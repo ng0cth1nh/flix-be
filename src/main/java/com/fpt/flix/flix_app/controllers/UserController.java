@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fpt.flix.flix_app.configurations.AppConf;
 import com.fpt.flix.flix_app.models.db.Role;
 import com.fpt.flix.flix_app.models.db.User;
+import com.fpt.flix.flix_app.models.errors.GeneralException;
+import com.fpt.flix.flix_app.models.responses.TokenResponse;
 import com.fpt.flix.flix_app.services.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -61,20 +63,19 @@ public class UserController {
                         .withClaim(ROLES, user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
                         .sign(algorithm);
 
-                Map<String, String> tokens = new HashMap<>();
-                tokens.put(ACCESS_TOKEN, accessToken);
-                tokens.put(REFRESH_TOKEN, refreshToken);
+                TokenResponse tokenResponse = new TokenResponse(accessToken, refreshToken);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                new ObjectMapper().writeValue(response.getOutputStream(), tokens);
+                new ObjectMapper().writeValue(response.getOutputStream(), tokenResponse);
             } catch (Exception exception) {
+
                 response.setStatus(FORBIDDEN.value());
                 Map<String, String> errors = new HashMap<>();
-                errors.put("error_message", exception.getMessage());
+                errors.put("message", REFRESH_TOKEN_INVALID);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 new ObjectMapper().writeValue(response.getOutputStream(), errors);
             }
         } else {
-            throw new RuntimeException("Refresh token is missing");
+            throw new GeneralException(REFRESH_TOKEN_MISSING);
         }
     }
 

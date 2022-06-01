@@ -1,0 +1,11 @@
+app:
+  secretKey: 'secret'
+  lifeTimeToke: 600000 #milliseconds
+  lifeTimeRefreshToken: 1800000 #milliseconds
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/flix_db
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver

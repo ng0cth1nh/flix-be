@@ -24,17 +24,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.fpt.flix.flix_app.constants.Constant.*;
+
 @Slf4j
 public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
 
     private final AppConf appConf;
 
-    private final String ACCESS_TOKEN = "access_token";
-
-    private final String REFRESH_TOKEN = "refresh_token";
-
-    private final String ROLES = "roles";
 
     @Autowired
     public CustomAuthenticationFilter(AuthenticationManager authenticationManager,

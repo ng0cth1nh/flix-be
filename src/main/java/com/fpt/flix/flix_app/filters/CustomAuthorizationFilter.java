@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.fpt.flix.flix_app.constants.Constant.BEARER;
+import static com.fpt.flix.flix_app.constants.Constant.ROLES;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 
@@ -31,10 +33,6 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
     private final AppConf appConf;
-
-    private final String ROLES = "roles";
-
-    private final String BEARER = "Bearer ";
 
     @Autowired
     public CustomAuthorizationFilter(AppConf appConf) {
@@ -67,7 +65,6 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                     filterChain.doFilter(request, response);
                 } catch (Exception exception) {
                     log.error("Error logging in: {}", exception.getMessage());
-                    response.setHeader("error", exception.getMessage());
                     response.setStatus(FORBIDDEN.value());
                     Map<String, String> errors = new HashMap<>();
                     errors.put("error_message", exception.getMessage());

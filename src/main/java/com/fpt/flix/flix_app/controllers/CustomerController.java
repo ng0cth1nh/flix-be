@@ -10,7 +10,9 @@ import com.fpt.flix.flix_app.configurations.AppConf;
 import com.fpt.flix.flix_app.models.db.Role;
 import com.fpt.flix.flix_app.models.db.User;
 import com.fpt.flix.flix_app.models.errors.GeneralException;
+import com.fpt.flix.flix_app.models.requests.CFRegisterCustomerRequest;
 import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
+import com.fpt.flix.flix_app.models.responses.CFRegisterCustomerResponse;
 import com.fpt.flix.flix_app.models.responses.RegisterCustomerResponse;
 import com.fpt.flix.flix_app.models.responses.TokenResponse;
 import com.fpt.flix.flix_app.repositories.UserRepository;
@@ -56,4 +58,8 @@ public class CustomerController {
         customerService.refreshToken(request, response);
     }
 
+    @PostMapping("register/customer/confirm")
+    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(@RequestBody CFRegisterCustomerRequest request) {
+        return customerService.confirmRegisterCustomer(request);
+    }
 }

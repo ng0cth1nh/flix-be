@@ -7,13 +7,13 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fpt.flix.flix_app.configurations.AppConf;
-import com.fpt.flix.flix_app.constants.RoleType;
 import com.fpt.flix.flix_app.models.db.OTPInfo;
 import com.fpt.flix.flix_app.models.db.Role;
 import com.fpt.flix.flix_app.models.db.User;
 import com.fpt.flix.flix_app.models.errors.GeneralException;
 import com.fpt.flix.flix_app.models.requests.CFRegisterCustomerRequest;
 import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
+import com.fpt.flix.flix_app.models.requests.SmsRequest;
 import com.fpt.flix.flix_app.models.responses.CFRegisterCustomerResponse;
 import com.fpt.flix.flix_app.models.responses.RegisterCustomerResponse;
 import com.fpt.flix.flix_app.models.responses.TokenResponse;
@@ -21,6 +21,7 @@ import com.fpt.flix.flix_app.repositories.RedisRepository;
 import com.fpt.flix.flix_app.repositories.RoleRepository;
 import com.fpt.flix.flix_app.repositories.UserRepository;
 import com.fpt.flix.flix_app.utils.InputValidation;
+import com.fpt.flix.flix_app.utils.PhoneFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -55,18 +56,21 @@ public class CustomerService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final AppConf appConf;
     private final RedisRepository redisRepository;
+    private final SmsService smsService;
 
 
     public CustomerService(UserRepository userRepository,
                            RoleRepository roleRepository,
                            PasswordEncoder passwordEncoder,
                            AppConf appConf,
-                           RedisRepository redisRepository) {
+                           RedisRepository redisRepository,
+                           SmsService smsService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.appConf = appConf;
         this.redisRepository = redisRepository;
+        this.smsService = smsService;
     }
 
     @Override
@@ -103,7 +107,6 @@ public class CustomerService implements UserDetailsService {
                 String accessToken = JWT.create()
                         .withSubject(user.getUsername())
                         .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeToke()))
-                        .withIssuer(request.getRequestURI())
                         .withClaim(ROLES, user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
                         .sign(algorithm);
 
@@ -128,7 +131,7 @@ public class CustomerService implements UserDetailsService {
         return userRepository.findByUsername(username).orElse(null);
     }
 
-    public ResponseEntity<RegisterCustomerResponse> registerCustomer(@RequestBody RegisterCustomerRequest request) throws JsonProcessingException {
+    public ResponseEntity<RegisterCustomerResponse> registerCustomer(RegisterCustomerRequest request) throws JsonProcessingException {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(INVALID_PHONE_NUMBER);
         }
@@ -144,15 +147,24 @@ public class CustomerService implements UserDetailsService {
         request.setPassword(passwordEncoder.encode(request.getPassword()));
         redisRepository.saveRegisterAccount(request);
 
+        SmsRequest sms = new SmsRequest();
+        sms.setUsername(request.getPhone());
+        sms.setPhoneNumber(PhoneFormatter.getVietNamePhoneNumber(request.getPhone()));
+        smsService.sendAndSaveOTP(sms);
+
         RegisterCustomerResponse response = new RegisterCustomerResponse();
         response.setMessage(NEW_ACCOUNT_VALID);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(@RequestBody CFRegisterCustomerRequest request) {
+    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) {
         OTPInfo otpInfo = redisRepository.findOTP(request);
         if (otpInfo == null) {
             throw new GeneralException(INVALID_OTP);
+        }
+
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new GeneralException(ACCOUNT_EXISTED);
         }
 
         RegisterCustomerRequest registerAccount = redisRepository.findRegisterAccount(request.getUsername());
@@ -171,7 +183,23 @@ public class CustomerService implements UserDetailsService {
         user.setUpdatedAt(now);
         userRepository.save(user);
 
-        return null;
+        Algorithm algorithm = Algorithm.HMAC256(this.appConf.getSecretKey().getBytes());
+        String accessToken = JWT.create()
+                .withSubject(user.getUsername())
+                .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeToke()))
+                .withClaim(ROLES, user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
+                .sign(algorithm);
+
+        String refreshToken = JWT.create()
+                .withSubject(user.getUsername())
+                .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeRefreshToken()))
+                .sign(algorithm);
+
+        CFRegisterCustomerResponse response = new CFRegisterCustomerResponse();
+        response.setAccessToken(accessToken);
+        response.setRefreshToken(refreshToken);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 

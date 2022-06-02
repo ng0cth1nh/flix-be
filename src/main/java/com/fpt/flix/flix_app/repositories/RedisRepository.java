@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fpt.flix.flix_app.constants.enums.RedisDataTypeEnum;
 import com.fpt.flix.flix_app.models.requests.OTPRequest;
 import com.fpt.flix.flix_app.models.db.OTPInfo;
+import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.time.Instant;
 
 import static com.fpt.flix.flix_app.constants.Constant.REDIS_KEY_OTP_PREFIX;
+import static com.fpt.flix.flix_app.constants.Constant.REDIS_KEY_REGISTER_PREFIX;
 
 @Service
 public class RedisRepository {
@@ -44,6 +46,24 @@ public class RedisRepository {
         String key = REDIS_KEY_OTP_PREFIX + otpInfo.getUsername() + "_" + otpInfo.getOtp();
         redisTemplate.opsForValue().set(key, objectToString(otpInfo));
         redisTemplate.expireAt(key, Instant.now().plusSeconds(60));
+    }
+
+    public void saveRegisterAccount(RegisterCustomerRequest request) throws JsonProcessingException {
+        String key = REDIS_KEY_REGISTER_PREFIX + "_" + request.getPhone();
+        redisTemplate.opsForValue().set(key, objectToString(request));
+        redisTemplate.expireAt(key, Instant.now().plusSeconds(60));
+    }
+
+    public RegisterCustomerRequest findRegisterAccount(String phoneNumber) {
+        String key = REDIS_KEY_REGISTER_PREFIX + "_" + phoneNumber;
+        RegisterCustomerRequest account = null;
+        try {
+            Object data = redisTemplate.opsForValue().get(key);
+            account = stringToObject(String.valueOf(data), RegisterCustomerRequest.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return account;
     }
 
     private <E> E stringToObject(String data, Class<E> clazz) throws IOException {

@@ -6,7 +6,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fpt.flix.flix_app.configurations.AppConf;
-import com.fpt.flix.flix_app.models.errors.GeneralException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -67,7 +66,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                     log.error("Error logging in: {}", exception.getMessage());
                     response.setStatus(FORBIDDEN.value());
                     Map<String, String> errors = new HashMap<>();
-                    errors.put("message", TOKEN_INVALID);
+                    errors.put("message", INVALID_TOKEN);
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     new ObjectMapper().writeValue(response.getOutputStream(), errors);
                 }

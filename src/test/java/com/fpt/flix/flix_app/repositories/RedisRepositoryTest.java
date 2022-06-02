@@ -3,6 +3,7 @@ package com.fpt.flix.flix_app.repositories;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fpt.flix.flix_app.models.db.OTPInfo;
 import com.fpt.flix.flix_app.models.requests.OTPRequest;
+import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -67,5 +68,51 @@ class RedisRepositoryTest {
 
         // then
         Assertions.assertEquals(null, resultOTP);
+    }
+
+    @Test
+    void test_save_register_account() throws JsonProcessingException {
+        // given
+        String phone = "0522334455";
+        String password = "$2a$10$zbzRvX5G23ZI/qAPkmhQO.sJcVd.YxazNn4HOorXVuyR7V4uf2hvG";
+        String firstName = "Ngố";
+        String lastName = "Tàu";
+        RegisterCustomerRequest request = new RegisterCustomerRequest();
+        request.setPassword(password);
+        request.setFirstName(firstName);
+        request.setLastName(lastName);
+        request.setPhone(phone);
+
+        // when
+        redisRepository.saveRegisterAccount(request);
+        RegisterCustomerRequest result = redisRepository.findRegisterAccount(phone);
+
+        // then
+        Assertions.assertEquals(phone, result.getPhone());
+        Assertions.assertEquals(password, result.getPassword());
+        Assertions.assertEquals(firstName, result.getFirstName());
+        Assertions.assertEquals(lastName, result.getLastName());
+    }
+
+    @Test
+    void test_register_account_removed_after_60_seconds() throws JsonProcessingException, InterruptedException {
+        // given
+        String phone = "0522334455";
+        String password = "$2a$10$zbzRvX5G23ZI/qAPkmhQO.sJcVd.YxazNn4HOorXVuyR7V4uf2hvG";
+        String firstName = "Ngố";
+        String lastName = "Tàu";
+        RegisterCustomerRequest request = new RegisterCustomerRequest();
+        request.setPassword(password);
+        request.setFirstName(firstName);
+        request.setLastName(lastName);
+        request.setPhone(phone);
+
+        // when
+        redisRepository.saveRegisterAccount(request);
+        Thread.sleep(60000);
+        RegisterCustomerRequest result = redisRepository.findRegisterAccount(phone);
+
+        // then
+        Assertions.assertEquals(null, result);
     }
 }

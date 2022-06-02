@@ -4,12 +4,17 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fpt.flix.flix_app.configurations.AppConf;
+import com.fpt.flix.flix_app.constants.RoleType;
+import com.fpt.flix.flix_app.models.db.OTPInfo;
 import com.fpt.flix.flix_app.models.db.Role;
 import com.fpt.flix.flix_app.models.db.User;
 import com.fpt.flix.flix_app.models.errors.GeneralException;
+import com.fpt.flix.flix_app.models.requests.CFRegisterCustomerRequest;
 import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
+import com.fpt.flix.flix_app.models.responses.CFRegisterCustomerResponse;
 import com.fpt.flix.flix_app.models.responses.RegisterCustomerResponse;
 import com.fpt.flix.flix_app.models.responses.TokenResponse;
 import com.fpt.flix.flix_app.repositories.RedisRepository;
@@ -32,10 +37,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fpt.flix.flix_app.constants.Constant.*;
+import static com.fpt.flix.flix_app.constants.RoleType.ROLE_CUSTOMER;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 
@@ -107,7 +114,7 @@ public class CustomerService implements UserDetailsService {
 
                 response.setStatus(FORBIDDEN.value());
                 Map<String, String> errors = new HashMap<>();
-                errors.put("message", REFRESH_TOKEN_INVALID);
+                errors.put("message", INVALID_REFRESH_TOKEN);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 new ObjectMapper().writeValue(response.getOutputStream(), errors);
             }
@@ -121,9 +128,9 @@ public class CustomerService implements UserDetailsService {
         return userRepository.findByUsername(username).orElse(null);
     }
 
-    public ResponseEntity<RegisterCustomerResponse> registerCustomer(@RequestBody RegisterCustomerRequest request) {
+    public ResponseEntity<RegisterCustomerResponse> registerCustomer(@RequestBody RegisterCustomerRequest request) throws JsonProcessingException {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
-            throw new GeneralException(PHONE_NUMBER_INVALID);
+            throw new GeneralException(INVALID_PHONE_NUMBER);
         }
 
         if (userRepository.findByUsername(request.getPhone()).isPresent()) {
@@ -131,13 +138,42 @@ public class CustomerService implements UserDetailsService {
         }
 
         if (!InputValidation.isPasswordValid(request.getPassword())) {
-            throw new GeneralException(PASSWORD_INVALID);
+            throw new GeneralException(INVALID_PASSWORD);
         }
+
+        request.setPassword(passwordEncoder.encode(request.getPassword()));
+        redisRepository.saveRegisterAccount(request);
 
         RegisterCustomerResponse response = new RegisterCustomerResponse();
         response.setMessage(NEW_ACCOUNT_VALID);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(@RequestBody CFRegisterCustomerRequest request) {
+        OTPInfo otpInfo = redisRepository.findOTP(request);
+        if (otpInfo == null) {
+            throw new GeneralException(INVALID_OTP);
+        }
+
+        RegisterCustomerRequest registerAccount = redisRepository.findRegisterAccount(request.getUsername());
+
+        LocalDateTime now = LocalDateTime.now();
+        User user = new User();
+        user.setFullName(registerAccount.getFirstName() + " " + registerAccount.getLastName());
+        user.setFirstName(registerAccount.getFirstName());
+        user.setLastName(registerAccount.getLastName());
+        user.setPhone(registerAccount.getPhone());
+        user.setIsActive(true);
+        user.setUsername(registerAccount.getPhone());
+        user.setPassword(registerAccount.getPassword());
+        addRoleToUser(user.getUsername(), ROLE_CUSTOMER.name());
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
+        userRepository.save(user);
+
+        return null;
+    }
+
 
     public Role saveRole(Role role) {
         log.info("Saving new role {} to the database", role.getName());

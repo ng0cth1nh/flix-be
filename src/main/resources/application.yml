@@ -2,10 +2,18 @@ app:
   secretKey: 'secret'
   lifeTimeToke: 600000 #milliseconds
   lifeTimeRefreshToken: 1800000 #milliseconds
+  twilioInfo:
+    accountSid: 'ACb90a154f60452edbfba9e5955f9cd40c'
+    authToken: 'd1c1458436c445a536ec2ceaa5eeb713'
+    fromNumber: '+16073006721'
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/flix_db
+    url: jdbc:mysql://34.142.171.163:3306/flix_db
     username: root
-    password: password
+    password: S$s.(QQl6mXrG,eJ
     driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: localhost
+    port: 6379
+    password: ''

@@ -24,6 +24,10 @@ public class User {
 
     private String fullName;
 
+    private String firstName;
+
+    private String lastName;
+
     private String phone;
 
     private Boolean isActive;

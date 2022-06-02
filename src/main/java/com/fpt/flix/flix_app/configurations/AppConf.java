@@ -11,4 +11,12 @@ public class AppConf {
     private String secretKey;
     private Long lifeTimeToke;
     private Long lifeTimeRefreshToken;
+    private TwilioInfo twilioInfo;
+
+    @Data
+    public static class TwilioInfo {
+        private String accountSid;
+        private String authToken;
+        private String fromNumber;
+    }
 }

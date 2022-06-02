@@ -2,6 +2,7 @@ package com.fpt.flix.flix_app.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fpt.flix.flix_app.models.errors.GeneralException;
+import com.fpt.flix.flix_app.models.requests.CFRegisterCustomerRequest;
 import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
 import com.fpt.flix.flix_app.models.responses.RegisterCustomerResponse;
 import org.junit.jupiter.api.Assertions;
@@ -27,7 +28,7 @@ class CustomerServiceTest {
     @Test
     void should_register_customer_successful() throws JsonProcessingException {
         // given
-        String phone = "0865399032";
+        String phone = "0962706247";
         RegisterCustomerRequest request = new RegisterCustomerRequest();
         request.setPhone(phone);
         request.setFirstName("Lan");

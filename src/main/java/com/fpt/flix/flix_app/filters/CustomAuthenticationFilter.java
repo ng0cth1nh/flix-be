@@ -58,14 +58,12 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         String accessToken = JWT.create()
                 .withSubject(user.getUsername())
                 .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeToke()))
-                .withIssuer(request.getRequestURI())
                 .withClaim(ROLES, user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                 .sign(algorithm);
 
         String refreshToken = JWT.create()
                 .withSubject(user.getUsername())
                 .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeRefreshToken()))
-                .withIssuer(request.getRequestURI())
                 .sign(algorithm);
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

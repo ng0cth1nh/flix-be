@@ -32,7 +32,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -50,7 +49,7 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 @Service
 @Transactional
 @Slf4j
-public class CustomerService implements UserDetailsService {
+public class AccountService implements UserDetailsService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -59,12 +58,12 @@ public class CustomerService implements UserDetailsService {
     private final SmsService smsService;
 
 
-    public CustomerService(UserRepository userRepository,
-                           RoleRepository roleRepository,
-                           PasswordEncoder passwordEncoder,
-                           AppConf appConf,
-                           RedisRepository redisRepository,
-                           SmsService smsService) {
+    public AccountService(UserRepository userRepository,
+                          RoleRepository roleRepository,
+                          PasswordEncoder passwordEncoder,
+                          AppConf appConf,
+                          RedisRepository redisRepository,
+                          SmsService smsService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;

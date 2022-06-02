@@ -2,7 +2,6 @@ package com.fpt.flix.flix_app.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fpt.flix.flix_app.models.errors.GeneralException;
-import com.fpt.flix.flix_app.models.requests.CFRegisterCustomerRequest;
 import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
 import com.fpt.flix.flix_app.models.responses.RegisterCustomerResponse;
 import org.junit.jupiter.api.Assertions;
@@ -16,14 +15,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static com.fpt.flix.flix_app.constants.Constant.ACCOUNT_EXISTED;
 import static com.fpt.flix.flix_app.constants.Constant.NEW_ACCOUNT_VALID;
-import static org.junit.jupiter.api.Assertions.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-class CustomerServiceTest {
+class AccountServiceTest {
 
     @Autowired
-    CustomerService customerService;
+    AccountService accountService;
 
     @Test
     void should_register_customer_successful() throws JsonProcessingException {
@@ -36,7 +34,7 @@ class CustomerServiceTest {
         request.setPassword("123456");
 
         // when
-        ResponseEntity<RegisterCustomerResponse> response = customerService.registerCustomer(request);
+        ResponseEntity<RegisterCustomerResponse> response = accountService.registerCustomer(request);
 
         // then
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -54,7 +52,7 @@ class CustomerServiceTest {
         request.setPassword("123456");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> customerService.registerCustomer(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> accountService.registerCustomer(request));
 
         // then
         Assertions.assertEquals(ACCOUNT_EXISTED, exception.getMessage());

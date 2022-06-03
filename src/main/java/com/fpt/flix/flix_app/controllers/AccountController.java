@@ -3,8 +3,10 @@ package com.fpt.flix.flix_app.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fpt.flix.flix_app.models.requests.CFRegisterCustomerRequest;
 import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
+import com.fpt.flix.flix_app.models.requests.RegisterRepairerRequest;
 import com.fpt.flix.flix_app.models.responses.CFRegisterCustomerResponse;
 import com.fpt.flix.flix_app.models.responses.RegisterCustomerResponse;
+import com.fpt.flix.flix_app.models.responses.RegisterRepairerResponse;
 import com.fpt.flix.flix_app.services.AccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -38,5 +40,10 @@ public class AccountController {
     @PostMapping("register/customer/confirm")
     public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(@RequestBody CFRegisterCustomerRequest request) {
         return accountService.confirmRegisterCustomer(request);
+    }
+
+    @PostMapping("register/repairer")
+    public ResponseEntity<RegisterRepairerResponse> registerCustomer(@RequestBody RegisterRepairerRequest request) throws JsonProcessingException {
+        return accountService.registerRepairer(request);
     }
 }

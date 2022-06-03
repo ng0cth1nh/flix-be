@@ -182,8 +182,8 @@ public class AccountService implements UserDetailsService {
         RegisterRequest registerAccount = redisRepository.findRegisterAccount(request.getUsername());
 
         User user = buildUser(registerAccount);
-        addRoleToUser(user.getUsername(), ROLE_CUSTOMER.name());
         userRepository.save(user);
+        addRoleToUser(user.getUsername(), ROLE_CUSTOMER.name());
 
         String accessToken = getToken(user, ACCESS_TOKEN);
         String refreshToken = getToken(user, REFRESH_TOKEN);
@@ -201,8 +201,8 @@ public class AccountService implements UserDetailsService {
         RegisterRequest registerAccount = redisRepository.findRegisterAccount(request.getUsername());
 
         User user = buildUser(registerAccount);
-        addRoleToUser(user.getUsername(), ROLE_PENDING_REPAIRER.name());
         userRepository.save(user);
+        addRoleToUser(user.getUsername(), ROLE_PENDING_REPAIRER.name());
 
         String accessToken = getToken(user, ACCESS_TOKEN);
         String refreshToken = getToken(user, REFRESH_TOKEN);

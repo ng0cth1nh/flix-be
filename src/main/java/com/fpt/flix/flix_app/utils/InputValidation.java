@@ -4,7 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class InputValidation {
-    private static final String PHONE_REGEX = "^(0[3|5|7|8|9]){1}([0-9]{8,9})$";
+    private static final String PHONE_REGEX = "^(03|05|07|08|09|01[2|6|8|9])([0-9]{8})$";
     private static final String PASSWORD_REGEX = "^(\\S){6,10}$";
 
     public static boolean isPhoneValid(String phoneNumber) {

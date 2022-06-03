@@ -21,6 +21,7 @@ import static com.fpt.flix.flix_app.constants.Constant.REDIS_KEY_REGISTER_PREFIX
 public class RedisRepository {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final long EXPIRE_TIME_IN_SECONDS = 60;
 
 
     @Autowired
@@ -46,16 +47,16 @@ public class RedisRepository {
     public void saveOTP(OTPInfo otpInfo) throws JsonProcessingException {
         String key = REDIS_KEY_OTP_PREFIX + otpInfo.getUsername() + "_" + otpInfo.getOtp();
         redisTemplate.opsForValue().set(key, objectToString(otpInfo));
-        redisTemplate.expireAt(key, Instant.now().plusSeconds(60));
+        redisTemplate.expireAt(key, Instant.now().plusSeconds(EXPIRE_TIME_IN_SECONDS));
     }
 
     public void saveRegisterAccount(RegisterRequest request) throws JsonProcessingException {
         String key = REDIS_KEY_REGISTER_PREFIX + "_" + request.getPhone();
         redisTemplate.opsForValue().set(key, objectToString(request));
-        redisTemplate.expireAt(key, Instant.now().plusSeconds(60));
+        redisTemplate.expireAt(key, Instant.now().plusSeconds(EXPIRE_TIME_IN_SECONDS));
     }
 
-    public RegisterCustomerRequest findRegisterAccount(String phoneNumber) {
+    public RegisterRequest findRegisterAccount(String phoneNumber) {
         String key = REDIS_KEY_REGISTER_PREFIX + "_" + phoneNumber;
         RegisterCustomerRequest account = null;
         try {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fpt.flix.flix_app.models.db.OTPInfo;
 import com.fpt.flix.flix_app.models.requests.OTPRequest;
 import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
+import com.fpt.flix.flix_app.models.requests.RegisterRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -85,7 +86,7 @@ class RedisRepositoryTest {
 
         // when
         redisRepository.saveRegisterAccount(request);
-        RegisterCustomerRequest result = redisRepository.findRegisterAccount(phone);
+        RegisterRequest result = redisRepository.findRegisterAccount(phone);
 
         // then
         Assertions.assertEquals(phone, result.getPhone());
@@ -110,7 +111,7 @@ class RedisRepositoryTest {
         // when
         redisRepository.saveRegisterAccount(request);
         Thread.sleep(60000);
-        RegisterCustomerRequest result = redisRepository.findRegisterAccount(phone);
+        RegisterRequest result = redisRepository.findRegisterAccount(phone);
 
         // then
         Assertions.assertEquals(null, result);

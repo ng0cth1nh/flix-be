@@ -11,11 +11,10 @@ import com.fpt.flix.flix_app.models.db.OTPInfo;
 import com.fpt.flix.flix_app.models.db.Role;
 import com.fpt.flix.flix_app.models.db.User;
 import com.fpt.flix.flix_app.models.errors.GeneralException;
-import com.fpt.flix.flix_app.models.requests.CFRegisterCustomerRequest;
-import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
-import com.fpt.flix.flix_app.models.requests.SmsRequest;
+import com.fpt.flix.flix_app.models.requests.*;
 import com.fpt.flix.flix_app.models.responses.CFRegisterCustomerResponse;
 import com.fpt.flix.flix_app.models.responses.RegisterCustomerResponse;
+import com.fpt.flix.flix_app.models.responses.RegisterRepairerResponse;
 import com.fpt.flix.flix_app.models.responses.TokenResponse;
 import com.fpt.flix.flix_app.repositories.RedisRepository;
 import com.fpt.flix.flix_app.repositories.RoleRepository;
@@ -131,6 +130,35 @@ public class AccountService implements UserDetailsService {
     }
 
     public ResponseEntity<RegisterCustomerResponse> registerCustomer(RegisterCustomerRequest request) throws JsonProcessingException {
+        validateRegisterInput(request);
+
+        request.setPassword(passwordEncoder.encode(request.getPassword()));
+        redisRepository.saveRegisterAccount(request);
+
+        SmsRequest sms = getSmsRequest(request);
+        smsService.sendAndSaveOTP(sms);
+
+        RegisterCustomerResponse response = new RegisterCustomerResponse();
+        response.setMessage(NEW_ACCOUNT_VALID);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    public ResponseEntity<RegisterRepairerResponse> registerRepairer(RegisterRepairerRequest request) throws JsonProcessingException {
+        validateRegisterInput(request);
+
+        request.setPassword(passwordEncoder.encode(request.getPassword()));
+        redisRepository.saveRegisterAccount(request);
+
+        SmsRequest sms = getSmsRequest(request);
+        smsService.sendAndSaveOTP(sms);
+
+        RegisterRepairerResponse response = new RegisterRepairerResponse();
+        response.setMessage(NEW_ACCOUNT_VALID);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    public void validateRegisterInput(RegisterRequest request) {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(INVALID_PHONE_NUMBER);
         }
@@ -142,18 +170,13 @@ public class AccountService implements UserDetailsService {
         if (!InputValidation.isPasswordValid(request.getPassword())) {
             throw new GeneralException(INVALID_PASSWORD);
         }
+    }
 
-        request.setPassword(passwordEncoder.encode(request.getPassword()));
-        redisRepository.saveRegisterAccount(request);
-
+    public SmsRequest getSmsRequest(RegisterRequest registerRequest) {
         SmsRequest sms = new SmsRequest();
-        sms.setUsername(request.getPhone());
-        sms.setPhoneNumber(PhoneFormatter.getVietNamePhoneNumber(request.getPhone()));
-        smsService.sendAndSaveOTP(sms);
-
-        RegisterCustomerResponse response = new RegisterCustomerResponse();
-        response.setMessage(NEW_ACCOUNT_VALID);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        sms.setUsername(registerRequest.getPhone());
+        sms.setPhoneNumber(PhoneFormatter.getVietNamePhoneNumber(registerRequest.getPhone()));
+        return sms;
     }
 
     public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) {

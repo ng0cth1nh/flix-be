@@ -6,6 +6,7 @@ import com.fpt.flix.flix_app.constants.enums.RedisDataTypeEnum;
 import com.fpt.flix.flix_app.models.requests.OTPRequest;
 import com.fpt.flix.flix_app.models.db.OTPInfo;
 import com.fpt.flix.flix_app.models.requests.RegisterCustomerRequest;
+import com.fpt.flix.flix_app.models.requests.RegisterRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -48,7 +49,7 @@ public class RedisRepository {
         redisTemplate.expireAt(key, Instant.now().plusSeconds(60));
     }
 
-    public void saveRegisterAccount(RegisterCustomerRequest request) throws JsonProcessingException {
+    public void saveRegisterAccount(RegisterRequest request) throws JsonProcessingException {
         String key = REDIS_KEY_REGISTER_PREFIX + "_" + request.getPhone();
         redisTemplate.opsForValue().set(key, objectToString(request));
         redisTemplate.expireAt(key, Instant.now().plusSeconds(60));

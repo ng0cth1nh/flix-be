@@ -202,7 +202,6 @@ public class AccountService implements UserDetailsService {
 
         User user = buildUser(registerAccount);
         userRepository.save(user);
-
         addRoleToUser(user.getUsername(), ROLE_PENDING_REPAIRER.name());
 
         String accessToken = getToken(user, ACCESS_TOKEN);

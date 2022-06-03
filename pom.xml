@@ -8,8 +8,8 @@
 		<version>2.6.7</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.fpt.flix</groupId>
-	<artifactId>flix_app</artifactId>
+	<groupId>com.fu</groupId>
+	<artifactId>flix</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>flix_app</name>
 	<description>Demo project for Spring Boot</description>

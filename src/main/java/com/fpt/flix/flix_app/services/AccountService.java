@@ -7,21 +7,20 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fpt.flix.flix_app.configurations.AppConf;
+import com.fpt.flix.flix_app.constants.enums.TokenType;
 import com.fpt.flix.flix_app.models.db.OTPInfo;
 import com.fpt.flix.flix_app.models.db.Role;
 import com.fpt.flix.flix_app.models.db.User;
 import com.fpt.flix.flix_app.models.errors.GeneralException;
 import com.fpt.flix.flix_app.models.requests.*;
-import com.fpt.flix.flix_app.models.responses.CFRegisterCustomerResponse;
-import com.fpt.flix.flix_app.models.responses.RegisterCustomerResponse;
-import com.fpt.flix.flix_app.models.responses.RegisterRepairerResponse;
-import com.fpt.flix.flix_app.models.responses.TokenResponse;
+import com.fpt.flix.flix_app.models.responses.*;
 import com.fpt.flix.flix_app.repositories.RedisRepository;
 import com.fpt.flix.flix_app.repositories.RoleRepository;
 import com.fpt.flix.flix_app.repositories.UserRepository;
 import com.fpt.flix.flix_app.utils.InputValidation;
 import com.fpt.flix.flix_app.utils.PhoneFormatter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +40,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fpt.flix.flix_app.constants.Constant.*;
-import static com.fpt.flix.flix_app.constants.RoleType.ROLE_CUSTOMER;
+import static com.fpt.flix.flix_app.constants.enums.RoleType.ROLE_CUSTOMER;
+import static com.fpt.flix.flix_app.constants.enums.RoleType.ROLE_PENDING_REPAIRER;
+import static com.fpt.flix.flix_app.constants.enums.TokenType.ACCESS_TOKEN;
+import static com.fpt.flix.flix_app.constants.enums.TokenType.REFRESH_TOKEN;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 
@@ -100,7 +102,7 @@ public class AccountService implements UserDetailsService {
                 JWTVerifier verifier = JWT.require(algorithm).build();
                 DecodedJWT decodedJWT = verifier.verify(refreshToken);
                 String username = decodedJWT.getSubject();
-                User user = getUser(username);
+                User user = userRepository.findByUsername(username).orElse(null);
 
                 String accessToken = JWT.create()
                         .withSubject(user.getUsername())
@@ -122,11 +124,6 @@ public class AccountService implements UserDetailsService {
         } else {
             throw new GeneralException(REFRESH_TOKEN_MISSING);
         }
-    }
-
-    public User getUser(String username) {
-        log.info("fetching user {}", username);
-        return userRepository.findByUsername(username).orElse(null);
     }
 
     public ResponseEntity<RegisterCustomerResponse> registerCustomer(RegisterCustomerRequest request) throws JsonProcessingException {
@@ -180,6 +177,67 @@ public class AccountService implements UserDetailsService {
     }
 
     public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) {
+        validateOTP(request);
+
+        RegisterRequest registerAccount = redisRepository.findRegisterAccount(request.getUsername());
+
+        User user = buildUser(registerAccount);
+        addRoleToUser(user.getUsername(), ROLE_CUSTOMER.name());
+        userRepository.save(user);
+
+        String accessToken = getToken(user, ACCESS_TOKEN);
+        String refreshToken = getToken(user, REFRESH_TOKEN);
+
+        CFRegisterCustomerResponse response = new CFRegisterCustomerResponse();
+        response.setAccessToken(accessToken);
+        response.setRefreshToken(refreshToken);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) {
+        validateOTP(request);
+
+        RegisterRequest registerAccount = redisRepository.findRegisterAccount(request.getUsername());
+
+        User user = buildUser(registerAccount);
+        addRoleToUser(user.getUsername(), ROLE_PENDING_REPAIRER.name());
+        userRepository.save(user);
+
+        String accessToken = getToken(user, ACCESS_TOKEN);
+        String refreshToken = getToken(user, REFRESH_TOKEN);
+
+        CFRegisterRepairerResponse response = new CFRegisterRepairerResponse();
+        response.setAccessToken(accessToken);
+        response.setRefreshToken(refreshToken);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getToken(User user, TokenType tokenType) {
+        Algorithm algorithm = Algorithm.HMAC256(this.appConf.getSecretKey().getBytes());
+        String token = Strings.EMPTY;
+
+        switch (tokenType) {
+            case ACCESS_TOKEN:
+                token = JWT.create()
+                        .withSubject(user.getUsername())
+                        .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeToke()))
+                        .withClaim(ROLES, user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
+                        .sign(algorithm);
+                break;
+            case REFRESH_TOKEN:
+                token = JWT.create()
+                        .withSubject(user.getUsername())
+                        .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeRefreshToken()))
+                        .sign(algorithm);
+                break;
+        }
+
+        return token;
+    }
+
+    public void validateOTP(OTPRequest request) {
         OTPInfo otpInfo = redisRepository.findOTP(request);
         if (otpInfo == null) {
             throw new GeneralException(INVALID_OTP);
@@ -188,9 +246,9 @@ public class AccountService implements UserDetailsService {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new GeneralException(ACCOUNT_EXISTED);
         }
+    }
 
-        RegisterCustomerRequest registerAccount = redisRepository.findRegisterAccount(request.getUsername());
-
+    public User buildUser(RegisterRequest registerAccount) {
         LocalDateTime now = LocalDateTime.now();
         User user = new User();
         user.setFullName(registerAccount.getFirstName() + " " + registerAccount.getLastName());
@@ -200,40 +258,9 @@ public class AccountService implements UserDetailsService {
         user.setIsActive(true);
         user.setUsername(registerAccount.getPhone());
         user.setPassword(registerAccount.getPassword());
-        addRoleToUser(user.getUsername(), ROLE_CUSTOMER.name());
         user.setCreatedAt(now);
         user.setUpdatedAt(now);
-        userRepository.save(user);
-
-        Algorithm algorithm = Algorithm.HMAC256(this.appConf.getSecretKey().getBytes());
-        String accessToken = JWT.create()
-                .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeToke()))
-                .withClaim(ROLES, user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
-                .sign(algorithm);
-
-        String refreshToken = JWT.create()
-                .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeRefreshToken()))
-                .sign(algorithm);
-
-        CFRegisterCustomerResponse response = new CFRegisterCustomerResponse();
-        response.setAccessToken(accessToken);
-        response.setRefreshToken(refreshToken);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-
-    public Role saveRole(Role role) {
-        log.info("Saving new role {} to the database", role.getName());
-        return roleRepository.save(role);
-    }
-
-    public User saveUser(User user) {
-        log.info("Saving new user {} to the database", user.getUsername());
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        return user;
     }
 
     public void addRoleToUser(String username, String roleName) {

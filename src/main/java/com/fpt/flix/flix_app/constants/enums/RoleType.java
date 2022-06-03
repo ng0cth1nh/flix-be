@@ -1,4 +1,4 @@
-package com.fpt.flix.flix_app.constants;
+package com.fpt.flix.flix_app.constants.enums;
 
 public enum RoleType {
     ROLE_ADMIN,

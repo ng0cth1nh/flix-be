@@ -23,7 +23,7 @@ class SmsServiceImplTest {
     @Autowired
     RedisDAOImpl redisDAOImpl;
 
-    @Test
+//    @Test
     void test_send_and_save_OTP() throws JsonProcessingException {
         // given
         String username = "0865390031";

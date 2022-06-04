@@ -44,7 +44,7 @@ class RedisDAOImplTest {
         Assertions.assertEquals("0865390031", resultOTP.getUsername());
     }
 
-    @Test
+//    @Test
     void test_OTP_expire_after_60_seconds() throws JsonProcessingException, InterruptedException {
 
         // given
@@ -94,7 +94,7 @@ class RedisDAOImplTest {
         Assertions.assertEquals(lastName, result.getLastName());
     }
 
-    @Test
+//    @Test
     void test_register_account_removed_after_60_seconds() throws JsonProcessingException, InterruptedException {
         // given
         String phone = "0522334455";

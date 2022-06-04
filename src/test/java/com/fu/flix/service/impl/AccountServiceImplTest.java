@@ -26,7 +26,7 @@ class AccountServiceImplTest {
     @Autowired
     AccountServiceImpl accountServiceImpl;
 
-    @Test
+//    @Test
     void should_register_customer_successful() throws JsonProcessingException {
         // given
         String phone = "0865390031";
@@ -61,7 +61,7 @@ class AccountServiceImplTest {
         Assertions.assertEquals(ACCOUNT_EXISTED, exception.getMessage());
     }
 
-    @Test
+//    @Test
     void should_register_repairer_successful() throws JsonProcessingException {
         // given
         String phone = "0865390031";

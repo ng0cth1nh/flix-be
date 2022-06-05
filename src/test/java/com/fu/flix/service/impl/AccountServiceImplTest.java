@@ -32,8 +32,7 @@ class AccountServiceImplTest {
         String phone = "0865390031";
         RegisterCustomerRequest request = new RegisterCustomerRequest();
         request.setPhone(phone);
-        request.setFirstName("Lan");
-        request.setLastName("Mai");
+        request.setFullName("La La");
         request.setPassword("123456");
 
         // when
@@ -50,8 +49,7 @@ class AccountServiceImplTest {
         String phone = "0962706247";
         RegisterCustomerRequest request = new RegisterCustomerRequest();
         request.setPhone(phone);
-        request.setFirstName("Lan");
-        request.setLastName("Mai");
+        request.setFullName("La La");
         request.setPassword("123456");
 
         // when
@@ -67,8 +65,7 @@ class AccountServiceImplTest {
         String phone = "0865390031";
         RegisterRepairerRequest request = new RegisterRepairerRequest();
         request.setPhone(phone);
-        request.setFirstName("Trung");
-        request.setLastName("Dung");
+        request.setFullName("La La");
         request.setPassword("123456");
 
         // when
@@ -85,8 +82,7 @@ class AccountServiceImplTest {
         String phone = "0962706247";
         RegisterRepairerRequest request = new RegisterRepairerRequest();
         request.setPhone(phone);
-        request.setFirstName("Lan");
-        request.setLastName("Mai");
+        request.setFullName("La La");
         request.setPassword("123456");
 
         // when

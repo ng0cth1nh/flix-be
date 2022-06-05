@@ -6,7 +6,7 @@ import com.fu.flix.dto.request.RegisterCustomerRequest;
 import com.fu.flix.dto.request.RegisterRepairerRequest;
 import com.fu.flix.dto.response.RegisterCustomerResponse;
 import com.fu.flix.dto.response.RegisterRepairerResponse;
-import com.fu.flix.service.impl.AccountServiceImpl;
+import com.fu.flix.service.AccountService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -24,9 +24,9 @@ import static com.fu.flix.constant.Constant.NEW_ACCOUNT_VALID;
 class AccountServiceImplTest {
 
     @Autowired
-    AccountServiceImpl accountServiceImpl;
+    AccountService accountService;
 
-//    @Test
+    //    @Test
     void should_register_customer_successful() throws JsonProcessingException {
         // given
         String phone = "0865390031";
@@ -36,7 +36,7 @@ class AccountServiceImplTest {
         request.setPassword("123456");
 
         // when
-        ResponseEntity<RegisterCustomerResponse> response = accountServiceImpl.registerCustomer(request);
+        ResponseEntity<RegisterCustomerResponse> response = accountService.registerCustomer(request);
 
         // then
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -53,13 +53,13 @@ class AccountServiceImplTest {
         request.setPassword("123456");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> accountServiceImpl.registerCustomer(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> accountService.registerCustomer(request));
 
         // then
         Assertions.assertEquals(ACCOUNT_EXISTED, exception.getMessage());
     }
 
-//    @Test
+    //    @Test
     void should_register_repairer_successful() throws JsonProcessingException {
         // given
         String phone = "0865390031";
@@ -69,7 +69,7 @@ class AccountServiceImplTest {
         request.setPassword("123456");
 
         // when
-        ResponseEntity<RegisterRepairerResponse> response = accountServiceImpl.registerRepairer(request);
+        ResponseEntity<RegisterRepairerResponse> response = accountService.registerRepairer(request);
 
         // then
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -86,7 +86,7 @@ class AccountServiceImplTest {
         request.setPassword("123456");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> accountServiceImpl.registerRepairer(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> accountService.registerRepairer(request));
 
         // then
         Assertions.assertEquals(ACCOUNT_EXISTED, exception.getMessage());

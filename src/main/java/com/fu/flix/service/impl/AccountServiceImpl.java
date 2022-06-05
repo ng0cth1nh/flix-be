@@ -299,7 +299,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         Optional<User> optionalUser = userDAO.findByUsername(username);
         Optional<Commune> optionalCommune = communeDAO.findById(registerAccount.getCommuneId());
 
-        if (optionalUser.isPresent() && optionalUser.isPresent()) {
+        if (optionalUser.isPresent() && optionalCommune.isPresent()) {
             User user = optionalUser.get();
             Commune commune = optionalCommune.get();
 

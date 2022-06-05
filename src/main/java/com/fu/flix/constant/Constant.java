@@ -14,4 +14,7 @@ public class Constant {
     public static final String INVALID_PHONE_NUMBER = "INVALID_PHONE_NUMBER";
     public static final String REDIS_KEY_REGISTER_PREFIX = "REGISTER_";
     public static final String INVALID_OTP = "INVALID_OTP";
+    public static final String INVALID_CITY = "INVALID_CITY";
+    public static final String INVALID_DISTRICT = "INVALID_DISTRICT";
+    public static final String INVALID_COMMUNE = "INVALID_COMMUNE";
 }

@@ -75,12 +75,10 @@ class RedisDAOImplTest {
         // given
         String phone = "0522334455";
         String password = "$2a$10$zbzRvX5G23ZI/qAPkmhQO.sJcVd.YxazNn4HOorXVuyR7V4uf2hvG";
-        String firstName = "Ngố";
-        String lastName = "Tàu";
+        String fullName = "Ngố Tàu";
         RegisterCustomerRequest request = new RegisterCustomerRequest();
         request.setPassword(password);
-        request.setFirstName(firstName);
-        request.setLastName(lastName);
+        request.setFullName(fullName);
         request.setPhone(phone);
 
         // when
@@ -90,8 +88,7 @@ class RedisDAOImplTest {
         // then
         Assertions.assertEquals(phone, result.getPhone());
         Assertions.assertEquals(password, result.getPassword());
-        Assertions.assertEquals(firstName, result.getFirstName());
-        Assertions.assertEquals(lastName, result.getLastName());
+        Assertions.assertEquals(fullName, result.getFullName());
     }
 
 //    @Test
@@ -99,12 +96,10 @@ class RedisDAOImplTest {
         // given
         String phone = "0522334455";
         String password = "$2a$10$zbzRvX5G23ZI/qAPkmhQO.sJcVd.YxazNn4HOorXVuyR7V4uf2hvG";
-        String firstName = "Ngố";
-        String lastName = "Tàu";
+        String fullName = "Ngố Tàu";
         RegisterCustomerRequest request = new RegisterCustomerRequest();
         request.setPassword(password);
-        request.setFirstName(firstName);
-        request.setLastName(lastName);
+        request.setFullName(fullName);
         request.setPhone(phone);
 
         // when

@@ -8,16 +8,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.TokenType;
-import com.fu.flix.dao.RedisDAO;
-import com.fu.flix.entity.OTPInfo;
-import com.fu.flix.entity.Role;
-import com.fu.flix.entity.User;
+import com.fu.flix.dao.*;
+import com.fu.flix.entity.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.*;
-import com.fu.flix.dao.RoleDAO;
-import com.fu.flix.dao.UserDAO;
 import com.fu.flix.service.AccountService;
 import com.fu.flix.service.SmsService;
+import com.fu.flix.util.FileUtil;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.PhoneFormatter;
 import com.fu.flix.constant.enums.RoleType;
@@ -33,6 +30,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,6 +54,10 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final AppConf appConf;
     private final RedisDAO redisDAO;
     private final SmsService smsService;
+    private final ImageDAO imageDAO;
+    private final CommuneDAO communeDAO;
+    private final DistrictDAO districtDAO;
+    private final CityDAO cityDAO;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -63,13 +65,22 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               PasswordEncoder passwordEncoder,
                               AppConf appConf,
                               RedisDAO redisDAO,
-                              SmsService smsService) {
+                              SmsService smsService,
+                              ImageDAO imageDAO,
+                              CommuneDAO communeDAO,
+                              DistrictDAO districtDAO,
+                              CityDAO cityDAO
+    ) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.passwordEncoder = passwordEncoder;
         this.appConf = appConf;
         this.redisDAO = redisDAO;
         this.smsService = smsService;
+        this.imageDAO = imageDAO;
+        this.communeDAO = communeDAO;
+        this.districtDAO = districtDAO;
+        this.cityDAO = cityDAO;
     }
 
     @Override
@@ -160,14 +171,16 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private void validateRegisterInput(RegisterRequest request) {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(INVALID_PHONE_NUMBER);
-        }
-
-        if (userDAO.findByUsername(request.getPhone()).isPresent()) {
+        } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
             throw new GeneralException(ACCOUNT_EXISTED);
-        }
-
-        if (!InputValidation.isPasswordValid(request.getPassword())) {
+        } else if (!InputValidation.isPasswordValid(request.getPassword())) {
             throw new GeneralException(INVALID_PASSWORD);
+        } else if (cityDAO.findById(request.getCityId()).isEmpty()) {
+            throw new GeneralException(INVALID_CITY);
+        } else if (districtDAO.findById(request.getDistrictId()).isEmpty()) {
+            throw new GeneralException(INVALID_DISTRICT);
+        } else if (communeDAO.findById(request.getCommuneId()).isEmpty()) {
+            throw new GeneralException(INVALID_COMMUNE);
         }
     }
 
@@ -184,9 +197,10 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
         RegisterRequest registerAccount = redisDAO.findRegisterAccount(request.getUsername());
 
-        User user = buildUser(registerAccount);
+        User user = buildUser(registerAccount, request.getAvatar());
         userDAO.save(user);
         addRoleToUser(user.getUsername(), RoleType.ROLE_CUSTOMER.name());
+        addAddressToUser(user.getUsername(), registerAccount);
 
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
@@ -204,9 +218,10 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
         RegisterRequest registerAccount = redisDAO.findRegisterAccount(request.getUsername());
 
-        User user = buildUser(registerAccount);
+        User user = buildUser(registerAccount, request.getAvatar());
         userDAO.save(user);
         addRoleToUser(user.getUsername(), RoleType.ROLE_PENDING_REPAIRER.name());
+        addAddressToUser(user.getUsername(), registerAccount);
 
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
@@ -252,19 +267,50 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         }
     }
 
-    private User buildUser(RegisterRequest registerAccount) {
+    private User buildUser(RegisterRequest registerAccount, MultipartFile avatar) {
         LocalDateTime now = LocalDateTime.now();
         User user = new User();
-        user.setFullName(registerAccount.getFirstName() + " " + registerAccount.getLastName());
-        user.setFirstName(registerAccount.getFirstName());
-        user.setLastName(registerAccount.getLastName());
+        user.setFullName(registerAccount.getFullName());
         user.setPhone(registerAccount.getPhone());
         user.setIsActive(true);
         user.setUsername(registerAccount.getPhone());
         user.setPassword(registerAccount.getPassword());
+        user = updateUserAvatar(user, avatar);
         user.setCreatedAt(now);
         user.setUpdatedAt(now);
         return user;
+    }
+
+    public User updateUserAvatar(User user, MultipartFile avatar) {
+        if (avatar != null) {
+            String url = FileUtil.uploadImage(avatar);
+            Image image = new Image();
+            image.setName(user.getFullName());
+            image.setUrl(url);
+            Image savedImage = imageDAO.save(image);
+            user.setAvatar(savedImage.getId());
+        } else {
+            user.setAvatar(1L);
+        }
+        return user;
+    }
+
+    public void addAddressToUser(String username, RegisterRequest registerAccount) {
+        Optional<User> optionalUser = userDAO.findByUsername(username);
+        Optional<Commune> optionalCommune = communeDAO.findById(registerAccount.getCommuneId());
+
+        if (optionalUser.isPresent() && optionalCommune.isPresent()) {
+            User user = optionalUser.get();
+            Commune commune = optionalCommune.get();
+
+            UserAddress userAddress = new UserAddress();
+            userAddress.setMainAddress(true);
+            userAddress.setStreetAddress(registerAccount.getStreetAddress());
+            userAddress.setUser(user);
+            userAddress.setCommune(commune);
+
+            user.getUserAddresses().add(userAddress);
+        }
     }
 
     private void addRoleToUser(String username, String roleName) {

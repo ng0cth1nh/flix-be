@@ -1,7 +1,7 @@
 package com.fu.flix.dao.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fu.flix.dao.impl.RedisDAOImpl;
+import com.fu.flix.dao.RedisDAO;
 import com.fu.flix.entity.OTPInfo;
 import com.fu.flix.dto.request.OTPRequest;
 import com.fu.flix.dto.request.RegisterCustomerRequest;
@@ -18,7 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 class RedisDAOImplTest {
 
     @Autowired
-    RedisDAOImpl redisDAOImpl;
+    RedisDAO redisDAO;
 
     @Test
     void test_save_and_get_OTP_from_redis() throws JsonProcessingException {
@@ -36,15 +36,15 @@ class RedisDAOImplTest {
         otpRequest.setUsername(username);
 
         // when
-        redisDAOImpl.saveOTP(paramOTP);
-        OTPInfo resultOTP = redisDAOImpl.findOTP(otpRequest);
+        redisDAO.saveOTP(paramOTP);
+        OTPInfo resultOTP = redisDAO.findOTP(otpRequest);
 
         // then
         Assertions.assertEquals(123456, resultOTP.getOtp());
         Assertions.assertEquals("0865390031", resultOTP.getUsername());
     }
 
-//    @Test
+    //    @Test
     void test_OTP_expire_after_60_seconds() throws JsonProcessingException, InterruptedException {
 
         // given
@@ -60,11 +60,11 @@ class RedisDAOImplTest {
         otpRequest.setUsername(username);
 
         // when
-        redisDAOImpl.saveOTP(paramOTP);
+        redisDAO.saveOTP(paramOTP);
 
         Thread.sleep(60000);
 
-        OTPInfo resultOTP = redisDAOImpl.findOTP(otpRequest);
+        OTPInfo resultOTP = redisDAO.findOTP(otpRequest);
 
         // then
         Assertions.assertEquals(null, resultOTP);
@@ -82,8 +82,8 @@ class RedisDAOImplTest {
         request.setPhone(phone);
 
         // when
-        redisDAOImpl.saveRegisterAccount(request);
-        RegisterRequest result = redisDAOImpl.findRegisterAccount(phone);
+        redisDAO.saveRegisterAccount(request);
+        RegisterRequest result = redisDAO.findRegisterAccount(phone);
 
         // then
         Assertions.assertEquals(phone, result.getPhone());
@@ -91,7 +91,7 @@ class RedisDAOImplTest {
         Assertions.assertEquals(fullName, result.getFullName());
     }
 
-//    @Test
+    //    @Test
     void test_register_account_removed_after_60_seconds() throws JsonProcessingException, InterruptedException {
         // given
         String phone = "0522334455";
@@ -103,9 +103,9 @@ class RedisDAOImplTest {
         request.setPhone(phone);
 
         // when
-        redisDAOImpl.saveRegisterAccount(request);
+        redisDAO.saveRegisterAccount(request);
         Thread.sleep(60000);
-        RegisterRequest result = redisDAOImpl.findRegisterAccount(phone);
+        RegisterRequest result = redisDAO.findRegisterAccount(phone);
 
         // then
         Assertions.assertEquals(null, result);

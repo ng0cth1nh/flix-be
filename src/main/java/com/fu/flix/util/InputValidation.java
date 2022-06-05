@@ -18,4 +18,5 @@ public class InputValidation {
         Matcher matcher = pattern.matcher(password);
         return matcher.matches();
     }
+
 }

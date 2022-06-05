@@ -1,10 +1,12 @@
 package com.fu.flix.entity;
 
+import com.fu.flix.util.FileUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -23,10 +25,6 @@ public class User {
     private Long id;
 
     private String fullName;
-
-    private String firstName;
-
-    private String lastName;
 
     private String phone;
 
@@ -48,6 +46,9 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Collection<Role> roles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Collection<UserAddress> userAddresses = new ArrayList<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;

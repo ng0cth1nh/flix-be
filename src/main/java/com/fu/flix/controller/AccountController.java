@@ -40,7 +40,7 @@ public class AccountController {
     }
 
     @PostMapping("register/customer/confirm")
-    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(@RequestBody CFRegisterCustomerRequest request) {
+    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) {
         return accountService.confirmRegisterCustomer(request);
     }
 
@@ -50,7 +50,7 @@ public class AccountController {
     }
 
     @PostMapping("register/repairer/confirm")
-    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(@RequestBody CFRegisterRepairerRequest request) {
+    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) {
         return accountService.confirmRegisterRepairer(request);
     }
 }

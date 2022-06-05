@@ -54,14 +54,14 @@ public class RedisDAOImpl implements RedisDAO {
 
     @Override
     public void saveRegisterAccount(RegisterRequest request) throws JsonProcessingException {
-        String key = REDIS_KEY_REGISTER_PREFIX + "_" + request.getPhone();
+        String key = REDIS_KEY_REGISTER_PREFIX + request.getPhone();
         redisTemplate.opsForValue().set(key, objectToString(request));
         redisTemplate.expireAt(key, Instant.now().plusSeconds(EXPIRE_TIME_IN_SECONDS));
     }
 
     @Override
     public RegisterRequest findRegisterAccount(String phoneNumber) {
-        String key = REDIS_KEY_REGISTER_PREFIX + "_" + phoneNumber;
+        String key = REDIS_KEY_REGISTER_PREFIX + phoneNumber;
         RegisterCustomerRequest account = null;
         try {
             Object data = redisTemplate.opsForValue().get(key);

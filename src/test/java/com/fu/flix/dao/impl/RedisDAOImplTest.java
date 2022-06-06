@@ -20,7 +20,7 @@ class RedisDAOImplTest {
     @Autowired
     RedisDAO redisDAO;
 
-    @Test
+   // @Test
     void test_save_and_get_OTP_from_redis() throws JsonProcessingException {
 
         // given
@@ -70,7 +70,7 @@ class RedisDAOImplTest {
         Assertions.assertEquals(null, resultOTP);
     }
 
-    @Test
+   // @Test
     void test_save_register_account() throws JsonProcessingException {
         // given
         String phone = "0522334455";

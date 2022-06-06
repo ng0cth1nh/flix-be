@@ -1,6 +1,8 @@
 package com.fu.flix.controller;
 
+import com.fu.flix.dto.request.DistrictRequest;
 import com.fu.flix.dto.response.CityResponse;
+import com.fu.flix.dto.response.DistrictResponse;
 import com.fu.flix.service.AddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +19,12 @@ public class AddressController {
     }
 
     @GetMapping("city")
-    public ResponseEntity<CityResponse> registerCustomer() {
+    public ResponseEntity<CityResponse> getAllCities() {
         return addressService.getAllCities();
+    }
+
+    @GetMapping("district")
+    public ResponseEntity<DistrictResponse> getDistrictsByCity(@RequestBody DistrictRequest request) {
+        return addressService.getDistrictByCity(request);
     }
 }

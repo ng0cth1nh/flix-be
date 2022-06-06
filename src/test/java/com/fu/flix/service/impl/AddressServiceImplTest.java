@@ -1,7 +1,10 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dto.CityDTO;
+import com.fu.flix.dto.DistrictDTO;
+import com.fu.flix.dto.request.DistrictRequest;
 import com.fu.flix.dto.response.CityResponse;
+import com.fu.flix.dto.response.DistrictResponse;
 import com.fu.flix.service.AddressService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -29,5 +32,19 @@ class AddressServiceImplTest {
 
         // then
         Assertions.assertEquals(63, cities.size());
+    }
+
+    @Test
+    void test_get_districts_by_city() {
+        // given
+        DistrictRequest request = new DistrictRequest();
+        request.setCityId("01");
+
+        // when
+        ResponseEntity<DistrictResponse> response = addressService.getDistrictByCity(request);
+        List<DistrictDTO> districts = response.getBody().getDistricts();
+
+        // then
+        Assertions.assertEquals(30, districts.size());
     }
 }

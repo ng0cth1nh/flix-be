@@ -21,5 +21,5 @@ public class District {
 
     private String type;
 
-    private String city_id;
+    private String cityId;
 }

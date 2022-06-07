@@ -6,8 +6,6 @@ import com.fu.flix.constant.enums.RedisDataTypeEnum;
 import com.fu.flix.dao.RedisDAO;
 import com.fu.flix.dto.request.OTPRequest;
 import com.fu.flix.entity.OTPInfo;
-import com.fu.flix.dto.request.RegisterCustomerRequest;
-import com.fu.flix.dto.request.RegisterRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -16,7 +14,6 @@ import java.io.IOException;
 import java.time.Instant;
 
 import static com.fu.flix.constant.Constant.REDIS_KEY_OTP_PREFIX;
-import static com.fu.flix.constant.Constant.REDIS_KEY_REGISTER_PREFIX;
 
 @Service
 public class RedisDAOImpl implements RedisDAO {
@@ -34,7 +31,7 @@ public class RedisDAOImpl implements RedisDAO {
 
     @Override
     public OTPInfo findOTP(OTPRequest OTPRequest) {
-        String key = REDIS_KEY_OTP_PREFIX + OTPRequest.getUsername() + "_" + OTPRequest.getOtp();
+        String key = REDIS_KEY_OTP_PREFIX + OTPRequest.getPhone() + "_" + OTPRequest.getOtp();
         OTPInfo otpInfo = null;
         try {
             Object data = redisTemplate.opsForValue().get(key);
@@ -50,26 +47,6 @@ public class RedisDAOImpl implements RedisDAO {
         String key = REDIS_KEY_OTP_PREFIX + otpInfo.getUsername() + "_" + otpInfo.getOtp();
         redisTemplate.opsForValue().set(key, objectToString(otpInfo));
         redisTemplate.expireAt(key, Instant.now().plusSeconds(EXPIRE_TIME_IN_SECONDS));
-    }
-
-    @Override
-    public void saveRegisterAccount(RegisterRequest request) throws JsonProcessingException {
-        String key = REDIS_KEY_REGISTER_PREFIX + request.getPhone();
-        redisTemplate.opsForValue().set(key, objectToString(request));
-        redisTemplate.expireAt(key, Instant.now().plusSeconds(EXPIRE_TIME_IN_SECONDS));
-    }
-
-    @Override
-    public RegisterRequest findRegisterAccount(String phoneNumber) {
-        String key = REDIS_KEY_REGISTER_PREFIX + phoneNumber;
-        RegisterCustomerRequest account = null;
-        try {
-            Object data = redisTemplate.opsForValue().get(key);
-            account = stringToObject(String.valueOf(data), RegisterCustomerRequest.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return account;
     }
 
     private <E> E stringToObject(String data, Class<E> clazz) throws IOException {

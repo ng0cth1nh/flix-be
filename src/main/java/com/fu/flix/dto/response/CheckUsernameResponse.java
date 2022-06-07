@@ -3,6 +3,6 @@ package com.fu.flix.dto.response;
 import lombok.Data;
 
 @Data
-public class RegisterCustomerResponse {
+public class CheckUsernameResponse {
     private String message;
 }

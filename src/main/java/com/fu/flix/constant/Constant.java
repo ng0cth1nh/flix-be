@@ -17,4 +17,5 @@ public class Constant {
     public static final String INVALID_CITY = "INVALID_CITY";
     public static final String INVALID_DISTRICT = "INVALID_DISTRICT";
     public static final String INVALID_COMMUNE = "INVALID_COMMUNE";
+    public static final String ANONYMOUS_USER = "anonymousUser";
 }

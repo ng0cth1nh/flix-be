@@ -29,4 +29,10 @@ public class UserAddress {
     private String streetAddress;
 
     private boolean isMainAddress;
+
+    private String name;
+
+    private String phone;
+
+    private String addressCode;
 }

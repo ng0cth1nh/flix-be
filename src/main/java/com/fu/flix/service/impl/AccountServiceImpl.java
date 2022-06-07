@@ -308,6 +308,9 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             userAddress.setStreetAddress(registerAccount.getStreetAddress());
             userAddress.setUser(user);
             userAddress.setCommune(commune);
+            userAddress.setName(registerAccount.getFullName());
+            userAddress.setPhone(registerAccount.getPhone());
+            userAddress.setAddressCode(UUID.randomUUID().toString());
 
             user.getUserAddresses().add(userAddress);
         }

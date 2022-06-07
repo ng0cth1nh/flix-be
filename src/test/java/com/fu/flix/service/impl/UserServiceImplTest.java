@@ -54,7 +54,6 @@ class UserServiceImplTest {
 
 //    @Test
     void test_get_main_address() {
-
         // given
         String phone = "0865390037";
         MainAddressRequest request = new MainAddressRequest();

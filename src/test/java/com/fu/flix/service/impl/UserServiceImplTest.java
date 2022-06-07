@@ -54,7 +54,6 @@ class UserServiceImplTest {
 
 //    @Test
     void test_get_main_address() {
-
         // given
         String phone = "0865390037";
         MainAddressRequest request = new MainAddressRequest();
@@ -83,7 +82,6 @@ class UserServiceImplTest {
 
         // then
         Assertions.assertEquals(1, userAddressResponse.getAddresses().size());
-
     }
 
     void setContextUsername(String phone) {

@@ -139,7 +139,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     @Override
-    public ResponseEntity<CheckUsernameResponse> checkUsername(CheckUsernameRequest request) throws JsonProcessingException {
+    public ResponseEntity<CheckUsernameResponse> sendRegisterOTP(CheckUsernameRequest request) throws JsonProcessingException {
         if (userDAO.findByUsername(request.getPhone()).isPresent()) {
             throw new GeneralException(ACCOUNT_EXISTED);
         }

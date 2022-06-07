@@ -5,8 +5,11 @@ import com.fu.flix.entity.UserAddress;
 import com.fu.flix.entity.UserAddressId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserAddressDAO extends JpaRepository<UserAddress, UserAddressId> {
     Optional<UserAddress> findByUserAndIsMainAddress(User user, boolean isMainAddress);
+
+    List<UserAddress> findByUser(User user);
 }

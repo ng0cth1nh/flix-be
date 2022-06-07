@@ -3,7 +3,9 @@ package com.fu.flix.service.impl;
 import com.fu.flix.dao.UserAddressDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.request.MainAddressRequest;
+import com.fu.flix.dto.request.UserAddressRequest;
 import com.fu.flix.dto.response.MainAddressResponse;
+import com.fu.flix.dto.response.UserAddressResponse;
 import com.fu.flix.entity.User;
 import com.fu.flix.entity.UserAddress;
 import com.fu.flix.service.UserService;
@@ -66,6 +68,22 @@ class UserServiceImplTest {
         Assertions.assertEquals(phone, mainAddressResponse.getPhone());
         Assertions.assertEquals("Sơn Tùng MTP", mainAddressResponse.getCustomerName());
         Assertions.assertEquals("68 Hoàng Hoa Thám, Phường Phúc Xá, Quận Ba Đình, Thành phố Hà Nội", mainAddressResponse.getAddressName());
+    }
+
+    @Test
+    void test_get_user_addresses() {
+        // given
+        String phone = "0865390039";
+        UserAddressRequest request = new UserAddressRequest();
+        setContextUsername(phone);
+
+        // when
+        ResponseEntity<UserAddressResponse> responseEntity = userService.getUserAddresses(request);
+        UserAddressResponse userAddressResponse = responseEntity.getBody();
+
+        // then
+        Assertions.assertEquals(1, userAddressResponse.getAddresses().size());
+
     }
 
     void setContextUsername(String phone) {

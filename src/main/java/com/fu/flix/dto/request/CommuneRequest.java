@@ -3,6 +3,6 @@ package com.fu.flix.dto.request;
 import lombok.Data;
 
 @Data
-public class CommuneRequest extends DataRequest{
+public class CommuneRequest  {
     private String districtId;
 }

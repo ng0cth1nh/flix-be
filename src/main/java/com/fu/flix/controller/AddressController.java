@@ -26,12 +26,12 @@ public class AddressController {
     }
 
     @GetMapping("district")
-    public ResponseEntity<DistrictResponse> getDistrictsByCity(@RequestBody DistrictRequest request) {
+    public ResponseEntity<DistrictResponse> getDistrictsByCity(DistrictRequest request) {
         return addressService.getDistrictByCity(request);
     }
 
     @GetMapping("commune")
-    public ResponseEntity<CommuneResponse> getCommunesByDistrict(@RequestBody CommuneRequest request) {
+    public ResponseEntity<CommuneResponse> getCommunesByDistrict(CommuneRequest request) {
         return addressService.getCommunesByDistrict(request);
     }
 }

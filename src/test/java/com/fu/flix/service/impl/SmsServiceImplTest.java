@@ -35,7 +35,7 @@ class SmsServiceImplTest {
         int otp = smsService.sendAndSaveOTP(request);
         OTPRequest otpRequest = new OTPRequest();
         otpRequest.setOtp(otp);
-        otpRequest.setUsername(username);
+        otpRequest.setPhone(username);
         OTPInfo resultOTP = redisDAO.findOTP(otpRequest);
 
         // then

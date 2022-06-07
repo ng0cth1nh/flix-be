@@ -17,7 +17,6 @@ import com.fu.flix.service.SmsService;
 import com.fu.flix.util.FileUtil;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.PhoneFormatter;
-import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dto.request.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -28,7 +27,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -50,7 +48,6 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final UserDAO userDAO;
     private final RoleDAO roleDAO;
-    private final PasswordEncoder passwordEncoder;
     private final AppConf appConf;
     private final RedisDAO redisDAO;
     private final SmsService smsService;
@@ -63,7 +60,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
     public AccountServiceImpl(UserDAO userDAO,
                               RoleDAO roleDAO,
-                              PasswordEncoder passwordEncoder,
                               AppConf appConf,
                               RedisDAO redisDAO,
                               SmsService smsService,
@@ -74,7 +70,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               UserAddressDAO userAddressDAO) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
-        this.passwordEncoder = passwordEncoder;
         this.appConf = appConf;
         this.redisDAO = redisDAO;
         this.smsService = smsService;
@@ -140,38 +135,49 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     @Override
-    public ResponseEntity<RegisterCustomerResponse> registerCustomer(RegisterCustomerRequest request) throws JsonProcessingException {
-        validateRegisterInput(request);
-
-        request.setPassword(passwordEncoder.encode(request.getPassword()));
-        redisDAO.saveRegisterAccount(request);
+    public ResponseEntity<CheckUsernameResponse> checkUsername(CheckUsernameRequest request) throws JsonProcessingException {
+        if (userDAO.findByUsername(request.getPhone()).isPresent()) {
+            throw new GeneralException(ACCOUNT_EXISTED);
+        }
 
         SmsRequest sms = getSmsRequest(request);
         smsService.sendAndSaveOTP(sms);
 
-        RegisterCustomerResponse response = new RegisterCustomerResponse();
+        CheckUsernameResponse response = new CheckUsernameResponse();
         response.setMessage(NEW_ACCOUNT_VALID);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private SmsRequest getSmsRequest(CheckUsernameRequest checkUsernameRequest) {
+        SmsRequest sms = new SmsRequest();
+        sms.setUsername(checkUsernameRequest.getPhone());
+        sms.setPhoneNumber(PhoneFormatter.getVietNamePhoneNumber(checkUsernameRequest.getPhone()));
+        return sms;
     }
 
     @Override
-    public ResponseEntity<RegisterRepairerResponse> registerRepairer(RegisterRepairerRequest request) throws JsonProcessingException {
+    public ResponseEntity<CFRegisterResponse> confirmRegister(CFRegisterRequest request) {
         validateRegisterInput(request);
 
-        request.setPassword(passwordEncoder.encode(request.getPassword()));
-        redisDAO.saveRegisterAccount(request);
+        User user = buildUser(request, request.getAvatar());
+        userDAO.save(user);
+        addRoleToUser(user.getUsername(), request.getRoleType().name());
+        saveUserAddress(user.getUsername(), request);
 
-        SmsRequest sms = getSmsRequest(request);
-        smsService.sendAndSaveOTP(sms);
+        String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
+        String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
 
-        RegisterRepairerResponse response = new RegisterRepairerResponse();
-        response.setMessage(NEW_ACCOUNT_VALID);
+        CFRegisterResponse response = new CFRegisterResponse();
+        response.setAccessToken(accessToken);
+        response.setRefreshToken(refreshToken);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void validateRegisterInput(RegisterRequest request) {
-        if (!InputValidation.isPhoneValid(request.getPhone())) {
+    private void validateRegisterInput(CFRegisterRequest request) {
+        if (!isValidOTP(request)) {
+            throw new GeneralException(INVALID_OTP);
+        } else if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
             throw new GeneralException(ACCOUNT_EXISTED);
@@ -186,54 +192,11 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         }
     }
 
-    private SmsRequest getSmsRequest(RegisterRequest registerRequest) {
-        SmsRequest sms = new SmsRequest();
-        sms.setUsername(registerRequest.getPhone());
-        sms.setPhoneNumber(PhoneFormatter.getVietNamePhoneNumber(registerRequest.getPhone()));
-        return sms;
+    private boolean isValidOTP(OTPRequest request) {
+        OTPInfo otpInfo = redisDAO.findOTP(request);
+        return otpInfo != null;
     }
 
-    @Override
-    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) {
-        validateOTP(request);
-
-        RegisterRequest registerAccount = redisDAO.findRegisterAccount(request.getUsername());
-
-        User user = buildUser(registerAccount, request.getAvatar());
-        userDAO.save(user);
-        addRoleToUser(user.getUsername(), RoleType.ROLE_CUSTOMER.name());
-        saveUserAddress(user.getUsername(), registerAccount);
-
-        String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
-        String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
-
-        CFRegisterCustomerResponse response = new CFRegisterCustomerResponse();
-        response.setAccessToken(accessToken);
-        response.setRefreshToken(refreshToken);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @Override
-    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) {
-        validateOTP(request);
-
-        RegisterRequest registerAccount = redisDAO.findRegisterAccount(request.getUsername());
-
-        User user = buildUser(registerAccount, request.getAvatar());
-        userDAO.save(user);
-        addRoleToUser(user.getUsername(), RoleType.ROLE_PENDING_REPAIRER.name());
-        saveUserAddress(user.getUsername(), registerAccount);
-
-        String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
-        String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
-
-        CFRegisterRepairerResponse response = new CFRegisterRepairerResponse();
-        response.setAccessToken(accessToken);
-        response.setRefreshToken(refreshToken);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
 
     private String getToken(User user, TokenType tokenType) {
         Algorithm algorithm = Algorithm.HMAC256(this.appConf.getSecretKey().getBytes());
@@ -258,18 +221,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return token;
     }
 
-    private void validateOTP(OTPRequest request) {
-        OTPInfo otpInfo = redisDAO.findOTP(request);
-        if (otpInfo == null) {
-            throw new GeneralException(INVALID_OTP);
-        }
-
-        if (userDAO.findByUsername(request.getUsername()).isPresent()) {
-            throw new GeneralException(ACCOUNT_EXISTED);
-        }
-    }
-
-    private User buildUser(RegisterRequest registerAccount, MultipartFile avatar) {
+    private User buildUser(CFRegisterRequest registerAccount, MultipartFile avatar) {
         LocalDateTime now = LocalDateTime.now();
         User user = new User();
         user.setFullName(registerAccount.getFullName());
@@ -297,7 +249,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return user;
     }
 
-    public void saveUserAddress(String username, RegisterRequest registerAccount) {
+    public void saveUserAddress(String username, CFRegisterRequest registerAccount) {
         Optional<User> optionalUser = userDAO.findByUsername(username);
         Optional<Commune> optionalCommune = communeDAO.findById(registerAccount.getCommuneId());
 

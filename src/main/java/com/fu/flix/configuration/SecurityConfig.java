@@ -16,6 +16,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static com.fu.flix.constant.enums.RoleType.*;
+import static org.springframework.http.HttpMethod.GET;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -50,8 +53,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 "/api/v1/token/refresh/**",
                 "/api/v1/register/**",
                 "/api/v1/address/**").permitAll();
-//        http.authorizeRequests().antMatchers(GET, "/api/v1/user/**").hasAnyAuthority(ROLE_CUSTOMER.name());
-//        http.authorizeRequests().antMatchers(POST, "/api/v1/user/save/**").hasAnyAuthority(ROLE_ADMIN.name());
+        http.authorizeRequests().antMatchers(GET, "/api/v1/user/**")
+                .hasAnyAuthority(ROLE_CUSTOMER.name(), ROLE_PENDING_REPAIRER.name(), ROLE_REPAIRER.name());
         http.authorizeRequests().anyRequest().authenticated();
         http.addFilter(customAuthenticationFilter);
         http.addFilterBefore(new CustomAuthorizationFilter(this.appConf), UsernamePasswordAuthenticationFilter.class);

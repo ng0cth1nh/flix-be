@@ -1,14 +1,21 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.*;
+import com.fu.flix.dto.UserAddressDTO;
 import com.fu.flix.dto.request.MainAddressRequest;
+import com.fu.flix.dto.request.UserAddressRequest;
 import com.fu.flix.dto.response.MainAddressResponse;
+import com.fu.flix.dto.response.UserAddressResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -43,6 +50,28 @@ public class UserServiceImpl implements UserService {
         response.setCustomerName(userAddress.getName());
         response.setPhone(userAddress.getPhone());
         response.setAddressName(getAddressFormatted(userAddress.getCommune().getId(), userAddress.getStreetAddress()));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<UserAddressResponse> getUserAddresses(UserAddressRequest request) {
+        User user = userDAO.findByUsername(request.getUsername()).get();
+        List<UserAddress> userAddresses = userAddressDAO.findByUser(user);
+
+        List<UserAddressDTO> addresses = userAddresses.stream()
+                .map(userAddress -> {
+                    UserAddressDTO dto = new UserAddressDTO();
+                    dto.setAddressCode(userAddress.getAddressCode());
+                    dto.setCustomerName(userAddress.getName());
+                    dto.setPhone(userAddress.getPhone());
+                    dto.setAddressName(getAddressFormatted(userAddress.getCommune().getId(), userAddress.getStreetAddress()));
+                    dto.setMainAddress(userAddress.isMainAddress());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        UserAddressResponse response = new UserAddressResponse();
+        response.setAddresses(addresses);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

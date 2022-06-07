@@ -27,6 +27,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -56,6 +57,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final DistrictDAO districtDAO;
     private final CityDAO cityDAO;
     private final UserAddressDAO userAddressDAO;
+    private final PasswordEncoder passwordEncoder;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -67,7 +69,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               CommuneDAO communeDAO,
                               DistrictDAO districtDAO,
                               CityDAO cityDAO,
-                              UserAddressDAO userAddressDAO) {
+                              UserAddressDAO userAddressDAO,
+                              PasswordEncoder passwordEncoder) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
@@ -78,6 +81,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.districtDAO = districtDAO;
         this.cityDAO = cityDAO;
         this.userAddressDAO = userAddressDAO;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -197,7 +201,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return otpInfo != null;
     }
 
-
     private String getToken(User user, TokenType tokenType) {
         Algorithm algorithm = Algorithm.HMAC256(this.appConf.getSecretKey().getBytes());
         String token = Strings.EMPTY;
@@ -228,7 +231,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         user.setPhone(registerAccount.getPhone());
         user.setIsActive(true);
         user.setUsername(registerAccount.getPhone());
-        user.setPassword(registerAccount.getPassword());
+        user.setPassword(passwordEncoder.encode(registerAccount.getPassword()));
         user = updateUserAvatar(user, avatar);
         user.setCreatedAt(now);
         user.setUpdatedAt(now);

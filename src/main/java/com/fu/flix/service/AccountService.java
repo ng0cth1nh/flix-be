@@ -14,7 +14,7 @@ public interface AccountService {
 
     void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException;
 
-    ResponseEntity<CheckUsernameResponse> checkUsername(CheckUsernameRequest request) throws JsonProcessingException;
+    ResponseEntity<CheckUsernameResponse> sendRegisterOTP(CheckUsernameRequest request) throws JsonProcessingException;
 
     ResponseEntity<CFRegisterResponse> confirmRegister(CFRegisterRequest request);
 }

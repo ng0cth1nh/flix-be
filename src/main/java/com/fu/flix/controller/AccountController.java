@@ -30,9 +30,9 @@ public class AccountController {
         accountService.refreshToken(request, response);
     }
 
-    @PostMapping("register/checkUsername")
-    public ResponseEntity<CheckUsernameResponse> checkUsername(@RequestBody CheckUsernameRequest request) throws JsonProcessingException {
-        return accountService.checkUsername(request);
+    @PostMapping("register/sendOTP")
+    public ResponseEntity<CheckUsernameResponse> sendRegisterOTP(@RequestBody CheckUsernameRequest request) throws JsonProcessingException {
+        return accountService.sendRegisterOTP(request);
     }
 
     @PostMapping("register/confirm")

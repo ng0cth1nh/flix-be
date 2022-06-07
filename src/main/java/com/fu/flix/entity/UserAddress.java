@@ -13,18 +13,13 @@ import javax.persistence.*;
 @AllArgsConstructor
 public class UserAddress {
 
-    @EmbeddedId
-    private UserAddressId id = new UserAddressId();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @ManyToOne
-    @MapsId("userId")
-    @JoinColumn(name = "user_id")
-    private User user;
+    private Long userId;
 
-    @ManyToOne
-    @MapsId("communeId")
-    @JoinColumn(name = "commune_id")
-    private Commune commune;
+    private String communeId;
 
     private String streetAddress;
 
@@ -33,6 +28,4 @@ public class UserAddress {
     private String name;
 
     private String phone;
-
-    private String addressCode;
 }

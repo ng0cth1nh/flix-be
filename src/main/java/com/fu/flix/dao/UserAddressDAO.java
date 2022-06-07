@@ -1,15 +1,13 @@
 package com.fu.flix.dao;
 
-import com.fu.flix.entity.User;
 import com.fu.flix.entity.UserAddress;
-import com.fu.flix.entity.UserAddressId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface UserAddressDAO extends JpaRepository<UserAddress, UserAddressId> {
-    Optional<UserAddress> findByUserAndIsMainAddress(User user, boolean isMainAddress);
+public interface UserAddressDAO extends JpaRepository<UserAddress, Long> {
+    Optional<UserAddress> findByUserIdAndIsMainAddress(Long userId, boolean isMainAddress);
 
-    List<UserAddress> findByUser(User user);
+    List<UserAddress> findByUserId(Long userId);
 }

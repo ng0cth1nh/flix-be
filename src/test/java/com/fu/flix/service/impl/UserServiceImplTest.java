@@ -82,7 +82,6 @@ class UserServiceImplTest {
 
         // then
         Assertions.assertEquals(1, userAddressResponse.getAddresses().size());
-
     }
 
     void setContextUsername(String phone) {

@@ -47,9 +47,6 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Collection<Role> roles = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Collection<UserAddress> userAddresses = new ArrayList<>();
-
     @CreationTimestamp
     private LocalDateTime createdAt;
 

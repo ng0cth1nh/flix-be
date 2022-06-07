@@ -58,6 +58,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final CommuneDAO communeDAO;
     private final DistrictDAO districtDAO;
     private final CityDAO cityDAO;
+    private final UserAddressDAO userAddressDAO;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -69,8 +70,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               ImageDAO imageDAO,
                               CommuneDAO communeDAO,
                               DistrictDAO districtDAO,
-                              CityDAO cityDAO
-    ) {
+                              CityDAO cityDAO,
+                              UserAddressDAO userAddressDAO) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.passwordEncoder = passwordEncoder;
@@ -81,6 +82,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.communeDAO = communeDAO;
         this.districtDAO = districtDAO;
         this.cityDAO = cityDAO;
+        this.userAddressDAO = userAddressDAO;
     }
 
     @Override
@@ -200,7 +202,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         User user = buildUser(registerAccount, request.getAvatar());
         userDAO.save(user);
         addRoleToUser(user.getUsername(), RoleType.ROLE_CUSTOMER.name());
-        addAddressToUser(user.getUsername(), registerAccount);
+        saveUserAddress(user.getUsername(), registerAccount);
 
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
@@ -221,7 +223,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         User user = buildUser(registerAccount, request.getAvatar());
         userDAO.save(user);
         addRoleToUser(user.getUsername(), RoleType.ROLE_PENDING_REPAIRER.name());
-        addAddressToUser(user.getUsername(), registerAccount);
+        saveUserAddress(user.getUsername(), registerAccount);
 
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
@@ -295,7 +297,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return user;
     }
 
-    public void addAddressToUser(String username, RegisterRequest registerAccount) {
+    public void saveUserAddress(String username, RegisterRequest registerAccount) {
         Optional<User> optionalUser = userDAO.findByUsername(username);
         Optional<Commune> optionalCommune = communeDAO.findById(registerAccount.getCommuneId());
 
@@ -304,15 +306,13 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             Commune commune = optionalCommune.get();
 
             UserAddress userAddress = new UserAddress();
+            userAddress.setUserId(user.getId());
             userAddress.setMainAddress(true);
             userAddress.setStreetAddress(registerAccount.getStreetAddress());
-            userAddress.setUser(user);
-            userAddress.setCommune(commune);
             userAddress.setName(registerAccount.getFullName());
             userAddress.setPhone(registerAccount.getPhone());
-            userAddress.setAddressCode(UUID.randomUUID().toString());
-
-            user.getUserAddresses().add(userAddress);
+            userAddress.setCommuneId(commune.getId());
+            userAddressDAO.save(userAddress);
         }
     }
 

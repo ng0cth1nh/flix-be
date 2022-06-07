@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,13 +42,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<MainAddressResponse> getMainAddress(MainAddressRequest request) {
         User user = userDAO.findByUsername(request.getUsername()).get();
-        UserAddress userAddress = userAddressDAO.findByUserAndIsMainAddress(user, true).get();
+        UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddress(user.getId(), true).get();
 
         MainAddressResponse response = new MainAddressResponse();
-        response.setAddressCode(userAddress.getAddressCode());
+        response.setAddressId(userAddress.getId());
         response.setCustomerName(userAddress.getName());
         response.setPhone(userAddress.getPhone());
-        response.setAddressName(getAddressFormatted(userAddress.getCommune().getId(), userAddress.getStreetAddress()));
+        response.setAddressName(getAddressFormatted(userAddress.getCommuneId(), userAddress.getStreetAddress()));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -57,15 +56,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<UserAddressResponse> getUserAddresses(UserAddressRequest request) {
         User user = userDAO.findByUsername(request.getUsername()).get();
-        List<UserAddress> userAddresses = userAddressDAO.findByUser(user);
+        List<UserAddress> userAddresses = userAddressDAO.findByUserId(user.getId());
 
         List<UserAddressDTO> addresses = userAddresses.stream()
                 .map(userAddress -> {
                     UserAddressDTO dto = new UserAddressDTO();
-                    dto.setAddressCode(userAddress.getAddressCode());
+                    dto.setAddressId(userAddress.getId());
                     dto.setCustomerName(userAddress.getName());
                     dto.setPhone(userAddress.getPhone());
-                    dto.setAddressName(getAddressFormatted(userAddress.getCommune().getId(), userAddress.getStreetAddress()));
+                    dto.setAddressName(getAddressFormatted(userAddress.getCommuneId(), userAddress.getStreetAddress()));
                     dto.setMainAddress(userAddress.isMainAddress());
                     return dto;
                 }).collect(Collectors.toList());

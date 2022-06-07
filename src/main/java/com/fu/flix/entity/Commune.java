@@ -22,7 +22,4 @@ public class Commune {
     private String type;
 
     private String districtId;
-
-    @OneToMany(mappedBy = "commune", cascade = CascadeType.ALL)
-    private Collection<UserAddress> userAddresses = new ArrayList<>();
 }

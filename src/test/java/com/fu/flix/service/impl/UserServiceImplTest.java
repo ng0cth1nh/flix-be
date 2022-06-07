@@ -44,12 +44,12 @@ class UserServiceImplTest {
 
         // when
         User user = optionalUser.get();
-        Optional<UserAddress> optionalUserAddress = userAddressDAO.findByUserAndIsMainAddress(user, true);
+        Optional<UserAddress> optionalUserAddress = userAddressDAO.findByUserIdAndIsMainAddress(user.getId(), true);
         UserAddress userAddress = optionalUserAddress.get();
 
         // then
         Assertions.assertEquals(phone, userAddress.getPhone());
-        Assertions.assertEquals("00001", userAddress.getCommune().getId());
+        Assertions.assertEquals("00001", userAddress.getCommuneId());
     }
 
     @Test

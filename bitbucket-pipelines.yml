@@ -5,23 +5,61 @@
 
 # Prerequisites: pom.xml and appropriate project structure should exist in the repository.
 
-image: maven:3.6.3
+options:
+  docker: true
 
-pipelines:
-  default:
-    - parallel:
-      - step:
-          name: Build and Test
-          caches:
-            - maven
-          script:
-            - mvn -B verify --file pom.xml
-          after-script:
+
+definitions:
+  steps:
+    - step: &build-and-test
+        name: Build and Test
+        image: maven:3.6.3
+        caches:
+          - maven
+        script:
+          - mvn -B verify --file pom.xml
+        after-script:
               # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
-            - pipe: atlassian/checkstyle-report:0.3.0
-      - step:
-          name: Security Scan
-          script:
+          - pipe: atlassian/checkstyle-report:0.3.0
+    - step: &build-image
+        name: Security Scan
+        script:
             # Run a security scan for sensitive data.
             # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
-            - pipe: atlassian/git-secrets-scan:0.5.1
+          - pipe: atlassian/git-secrets-scan:0.5.1  
+    - step: &build-image
+        name: Build Docker image
+        image: openjdk:8-jdk-alpine
+        script:
+          - docker build -t helloworld -f docker/hello-world/Dockerfile .
+          - docker save --output tmp-image.docker helloworld
+        artifacts:
+          - tmp-image.docker
+    - step: &push-gcp
+        name: Push to GCP registry
+        image: google/cloud-sdk:alpine
+        script:
+          - docker load --input ./tmp-image.docker
+          # Authenticating with the service account key file
+          - echo $GCLOUD_API_KEYFILE | base64 -d > ./gcloud-api-key.json
+          - gcloud auth activate-service-account --key-file gcloud-api-key.json
+          - gcloud config set project $GCLOUD_PROJECT
+          # Tag container & push
+          - export TAG=$(echo "$BITBUCKET_TAG" | sed -e "s/v//g")
+          - export SUFFIX=$([[ ! -z "$TAG" ]] && echo ":$TAG" || echo "")
+          - export IMAGE_NAME=gcr.io/my-project/hello-world${SUFFIX}
+          - docker tag helloworld ${IMAGE_NAME}
+          # Login to google docker hub
+          - cat ./gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
+          - docker push ${IMAGE_NAME}
+
+pipelines:
+  tags:
+    v*:
+      - step: *build-image
+      - step: *push-gcp
+
+  branches:
+    master:
+      - step: *build-image
+      - step: *push-gcp

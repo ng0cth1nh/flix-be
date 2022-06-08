@@ -21,7 +21,7 @@ definitions:
         after-script:
               # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0
-    - step: &build-image
+    - step: &security-scan
         name: Security Scan
         script:
             # Run a security scan for sensitive data.
@@ -29,9 +29,9 @@ definitions:
           - pipe: atlassian/git-secrets-scan:0.5.1  
     - step: &build-image
         name: Build Docker image
-        image: openjdk:8-jdk-alpine
+        image: openjdk:11-jdk-alpine
         script:
-          - docker build -t helloworld -f docker/hello-world/Dockerfile .
+          - docker build -t flix -f  .
           - docker save --output tmp-image.docker helloworld
         artifacts:
           - tmp-image.docker
@@ -60,6 +60,8 @@ pipelines:
       - step: *push-gcp
 
   branches:
-    master:
+    dev:
+      - step: *build-and-test
+      - step: *security-scan
       - step: *build-image
       - step: *push-gcp

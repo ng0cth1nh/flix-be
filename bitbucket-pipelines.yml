@@ -36,7 +36,7 @@ definitions:
         artifacts:
           - tmp-image.docker
     - step: &push-gcp
-        name: Push to GCP registry
+        name: Push to GCP registry and Deploy
         image: google/cloud-sdk:alpine
         script:
           - docker load --input ./tmp-image.docker
@@ -52,6 +52,7 @@ definitions:
           # Login to google docker hub
           - cat ./gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
           - docker push ${IMAGE_NAME}
+          - gcloud run deploy flix --image ${IMAGE_NAME} --platform managed --region us-central1 --allow-unauthenticated
 
 pipelines:
   tags:

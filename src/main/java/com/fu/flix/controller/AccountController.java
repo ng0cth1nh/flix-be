@@ -35,7 +35,7 @@ public class AccountController {
         return accountService.sendRegisterOTP(request);
     }
 
-    @PostMapping("register/confirm")
+    @RequestMapping(value = "register/confirm", method = RequestMethod.POST, consumes = {"multipart/form-data"})
     public ResponseEntity<CFRegisterResponse> confirmRegisterCustomer(CFRegisterRequest request) {
         return accountService.confirmRegister(request);
     }

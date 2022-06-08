@@ -148,7 +148,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         smsService.sendAndSaveOTP(sms);
 
         CheckUsernameResponse response = new CheckUsernameResponse();
-        response.setMessage(NEW_ACCOUNT_VALID);
+        response.setMessage("NEW_ACCOUNT_VALIDD");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

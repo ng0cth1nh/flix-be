@@ -27,7 +27,7 @@ definitions:
           - pipe: atlassian/git-secrets-scan:0.5.1  
     - step: &build-image
         name: Build Docker image
-        image: openjdk:11-jdk-alpine
+        image: openjdk:11
         script:
           - docker build -t flix -f .
           - docker save --output tmp-image.docker flix

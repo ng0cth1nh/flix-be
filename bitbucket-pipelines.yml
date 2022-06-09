@@ -36,7 +36,7 @@ definitions:
         artifacts:
           - tmp-image.docker
     - step: &push-gcp
-        name: Push to GCP registry and Deploy
+        name: Push to GCR and Deploy to Cloud Run
         image: google/cloud-sdk:alpine
         script:
           - docker load --input ./tmp-image.docker
@@ -49,10 +49,11 @@ definitions:
           - export SUFFIX=$([[ ! -z "$TAG" ]] && echo ":$TAG" || echo "")
           - export IMAGE_NAME=gcr.io/authentic-reach-351916/flix${SUFFIX}
           - docker tag flix ${IMAGE_NAME}
-          # Login to google docker hub
+          # Login to GCR
           - cat ./gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
           - docker push ${IMAGE_NAME}
-          - gcloud run deploy flix --image ${IMAGE_NAME} --platform managed --region us-central1 --allow-unauthenticated
+          # Deploy to Cloud Run
+          - gcloud run deploy flix --image gcr.io/authentic-reach-351916/flix${SUFFIX} --platform managed --region us-central1 --allow-unauthenticated
 
 pipelines:
   tags:

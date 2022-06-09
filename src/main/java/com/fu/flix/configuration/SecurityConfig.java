@@ -53,7 +53,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 "/api/v1/login/**",
                 "/api/v1/token/refresh/**",
                 "/api/v1/register/**",
-                "/api/v1/address/**").permitAll();
+                "/api/v1/address/**",
+                "/swagger-ui/**",
+                "/swagger-resources/**",
+                "/v2/api-docs/**").permitAll();
 
         http.authorizeRequests().antMatchers(GET, "/api/v1/user/**")
                 .hasAnyAuthority(ROLE_CUSTOMER.name(),

@@ -66,6 +66,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         ROLE_REPAIRER.name(),
                         ROLE_ADMIN.name());
 
+        http.authorizeRequests().antMatchers("/api/v1/customer/**");
+
         http.authorizeRequests().anyRequest().authenticated();
         http.addFilter(customAuthenticationFilter);
         http.addFilterBefore(new CustomAuthorizationFilter(this.appConf), UsernamePasswordAuthenticationFilter.class);

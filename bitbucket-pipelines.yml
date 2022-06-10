@@ -46,7 +46,7 @@ definitions:
           # Login to GCR
           - cat ./gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
           - docker push ${IMAGE_NAME}
-          - echo "export IMAGE_NAME=$IMAGE_NAME" >> set_env.sh
+          - echo "export SUFFIX=$SUFFIX" >> set_env.sh
         artifacts:
           - set_env.sh
     - step: &deploy-to-cloud-run
@@ -55,7 +55,7 @@ definitions:
         script:
           - cat set_env.sh
           - source set_env.sh
-          - gcloud run deploy flix --image $IMAGE_NAME --platform managed --region us-central1 --allow-unauthenticated
+          - gcloud run deploy flix --image gcr.io/authentic-reach-351916/flix$SUFFIX --platform managed --region us-central1 --allow-unauthenticated
 pipelines:
   tags:
     v*:

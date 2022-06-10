@@ -5,7 +5,7 @@ FROM openjdk:11-jre-slim-buster
 ENV TZ=Asia/Ho_Chi_Minh
 ENV PORT=8080
 ENV APP_HOME=/app
-ARG JAR_FILE=target/*.jar
+ENV JAR_FILE=target/*.jar
 
 
 # This set timezone
@@ -17,8 +17,8 @@ RUN mkdir -p /app
 # This is the directory where the output of CMD should run
 WORKDIR $APP_HOME
 
-# This copies the file or a directory to the containerâ€™s directory.
-# Thus, copy build/libs/*.jar to the containerâ€™s app.jar.
+# This copies the file or a directory to the container’s directory.
+# Thus, copy build/libs/*.jar to the container’s app.jar.
 COPY $JAR_FILE $APP_HOME/dist/flix-app-1.0.jar
 
 # Expose sets the port number to connect to the host.

@@ -5,23 +5,65 @@
 
 # Prerequisites: pom.xml and appropriate project structure should exist in the repository.
 
-image: maven:3.6.3
-
-pipelines:
-  default:
-    - parallel:
-      - step:
-          name: Build and Test
-          caches:
-            - maven
-          script:
-            - mvn -B verify --file pom.xml
-          after-script:
+options:
+  docker: true
+definitions:
+  steps:
+    - step: &build-and-test
+        name: Build and Test
+        image: maven:3.6.3
+        caches:
+          - maven
+        script:
+          - mvn -B verify --file pom.xml
+        artifacts:
+          - target/**  
+        after-script:
               # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
-            - pipe: atlassian/checkstyle-report:0.3.0
-      - step:
-          name: Security Scan
-          script:
+          - pipe: atlassian/checkstyle-report:0.3.0
+    - step: &security-scan
+        name: Security Scan
+        script:
             # Run a security scan for sensitive data.
             # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
-            - pipe: atlassian/git-secrets-scan:0.5.1
+          - pipe: atlassian/git-secrets-scan:0.5.1  
+    - step: &build-image
+        name: Build Docker image
+        image: openjdk:11
+        script:
+          - docker build -t flix .
+          - docker save --output tmp-image.docker flix
+        artifacts:
+          - tmp-image.docker
+    - step: &push-gcp
+        name: Push to GCR and Deploy to Cloud Run
+        image: google/cloud-sdk:alpine
+        script:
+          - docker load --input ./tmp-image.docker
+          # Authenticating with the service account key file
+          - echo $GCLOUD_API_KEYFILE | base64 -d > ./gcloud-api-key.json
+          - gcloud auth activate-service-account --key-file gcloud-api-key.json
+          - gcloud config set project $GCLOUD_PROJECT
+          # Tag container & push
+          - export TAG=$(echo "$BITBUCKET_TAG" | sed -e "s/v//g")
+          - export SUFFIX=$([[ ! -z "$TAG" ]] && echo ":$TAG" || echo "")
+          - export IMAGE_NAME=gcr.io/authentic-reach-351916/flix${SUFFIX}
+          - docker tag flix ${IMAGE_NAME}
+          # Login to GCR
+          - cat ./gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
+          - docker push ${IMAGE_NAME}
+          # Deploy to Cloud Run
+          - gcloud run deploy flix --image gcr.io/authentic-reach-351916/flix${SUFFIX} --platform managed --region us-central1 --allow-unauthenticated
+
+pipelines:
+  tags:
+    v*:
+      - step: *build-image
+      - step: *push-gcp
+
+  branches:
+    dev:
+      - step: *build-and-test
+      - step: *security-scan
+      - step: *build-image
+      - step: *push-gcp

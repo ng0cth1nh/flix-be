@@ -7,6 +7,9 @@ app:
     authToken: 'd1c1458436c445a536ec2ceaa5eeb713'
     fromNumber: '+16073006721'
 
+server:
+  port: 8080
+
 spring:
   datasource:
     url: jdbc:mysql://34.142.171.163:3306/flix_db
@@ -20,3 +23,6 @@ spring:
   jackson:
     serialization:
       FAIL_ON_EMPTY_BEANS: false
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher

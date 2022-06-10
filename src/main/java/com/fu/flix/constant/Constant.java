@@ -18,4 +18,13 @@ public class Constant {
     public static final String INVALID_DISTRICT = "INVALID_DISTRICT";
     public static final String INVALID_COMMUNE = "INVALID_COMMUNE";
     public static final String ANONYMOUS_USER = "anonymousUser";
+    public static final String WRONG_LOCAL_DATE_TIME_FORMAT = "WRONG_LOCAL_DATE_TIME_FORMAT";
+    public static final String USER_NOT_HOLD_VOUCHER = "USER_NOT_HOLD_VOUCHER";
+    public static final String CREATE_REPAIR_REQUEST_SUCCESSFUL = "CREATE_REPAIR_REQUEST_SUCCESSFUL";
+    public static final String VOUCHER_EXPIRED = "VOUCHER_EXPIRED";
+    public static final String VOUCHER_BEFORE_EFFECTIVE_DATE = "VOUCHER_BEFORE_EFFECTIVE_DATE";
+    public static final String VOUCHER_MUST_BE_TYPE_INSPECTION = "VOUCHER_MUST_BE_TYPE_INSPECTION";
+    public static final String OUT_OF_VOUCHER = "OUT_OF_VOUCHER";
+    public static final String EXPECT_FIXING_DAY_MUST_GREATER_OR_EQUAL_NOW = "EXPECT_FIXING_DAY_MUST_GREATER_OR_EQUAL_NOW";
+    public static final String USER_DO_NOT_HAVE_THIS_ADDRESS = "USER_DO_NOT_HAVE_THIS_ADDRESS";
 }

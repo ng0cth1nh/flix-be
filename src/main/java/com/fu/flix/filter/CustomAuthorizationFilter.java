@@ -3,9 +3,13 @@ package com.fu.flix.filter;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.SignatureVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.dto.error.GeneralException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -19,6 +23,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,12 +68,16 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     filterChain.doFilter(request, response);
                 } catch (Exception exception) {
-                    log.error("Error logging in: {}", exception.getMessage());
-                    response.setStatus(FORBIDDEN.value());
-                    Map<String, String> errors = new HashMap<>();
-                    errors.put("message", INVALID_TOKEN);
-                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    new ObjectMapper().writeValue(response.getOutputStream(), errors);
+                    if (exception instanceof JWTVerificationException) {
+                        log.error("Error logging in: {}", exception.getMessage());
+                        response.setStatus(FORBIDDEN.value());
+                        Map<String, String> errors = new HashMap<>();
+                        errors.put("message", INVALID_TOKEN);
+                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                        new ObjectMapper().writeValue(response.getOutputStream(), errors);
+                        return;
+                    }
+                    throw exception;
                 }
 
             } else {

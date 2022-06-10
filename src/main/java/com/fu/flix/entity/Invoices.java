@@ -1,0 +1,50 @@
+package com.fu.flix.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import java.time.LocalDateTime;
+
+@Entity
+@Data
+@Table(name = "invoices")
+@NoArgsConstructor
+@AllArgsConstructor
+public class Invoices {
+
+    @Id
+    private Long repairRequestId;
+
+    private String paymentMethodId;
+
+    private String statusId;
+
+    private Double totalServiceDetailPrice;
+
+    private Double totalOtherPrice;
+
+    private Double totalAccessoryPrice;
+
+    private Double totalPrice;
+
+    private Long voucherId;
+
+    private Double totalDiscount;
+
+    private Double vat;
+
+    private Double actualProceeds;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+}

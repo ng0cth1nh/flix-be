@@ -21,12 +21,6 @@ definitions:
         after-script:
               # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0
-    - step: &security-scan
-        name: Security Scan
-        script:
-            # Run a security scan for sensitive data.
-            # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
-          - pipe: atlassian/git-secrets-scan:0.5.1  
     - step: &build-image
         name: Build Docker image
         image: openjdk:11
@@ -35,8 +29,8 @@ definitions:
           - docker save --output tmp-image.docker flix
         artifacts:
           - tmp-image.docker
-    - step: &push-gcp
-        name: Push to GCR and Deploy to Cloud Run
+    - step: &push-gcr
+        name: Push to GCR
         image: google/cloud-sdk:alpine
         script:
           - docker load --input ./tmp-image.docker
@@ -52,18 +46,25 @@ definitions:
           # Login to GCR
           - cat ./gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
           - docker push ${IMAGE_NAME}
-          # Deploy to Cloud Run
-          - gcloud run deploy flix --image gcr.io/authentic-reach-351916/flix${SUFFIX} --platform managed --region us-central1 --allow-unauthenticated
-
+          - echo "export IMAGE_NAME=$IMAGE_NAME" >> set_env.sh
+        artifacts:
+          - set_env.sh
+    - step: &deploy-to-cloud-run
+        name: Deploy to Cloud Run
+        image: google/cloud-sdk:alpine
+        script:
+          - cat set_env.sh
+          - source set_env.sh
+          - gcloud run deploy flix --image $IMAGE_NAME --platform managed --region us-central1 --allow-unauthenticated
 pipelines:
   tags:
     v*:
       - step: *build-image
-      - step: *push-gcp
+      - step: *push-gcr
 
   branches:
     dev:
       - step: *build-and-test
-      - step: *security-scan
       - step: *build-image
-      - step: *push-gcp
+      - step: *push-gcr
+      - step: *deploy-to-cloud-run

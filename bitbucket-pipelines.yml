@@ -10,7 +10,7 @@ options:
 definitions:
   steps:
     - step: &build-and-test
-        name: Build and Test
+        name: Build and test
         image: maven:3.6.3
         caches:
           - maven
@@ -29,8 +29,8 @@ definitions:
           - docker save --output tmp-image.docker flix
         artifacts:
           - tmp-image.docker
-    - step: &push-gcr
-        name: Push to GCR
+    - step: &push-gcr-and-deploy
+        name: Push to GCR and deploy to Cloud Run
         image: google/cloud-sdk:alpine
         script:
           - docker load --input ./tmp-image.docker
@@ -46,25 +46,15 @@ definitions:
           # Login to GCR
           - cat ./gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
           - docker push ${IMAGE_NAME}
-          - echo "export SUFFIX=$SUFFIX" >> set_env.sh
-        artifacts:
-          - set_env.sh
-    - step: &deploy-to-cloud-run
-        name: Deploy to Cloud Run
-        image: google/cloud-sdk:alpine
-        script:
-          - cat set_env.sh
-          - source set_env.sh
-          - gcloud run deploy flix --image gcr.io/authentic-reach-351916/flix$SUFFIX --platform managed --region us-central1 --allow-unauthenticated
+          # Deploy to Cloud Run
+          - gcloud run deploy flix --image gcr.io/authentic-reach-351916/flix${SUFFIX} --platform managed --region us-central1 --allow-unauthenticated
 pipelines:
   tags:
     v*:
       - step: *build-image
-      - step: *push-gcr
-
+      - step: *push-gcr-and-deploy
   branches:
     dev:
       - step: *build-and-test
       - step: *build-image
-      - step: *push-gcr
-      - step: *deploy-to-cloud-run
+      - step: *push-gcr-and-deploy

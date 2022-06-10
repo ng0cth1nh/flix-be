@@ -58,6 +58,7 @@ class CustomerServiceImplTest {
         Assertions.assertEquals(PENDING.name(), response.getStatus());
     }
 
+
 //    @Test
     void test_create_row_on_repair_request_table() {
 

@@ -1,7 +1,6 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.RepairRequestDAO;
-import com.fu.flix.dao.UserAddressDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dao.VoucherDAO;
 import com.fu.flix.dto.error.GeneralException;
@@ -32,17 +31,14 @@ public class CustomerServiceImpl implements CustomerService {
     private final UserDAO userDAO;
     private final RepairRequestDAO repairRequestDAO;
     private final VoucherDAO voucherDAO;
-    private final UserAddressDAO userAddressDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public CustomerServiceImpl(UserDAO userDAO,
                                RepairRequestDAO repairRequestDAO,
-                               VoucherDAO voucherDAO,
-                               UserAddressDAO userAddressDAO) {
+                               VoucherDAO voucherDAO) {
         this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
-        this.userAddressDAO = userAddressDAO;
     }
 
     @Override
@@ -113,12 +109,10 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private UserVoucher getUserVoucher(Collection<UserVoucher> userVouchers, Long voucherId) {
-        UserVoucher userVoucher = userVouchers.stream()
+        return userVouchers.stream()
                 .filter(uv -> uv.getUserVoucherId().getVoucherId().equals(voucherId))
                 .findFirst()
                 .orElse(null);
-
-        return userVoucher;
     }
 
     private LocalDateTime getExpectFixingDay(RequestingRepairRequest request, LocalDateTime now) {

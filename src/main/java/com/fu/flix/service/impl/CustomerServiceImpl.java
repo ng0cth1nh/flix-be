@@ -162,7 +162,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         if (!isCancelable(repairRequest)) {
-            throw new GeneralException(ONLY_CAN_CANCEL_REQUEST_PENDING_OR_ACCEPTED);
+            throw new GeneralException(ONLY_CAN_CANCEL_REQUEST_PENDING_OR_CONFIRMED);
         }
 
         return repairRequest;
@@ -171,6 +171,6 @@ public class CustomerServiceImpl implements CustomerService {
     private boolean isCancelable(RepairRequest repairRequest) {
         String statusId = repairRequest.getStatusId();
         return PENDING.getId().equals(statusId) ||
-                ACCEPTED.getId().equals(statusId);
+                CONFIRMED.getId().equals(statusId);
     }
 }

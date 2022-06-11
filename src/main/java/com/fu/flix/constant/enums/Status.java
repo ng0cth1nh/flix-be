@@ -1,7 +1,7 @@
 package com.fu.flix.constant.enums;
 
 public enum Status {
-    PENDING("P"), CANCELLED("C"), ACCEPTED("AC");
+    PENDING("P"), CANCELLED("C"), CONFIRMED("CF");
 
     private final String id;
 

@@ -1,8 +1,7 @@
 package com.fu.flix.service.impl;
 
-import com.fu.flix.dao.RepairRequestDAO;
-import com.fu.flix.dao.UserDAO;
-import com.fu.flix.dao.VoucherDAO;
+import com.fu.flix.dao.*;
+import com.fu.flix.dto.UsingVoucherDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CancelRequestingRepairRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
@@ -34,14 +33,20 @@ public class CustomerServiceImpl implements CustomerService {
     private final UserDAO userDAO;
     private final RepairRequestDAO repairRequestDAO;
     private final VoucherDAO voucherDAO;
+    private final ServiceDAO serviceDAO;
+    private final PaymentMethodDAO paymentMethodDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public CustomerServiceImpl(UserDAO userDAO,
                                RepairRequestDAO repairRequestDAO,
-                               VoucherDAO voucherDAO) {
+                               VoucherDAO voucherDAO,
+                               ServiceDAO serviceDAO,
+                               PaymentMethodDAO paymentMethodDAO) {
         this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
+        this.serviceDAO = serviceDAO;
+        this.paymentMethodDAO = paymentMethodDAO;
     }
 
     @Override
@@ -50,7 +55,9 @@ public class CustomerServiceImpl implements CustomerService {
         Long voucherId = request.getVoucherId();
         User user = userDAO.findByUsername(request.getUsername()).get();
         Collection<UserVoucher> userVouchers = user.getUserVouchers();
-        useVoucher(userVouchers, voucherId, now);
+
+        UsingVoucherDTO usingVoucherDTO = new UsingVoucherDTO(userVouchers, voucherId, request.getServiceId());
+        useInspectionVoucher(usingVoucherDTO, now);
 
         Long userId = user.getId();
 
@@ -60,7 +67,7 @@ public class CustomerServiceImpl implements CustomerService {
         repairRequest.setRequestCode(UUID.randomUUID().toString());
         repairRequest.setUserId(userId);
         repairRequest.setServiceId(request.getServiceId());
-        repairRequest.setPaymentMethodId(request.getPaymentMethodId());
+        repairRequest.setPaymentMethodId(getPaymentMethodIdValidated(request.getPaymentMethodId()));
         repairRequest.setStatusId(PENDING.getId());
         repairRequest.setExpectStartFixingAt(expectFixingDay);
         repairRequest.setDescription(request.getDescription());
@@ -78,8 +85,19 @@ public class CustomerServiceImpl implements CustomerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void useVoucher(Collection<UserVoucher> userVouchers, Long voucherId, LocalDateTime now) {
-        UserVoucher userVoucher = getUserVoucher(userVouchers, voucherId);
+    private void useInspectionVoucher(UsingVoucherDTO usingVoucherDTO, LocalDateTime now) {
+        Long voucherId = usingVoucherDTO.getVoucherId();
+        UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
+        Optional<com.fu.flix.entity.Service> optionalService = serviceDAO.findById(usingVoucherDTO.getServiceId());
+        Voucher voucher = voucherDAO.findById(voucherId).get();
+
+        if (optionalService.isEmpty()) {
+            throw new GeneralException(INVALID_SERVICE);
+        }
+
+        if (optionalService.get().getInspectionPrice() < voucher.getMinOrderPrice()) {
+            throw new GeneralException(INSPECTION_PRICE_MUST_GREATER_OR_EQUAL_VOUCHER_MIN_PRICE);
+        }
 
         if (userVoucher == null) {
             throw new GeneralException(USER_NOT_HOLD_VOUCHER);
@@ -88,8 +106,6 @@ public class CustomerServiceImpl implements CustomerService {
         if (userVoucher.getQuantity() <= 0) {
             throw new GeneralException(USER_NOT_HOLD_VOUCHER);
         }
-
-        Voucher voucher = voucherDAO.findById(voucherId).get();
 
         if (voucher.getRemainQuantity() <= 0) {
             throw new GeneralException(OUT_OF_VOUCHER);
@@ -111,13 +127,6 @@ public class CustomerServiceImpl implements CustomerService {
         userVoucher.setQuantity(userVoucher.getQuantity() - 1);
     }
 
-    private UserVoucher getUserVoucher(Collection<UserVoucher> userVouchers, Long voucherId) {
-        return userVouchers.stream()
-                .filter(uv -> uv.getUserVoucherId().getVoucherId().equals(voucherId))
-                .findFirst()
-                .orElse(null);
-    }
-
     private LocalDateTime getExpectFixingDay(RequestingRepairRequest request, LocalDateTime now) {
         LocalDateTime expectFixingDay;
         try {
@@ -133,11 +142,26 @@ public class CustomerServiceImpl implements CustomerService {
         return expectFixingDay;
     }
 
+    private String getPaymentMethodIdValidated(String paymentMethodId) {
+        String cashID = com.fu.flix.constant.enums.PaymentMethod.CASH.getId();
+        if (paymentMethodId == null) {
+            return cashID;
+        }
+
+        Optional<PaymentMethod> optionalPaymentMethod = paymentMethodDAO.findById(paymentMethodId);
+        return optionalPaymentMethod.isPresent()
+                ? paymentMethodId
+                : cashID;
+    }
+
     @Override
     public ResponseEntity<CancelRequestingRepairResponse> cancelFixingRequest(CancelRequestingRepairRequest request) {
         RepairRequest repairRequest = getRepairRequestValidated(request.getRequestCode(), request.getUsername());
 
         LocalDateTime now = LocalDateTime.now();
+
+        updateUsedVoucherQuantity(repairRequest);
+
         repairRequest.setStatusId(CANCELLED.getId());
         repairRequest.setVoucherId(null);
         repairRequest.setUpdatedAt(now);
@@ -172,5 +196,25 @@ public class CustomerServiceImpl implements CustomerService {
         String statusId = repairRequest.getStatusId();
         return PENDING.getId().equals(statusId) ||
                 CONFIRMED.getId().equals(statusId);
+    }
+
+    private void updateUsedVoucherQuantity(RepairRequest repairRequest) {
+        Long voucherId = repairRequest.getVoucherId();
+        if (voucherId != null) {
+            Voucher voucher = voucherDAO.findById(voucherId).get();
+            voucher.setRemainQuantity(voucher.getRemainQuantity() + 1);
+
+            User user = userDAO.findById(repairRequest.getUserId()).get();
+            Collection<UserVoucher> userVouchers = user.getUserVouchers();
+            UserVoucher userVoucher = getUserVoucher(userVouchers, voucherId);
+            userVoucher.setQuantity(userVoucher.getQuantity() + 1);
+        }
+    }
+
+    private UserVoucher getUserVoucher(Collection<UserVoucher> userVouchers, Long voucherId) {
+        return userVouchers.stream()
+                .filter(uv -> uv.getUserVoucherId().getVoucherId().equals(voucherId))
+                .findFirst()
+                .orElse(null);
     }
 }

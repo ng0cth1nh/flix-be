@@ -289,4 +289,5 @@ public class CustomerServiceImpl implements CustomerService {
         DiscountPercent discountPercent = discountPercentDAO.findByVoucherId(voucherId).get();
         return discountPercent.getDiscountPercent() * inspectionPrice;
     }
+
 }

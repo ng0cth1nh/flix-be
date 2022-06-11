@@ -31,8 +31,6 @@ public class RepairRequest {
 
     private LocalDateTime expectStartFixingAt;
 
-    private LocalDateTime cancelAt;
-
     private String description;
 
     private Long voucherId;

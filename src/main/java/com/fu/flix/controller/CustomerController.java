@@ -1,6 +1,8 @@
 package com.fu.flix.controller;
 
+import com.fu.flix.dto.request.CancelRequestingRepairRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
+import com.fu.flix.dto.response.CancelRequestingRepairResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.service.CustomerService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +23,12 @@ public class CustomerController {
     }
 
     @PostMapping("request/repair")
-    public ResponseEntity<RequestingRepairResponse> getCommunesByDistrict(@RequestBody RequestingRepairRequest request) {
+    public ResponseEntity<RequestingRepairResponse> createFixingRequest(@RequestBody RequestingRepairRequest request) {
         return customerService.createFixingRequest(request);
+    }
+
+    @PostMapping("request/cancel")
+    public ResponseEntity<CancelRequestingRepairResponse> cancelFixingRequest(@RequestBody CancelRequestingRepairRequest request) {
+        return customerService.cancelFixingRequest(request);
     }
 }

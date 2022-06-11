@@ -10,7 +10,7 @@ import javax.persistence.Table;
 
 @Entity
 @Data
-@Table(name = "discount_moneys")
+@Table(name = "discount_percents")
 @NoArgsConstructor
 @AllArgsConstructor
 public class DiscountPercent {

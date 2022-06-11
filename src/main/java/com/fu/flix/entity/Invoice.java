@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Table(name = "invoices")
 @NoArgsConstructor
 @AllArgsConstructor
-public class Invoices {
+public class Invoice {
 
     @Id
     private Long repairRequestId;

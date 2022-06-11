@@ -1,11 +1,14 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.*;
+import com.fu.flix.dto.HistoryRepairRequestDTO;
 import com.fu.flix.dto.UsingVoucherDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CancelRequestingRepairRequest;
+import com.fu.flix.dto.request.HistoryRequestingRepairRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
 import com.fu.flix.dto.response.CancelRequestingRepairResponse;
+import com.fu.flix.dto.response.HistoryRequestingRepairResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.CustomerService;
@@ -19,8 +22,10 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.Status.*;
@@ -35,18 +40,27 @@ public class CustomerServiceImpl implements CustomerService {
     private final VoucherDAO voucherDAO;
     private final ServiceDAO serviceDAO;
     private final PaymentMethodDAO paymentMethodDAO;
+    private final InvoiceDAO invoiceDAO;
+    private final DiscountPercentDAO discountPercentDAO;
+    private final DiscountMoneyDAO discountMoneyDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public CustomerServiceImpl(UserDAO userDAO,
                                RepairRequestDAO repairRequestDAO,
                                VoucherDAO voucherDAO,
                                ServiceDAO serviceDAO,
-                               PaymentMethodDAO paymentMethodDAO) {
+                               PaymentMethodDAO paymentMethodDAO,
+                               InvoiceDAO invoiceDAO,
+                               DiscountPercentDAO discountPercentDAO,
+                               DiscountMoneyDAO discountMoneyDAO) {
         this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
         this.serviceDAO = serviceDAO;
         this.paymentMethodDAO = paymentMethodDAO;
+        this.invoiceDAO = invoiceDAO;
+        this.discountPercentDAO = discountPercentDAO;
+        this.discountMoneyDAO = discountMoneyDAO;
     }
 
     @Override
@@ -163,7 +177,6 @@ public class CustomerServiceImpl implements CustomerService {
         updateUsedVoucherQuantity(repairRequest);
 
         repairRequest.setStatusId(CANCELLED.getId());
-        repairRequest.setVoucherId(null);
         repairRequest.setUpdatedAt(now);
 
         CancelRequestingRepairResponse response = new CancelRequestingRepairResponse();
@@ -216,5 +229,63 @@ public class CustomerServiceImpl implements CustomerService {
                 .filter(uv -> uv.getUserVoucherId().getVoucherId().equals(voucherId))
                 .findFirst()
                 .orElse(null);
+    }
+
+    @Override
+    public ResponseEntity<HistoryRequestingRepairResponse> getFixingRequestHistories(HistoryRequestingRepairRequest request) {
+        User user = userDAO.findByUsername(request.getUsername()).get();
+        List<RepairRequest> repairRequests = repairRequestDAO
+                .findByUserIdAndStatusId(user.getId(), getStatusIdValidated(request.getStatus()));
+
+        List<HistoryRepairRequestDTO> historyRepairRequestDTOS = repairRequests.stream()
+                .map(repairRequest -> {
+                    com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
+
+                    HistoryRepairRequestDTO dto = new HistoryRepairRequestDTO();
+                    dto.setRequestCode(repairRequest.getRequestCode());
+                    dto.setServiceName(service.getName());
+                    dto.setDescription(repairRequest.getDescription());
+                    dto.setPrice(getRepairRequestPrice(repairRequest, service.getInspectionPrice()));
+
+                    return dto;
+                }).collect(Collectors.toList());
+
+        HistoryRequestingRepairResponse response = new HistoryRequestingRepairResponse();
+        response.setRequestHistories(historyRepairRequestDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getStatusIdValidated(String status) {
+        try {
+            return valueOf(status).getId();
+        } catch (IllegalArgumentException e) {
+            throw new GeneralException(INVALID_STATUS);
+        }
+    }
+
+    private Double getRepairRequestPrice(RepairRequest repairRequest, Double inspectionPrice) {
+        Optional<Invoice> optionalInvoice = invoiceDAO.findByRepairRequestId(repairRequest.getId());
+        if (optionalInvoice.isPresent()) {
+            return optionalInvoice.get().getActualProceeds();
+        }
+
+        Double discount = getVoucherDiscount(inspectionPrice, repairRequest.getVoucherId());
+        return inspectionPrice - discount;
+    }
+
+    private Double getVoucherDiscount(Double inspectionPrice, Long voucherId) {
+        if (voucherId == null) {
+            return 0.0;
+        }
+
+        Voucher voucher = voucherDAO.findById(voucherId).get();
+        if (voucher.isDiscountMoney()) {
+            DiscountMoney discountMoney = discountMoneyDAO.findByVoucherId(voucherId).get();
+            return discountMoney.getDiscountMoney();
+        }
+
+        DiscountPercent discountPercent = discountPercentDAO.findByVoucherId(voucherId).get();
+        return discountPercent.getDiscountPercent() * inspectionPrice;
     }
 }

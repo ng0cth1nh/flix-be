@@ -139,6 +139,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         LocalDateTime now = LocalDateTime.now();
         repairRequest.setStatusId(CANCELLED.getId());
+        repairRequest.setVoucherId(null);
         repairRequest.setUpdatedAt(now);
 
         CancelRequestingRepairResponse response = new CancelRequestingRepairResponse();

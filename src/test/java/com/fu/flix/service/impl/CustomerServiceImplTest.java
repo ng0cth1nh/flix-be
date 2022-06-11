@@ -1,7 +1,9 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.RepairRequestDAO;
+import com.fu.flix.dto.request.CancelRequestingRepairRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
+import com.fu.flix.dto.response.CancelRequestingRepairResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.entity.RepairRequest;
 import com.fu.flix.service.CustomerService;
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
+import static com.fu.flix.constant.Constant.CANCEL_REPAIR_REQUEST_SUCCESSFUL;
 import static com.fu.flix.constant.Constant.CREATE_REPAIR_REQUEST_SUCCESSFUL;
 import static com.fu.flix.constant.enums.Status.PENDING;
 
@@ -58,8 +61,29 @@ class CustomerServiceImplTest {
         Assertions.assertEquals(PENDING.name(), response.getStatus());
     }
 
+    //    @Test
+    void test_cancel_repair_request_success() {
+        // given
+        String requestCode = "87a4c2eb-5413-4237-82b6-9f261c3d1825";
+        CancelRequestingRepairRequest request = new CancelRequestingRepairRequest();
+        request.setRequestCode(requestCode);
 
-//    @Test
+        setContextUsername("0865390037");
+
+        // when
+        ResponseEntity<CancelRequestingRepairResponse> responseEntity = customerService.cancelFixingRequest(request);
+        CancelRequestingRepairResponse response = responseEntity.getBody();
+
+        RepairRequest repairRequest = repairRequestDAO.findByRequestCode(requestCode).get();
+
+        // then
+        Assertions.assertEquals("C", repairRequest.getStatusId());
+        Assertions.assertEquals(CANCEL_REPAIR_REQUEST_SUCCESSFUL, response.getMessage());
+
+    }
+
+
+    //    @Test
     void test_create_row_on_repair_request_table() {
 
         // given
@@ -90,7 +114,6 @@ class CustomerServiceImplTest {
         Assertions.assertEquals(addressId, repairRequest.getAddressId());
         Assertions.assertEquals(LocalDateTime.of(2022, 06, 20, 13, 0, 0),
                 repairRequest.getExpectStartFixingAt());
-        Assertions.assertEquals(null, repairRequest.getCancelAt());
         Assertions.assertEquals(description, repairRequest.getDescription());
         Assertions.assertEquals(paymentMethodId, repairRequest.getPaymentMethodId());
     }

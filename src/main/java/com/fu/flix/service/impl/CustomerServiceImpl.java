@@ -4,7 +4,9 @@ import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dao.VoucherDAO;
 import com.fu.flix.dto.error.GeneralException;
+import com.fu.flix.dto.request.CancelRequestingRepairRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
+import com.fu.flix.dto.response.CancelRequestingRepairResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.CustomerService;
@@ -18,10 +20,11 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.Status.PENDING;
+import static com.fu.flix.constant.enums.Status.*;
 import static com.fu.flix.constant.enums.VoucherType.INSPECTION;
 
 @Service
@@ -128,5 +131,45 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         return expectFixingDay;
+    }
+
+    @Override
+    public ResponseEntity<CancelRequestingRepairResponse> cancelFixingRequest(CancelRequestingRepairRequest request) {
+        RepairRequest repairRequest = getRepairRequestValidated(request.getRequestCode(), request.getUsername());
+
+        LocalDateTime now = LocalDateTime.now();
+        repairRequest.setStatusId(CANCELLED.getId());
+        repairRequest.setUpdatedAt(now);
+
+        CancelRequestingRepairResponse response = new CancelRequestingRepairResponse();
+        response.setMessage(CANCEL_REPAIR_REQUEST_SUCCESSFUL);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private RepairRequest getRepairRequestValidated(String requestCode, String username) {
+        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+        if (optionalRepairRequest.isEmpty()) {
+            throw new GeneralException(INVALID_REQUEST_CODE);
+        }
+
+        User user = userDAO.findByUsername(username).get();
+        RepairRequest repairRequest = optionalRepairRequest.get();
+
+        if (!repairRequest.getUserId().equals(user.getId())) {
+            throw new GeneralException(INVALID_REQUEST_CODE);
+        }
+
+        if (!isCancelable(repairRequest)) {
+            throw new GeneralException(ONLY_CAN_CANCEL_REQUEST_PENDING_OR_ACCEPTED);
+        }
+
+        return repairRequest;
+    }
+
+    private boolean isCancelable(RepairRequest repairRequest) {
+        String statusId = repairRequest.getStatusId();
+        return PENDING.getId().equals(statusId) ||
+                ACCEPTED.getId().equals(statusId);
     }
 }

@@ -246,6 +246,7 @@ public class CustomerServiceImpl implements CustomerService {
                     dto.setServiceName(service.getName());
                     dto.setDescription(repairRequest.getDescription());
                     dto.setPrice(getRepairRequestPrice(repairRequest, service.getInspectionPrice()));
+                    dto.setDate(repairRequest.getCreatedAt().toString());
 
                     return dto;
                 }).collect(Collectors.toList());
@@ -288,4 +289,5 @@ public class CustomerServiceImpl implements CustomerService {
         DiscountPercent discountPercent = discountPercentDAO.findByVoucherId(voucherId).get();
         return discountPercent.getDiscountPercent() * inspectionPrice;
     }
+
 }

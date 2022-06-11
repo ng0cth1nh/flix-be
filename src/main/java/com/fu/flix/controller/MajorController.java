@@ -21,7 +21,7 @@ public class MajorController {
     }
 
     @GetMapping("services")
-    public ResponseEntity<ServiceResponse> getCommunesByDistrict(@RequestBody ServiceRequest request) {
+    public ResponseEntity<ServiceResponse> getCommunesByDistrict(ServiceRequest request) {
         return majorService.getServicesByMajor(request);
     }
 }

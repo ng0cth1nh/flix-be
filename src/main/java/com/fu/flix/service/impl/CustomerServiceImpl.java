@@ -13,6 +13,7 @@ import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.util.DateFormatUtil;
+import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,6 @@ import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
@@ -78,7 +78,7 @@ public class CustomerServiceImpl implements CustomerService {
         LocalDateTime expectFixingDay = getExpectFixingDay(request, now);
 
         RepairRequest repairRequest = new RepairRequest();
-        repairRequest.setRequestCode(UUID.randomUUID().toString());
+        repairRequest.setRequestCode(RandomUtil.generateCode());
         repairRequest.setUserId(userId);
         repairRequest.setServiceId(request.getServiceId());
         repairRequest.setPaymentMethodId(getPaymentMethodIdValidated(request.getPaymentMethodId()));
@@ -246,7 +246,7 @@ public class CustomerServiceImpl implements CustomerService {
                     dto.setServiceName(service.getName());
                     dto.setDescription(repairRequest.getDescription());
                     dto.setPrice(getRepairRequestPrice(repairRequest, service.getInspectionPrice()));
-                    dto.setDate(repairRequest.getCreatedAt().toString());
+                    dto.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
 
                     return dto;
                 }).collect(Collectors.toList());

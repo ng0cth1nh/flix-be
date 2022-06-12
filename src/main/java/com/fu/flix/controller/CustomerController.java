@@ -1,9 +1,11 @@
 package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.CancelRequestingRepairRequest;
+import com.fu.flix.dto.request.DetailRequestingRepairRequest;
 import com.fu.flix.dto.request.HistoryRequestingRepairRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
 import com.fu.flix.dto.response.CancelRequestingRepairResponse;
+import com.fu.flix.dto.response.DetailRequestingRepairResponse;
 import com.fu.flix.dto.response.HistoryRequestingRepairResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.service.CustomerService;
@@ -34,5 +36,10 @@ public class CustomerController {
     @GetMapping("request/histories")
     public ResponseEntity<HistoryRequestingRepairResponse> getFixingRequestHistories(HistoryRequestingRepairRequest request) {
         return customerService.getFixingRequestHistories(request);
+    }
+
+    @GetMapping("request/detail")
+    public ResponseEntity<DetailRequestingRepairResponse> getDetailFixingRequest(DetailRequestingRepairRequest request) {
+        return customerService.getDetailFixingRequest(request);
     }
 }

@@ -5,9 +5,11 @@ import com.fu.flix.dto.HistoryRepairRequestDTO;
 import com.fu.flix.dto.UsingVoucherDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CancelRequestingRepairRequest;
+import com.fu.flix.dto.request.DetailRequestingRepairRequest;
 import com.fu.flix.dto.request.HistoryRequestingRepairRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
 import com.fu.flix.dto.response.CancelRequestingRepairResponse;
+import com.fu.flix.dto.response.DetailRequestingRepairResponse;
 import com.fu.flix.dto.response.HistoryRequestingRepairResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.entity.*;
@@ -171,6 +173,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<CancelRequestingRepairResponse> cancelFixingRequest(CancelRequestingRepairRequest request) {
         RepairRequest repairRequest = getRepairRequestValidated(request.getRequestCode(), request.getUsername());
+        if (!isCancelable(repairRequest)) {
+            throw new GeneralException(ONLY_CAN_CANCEL_REQUEST_PENDING_OR_CONFIRMED);
+        }
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -183,26 +188,6 @@ public class CustomerServiceImpl implements CustomerService {
         response.setMessage(CANCEL_REPAIR_REQUEST_SUCCESSFUL);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private RepairRequest getRepairRequestValidated(String requestCode, String username) {
-        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
-        if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(INVALID_REQUEST_CODE);
-        }
-
-        User user = userDAO.findByUsername(username).get();
-        RepairRequest repairRequest = optionalRepairRequest.get();
-
-        if (!repairRequest.getUserId().equals(user.getId())) {
-            throw new GeneralException(INVALID_REQUEST_CODE);
-        }
-
-        if (!isCancelable(repairRequest)) {
-            throw new GeneralException(ONLY_CAN_CANCEL_REQUEST_PENDING_OR_CONFIRMED);
-        }
-
-        return repairRequest;
     }
 
     private boolean isCancelable(RepairRequest repairRequest) {
@@ -265,6 +250,41 @@ public class CustomerServiceImpl implements CustomerService {
         }
     }
 
+    @Override
+    public ResponseEntity<DetailRequestingRepairResponse> getDetailFixingRequest(DetailRequestingRepairRequest request) {
+        RepairRequest repairRequest = getRepairRequestValidated(request.getRequestCode(), request.getUsername());
+        com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
+
+        DetailRequestingRepairResponse response = new DetailRequestingRepairResponse();
+        response.setServiceId(service.getId());
+        response.setServiceName(service.getName());
+        response.setAddressId(repairRequest.getAddressId());
+        response.setExpectFixingDay(DateFormatUtil.toString(repairRequest.getExpectStartFixingAt(), DATE_TIME_PATTERN));
+        response.setDescription(repairRequest.getDescription());
+        response.setVoucherId(repairRequest.getVoucherId());
+        response.setPaymentMethodId(repairRequest.getPaymentMethodId());
+        response.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
+        response.setPrice(getRepairRequestPrice(repairRequest, service.getInspectionPrice()));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private RepairRequest getRepairRequestValidated(String requestCode, String username) {
+        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+        if (optionalRepairRequest.isEmpty()) {
+            throw new GeneralException(INVALID_REQUEST_CODE);
+        }
+
+        User user = userDAO.findByUsername(username).get();
+        RepairRequest repairRequest = optionalRepairRequest.get();
+
+        if (!repairRequest.getUserId().equals(user.getId())) {
+            throw new GeneralException(INVALID_REQUEST_CODE);
+        }
+
+        return repairRequest;
+    }
+
     private Double getRepairRequestPrice(RepairRequest repairRequest, Double inspectionPrice) {
         Optional<Invoice> optionalInvoice = invoiceDAO.findByRepairRequestId(repairRequest.getId());
         if (optionalInvoice.isPresent()) {
@@ -289,5 +309,4 @@ public class CustomerServiceImpl implements CustomerService {
         DiscountPercent discountPercent = discountPercentDAO.findByVoucherId(voucherId).get();
         return discountPercent.getDiscountPercent() * inspectionPrice;
     }
-
 }

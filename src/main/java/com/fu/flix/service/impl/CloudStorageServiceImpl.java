@@ -1,6 +1,7 @@
-package com.fu.flix.util;
+package com.fu.flix.service.impl;
 
 import com.fu.flix.dto.error.GeneralException;
+import com.fu.flix.service.CloudStorageService;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Acl;
@@ -8,14 +9,10 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.UUID;
@@ -23,19 +20,20 @@ import java.util.UUID;
 import static com.fu.flix.constant.Constant.FILE_MUST_BE_IMAGE;
 
 @Slf4j
-@Component
-public class CloudStorageHelper {
+@Service
+public class CloudStorageServiceImpl implements CloudStorageService {
     private final String BUCKET_NAME = "flix_public";
     private final String CLOUD_AUTHEN_FILE_NAME = "/cloud_authen.json";
     private final Credentials CREDENTIALS;
     private final Storage STORAGE;
 
-    public CloudStorageHelper() throws IOException {
+    public CloudStorageServiceImpl() throws IOException {
         InputStream inputStream = getClass().getResourceAsStream(CLOUD_AUTHEN_FILE_NAME);
         CREDENTIALS = GoogleCredentials.fromStream(inputStream);
         STORAGE = StorageOptions.newBuilder().setCredentials(CREDENTIALS).build().getService();
     }
 
+    @Override
     public String uploadImage(MultipartFile fileStream) throws IOException {
         if (!isImageFile(fileStream.getOriginalFilename())) {
             throw new GeneralException(FILE_MUST_BE_IMAGE);

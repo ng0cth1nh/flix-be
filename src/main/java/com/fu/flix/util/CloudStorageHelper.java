@@ -30,7 +30,7 @@ public class CloudStorageHelper {
     private final Credentials CREDENTIALS;
     private final Storage STORAGE;
 
-    public CloudStorageHelper() throws IOException, URISyntaxException {
+    public CloudStorageHelper() throws IOException {
         InputStream inputStream = getClass().getResourceAsStream(CLOUD_AUTHEN_FILE_NAME);
         CREDENTIALS = GoogleCredentials.fromStream(inputStream);
         STORAGE = StorageOptions.newBuilder().setCredentials(CREDENTIALS).build().getService();

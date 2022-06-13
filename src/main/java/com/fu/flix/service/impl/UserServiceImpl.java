@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<MainAddressResponse> getMainAddress(MainAddressRequest request) {
         User user = userDAO.findByUsername(request.getUsername()).get();
-        UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddress(user.getId(), true).get();
+        UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(user.getId(), true).get();
 
         MainAddressResponse response = new MainAddressResponse();
         response.setAddressId(userAddress.getId());
@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<UserAddressResponse> getUserAddresses(UserAddressRequest request) {
         User user = userDAO.findByUsername(request.getUsername()).get();
-        List<UserAddress> userAddresses = userAddressDAO.findByUserId(user.getId());
+        List<UserAddress> userAddresses = userAddressDAO.findByUserIdAndDeletedAtIsNull(user.getId());
 
         List<UserAddressDTO> addresses = userAddresses.stream()
                 .map(userAddress -> {

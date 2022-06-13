@@ -34,4 +34,5 @@ public class Constant {
     public static final String INSPECTION_PRICE_MUST_GREATER_OR_EQUAL_VOUCHER_MIN_PRICE = "INSPECTION_PRICE_MUST_GREATER_OR_EQUAL_VOUCHER_MIN_PRICE";
     public static final String INVALID_STATUS = "INVALID_STATUS";
     public static final String FILE_MUST_BE_IMAGE = "FILE_MUST_BE_IMAGE";
+    public static final String LOGIN_FAILED = "LOGIN_FAILED";
 }

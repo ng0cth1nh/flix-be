@@ -8,6 +8,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,14 +26,13 @@ import static com.fu.flix.constant.Constant.FILE_MUST_BE_IMAGE;
 @Component
 public class CloudStorageHelper {
     private final String BUCKET_NAME = "flix_public";
-    private final String CLOUD_AUTHEN_FILE_NAME = "cloud_authen.json";
+    private final String CLOUD_AUTHEN_FILE_NAME = "/cloud_authen.json";
     private final Credentials CREDENTIALS;
     private final Storage STORAGE;
 
     public CloudStorageHelper() throws IOException, URISyntaxException {
-        URL resource = this.getClass().getClassLoader().getResource(CLOUD_AUTHEN_FILE_NAME);
-        File file = new File(new URI(resource.getFile()).getPath());
-        CREDENTIALS = GoogleCredentials.fromStream(new FileInputStream(file));
+        InputStream inputStream = getClass().getResourceAsStream(CLOUD_AUTHEN_FILE_NAME);
+        CREDENTIALS = GoogleCredentials.fromStream(inputStream);
         STORAGE = StorageOptions.newBuilder().setCredentials(CREDENTIALS).build().getService();
     }
 

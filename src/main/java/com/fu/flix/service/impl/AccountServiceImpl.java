@@ -14,7 +14,7 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.service.AccountService;
 import com.fu.flix.service.SmsService;
-import com.fu.flix.util.FileUtil;
+import com.fu.flix.util.CloudStorageHelper;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.PhoneFormatter;
 import com.fu.flix.dto.request.*;
@@ -58,6 +58,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final CityDAO cityDAO;
     private final UserAddressDAO userAddressDAO;
     private final PasswordEncoder passwordEncoder;
+    private final CloudStorageHelper cloudStorageHelper;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -70,7 +71,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               DistrictDAO districtDAO,
                               CityDAO cityDAO,
                               UserAddressDAO userAddressDAO,
-                              PasswordEncoder passwordEncoder) {
+                              PasswordEncoder passwordEncoder,
+                              CloudStorageHelper cloudStorageHelper) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
@@ -82,6 +84,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.cityDAO = cityDAO;
         this.userAddressDAO = userAddressDAO;
         this.passwordEncoder = passwordEncoder;
+        this.cloudStorageHelper = cloudStorageHelper;
     }
 
     @Override
@@ -160,7 +163,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     @Override
-    public ResponseEntity<CFRegisterResponse> confirmRegister(CFRegisterRequest request) {
+    public ResponseEntity<CFRegisterResponse> confirmRegister(CFRegisterRequest request) throws IOException {
         validateRegisterInput(request);
 
         User user = buildUser(request, request.getAvatar());
@@ -224,7 +227,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return token;
     }
 
-    private User buildUser(CFRegisterRequest registerAccount, MultipartFile avatar) {
+    private User buildUser(CFRegisterRequest registerAccount, MultipartFile avatar) throws IOException {
         LocalDateTime now = LocalDateTime.now();
         User user = new User();
         user.setFullName(registerAccount.getFullName());
@@ -238,9 +241,9 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return user;
     }
 
-    public User updateUserAvatar(User user, MultipartFile avatar) {
+    public User updateUserAvatar(User user, MultipartFile avatar) throws IOException {
         if (avatar != null) {
-            String url = FileUtil.uploadImage(avatar);
+            String url = cloudStorageHelper.uploadImage(avatar);
             Image image = new Image();
             image.setName(user.getFullName());
             image.setUrl(url);

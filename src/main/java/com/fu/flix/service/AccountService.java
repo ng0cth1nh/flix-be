@@ -16,5 +16,5 @@ public interface AccountService {
 
     ResponseEntity<CheckUsernameResponse> sendRegisterOTP(CheckUsernameRequest request) throws JsonProcessingException;
 
-    ResponseEntity<CFRegisterResponse> confirmRegister(CFRegisterRequest request);
+    ResponseEntity<CFRegisterResponse> confirmRegister(CFRegisterRequest request) throws IOException;
 }

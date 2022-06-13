@@ -57,7 +57,7 @@ class InputValidationTest {
     @Test
     void should_valid_password(){
         // given
-        String password = "12#$-67";
+        String password = "aa1aaa";
 
         // when
         boolean check = InputValidation.isPasswordValid(password);

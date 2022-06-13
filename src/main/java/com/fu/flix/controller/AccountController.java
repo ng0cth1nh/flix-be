@@ -36,7 +36,7 @@ public class AccountController {
     }
 
     @RequestMapping(value = "register/confirm", method = RequestMethod.POST, consumes = {"multipart/form-data"})
-    public ResponseEntity<CFRegisterResponse> confirmRegisterCustomer(CFRegisterRequest request) {
+    public ResponseEntity<CFRegisterResponse> confirmRegisterCustomer(CFRegisterRequest request) throws IOException {
         return accountService.confirmRegister(request);
     }
 }

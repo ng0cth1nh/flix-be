@@ -58,6 +58,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final CityDAO cityDAO;
     private final UserAddressDAO userAddressDAO;
     private final PasswordEncoder passwordEncoder;
+    private final CloudStorageHelper cloudStorageHelper;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -70,7 +71,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               DistrictDAO districtDAO,
                               CityDAO cityDAO,
                               UserAddressDAO userAddressDAO,
-                              PasswordEncoder passwordEncoder) {
+                              PasswordEncoder passwordEncoder,
+                              CloudStorageHelper cloudStorageHelper) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
@@ -82,6 +84,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.cityDAO = cityDAO;
         this.userAddressDAO = userAddressDAO;
         this.passwordEncoder = passwordEncoder;
+        this.cloudStorageHelper = cloudStorageHelper;
     }
 
     @Override
@@ -240,7 +243,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
     public User updateUserAvatar(User user, MultipartFile avatar) throws IOException {
         if (avatar != null) {
-            String url = CloudStorageHelper.uploadImage(avatar);
+            String url = cloudStorageHelper.uploadImage(avatar);
             Image image = new Image();
             image.setName(user.getFullName());
             image.setUrl(url);

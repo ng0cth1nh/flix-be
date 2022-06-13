@@ -21,16 +21,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 @Slf4j
 public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
-
     private final AppConf appConf;
-
 
     @Autowired
     public CustomAuthenticationFilter(AuthenticationManager authenticationManager,
@@ -43,7 +44,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
-        log.info("Username is {}, Password is {}", username, password);
+        log.info("login with Username is {}", username);
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
         return authenticationManager.authenticate(authenticationToken);
     }
@@ -69,5 +70,16 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         TokenResponse tokenResponse = new TokenResponse(accessToken, refreshToken);
         new ObjectMapper().writeValue(response.getOutputStream(), tokenResponse);
+    }
+
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request,
+                                              HttpServletResponse response,
+                                              AuthenticationException failed) throws IOException {
+        response.setStatus(FORBIDDEN.value());
+        Map<String, String> errors = new HashMap<>();
+        errors.put("message", LOGIN_FAILED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        new ObjectMapper().writeValue(response.getOutputStream(), errors);
     }
 }

@@ -44,7 +44,7 @@ class UserServiceImplTest {
 
         // when
         User user = optionalUser.get();
-        Optional<UserAddress> optionalUserAddress = userAddressDAO.findByUserIdAndIsMainAddress(user.getId(), true);
+        Optional<UserAddress> optionalUserAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(user.getId(), true);
         UserAddress userAddress = optionalUserAddress.get();
 
         // then

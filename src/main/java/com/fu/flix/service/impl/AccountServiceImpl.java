@@ -13,8 +13,8 @@ import com.fu.flix.entity.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.service.AccountService;
+import com.fu.flix.service.CloudStorageService;
 import com.fu.flix.service.SmsService;
-import com.fu.flix.util.CloudStorageHelper;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.PhoneFormatter;
 import com.fu.flix.dto.request.*;
@@ -58,7 +58,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final CityDAO cityDAO;
     private final UserAddressDAO userAddressDAO;
     private final PasswordEncoder passwordEncoder;
-    private final CloudStorageHelper cloudStorageHelper;
+    private final CloudStorageService cloudStorageService;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -72,7 +72,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               CityDAO cityDAO,
                               UserAddressDAO userAddressDAO,
                               PasswordEncoder passwordEncoder,
-                              CloudStorageHelper cloudStorageHelper) {
+                              CloudStorageService cloudStorageService) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
@@ -84,7 +84,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.cityDAO = cityDAO;
         this.userAddressDAO = userAddressDAO;
         this.passwordEncoder = passwordEncoder;
-        this.cloudStorageHelper = cloudStorageHelper;
+        this.cloudStorageService = cloudStorageService;
     }
 
     @Override
@@ -243,7 +243,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
     public User updateUserAvatar(User user, MultipartFile avatar) throws IOException {
         if (avatar != null) {
-            String url = cloudStorageHelper.uploadImage(avatar);
+            String url = cloudStorageService.uploadImage(avatar);
             Image image = new Image();
             image.setName(user.getFullName());
             image.setUrl(url);

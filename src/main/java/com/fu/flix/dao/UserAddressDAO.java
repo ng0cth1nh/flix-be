@@ -15,6 +15,13 @@ public interface UserAddressDAO extends JpaRepository<UserAddress, Long> {
     @Query(value = "SELECT * FROM user_addresses " +
             "WHERE user_id = :userId " +
             "AND id = :id " +
-            "AND is_main_address <> true", nativeQuery = true)
+            "AND is_main_address <> true " +
+            "AND deleted_at IS NULL", nativeQuery = true)
     Optional<UserAddress> findUserAddressToDelete(Long userId, Long id);
+
+    @Query(value = "SELECT * FROM user_addresses " +
+            "WHERE user_id = :userId " +
+            "AND id = :id " +
+            "AND deleted_at IS NULL", nativeQuery = true)
+    Optional<UserAddress> findUserAddressToEdit(Long userId, Long id);
 }

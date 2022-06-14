@@ -2,9 +2,11 @@ package com.fu.flix.controller;
 
 
 import com.fu.flix.dto.request.DeleteAddressRequest;
+import com.fu.flix.dto.request.EditAddressRequest;
 import com.fu.flix.dto.request.MainAddressRequest;
 import com.fu.flix.dto.request.UserAddressRequest;
 import com.fu.flix.dto.response.DeleteAddressResponse;
+import com.fu.flix.dto.response.EditAddressResponse;
 import com.fu.flix.dto.response.MainAddressResponse;
 import com.fu.flix.dto.response.UserAddressResponse;
 import com.fu.flix.service.UserService;
@@ -36,5 +38,10 @@ public class UserController {
     @DeleteMapping("address")
     public ResponseEntity<DeleteAddressResponse> deleteUserAddress(@RequestBody DeleteAddressRequest request) {
         return userService.deleteUserAddress(request);
+    }
+
+    @PostMapping("address")
+    public ResponseEntity<EditAddressResponse> editUserAddress(@RequestBody EditAddressRequest request) {
+        return userService.editUserAddress(request);
     }
 }

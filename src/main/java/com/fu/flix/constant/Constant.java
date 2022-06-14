@@ -36,4 +36,5 @@ public class Constant {
     public static final String FILE_MUST_BE_IMAGE = "FILE_MUST_BE_IMAGE";
     public static final String LOGIN_FAILED = "LOGIN_FAILED";
     public static final String DELETE_ADDRESS_SUCCESS = "DELETE_ADDRESS_SUCCESS";
+    public static final String EDIT_ADDRESS_SUCCESS = "EDIT_ADDRESS_SUCCESS";
 }

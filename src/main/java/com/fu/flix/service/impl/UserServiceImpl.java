@@ -2,8 +2,10 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.UserAddressDTO;
+import com.fu.flix.dto.request.DeleteAddressRequest;
 import com.fu.flix.dto.request.MainAddressRequest;
 import com.fu.flix.dto.request.UserAddressRequest;
+import com.fu.flix.dto.response.DeleteAddressResponse;
 import com.fu.flix.dto.response.MainAddressResponse;
 import com.fu.flix.dto.response.UserAddressResponse;
 import com.fu.flix.entity.*;
@@ -13,11 +15,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.fu.flix.constant.Constant.DELETE_ADDRESS_SUCCESS;
 
 @Service
 @Slf4j
+@Transactional
 public class UserServiceImpl implements UserService {
     private final UserAddressDAO userAddressDAO;
     private final UserDAO userDAO;
@@ -80,5 +88,18 @@ public class UserServiceImpl implements UserService {
         District district = districtDAO.findById(commune.getDistrictId()).get();
         City city = cityDAO.findById(district.getCityId()).get();
         return streetAddress + COMMA + commune.getName() + COMMA + district.getName() + COMMA + city.getName();
+    }
+
+    @Override
+    public ResponseEntity<DeleteAddressResponse> deleteUserAddress(DeleteAddressRequest request) {
+        User user = userDAO.findByUsername(request.getUsername()).get();
+        Optional<UserAddress> optionalUserAddress = userAddressDAO.findUserAddressToDelete(user.getId(), request.getAddressId());
+
+        optionalUserAddress.ifPresent(userAddress -> userAddress.setDeletedAt(LocalDateTime.now()));
+
+        DeleteAddressResponse response = new DeleteAddressResponse();
+        response.setMessage(DELETE_ADDRESS_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

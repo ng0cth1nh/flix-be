@@ -49,6 +49,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final ImageDAO imageDAO;
     private final String COMMA = ", ";
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private final String DATE_PATTERN = "dd-MM-yyyy";
 
     public CustomerServiceImpl(UserDAO userDAO,
                                RepairRequestDAO repairRequestDAO,
@@ -440,7 +441,7 @@ public class CustomerServiceImpl implements CustomerService {
         Image image = imageDAO.findById(user.getAvatar()).get();
         String dob = user.getDateOfBirth() == null
                 ? null
-                : DateFormatUtil.toString(user.getDateOfBirth(), "dd-MM-yyyy");
+                : DateFormatUtil.toString(user.getDateOfBirth(), DATE_PATTERN);
 
         CustomerProfileResponse response = new CustomerProfileResponse();
         response.setPhone(user.getPhone());

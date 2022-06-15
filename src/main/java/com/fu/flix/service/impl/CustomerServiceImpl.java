@@ -10,6 +10,7 @@ import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.util.DateFormatUtil;
+import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -329,7 +330,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<UserAddressResponse> getUserAddresses(UserAddressRequest request) {
+    public ResponseEntity<UserAddressResponse> getCustomerAddresses(UserAddressRequest request) {
         User user = userDAO.findByUsername(request.getUsername()).get();
         List<UserAddress> userAddresses = userAddressDAO.findByUserIdAndDeletedAtIsNull(user.getId());
 
@@ -358,7 +359,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<DeleteAddressResponse> deleteUserAddress(DeleteAddressRequest request) {
+    public ResponseEntity<DeleteAddressResponse> deleteCustomerAddress(DeleteAddressRequest request) {
         User user = userDAO.findByUsername(request.getUsername()).get();
         Optional<UserAddress> optionalUserAddress = userAddressDAO
                 .findUserAddressToDelete(user.getId(), request.getAddressId());
@@ -372,7 +373,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<EditAddressResponse> editUserAddress(EditAddressRequest request) {
+    public ResponseEntity<EditAddressResponse> editCustomerAddress(EditAddressRequest request) {
         Long addressId = request.getAddressId();
         User user = userDAO.findByUsername(request.getUsername()).get();
         Optional<UserAddress> optionalUserAddress = userAddressDAO
@@ -392,6 +393,35 @@ public class CustomerServiceImpl implements CustomerService {
         EditAddressResponse response = new EditAddressResponse();
         response.setAddressId(addressId);
         response.setMessage(EDIT_ADDRESS_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<CreateAddressResponse> createCustomerAddress(CreateAddressRequest request) {
+        Optional<Commune> optionalCommune = communeDAO.findById(request.getCommuneId());
+        if (optionalCommune.isEmpty()) {
+            throw new GeneralException(INVALID_COMMUNE);
+        }
+        if (!InputValidation.isPhoneValid(request.getPhone())) {
+            throw new GeneralException(INVALID_PHONE_NUMBER);
+        }
+        User user = userDAO.findByUsername(request.getUsername()).get();
+
+        Commune commune = optionalCommune.get();
+
+        UserAddress userAddress = new UserAddress();
+        userAddress.setUserId(user.getId());
+        userAddress.setMainAddress(false);
+        userAddress.setStreetAddress(request.getStreetAddress());
+        userAddress.setName(request.getFullName());
+        userAddress.setPhone(request.getPhone());
+        userAddress.setCommuneId(commune.getId());
+        UserAddress savedUserAddress = userAddressDAO.save(userAddress);
+
+        CreateAddressResponse response = new CreateAddressResponse();
+        response.setAddressId(savedUserAddress.getId());
+        response.setMessage(CREATE_ADDRESS_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

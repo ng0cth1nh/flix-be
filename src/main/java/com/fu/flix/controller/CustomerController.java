@@ -39,21 +39,26 @@ public class CustomerController {
 
     @GetMapping("address/list")
     public ResponseEntity<UserAddressResponse> getListAddress(UserAddressRequest request) {
-        return customerService.getUserAddresses(request);
+        return customerService.getCustomerAddresses(request);
     }
 
     @DeleteMapping("address")
     public ResponseEntity<DeleteAddressResponse> deleteCustomerAddress(@RequestBody DeleteAddressRequest request) {
-        return customerService.deleteUserAddress(request);
+        return customerService.deleteCustomerAddress(request);
     }
 
     @PutMapping("address")
     public ResponseEntity<EditAddressResponse> editCustomerAddress(@RequestBody EditAddressRequest request) {
-        return customerService.editUserAddress(request);
+        return customerService.editCustomerAddress(request);
     }
 
     @GetMapping("address/main")
     public ResponseEntity<MainAddressResponse> getMainAddress(MainAddressRequest request) {
         return customerService.getMainAddress(request);
+    }
+
+    @PostMapping("address")
+    public ResponseEntity<CreateAddressResponse> editCustomerAddress(@RequestBody CreateAddressRequest request) {
+        return customerService.createCustomerAddress(request);
     }
 }

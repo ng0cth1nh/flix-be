@@ -15,9 +15,11 @@ public interface CustomerService {
 
     ResponseEntity<MainAddressResponse> getMainAddress(MainAddressRequest request);
 
-    ResponseEntity<UserAddressResponse> getUserAddresses(UserAddressRequest request);
+    ResponseEntity<UserAddressResponse> getCustomerAddresses(UserAddressRequest request);
 
-    ResponseEntity<DeleteAddressResponse> deleteUserAddress(DeleteAddressRequest request);
+    ResponseEntity<DeleteAddressResponse> deleteCustomerAddress(DeleteAddressRequest request);
 
-    ResponseEntity<EditAddressResponse> editUserAddress(EditAddressRequest request);
+    ResponseEntity<EditAddressResponse> editCustomerAddress(EditAddressRequest request);
+
+    ResponseEntity<CreateAddressResponse> createCustomerAddress(CreateAddressRequest request);
 }

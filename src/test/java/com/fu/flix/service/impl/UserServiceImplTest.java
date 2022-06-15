@@ -77,7 +77,7 @@ class UserServiceImplTest {
         setContextUsername(phone);
 
         // when
-        ResponseEntity<UserAddressResponse> responseEntity = customerService.getUserAddresses(request);
+        ResponseEntity<UserAddressResponse> responseEntity = customerService.getCustomerAddresses(request);
         UserAddressResponse userAddressResponse = responseEntity.getBody();
 
         // then

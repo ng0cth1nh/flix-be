@@ -81,6 +81,11 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                 }
 
             } else {
+                response.setStatus(FORBIDDEN.value());
+                Map<String, String> errors = new HashMap<>();
+                errors.put("message", INVALID_TOKEN);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                new ObjectMapper().writeValue(response.getOutputStream(), errors);
                 filterChain.doFilter(request, response);
             }
         }

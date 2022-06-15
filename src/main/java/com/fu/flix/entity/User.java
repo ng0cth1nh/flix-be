@@ -37,6 +37,8 @@ public class User {
 
     private Long avatar;
 
+    private String email;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

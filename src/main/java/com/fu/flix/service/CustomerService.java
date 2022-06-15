@@ -22,4 +22,6 @@ public interface CustomerService {
     ResponseEntity<EditAddressResponse> editCustomerAddress(EditAddressRequest request);
 
     ResponseEntity<CreateAddressResponse> createCustomerAddress(CreateAddressRequest request);
+
+    ResponseEntity<CustomerProfileResponse> getCustomerProfile(CustomerProfileRequest request);
 }

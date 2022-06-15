@@ -61,4 +61,9 @@ public class CustomerController {
     public ResponseEntity<CreateAddressResponse> editCustomerAddress(@RequestBody CreateAddressRequest request) {
         return customerService.createCustomerAddress(request);
     }
+
+    @GetMapping("profile")
+    public ResponseEntity<CustomerProfileResponse> getCustomerProfile(CustomerProfileRequest request) {
+        return customerService.getCustomerProfile(request);
+    }
 }

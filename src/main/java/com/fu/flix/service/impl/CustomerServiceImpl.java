@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Collection;
@@ -45,6 +46,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final CommuneDAO communeDAO;
     private final DistrictDAO districtDAO;
     private final CityDAO cityDAO;
+    private final ImageDAO imageDAO;
     private final String COMMA = ", ";
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
@@ -55,7 +57,12 @@ public class CustomerServiceImpl implements CustomerService {
                                PaymentMethodDAO paymentMethodDAO,
                                InvoiceDAO invoiceDAO,
                                DiscountPercentDAO discountPercentDAO,
-                               DiscountMoneyDAO discountMoneyDAO, UserAddressDAO userAddressDAO, CommuneDAO communeDAO, DistrictDAO districtDAO, CityDAO cityDAO) {
+                               DiscountMoneyDAO discountMoneyDAO,
+                               UserAddressDAO userAddressDAO,
+                               CommuneDAO communeDAO,
+                               DistrictDAO districtDAO,
+                               CityDAO cityDAO,
+                               ImageDAO imageDAO) {
         this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
@@ -68,6 +75,7 @@ public class CustomerServiceImpl implements CustomerService {
         this.communeDAO = communeDAO;
         this.districtDAO = districtDAO;
         this.cityDAO = cityDAO;
+        this.imageDAO = imageDAO;
     }
 
     @Override
@@ -422,6 +430,25 @@ public class CustomerServiceImpl implements CustomerService {
         CreateAddressResponse response = new CreateAddressResponse();
         response.setAddressId(savedUserAddress.getId());
         response.setMessage(CREATE_ADDRESS_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<CustomerProfileResponse> getCustomerProfile(CustomerProfileRequest request) {
+        User user = userDAO.findByUsername(request.getUsername()).get();
+        Image image = imageDAO.findById(user.getAvatar()).get();
+        String dob = user.getDateOfBirth() == null
+                ? null
+                : DateFormatUtil.toString(user.getDateOfBirth(), "dd-MM-yyyy");
+
+        CustomerProfileResponse response = new CustomerProfileResponse();
+        response.setPhone(user.getPhone());
+        response.setFullName(user.getFullName());
+        response.setAvatarUrl(image.getUrl());
+        response.setDateOfBirth(dob);
+        response.setGender(user.getGender());
+        response.setEmail(user.getEmail());
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

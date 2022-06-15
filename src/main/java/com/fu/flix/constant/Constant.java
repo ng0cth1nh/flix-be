@@ -41,4 +41,5 @@ public class Constant {
     public static final String CREATE_ADDRESS_SUCCESS = "CREATE_ADDRESS_SUCCESS";
     public static final String INVALID_EMAIL = "INVALID_EMAIL";
     public static final String UPDATED_PROFILE_SUCCESS = "UPDATED_PROFILE_SUCCESS";
+    public static final String UPDATE_AVATAR_SUCCESS = "UPDATE_AVATAR_SUCCESS";
 }

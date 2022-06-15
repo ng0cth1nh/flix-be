@@ -14,6 +14,8 @@ public class AppConf {
     private Long lifeTimeToke;
     private Long lifeTimeRefreshToken;
     private TwilioInfo twilioInfo;
+    private Long defaultAvatar;
+    private String[] permitAllApis;
 
     @Data
     public static class TwilioInfo {

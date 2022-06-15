@@ -36,7 +36,7 @@ class UserServiceImplTest {
     @Autowired
     CustomerService customerService;
 
-    @Test
+//    @Test
     void test_get_user_address() {
         // given
         String phone = "0865390037";

@@ -6,6 +6,16 @@ app:
     accountSid: 'ACb90a154f60452edbfba9e5955f9cd40c'
     authToken: 'd1c1458436c445a536ec2ceaa5eeb713'
     fromNumber: '+16073006721'
+  defaultAvatar: 1
+  permitAllApis: [ '/api/v1/login',
+                   '/api/v1/token/refresh',
+                   '/api/v1/register/sendOTP',
+                   '/api/v1/register/confirm',
+                   '/api/v1/customer/address/list',
+                   '/api/v1/customer/address/main',
+                   '/swagger-ui/index.html',
+                   '/v2/api-docs',
+                   '/swagger-resources' ]
 
 server:
   port: 8080

@@ -5,7 +5,6 @@ import com.fu.flix.filter.CustomAuthorizationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -49,14 +48,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        http.authorizeRequests().antMatchers(
-                "/api/v1/login/**",
-                "/api/v1/token/refresh/**",
-                "/api/v1/register/**",
-                "/api/v1/address/**",
-                "/swagger-ui/**",
-                "/swagger-resources/**",
-                "/v2/api-docs/**").permitAll();
+        http.authorizeRequests().antMatchers(appConf.getPermitAllApis())
+                .permitAll();
 
         http.authorizeRequests().antMatchers(GET, "/api/v1/user/**")
                 .hasAnyAuthority(ROLE_CUSTOMER.name(),

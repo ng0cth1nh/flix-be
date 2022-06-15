@@ -15,6 +15,7 @@ import com.fu.flix.dto.response.*;
 import com.fu.flix.service.AccountService;
 import com.fu.flix.service.CloudStorageService;
 import com.fu.flix.service.SmsService;
+import com.fu.flix.service.UserService;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.PhoneFormatter;
 import com.fu.flix.dto.request.*;
@@ -59,6 +60,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final UserAddressDAO userAddressDAO;
     private final PasswordEncoder passwordEncoder;
     private final CloudStorageService cloudStorageService;
+    private final UserService userService;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -72,7 +74,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               CityDAO cityDAO,
                               UserAddressDAO userAddressDAO,
                               PasswordEncoder passwordEncoder,
-                              CloudStorageService cloudStorageService) {
+                              CloudStorageService cloudStorageService,
+                              UserService userService) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
@@ -85,6 +88,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.userAddressDAO = userAddressDAO;
         this.passwordEncoder = passwordEncoder;
         this.cloudStorageService = cloudStorageService;
+        this.userService = userService;
     }
 
     @Override
@@ -235,22 +239,18 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         user.setIsActive(true);
         user.setUsername(registerAccount.getPhone());
         user.setPassword(passwordEncoder.encode(registerAccount.getPassword()));
-        user = updateUserAvatar(user, avatar);
+        user = postUserAvatar(user, avatar);
         user.setCreatedAt(now);
         user.setUpdatedAt(now);
         return user;
     }
 
-    public User updateUserAvatar(User user, MultipartFile avatar) throws IOException {
+    public User postUserAvatar(User user, MultipartFile avatar) throws IOException {
         if (avatar != null) {
             String url = cloudStorageService.uploadImage(avatar);
-            Image image = new Image();
-            image.setName(user.getFullName());
-            image.setUrl(url);
-            Image savedImage = imageDAO.save(image);
-            user.setAvatar(savedImage.getId());
+            user = userService.addNewAvatarToUser(user, url);
         } else {
-            user.setAvatar(1L);
+            user.setAvatar(appConf.getDefaultAvatar());
         }
         return user;
     }

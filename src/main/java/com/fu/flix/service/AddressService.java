@@ -11,5 +11,6 @@ public interface AddressService {
     ResponseEntity<CityResponse> getAllCities();
 
     ResponseEntity<DistrictResponse> getDistrictByCity(DistrictRequest request);
+
     ResponseEntity<CommuneResponse> getCommunesByDistrict(CommuneRequest request);
 }

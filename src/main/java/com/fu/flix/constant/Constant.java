@@ -37,4 +37,5 @@ public class Constant {
     public static final String LOGIN_FAILED = "LOGIN_FAILED";
     public static final String DELETE_ADDRESS_SUCCESS = "DELETE_ADDRESS_SUCCESS";
     public static final String EDIT_ADDRESS_SUCCESS = "EDIT_ADDRESS_SUCCESS";
+    public static final String CREATE_ADDRESS_SUCCESS = "CREATE_ADDRESS_SUCCESS";
 }

@@ -19,6 +19,7 @@ public class Constant {
     public static final String INVALID_COMMUNE = "INVALID_COMMUNE";
     public static final String ANONYMOUS_USER = "anonymousUser";
     public static final String WRONG_LOCAL_DATE_TIME_FORMAT = "WRONG_LOCAL_DATE_TIME_FORMAT";
+    public static final String WRONG_LOCAL_DATE_FORMAT = "WRONG_LOCAL_DATE_FORMAT";
     public static final String USER_NOT_HOLD_VOUCHER = "USER_NOT_HOLD_VOUCHER";
     public static final String CREATE_REPAIR_REQUEST_SUCCESSFUL = "CREATE_REPAIR_REQUEST_SUCCESSFUL";
     public static final String VOUCHER_EXPIRED = "VOUCHER_EXPIRED";
@@ -38,4 +39,6 @@ public class Constant {
     public static final String DELETE_ADDRESS_SUCCESS = "DELETE_ADDRESS_SUCCESS";
     public static final String EDIT_ADDRESS_SUCCESS = "EDIT_ADDRESS_SUCCESS";
     public static final String CREATE_ADDRESS_SUCCESS = "CREATE_ADDRESS_SUCCESS";
+    public static final String INVALID_EMAIL = "INVALID_EMAIL";
+    public static final String UPDATED_PROFILE_SUCCESS = "UPDATED_PROFILE_SUCCESS";
 }

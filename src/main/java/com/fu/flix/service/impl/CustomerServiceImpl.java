@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Collection;
@@ -449,6 +450,33 @@ public class CustomerServiceImpl implements CustomerService {
         response.setDateOfBirth(dob);
         response.setGender(user.getGender());
         response.setEmail(user.getEmail());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request) {
+        LocalDate dob;
+        String email = request.getEmail();
+
+        try {
+            dob = DateFormatUtil.getLocalDate(request.getDateOfBirth(), DATE_PATTERN);
+        } catch (DateTimeParseException e) {
+            throw new GeneralException(WRONG_LOCAL_DATE_FORMAT);
+        }
+
+        if (!InputValidation.isEmailValid(email)) {
+            throw new GeneralException(INVALID_EMAIL);
+        }
+
+        User user = userDAO.findByUsername(request.getUsername()).get();
+        user.setFullName(request.getFullName());
+        user.setDateOfBirth(dob);
+        user.setGender(request.isGender());
+        user.setEmail(email);
+
+        UpdateCustomerProfileResponse response = new UpdateCustomerProfileResponse();
+        response.setMessage(UPDATED_PROFILE_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

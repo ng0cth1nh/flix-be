@@ -11,6 +11,11 @@ public class DateFormatUtil {
         return LocalDateTime.parse(date, formatter);
     }
 
+    public static LocalDate getLocalDate(String date, String pattern) throws DateTimeParseException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+        return LocalDate.parse(date, formatter);
+    }
+
     public static String toString(LocalDateTime dateTime, String pattern) {
         return DateTimeFormatter.ofPattern(pattern).format(dateTime);
     }

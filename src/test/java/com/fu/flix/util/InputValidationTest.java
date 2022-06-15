@@ -1,5 +1,6 @@
 package com.fu.flix.util;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,7 +56,7 @@ class InputValidationTest {
     }
 
     @Test
-    void should_valid_password(){
+    void should_valid_password() {
         // given
         String password = "aa1aaa";
 
@@ -67,7 +68,7 @@ class InputValidationTest {
     }
 
     @Test
-    void should_invalid_password_have_length_less_than_6(){
+    void should_invalid_password_have_length_less_than_6() {
         // given
         String password = "12#$-";
 
@@ -79,7 +80,7 @@ class InputValidationTest {
     }
 
     @Test
-    void should_invalid_password_have_length_greater_than_10(){
+    void should_invalid_password_have_length_greater_than_10() {
         // given
         String password = "12#$-123457";
 
@@ -91,7 +92,7 @@ class InputValidationTest {
     }
 
     @Test
-    void should_invalid_password_have_whitespace(){
+    void should_invalid_password_have_whitespace() {
         // given
         String password = "123456 7";
 
@@ -100,5 +101,17 @@ class InputValidationTest {
 
         // then
         assertFalse(check);
+    }
+
+    @Test
+    void should_valid_email() {
+        // given
+        String email = "dung6app@gmail.com";
+
+        // when
+        boolean check = InputValidation.isEmailValid(email);
+
+        // then
+        Assertions.assertTrue(check);
     }
 }

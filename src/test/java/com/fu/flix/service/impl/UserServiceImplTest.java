@@ -8,7 +8,7 @@ import com.fu.flix.dto.response.MainAddressResponse;
 import com.fu.flix.dto.response.UserAddressResponse;
 import com.fu.flix.entity.User;
 import com.fu.flix.entity.UserAddress;
-import com.fu.flix.service.UserService;
+import com.fu.flix.service.CustomerService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -34,7 +34,7 @@ class UserServiceImplTest {
     UserDAO userDAO;
 
     @Autowired
-    UserService userService;
+    CustomerService customerService;
 
     @Test
     void test_get_user_address() {
@@ -52,7 +52,7 @@ class UserServiceImplTest {
         Assertions.assertEquals("00001", userAddress.getCommuneId());
     }
 
-//    @Test
+    //    @Test
     void test_get_main_address() {
         // given
         String phone = "0865390037";
@@ -60,7 +60,7 @@ class UserServiceImplTest {
         setContextUsername(phone);
 
         // when
-        ResponseEntity<MainAddressResponse> responseEntity = userService.getMainAddress(request);
+        ResponseEntity<MainAddressResponse> responseEntity = customerService.getMainAddress(request);
         MainAddressResponse mainAddressResponse = responseEntity.getBody();
 
         // then
@@ -69,7 +69,7 @@ class UserServiceImplTest {
         Assertions.assertEquals("68 Hoàng Hoa Thám, Phường Phúc Xá, Quận Ba Đình, Thành phố Hà Nội", mainAddressResponse.getAddressName());
     }
 
-//    @Test
+    //    @Test
     void test_get_user_addresses() {
         // given
         String phone = "0865390039";
@@ -77,7 +77,7 @@ class UserServiceImplTest {
         setContextUsername(phone);
 
         // when
-        ResponseEntity<UserAddressResponse> responseEntity = userService.getUserAddresses(request);
+        ResponseEntity<UserAddressResponse> responseEntity = customerService.getUserAddresses(request);
         UserAddressResponse userAddressResponse = responseEntity.getBody();
 
         // then

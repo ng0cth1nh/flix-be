@@ -1,13 +1,7 @@
 package com.fu.flix.service;
 
-import com.fu.flix.dto.request.CancelRequestingRepairRequest;
-import com.fu.flix.dto.request.DetailRequestingRepairRequest;
-import com.fu.flix.dto.request.HistoryRequestingRepairRequest;
-import com.fu.flix.dto.request.RequestingRepairRequest;
-import com.fu.flix.dto.response.CancelRequestingRepairResponse;
-import com.fu.flix.dto.response.DetailRequestingRepairResponse;
-import com.fu.flix.dto.response.HistoryRequestingRepairResponse;
-import com.fu.flix.dto.response.RequestingRepairResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import org.springframework.http.ResponseEntity;
 
 public interface CustomerService {
@@ -18,4 +12,12 @@ public interface CustomerService {
     ResponseEntity<HistoryRequestingRepairResponse> getFixingRequestHistories(HistoryRequestingRepairRequest request);
 
     ResponseEntity<DetailRequestingRepairResponse> getDetailFixingRequest(DetailRequestingRepairRequest request);
+
+    ResponseEntity<MainAddressResponse> getMainAddress(MainAddressRequest request);
+
+    ResponseEntity<UserAddressResponse> getUserAddresses(UserAddressRequest request);
+
+    ResponseEntity<DeleteAddressResponse> deleteUserAddress(DeleteAddressRequest request);
+
+    ResponseEntity<EditAddressResponse> editUserAddress(EditAddressRequest request);
 }

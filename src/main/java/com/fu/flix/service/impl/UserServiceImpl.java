@@ -7,8 +7,11 @@ import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.NotificationDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.NotificationDTO;
+import com.fu.flix.dto.error.GeneralException;
+import com.fu.flix.dto.request.ChangePasswordRequest;
 import com.fu.flix.dto.request.NotificationRequest;
 import com.fu.flix.dto.request.UpdateAvatarRequest;
+import com.fu.flix.dto.response.ChangePasswordResponse;
 import com.fu.flix.dto.response.NotificationResponse;
 import com.fu.flix.dto.response.UpdateAvatarResponse;
 import com.fu.flix.entity.Image;
@@ -17,9 +20,11 @@ import com.fu.flix.entity.User;
 import com.fu.flix.service.CloudStorageService;
 import com.fu.flix.service.UserService;
 import com.fu.flix.util.DateFormatUtil;
+import com.fu.flix.util.InputValidation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +32,8 @@ import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.fu.flix.constant.Constant.*;
 
 @Service
 @Slf4j
@@ -37,18 +44,21 @@ public class UserServiceImpl implements UserService {
     private final UserDAO userDAO;
     private final AppConf appConf;
     private final NotificationDAO notificationDAO;
+    private final PasswordEncoder passwordEncoder;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public UserServiceImpl(ImageDAO imageDAO,
                            CloudStorageService cloudStorageService,
                            UserDAO userDAO,
                            AppConf appConf,
-                           NotificationDAO notificationDAO) {
+                           NotificationDAO notificationDAO,
+                           PasswordEncoder passwordEncoder) {
         this.imageDAO = imageDAO;
         this.cloudStorageService = cloudStorageService;
         this.userDAO = userDAO;
         this.appConf = appConf;
         this.notificationDAO = notificationDAO;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -113,6 +123,32 @@ public class UserServiceImpl implements UserService {
 
         NotificationResponse response = new NotificationResponse();
         response.setNotifications(notificationDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<ChangePasswordResponse> changePassword(ChangePasswordRequest request) {
+        User user = userDAO.findByUsername(request.getUsername()).get();
+        String oldPassword = request.getOldPassword();
+        boolean matches = passwordEncoder.matches(oldPassword, user.getPassword());
+        if (!matches) {
+            throw new GeneralException(WRONG_PASSWORD);
+        }
+
+        String newPassword = request.getNewPassword();
+        if (!InputValidation.isPasswordValid(newPassword)) {
+            throw new GeneralException(INVALID_PASSWORD);
+        }
+
+        if (oldPassword.equals(newPassword)) {
+            throw new GeneralException(NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD);
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        ChangePasswordResponse response = new ChangePasswordResponse();
+        response.setMessage(Constant.CHANGE_PASSWORD_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

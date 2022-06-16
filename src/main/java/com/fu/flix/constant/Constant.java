@@ -42,4 +42,7 @@ public class Constant {
     public static final String INVALID_EMAIL = "INVALID_EMAIL";
     public static final String UPDATED_PROFILE_SUCCESS = "UPDATED_PROFILE_SUCCESS";
     public static final String UPDATE_AVATAR_SUCCESS = "UPDATE_AVATAR_SUCCESS";
+    public static final String WRONG_PASSWORD = "WRONG_PASSWORD";
+    public static final String CHANGE_PASSWORD_SUCCESS = "CHANGE_PASSWORD_SUCCESS";
+    public static final String NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD = "NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD";
 }

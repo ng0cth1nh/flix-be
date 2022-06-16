@@ -1,7 +1,9 @@
 package com.fu.flix.controller;
 
 
+import com.fu.flix.dto.request.NotificationRequest;
 import com.fu.flix.dto.request.UpdateAvatarRequest;
+import com.fu.flix.dto.response.NotificationResponse;
 import com.fu.flix.dto.response.UpdateAvatarResponse;
 import com.fu.flix.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,5 +26,10 @@ public class UserController {
     @PutMapping("avatar")
     public ResponseEntity<UpdateAvatarResponse> updateAvatar(UpdateAvatarRequest request) throws IOException {
         return userService.updateAvatar(request);
+    }
+
+    @GetMapping("notifications")
+    public ResponseEntity<NotificationResponse> getNotifications(NotificationRequest request) {
+        return userService.getNotifications(request);
     }
 }

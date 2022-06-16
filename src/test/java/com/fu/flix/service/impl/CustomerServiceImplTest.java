@@ -1,11 +1,19 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.RepairRequestDAO;
+import com.fu.flix.dao.UserAddressDAO;
+import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.request.CancelRequestingRepairRequest;
+import com.fu.flix.dto.request.MainAddressRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
+import com.fu.flix.dto.request.UserAddressRequest;
 import com.fu.flix.dto.response.CancelRequestingRepairResponse;
+import com.fu.flix.dto.response.MainAddressResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
+import com.fu.flix.dto.response.UserAddressResponse;
 import com.fu.flix.entity.RepairRequest;
+import com.fu.flix.entity.User;
+import com.fu.flix.entity.UserAddress;
 import com.fu.flix.service.CustomerService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
@@ -35,6 +43,59 @@ class CustomerServiceImplTest {
 
     @Autowired
     RepairRequestDAO repairRequestDAO;
+    @Autowired
+    UserAddressDAO userAddressDAO;
+    @Autowired
+    UserDAO userDAO;
+
+
+    //    @Test
+    void test_get_user_address() {
+        // given
+        String phone = "0865390037";
+        Optional<User> optionalUser = userDAO.findByUsername(phone);
+
+        // when
+        User user = optionalUser.get();
+        Optional<UserAddress> optionalUserAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(user.getId(), true);
+        UserAddress userAddress = optionalUserAddress.get();
+
+        // then
+        Assertions.assertEquals(phone, userAddress.getPhone());
+        Assertions.assertEquals("00001", userAddress.getCommuneId());
+    }
+
+    //    @Test
+    void test_get_main_address() {
+        // given
+        String phone = "0865390037";
+        MainAddressRequest request = new MainAddressRequest();
+        setContextUsername(phone);
+
+        // when
+        ResponseEntity<MainAddressResponse> responseEntity = customerService.getMainAddress(request);
+        MainAddressResponse mainAddressResponse = responseEntity.getBody();
+
+        // then
+        Assertions.assertEquals(phone, mainAddressResponse.getPhone());
+        Assertions.assertEquals("Sơn Tùng MTP", mainAddressResponse.getCustomerName());
+        Assertions.assertEquals("68 Hoàng Hoa Thám, Phường Phúc Xá, Quận Ba Đình, Thành phố Hà Nội", mainAddressResponse.getAddressName());
+    }
+
+    //    @Test
+    void test_get_user_addresses() {
+        // given
+        String phone = "0865390039";
+        UserAddressRequest request = new UserAddressRequest();
+        setContextUsername(phone);
+
+        // when
+        ResponseEntity<UserAddressResponse> responseEntity = customerService.getCustomerAddresses(request);
+        UserAddressResponse userAddressResponse = responseEntity.getBody();
+
+        // then
+        Assertions.assertEquals(1, userAddressResponse.getAddresses().size());
+    }
 
     //        @Test
     void test_create_fixing_request_response_success() {

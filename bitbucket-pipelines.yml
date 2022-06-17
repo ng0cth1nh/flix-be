@@ -47,7 +47,7 @@ definitions:
           - cat ./gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
           - docker push ${IMAGE_NAME}
           # Deploy to Cloud Run
-          - gcloud run deploy flix --image gcr.io/authentic-reach-351916/flix${SUFFIX} --platform managed --region us-central1 --allow-unauthenticated
+          - gcloud run deploy flix --image gcr.io/authentic-reach-351916/flix${SUFFIX} --platform managed --region asia-southeast1 --allow-unauthenticated
 pipelines:
   tags:
     v*:

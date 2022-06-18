@@ -10,9 +10,11 @@ import com.fu.flix.dto.NotificationDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.ChangePasswordRequest;
 import com.fu.flix.dto.request.NotificationRequest;
+import com.fu.flix.dto.request.ResetPasswordRequest;
 import com.fu.flix.dto.request.UpdateAvatarRequest;
 import com.fu.flix.dto.response.ChangePasswordResponse;
 import com.fu.flix.dto.response.NotificationResponse;
+import com.fu.flix.dto.response.ResetPasswordResponse;
 import com.fu.flix.dto.response.UpdateAvatarResponse;
 import com.fu.flix.entity.Image;
 import com.fu.flix.entity.Notification;
@@ -149,6 +151,23 @@ public class UserServiceImpl implements UserService {
 
         ChangePasswordResponse response = new ChangePasswordResponse();
         response.setMessage(Constant.CHANGE_PASSWORD_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest request) {
+        User user = userDAO.findByUsername(request.getUsername()).get();
+
+        String newPassword = request.getNewPassword();
+        if (!InputValidation.isPasswordValid(newPassword)) {
+            throw new GeneralException(INVALID_PASSWORD);
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        ResetPasswordResponse response = new ResetPasswordResponse();
+        response.setMessage(RESET_PASSWORD_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

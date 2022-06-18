@@ -50,7 +50,7 @@ public class AccountController {
     }
 
     @PostMapping("forgot/password/confirm")
-    public ResponseEntity<CFForgotPassResponse> sendForgotPassOTP(@RequestBody CFForgotPassRequest request) {
+    public ResponseEntity<CFForgotPassResponse> confirmForgotPassword(@RequestBody CFForgotPassRequest request) {
         return accountService.confirmForgotPassword(request);
     }
 }

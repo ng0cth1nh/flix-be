@@ -3,9 +3,11 @@ package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.ChangePasswordRequest;
 import com.fu.flix.dto.request.NotificationRequest;
+import com.fu.flix.dto.request.ResetPasswordRequest;
 import com.fu.flix.dto.request.UpdateAvatarRequest;
 import com.fu.flix.dto.response.ChangePasswordResponse;
 import com.fu.flix.dto.response.NotificationResponse;
+import com.fu.flix.dto.response.ResetPasswordResponse;
 import com.fu.flix.dto.response.UpdateAvatarResponse;
 import com.fu.flix.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -38,5 +40,10 @@ public class UserController {
     @PutMapping("changePassword")
     public ResponseEntity<ChangePasswordResponse> changePassword(@RequestBody ChangePasswordRequest request) {
         return userService.changePassword(request);
+    }
+
+    @PutMapping("password/reset")
+    public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
+        return userService.resetPassword(request);
     }
 }

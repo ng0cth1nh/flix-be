@@ -303,12 +303,16 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     @Override
     public ResponseEntity<CFForgotPassResponse> confirmForgotPassword(CFForgotPassRequest request) {
         validateForgotPassInput(request);
+        User user = userDAO.findByUsername(request.getPhone()).get();
+
+        String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
 
         OTPInfo otpInfo = getOTPInfo(request, OTPType.FORGOT_PASSWORD);
         redisDAO.deleteOTP(otpInfo);
 
         CFForgotPassResponse response = new CFForgotPassResponse();
-        response.setMessage(CONFIRM_FORGOT_PASSWORD_SUCCESS);
+        response.setAccessToken(accessToken);
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

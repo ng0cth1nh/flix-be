@@ -163,7 +163,6 @@ public class UserServiceImpl implements UserService {
         if (!InputValidation.isPasswordValid(newPassword)) {
             throw new GeneralException(INVALID_PASSWORD);
         }
-
         user.setPassword(passwordEncoder.encode(newPassword));
 
         ResetPasswordResponse response = new ResetPasswordResponse();

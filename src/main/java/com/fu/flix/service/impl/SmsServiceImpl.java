@@ -33,12 +33,13 @@ public class SmsServiceImpl implements SmsService {
 
         String msg = "Your OTP is " + otp + ". Please verify this OTP";
         Message
-                .creator(new PhoneNumber(request.getPhoneNumber()), new PhoneNumber(appConf.getTwilioInfo().getFromNumber()), msg)
+                .creator(new PhoneNumber(request.getPhoneNumberFormatted()), new PhoneNumber(appConf.getTwilioInfo().getFromNumber()), msg)
                 .create();
 
         OTPInfo otpInfo = new OTPInfo();
         otpInfo.setOtp(otp);
         otpInfo.setUsername(request.getUsername());
+        otpInfo.setOtpType(request.getOtpType());
         redisDAO.saveOTP(otpInfo);
 
         return otp;

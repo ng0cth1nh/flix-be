@@ -7,8 +7,10 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.OTPType;
 import com.fu.flix.constant.enums.TokenType;
 import com.fu.flix.dao.*;
+import com.fu.flix.dto.PhoneDTO;
 import com.fu.flix.entity.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.*;
@@ -53,7 +55,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final AppConf appConf;
     private final RedisDAO redisDAO;
     private final SmsService smsService;
-    private final ImageDAO imageDAO;
     private final CommuneDAO communeDAO;
     private final DistrictDAO districtDAO;
     private final CityDAO cityDAO;
@@ -68,7 +69,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               AppConf appConf,
                               RedisDAO redisDAO,
                               SmsService smsService,
-                              ImageDAO imageDAO,
                               CommuneDAO communeDAO,
                               DistrictDAO districtDAO,
                               CityDAO cityDAO,
@@ -81,7 +81,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.appConf = appConf;
         this.redisDAO = redisDAO;
         this.smsService = smsService;
-        this.imageDAO = imageDAO;
         this.communeDAO = communeDAO;
         this.districtDAO = districtDAO;
         this.cityDAO = cityDAO;
@@ -146,24 +145,17 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     @Override
-    public ResponseEntity<CheckUsernameResponse> sendRegisterOTP(CheckUsernameRequest request) throws JsonProcessingException {
+    public ResponseEntity<SendRegisterOTPResponse> sendRegisterOTP(SendRegisterOTPRequest request) throws JsonProcessingException {
         if (userDAO.findByUsername(request.getPhone()).isPresent()) {
             throw new GeneralException(ACCOUNT_EXISTED);
         }
 
-        SmsRequest sms = getSmsRequest(request);
+        SmsRequest sms = getSmsRequest(request, OTPType.REGISTER);
         smsService.sendAndSaveOTP(sms);
 
-        CheckUsernameResponse response = new CheckUsernameResponse();
+        SendRegisterOTPResponse response = new SendRegisterOTPResponse();
         response.setMessage(NEW_ACCOUNT_VALID);
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private SmsRequest getSmsRequest(CheckUsernameRequest checkUsernameRequest) {
-        SmsRequest sms = new SmsRequest();
-        sms.setUsername(checkUsernameRequest.getPhone());
-        sms.setPhoneNumber(PhoneFormatter.getVietNamePhoneNumber(checkUsernameRequest.getPhone()));
-        return sms;
     }
 
     @Override
@@ -178,6 +170,9 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
 
+        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
+        redisDAO.deleteOTP(otpInfo);
+
         CFRegisterResponse response = new CFRegisterResponse();
         response.setAccessToken(accessToken);
         response.setRefreshToken(refreshToken);
@@ -186,7 +181,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     private void validateRegisterInput(CFRegisterRequest request) {
-        if (!isValidOTP(request)) {
+        if (isNotValidOTP(request, OTPType.REGISTER)) {
             throw new GeneralException(INVALID_OTP);
         } else if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(INVALID_PHONE_NUMBER);
@@ -201,11 +196,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         } else if (communeDAO.findById(request.getCommuneId()).isEmpty()) {
             throw new GeneralException(INVALID_COMMUNE);
         }
-    }
-
-    private boolean isValidOTP(OTPRequest request) {
-        OTPInfo otpInfo = redisDAO.findOTP(request);
-        return otpInfo != null;
     }
 
     private String getToken(User user, TokenType tokenType) {
@@ -284,5 +274,68 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             Role role = optionalRole.get();
             user.getRoles().add(role);
         }
+    }
+
+    @Override
+    public ResponseEntity<SendForgotPassOTPResponse> sendForgotPassOTP(SendForgotPassOTPRequest request) throws JsonProcessingException {
+        Optional<User> optionalUser = userDAO.findByUsername(request.getPhone());
+
+        if (optionalUser.isEmpty()) {
+            throw new GeneralException(ACCOUNT_NOT_FOUND);
+        }
+
+        SmsRequest sms = getSmsRequest(request, OTPType.FORGOT_PASSWORD);
+        smsService.sendAndSaveOTP(sms);
+
+        SendForgotPassOTPResponse response = new SendForgotPassOTPResponse();
+        response.setMessage(SEND_FORGOT_PASSWORD_OTP_SUCCESS);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private SmsRequest getSmsRequest(PhoneDTO phoneDTO, OTPType otpType) {
+        SmsRequest sms = new SmsRequest();
+        sms.setUsername(phoneDTO.getPhone());
+        sms.setPhoneNumberFormatted(PhoneFormatter.getVietNamePhoneNumber(phoneDTO.getPhone()));
+        sms.setOtpType(otpType);
+        return sms;
+    }
+
+    @Override
+    public ResponseEntity<CFForgotPassResponse> confirmForgotPassword(CFForgotPassRequest request) {
+        validateForgotPassInput(request);
+        User user = userDAO.findByUsername(request.getPhone()).get();
+
+        String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
+
+        OTPInfo otpInfo = getOTPInfo(request, OTPType.FORGOT_PASSWORD);
+        redisDAO.deleteOTP(otpInfo);
+
+        CFForgotPassResponse response = new CFForgotPassResponse();
+        response.setAccessToken(accessToken);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void validateForgotPassInput(CFForgotPassRequest request) {
+        if (isNotValidOTP(request, OTPType.FORGOT_PASSWORD)) {
+            throw new GeneralException(INVALID_OTP);
+        } else if (!InputValidation.isPhoneValid(request.getPhone())) {
+            throw new GeneralException(INVALID_PHONE_NUMBER);
+        } else if (userDAO.findByUsername(request.getPhone()).isEmpty()) {
+            throw new GeneralException(ACCOUNT_NOT_FOUND);
+        }
+    }
+
+    private OTPInfo getOTPInfo(OTPRequest request, OTPType otpType) {
+        OTPInfo otpInfo = new OTPInfo();
+        otpInfo.setOtp(request.getOtp());
+        otpInfo.setUsername(request.getPhone());
+        otpInfo.setOtpType(otpType);
+        return otpInfo;
+    }
+
+    private boolean isNotValidOTP(OTPRequest request, OTPType otpType) {
+        OTPInfo otpInfo = redisDAO.findOTP(request, otpType);
+        return otpInfo == null;
     }
 }

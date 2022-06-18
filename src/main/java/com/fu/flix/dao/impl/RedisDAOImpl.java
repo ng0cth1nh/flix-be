@@ -2,6 +2,7 @@ package com.fu.flix.dao.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fu.flix.constant.enums.OTPType;
 import com.fu.flix.constant.enums.RedisDataTypeEnum;
 import com.fu.flix.dao.RedisDAO;
 import com.fu.flix.dto.request.OTPRequest;
@@ -30,8 +31,8 @@ public class RedisDAOImpl implements RedisDAO {
     }
 
     @Override
-    public OTPInfo findOTP(OTPRequest OTPRequest) {
-        String key = REDIS_KEY_OTP_PREFIX + OTPRequest.getPhone() + "_" + OTPRequest.getOtp();
+    public OTPInfo findOTP(OTPRequest OTPRequest, OTPType otpType) {
+        String key = REDIS_KEY_OTP_PREFIX + otpType.name() + "_" + OTPRequest.getPhone() + "_" + OTPRequest.getOtp();
         OTPInfo otpInfo = null;
         try {
             Object data = redisTemplate.opsForValue().get(key);
@@ -44,9 +45,15 @@ public class RedisDAOImpl implements RedisDAO {
 
     @Override
     public void saveOTP(OTPInfo otpInfo) throws JsonProcessingException {
-        String key = REDIS_KEY_OTP_PREFIX + otpInfo.getUsername() + "_" + otpInfo.getOtp();
+        String key = REDIS_KEY_OTP_PREFIX + otpInfo.getOtpType().name() + "_" + otpInfo.getUsername() + "_" + otpInfo.getOtp();
         redisTemplate.opsForValue().set(key, objectToString(otpInfo));
         redisTemplate.expireAt(key, Instant.now().plusSeconds(EXPIRE_TIME_IN_SECONDS));
+    }
+
+    @Override
+    public void deleteOTP(OTPInfo otpInfo) {
+        String key = REDIS_KEY_OTP_PREFIX + otpInfo.getOtpType().name() + "_" + otpInfo.getUsername() + "_" + otpInfo.getOtp();
+        redisTemplate.delete(key);
     }
 
     private <E> E stringToObject(String data, Class<E> clazz) throws IOException {

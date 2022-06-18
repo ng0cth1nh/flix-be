@@ -1,6 +1,7 @@
 package com.fu.flix.dao.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fu.flix.constant.enums.OTPType;
 import com.fu.flix.dao.RedisDAO;
 import com.fu.flix.entity.OTPInfo;
 import com.fu.flix.dto.request.OTPRequest;
@@ -34,6 +35,7 @@ class RedisDAOImplTest {
         OTPInfo paramOTP = new OTPInfo();
         paramOTP.setOtp(otp);
         paramOTP.setUsername(username);
+        paramOTP.setOtpType(OTPType.REGISTER);
 
         OTPRequest otpRequest = new OTPRequest();
         otpRequest.setOtp(otp);
@@ -44,7 +46,7 @@ class RedisDAOImplTest {
 
         Thread.sleep(60000);
 
-        OTPInfo resultOTP = redisDAO.findOTP(otpRequest);
+        OTPInfo resultOTP = redisDAO.findOTP(otpRequest, OTPType.REGISTER);
 
         // then
         Assertions.assertEquals(null, resultOTP);

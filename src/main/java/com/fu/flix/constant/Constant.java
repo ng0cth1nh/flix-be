@@ -45,4 +45,7 @@ public class Constant {
     public static final String WRONG_PASSWORD = "WRONG_PASSWORD";
     public static final String CHANGE_PASSWORD_SUCCESS = "CHANGE_PASSWORD_SUCCESS";
     public static final String NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD = "NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD";
+    public static final String ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND";
+    public static final String SEND_FORGOT_PASSWORD_OTP_SUCCESS = "SEND_FORGOT_PASSWORD_OTP_SUCCESS";
+    public static final String RESET_PASSWORD_SUCCESS = "RESET_PASSWORD_SUCCESS";
 }

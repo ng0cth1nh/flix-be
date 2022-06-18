@@ -1,6 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fu.flix.constant.enums.OTPType;
 import com.fu.flix.dao.RedisDAO;
 import com.fu.flix.entity.OTPInfo;
 import com.fu.flix.dto.request.OTPRequest;
@@ -22,21 +23,21 @@ class SmsServiceImplTest {
     @Autowired
     RedisDAO redisDAO;
 
-//    @Test
+    //    @Test
     void test_send_and_save_OTP() throws JsonProcessingException {
         // given
         String username = "0865390031";
         String phone = "+84865390031";
         SmsRequest request = new SmsRequest();
         request.setUsername(username);
-        request.setPhoneNumber(phone);
+        request.setPhoneNumberFormatted(phone);
 
         // when
         int otp = smsService.sendAndSaveOTP(request);
         OTPRequest otpRequest = new OTPRequest();
         otpRequest.setOtp(otp);
         otpRequest.setPhone(username);
-        OTPInfo resultOTP = redisDAO.findOTP(otpRequest);
+        OTPInfo resultOTP = redisDAO.findOTP(otpRequest, OTPType.REGISTER);
 
         // then
         Assertions.assertEquals(otp, resultOTP.getOtp());

@@ -84,10 +84,13 @@ public class CustomerServiceImpl implements CustomerService {
         LocalDateTime now = LocalDateTime.now();
         Long voucherId = request.getVoucherId();
         User user = userDAO.findByUsername(request.getUsername()).get();
+        String paymentMethodID = request.getPaymentMethodId();
         Collection<UserVoucher> userVouchers = user.getUserVouchers();
 
-        UsingVoucherDTO usingVoucherDTO = new UsingVoucherDTO(userVouchers, voucherId, request.getServiceId());
-        useInspectionVoucher(usingVoucherDTO, now);
+        if (voucherId != null) {
+            UsingVoucherDTO usingVoucherDTO = new UsingVoucherDTO(userVouchers, voucherId, request.getServiceId(), paymentMethodID);
+            useInspectionVoucher(usingVoucherDTO, now);
+        }
 
         Long userId = user.getId();
 
@@ -97,7 +100,7 @@ public class CustomerServiceImpl implements CustomerService {
         repairRequest.setRequestCode(RandomUtil.generateCode());
         repairRequest.setUserId(userId);
         repairRequest.setServiceId(request.getServiceId());
-        repairRequest.setPaymentMethodId(getPaymentMethodIdValidated(request.getPaymentMethodId()));
+        repairRequest.setPaymentMethodId(getPaymentMethodIdValidated(paymentMethodID));
         repairRequest.setStatusId(PENDING.getId());
         repairRequest.setExpectStartFixingAt(expectFixingDay);
         repairRequest.setDescription(request.getDescription());
@@ -120,6 +123,10 @@ public class CustomerServiceImpl implements CustomerService {
         UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
         Optional<com.fu.flix.entity.Service> optionalService = serviceDAO.findById(usingVoucherDTO.getServiceId());
         Voucher voucher = voucherDAO.findById(voucherId).get();
+
+        if (!isMatchPaymentMethod(usingVoucherDTO, voucher)) {
+            throw new GeneralException(PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER);
+        }
 
         if (optionalService.isEmpty()) {
             throw new GeneralException(INVALID_SERVICE);
@@ -155,6 +162,11 @@ public class CustomerServiceImpl implements CustomerService {
 
         voucher.setRemainQuantity(voucher.getRemainQuantity() - 1);
         userVoucher.setQuantity(userVoucher.getQuantity() - 1);
+    }
+
+    private boolean isMatchPaymentMethod(UsingVoucherDTO usingVoucherDTO, Voucher voucher) {
+        return voucher.getVoucherPaymentMethods().stream()
+                .anyMatch(V -> V.getPaymentMethod().getId().equals(usingVoucherDTO.getPaymentMethodId()));
     }
 
     private LocalDateTime getExpectFixingDay(RequestingRepairRequest request, LocalDateTime now) {

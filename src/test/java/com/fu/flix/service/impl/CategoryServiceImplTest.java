@@ -3,7 +3,7 @@ package com.fu.flix.service.impl;
 import com.fu.flix.dto.ServiceDTO;
 import com.fu.flix.dto.request.ServiceRequest;
 import com.fu.flix.dto.request.ServiceResponse;
-import com.fu.flix.service.MajorService;
+import com.fu.flix.service.CategoryService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -14,23 +14,21 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @RunWith(SpringRunner.class)
 @SpringBootTest
-class MajorServiceImplTest {
+class CategoryServiceImplTest {
 
     @Autowired
-    MajorService majorService;
+    CategoryService categoryService;
 
     @Test
-    void getServicesByMajor() {
+    void getServicesByCategory() {
         // given
         ServiceRequest request = new ServiceRequest();
-        request.setMajorId(1L);
+        request.setCategoryId(1L);
 
         // when
-        ResponseEntity<ServiceResponse> responseEntity = majorService.getServicesByMajor(request);
+        ResponseEntity<ServiceResponse> responseEntity = categoryService.getServicesByCategory(request);
         ServiceResponse serviceResponse = responseEntity.getBody();
         List<ServiceDTO> services = serviceResponse.getServices();
 

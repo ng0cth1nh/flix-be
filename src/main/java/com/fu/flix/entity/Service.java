@@ -27,7 +27,7 @@ public class Service {
 
     private String description;
 
-    private Long majorId;
+    private Long categoryId;
 
     private boolean isActive;
 

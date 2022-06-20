@@ -6,8 +6,8 @@ import com.fu.flix.dto.request.ServiceResponse;
 import com.fu.flix.dto.response.SearchServicesResponse;
 import org.springframework.http.ResponseEntity;
 
-public interface MajorService {
-    ResponseEntity<ServiceResponse> getServicesByMajor(ServiceRequest request);
+public interface CategoryService {
+    ResponseEntity<ServiceResponse> getServicesByCategory(ServiceRequest request);
 
     ResponseEntity<SearchServicesResponse> searchServices(SearchServicesRequest request);
 }

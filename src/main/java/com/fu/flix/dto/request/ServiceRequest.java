@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class ServiceRequest extends DataRequest{
-    private Long majorId;
+    private Long categoryId;
 }

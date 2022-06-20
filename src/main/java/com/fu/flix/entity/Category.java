@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "majors")
+@Table(name = "categories")
 @NoArgsConstructor
 @AllArgsConstructor
-public class Major {
+public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

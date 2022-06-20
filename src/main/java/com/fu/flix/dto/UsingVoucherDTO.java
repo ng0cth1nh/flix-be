@@ -12,4 +12,5 @@ public class UsingVoucherDTO {
     private Collection<UserVoucher> userVouchers;
     private Long voucherId;
     private Long serviceId;
+    private String paymentMethodId;
 }

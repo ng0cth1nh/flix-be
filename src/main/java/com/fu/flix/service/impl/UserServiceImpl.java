@@ -3,9 +3,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.Constant;
-import com.fu.flix.constant.enums.CommentType;
 import com.fu.flix.constant.enums.FeedbackType;
-import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.constant.enums.Status;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.NotificationDTO;
@@ -26,13 +24,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.RoleType.*;
 
 @Service
 @Slf4j
@@ -46,9 +41,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final FeedbackDAO feedbackDAO;
     private final RepairRequestDAO repairRequestDAO;
-    private final CommentDAO commentDAO;
-    private final InvoiceDAO invoiceDAO;
-    private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public UserServiceImpl(ImageDAO imageDAO,
@@ -58,10 +50,7 @@ public class UserServiceImpl implements UserService {
                            NotificationDAO notificationDAO,
                            PasswordEncoder passwordEncoder,
                            FeedbackDAO feedbackDAO,
-                           RepairRequestDAO repairRequestDAO,
-                           CommentDAO commentDAO,
-                           InvoiceDAO invoiceDAO,
-                           RepairRequestMatchingDAO repairRequestMatchingDAO) {
+                           RepairRequestDAO repairRequestDAO) {
         this.imageDAO = imageDAO;
         this.cloudStorageService = cloudStorageService;
         this.userDAO = userDAO;
@@ -70,9 +59,6 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
         this.feedbackDAO = feedbackDAO;
         this.repairRequestDAO = repairRequestDAO;
-        this.commentDAO = commentDAO;
-        this.invoiceDAO = invoiceDAO;
-        this.repairRequestMatchingDAO = repairRequestMatchingDAO;
     }
 
     @Override
@@ -221,72 +207,5 @@ public class UserServiceImpl implements UserService {
         response.setMessage(CREATE_FEEDBACK_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @Override
-    public ResponseEntity<CommentResponse> createComment(CommentRequest request) {
-        String requestCode = request.getRequestCode();
-
-        if (requestCode == null) {
-            throw new GeneralException(INVALID_REQUEST_CODE);
-        }
-
-        Optional<Invoice> optionalInvoice = invoiceDAO.findByRequestCode(requestCode);
-        if (optionalInvoice.isEmpty()) {
-            throw new GeneralException(INVALID_REQUEST_CODE);
-        }
-
-        Invoice invoice = optionalInvoice.get();
-        if (!Status.DONE.getId().equals(invoice.getStatusId())) {
-            throw new GeneralException(CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE);
-        }
-
-        User user = userDAO.findByUsername(request.getUsername()).get();
-        String commentType = getCommentType(user.getRoles());
-        Optional<Comment> optionalComment = commentDAO.findComment(requestCode, commentType);
-        if (optionalComment.isPresent()) {
-            throw new GeneralException(COMMENT_EXISTED);
-        }
-
-        RepairRequest repairRequest = repairRequestDAO.findByRequestCode(requestCode).get();
-        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-
-        Comment comment = new Comment();
-        comment.setRating(getRatingValidated(request.getRating()));
-        comment.setComment(request.getComment());
-        comment.setRequestCode(requestCode);
-        comment.setRepairerId(repairRequestMatching.getRepairerId());
-        comment.setCustomerId(repairRequest.getUserId());
-        comment.setType(commentType);
-
-        commentDAO.save(comment);
-
-        CommentResponse response = new CommentResponse();
-        response.setMessage(COMMENT_SUCCESS);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private String getCommentType(Collection<Role> roles) {
-        for (Role role : roles) {
-            RoleType roleType = valueOf( role.getName());
-            if (ROLE_CUSTOMER.equals(roleType)) {
-                return CommentType.CUSTOMER_COMMENT.name();
-            } else if (ROLE_REPAIRER.equals(roleType)) {
-                return CommentType.REPAIRER_COMMENT.name();
-            }
-        }
-        return null;
-    }
-
-
-    private Integer getRatingValidated(Integer rating) {
-        if (rating == null) {
-            throw new GeneralException(RATING_IS_REQUIRED);
-        }
-        if (rating > 5 || rating < 1) {
-            throw new GeneralException(RATING_MUST_IN_RANGE_1_TO_5);
-        }
-        return rating;
     }
 }

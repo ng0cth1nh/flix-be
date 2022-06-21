@@ -1,14 +1,8 @@
 package com.fu.flix.controller;
 
 
-import com.fu.flix.dto.request.ChangePasswordRequest;
-import com.fu.flix.dto.request.NotificationRequest;
-import com.fu.flix.dto.request.ResetPasswordRequest;
-import com.fu.flix.dto.request.UpdateAvatarRequest;
-import com.fu.flix.dto.response.ChangePasswordResponse;
-import com.fu.flix.dto.response.NotificationResponse;
-import com.fu.flix.dto.response.ResetPasswordResponse;
-import com.fu.flix.dto.response.UpdateAvatarResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -45,5 +39,10 @@ public class UserController {
     @PutMapping("password/reset")
     public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
         return userService.resetPassword(request);
+    }
+
+    @PostMapping("feedback")
+    public ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException {
+        return userService.createFeedback(request);
     }
 }

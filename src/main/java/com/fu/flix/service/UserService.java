@@ -1,13 +1,7 @@
 package com.fu.flix.service;
 
-import com.fu.flix.dto.request.ChangePasswordRequest;
-import com.fu.flix.dto.request.NotificationRequest;
-import com.fu.flix.dto.request.ResetPasswordRequest;
-import com.fu.flix.dto.request.UpdateAvatarRequest;
-import com.fu.flix.dto.response.ChangePasswordResponse;
-import com.fu.flix.dto.response.NotificationResponse;
-import com.fu.flix.dto.response.ResetPasswordResponse;
-import com.fu.flix.dto.response.UpdateAvatarResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.User;
 import org.springframework.http.ResponseEntity;
 
@@ -23,4 +17,6 @@ public interface UserService {
     ResponseEntity<ChangePasswordResponse> changePassword(ChangePasswordRequest request);
 
     ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest request);
+
+    ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException;
 }

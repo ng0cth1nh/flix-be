@@ -49,4 +49,6 @@ public class Constant {
     public static final String SEND_FORGOT_PASSWORD_OTP_SUCCESS = "SEND_FORGOT_PASSWORD_OTP_SUCCESS";
     public static final String RESET_PASSWORD_SUCCESS = "RESET_PASSWORD_SUCCESS";
     public static final String PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER = "PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER";
+    public static final String INVALID_FEEDBACK_TYPE = "INVALID_FEEDBACK_TYPE";
+    public static final String CREATE_FEEDBACK_SUCCESS = "CREATE_FEEDBACK_SUCCESS";
 }

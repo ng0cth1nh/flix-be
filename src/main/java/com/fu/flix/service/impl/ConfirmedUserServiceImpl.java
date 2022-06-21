@@ -9,10 +9,12 @@ import com.fu.flix.dto.request.CommentRequest;
 import com.fu.flix.dto.response.CommentResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.ConfirmedUserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -21,6 +23,8 @@ import static com.fu.flix.constant.Constant.RATING_MUST_IN_RANGE_1_TO_5;
 import static com.fu.flix.constant.enums.RoleType.*;
 
 @Service
+@Slf4j
+@Transactional
 public class ConfirmedUserServiceImpl implements ConfirmedUserService {
     private final CommentDAO commentDAO;
     private final InvoiceDAO invoiceDAO;
@@ -68,12 +72,19 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         RepairRequest repairRequest = repairRequestDAO.findByRequestCode(requestCode).get();
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
 
+        Long userId = user.getId();
+        Long customerId = repairRequest.getUserId();
+        Long repairerId = repairRequestMatching.getRepairerId();
+        if (!userId.equals(customerId) && !userId.equals(repairerId)) {
+            throw new GeneralException(USER_AND_REQUEST_CODE_DOES_NOT_MATCH);
+        }
+
         Comment comment = new Comment();
         comment.setRating(getRatingValidated(request.getRating()));
         comment.setComment(request.getComment());
         comment.setRequestCode(requestCode);
-        comment.setRepairerId(repairRequestMatching.getRepairerId());
-        comment.setCustomerId(repairRequest.getUserId());
+        comment.setRepairerId(repairerId);
+        comment.setCustomerId(customerId);
         comment.setType(commentType);
 
         commentDAO.save(comment);

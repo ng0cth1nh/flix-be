@@ -56,4 +56,5 @@ public class Constant {
     public static final String COMMENT_SUCCESS = "COMMENT_SUCCESS";
     public static final String RATING_IS_REQUIRED = "RATING_IS_REQUIRED";
     public static final String RATING_MUST_IN_RANGE_1_TO_5 = "RATING_MUST_IN_RANGE_1_TO_5";
+    public static final String USER_AND_REQUEST_CODE_DOES_NOT_MATCH = "USER_AND_REQUEST_CODE_DOES_NOT_MATCH";
 }

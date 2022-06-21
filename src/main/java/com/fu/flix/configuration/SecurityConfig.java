@@ -16,7 +16,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static com.fu.flix.constant.enums.RoleType.*;
-import static org.springframework.http.HttpMethod.GET;
 
 @Configuration
 @EnableWebSecurity
@@ -51,12 +50,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().antMatchers(appConf.getPermitAllApis())
                 .permitAll();
 
-        http.authorizeRequests().antMatchers(GET, "/api/v1/user/**")
+        http.authorizeRequests().antMatchers("/api/v1/confirmedUser/**")
+                .hasAnyAuthority(ROLE_CUSTOMER.name(),
+                        ROLE_REPAIRER.name());
+
+        http.authorizeRequests().antMatchers("/api/v1/user/**")
                 .hasAnyAuthority(ROLE_CUSTOMER.name(),
                         ROLE_PENDING_REPAIRER.name(),
                         ROLE_REPAIRER.name());
 
-        http.authorizeRequests().antMatchers(GET, "/api/v1/category/**")
+        http.authorizeRequests().antMatchers("/api/v1/category/**")
                 .hasAnyAuthority(ROLE_CUSTOMER.name(),
                         ROLE_PENDING_REPAIRER.name(),
                         ROLE_REPAIRER.name(),

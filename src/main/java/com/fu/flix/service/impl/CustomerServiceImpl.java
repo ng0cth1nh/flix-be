@@ -106,8 +106,6 @@ public class CustomerServiceImpl implements CustomerService {
         repairRequest.setDescription(request.getDescription());
         repairRequest.setVoucherId(voucherId);
         repairRequest.setAddressId(request.getAddressId());
-        repairRequest.setCreatedAt(now);
-        repairRequest.setUpdatedAt(now);
         repairRequestDAO.save(repairRequest);
 
         RequestingRepairResponse response = new RequestingRepairResponse();
@@ -203,12 +201,9 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(ONLY_CAN_CANCEL_REQUEST_PENDING_OR_CONFIRMED);
         }
 
-        LocalDateTime now = LocalDateTime.now();
-
         updateUsedVoucherQuantity(repairRequest);
 
         repairRequest.setStatusId(CANCELLED.getId());
-        repairRequest.setUpdatedAt(now);
 
         CancelRequestingRepairResponse response = new CancelRequestingRepairResponse();
         response.setMessage(CANCEL_REPAIR_REQUEST_SUCCESSFUL);

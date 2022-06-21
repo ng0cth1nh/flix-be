@@ -51,4 +51,10 @@ public class Constant {
     public static final String PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER = "PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER";
     public static final String INVALID_FEEDBACK_TYPE = "INVALID_FEEDBACK_TYPE";
     public static final String CREATE_FEEDBACK_SUCCESS = "CREATE_FEEDBACK_SUCCESS";
+    public static final String COMMENT_EXISTED = "COMMENT_EXISTED";
+    public static final String CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE = "CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE";
+    public static final String COMMENT_SUCCESS = "COMMENT_SUCCESS";
+    public static final String RATING_IS_REQUIRED = "RATING_IS_REQUIRED";
+    public static final String RATING_MUST_IN_RANGE_1_TO_5 = "RATING_MUST_IN_RANGE_1_TO_5";
+    public static final String USER_AND_REQUEST_CODE_DOES_NOT_MATCH = "USER_AND_REQUEST_CODE_DOES_NOT_MATCH";
 }

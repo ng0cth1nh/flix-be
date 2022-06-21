@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.OTPType;
+import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.constant.enums.TokenType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.PhoneDTO;
@@ -38,7 +39,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,6 +62,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final PasswordEncoder passwordEncoder;
     private final CloudStorageService cloudStorageService;
     private final UserService userService;
+    private final RepairerDAO repairerDAO;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -75,7 +76,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               UserAddressDAO userAddressDAO,
                               PasswordEncoder passwordEncoder,
                               CloudStorageService cloudStorageService,
-                              UserService userService) {
+                              UserService userService,
+                              RepairerDAO repairerDAO) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
@@ -88,6 +90,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.passwordEncoder = passwordEncoder;
         this.cloudStorageService = cloudStorageService;
         this.userService = userService;
+        this.repairerDAO = repairerDAO;
     }
 
     @Override
@@ -164,7 +167,14 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
         User user = buildUser(request, request.getAvatar());
         userDAO.save(user);
-        addRoleToUser(user.getUsername(), request.getRoleType().name());
+
+        String roleType = request.getRoleType().name();
+        addRoleToUser(user.getUsername(), roleType);
+
+        if (RoleType.ROLE_PENDING_REPAIRER.equals(RoleType.valueOf(roleType))) {
+            createRepairer(user.getId());
+        }
+
         saveUserAddress(user.getUsername(), request);
 
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
@@ -178,6 +188,12 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         response.setRefreshToken(refreshToken);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void createRepairer(Long userId) {
+        Repairer repairer = new Repairer();
+        repairer.setUserId(userId);
+        repairerDAO.save(repairer);
     }
 
     private void validateRegisterInput(CFRegisterRequest request) {
@@ -222,7 +238,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     private User buildUser(CFRegisterRequest registerAccount, MultipartFile avatar) throws IOException {
-        LocalDateTime now = LocalDateTime.now();
         User user = new User();
         user.setFullName(registerAccount.getFullName());
         user.setPhone(registerAccount.getPhone());
@@ -230,8 +245,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         user.setUsername(registerAccount.getPhone());
         user.setPassword(passwordEncoder.encode(registerAccount.getPassword()));
         user = postUserAvatar(user, avatar);
-        user.setCreatedAt(now);
-        user.setUpdatedAt(now);
         return user;
     }
 

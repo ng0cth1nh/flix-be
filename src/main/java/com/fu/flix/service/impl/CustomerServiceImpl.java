@@ -312,7 +312,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private Double getRepairRequestPrice(RepairRequest repairRequest, Double inspectionPrice) {
-        Optional<Invoice> optionalInvoice = invoiceDAO.findByRepairRequestId(repairRequest.getId());
+        Optional<Invoice> optionalInvoice = invoiceDAO.findByRequestCode(repairRequest.getRequestCode());
         if (optionalInvoice.isPresent()) {
             return optionalInvoice.get().getActualProceeds();
         }

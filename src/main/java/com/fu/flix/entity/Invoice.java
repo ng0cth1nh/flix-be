@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class Invoice {
 
     @Id
-    private Long repairRequestId;
+    private String requestCode;
 
     private String paymentMethodId;
 

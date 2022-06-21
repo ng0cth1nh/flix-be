@@ -185,9 +185,11 @@ public class UserServiceImpl implements UserService {
             throw new GeneralException(INVALID_FEEDBACK_TYPE);
         }
 
-        if (repairRequestDAO.findByRequestCode(requestCode).isEmpty()) {
+        if (requestCode != null && repairRequestDAO.findByRequestCode(requestCode).isEmpty()) {
             throw new GeneralException(INVALID_REQUEST_CODE);
         }
+
+        feedback.setRequestCode(requestCode);
 
         for (MultipartFile multipartFile : request.getImages()) {
             String url = cloudStorageService.uploadImage(multipartFile);

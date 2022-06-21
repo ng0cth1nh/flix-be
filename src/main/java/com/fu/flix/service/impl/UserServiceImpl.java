@@ -3,22 +3,14 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.Constant;
-import com.fu.flix.dao.ImageDAO;
-import com.fu.flix.dao.NotificationDAO;
-import com.fu.flix.dao.UserDAO;
+import com.fu.flix.constant.enums.FeedbackType;
+import com.fu.flix.constant.enums.Status;
+import com.fu.flix.dao.*;
 import com.fu.flix.dto.NotificationDTO;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.ChangePasswordRequest;
-import com.fu.flix.dto.request.NotificationRequest;
-import com.fu.flix.dto.request.ResetPasswordRequest;
-import com.fu.flix.dto.request.UpdateAvatarRequest;
-import com.fu.flix.dto.response.ChangePasswordResponse;
-import com.fu.flix.dto.response.NotificationResponse;
-import com.fu.flix.dto.response.ResetPasswordResponse;
-import com.fu.flix.dto.response.UpdateAvatarResponse;
-import com.fu.flix.entity.Image;
-import com.fu.flix.entity.Notification;
-import com.fu.flix.entity.User;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
+import com.fu.flix.entity.*;
 import com.fu.flix.service.CloudStorageService;
 import com.fu.flix.service.UserService;
 import com.fu.flix.util.DateFormatUtil;
@@ -47,6 +39,8 @@ public class UserServiceImpl implements UserService {
     private final AppConf appConf;
     private final NotificationDAO notificationDAO;
     private final PasswordEncoder passwordEncoder;
+    private final FeedbackDAO feedbackDAO;
+    private final RepairRequestDAO repairRequestDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public UserServiceImpl(ImageDAO imageDAO,
@@ -54,13 +48,17 @@ public class UserServiceImpl implements UserService {
                            UserDAO userDAO,
                            AppConf appConf,
                            NotificationDAO notificationDAO,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           FeedbackDAO feedbackDAO,
+                           RepairRequestDAO repairRequestDAO) {
         this.imageDAO = imageDAO;
         this.cloudStorageService = cloudStorageService;
         this.userDAO = userDAO;
         this.appConf = appConf;
         this.notificationDAO = notificationDAO;
         this.passwordEncoder = passwordEncoder;
+        this.feedbackDAO = feedbackDAO;
+        this.repairRequestDAO = repairRequestDAO;
     }
 
     @Override
@@ -167,6 +165,44 @@ public class UserServiceImpl implements UserService {
 
         ResetPasswordResponse response = new ResetPasswordResponse();
         response.setMessage(RESET_PASSWORD_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException {
+        String requestCode = request.getRequestCode();
+        User user = userDAO.findByUsername(request.getUsername()).get();
+        Feedback feedback = new Feedback();
+        feedback.setCreatedById(user.getId());
+        feedback.setTitle(request.getTitle());
+        feedback.setDescription(request.getDescription());
+        feedback.setStatusId(Status.PENDING.getId());
+
+        try {
+            feedback.setType(FeedbackType.valueOf(request.getFeedbackType()).name());
+        } catch (Exception e) {
+            throw new GeneralException(INVALID_FEEDBACK_TYPE);
+        }
+
+        if (repairRequestDAO.findByRequestCode(requestCode).isEmpty()) {
+            throw new GeneralException(INVALID_REQUEST_CODE);
+        }
+
+        for (MultipartFile multipartFile : request.getImages()) {
+            String url = cloudStorageService.uploadImage(multipartFile);
+            Image image = new Image();
+            image.setName(request.getTitle());
+            image.setUrl(url);
+            Image savedImage = imageDAO.save(image);
+
+            feedback.getImages().add(savedImage);
+        }
+
+        feedbackDAO.save(feedback);
+
+        FeedbackResponse response = new FeedbackResponse();
+        response.setMessage(CREATE_FEEDBACK_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

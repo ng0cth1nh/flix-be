@@ -15,7 +15,12 @@ app:
                    '/api/v1/customer/address/main',
                    '/swagger-ui/index.html',
                    '/v2/api-docs',
-                   '/swagger-resources' ]
+                   '/swagger-resources',
+                   '/api/v1/forgot/password/sendOTP',
+                   '/api/v1/forgot/password/confirm',
+                   '/api/v1/address/city',
+                   '/api/v1/address/district',
+                   '/api/v1/address/commune' ]
 
 server:
   port: 8080

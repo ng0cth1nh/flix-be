@@ -16,7 +16,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static com.fu.flix.constant.enums.RoleType.*;
-import static org.springframework.http.HttpMethod.*;
 
 @Configuration
 @EnableWebSecurity

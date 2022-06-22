@@ -83,8 +83,6 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         comment.setRating(getRatingValidated(request.getRating()));
         comment.setComment(request.getComment());
         comment.setRequestCode(requestCode);
-        comment.setRepairerId(repairerId);
-        comment.setCustomerId(customerId);
         comment.setType(commentType);
 
         commentDAO.save(comment);

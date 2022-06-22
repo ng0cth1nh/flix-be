@@ -2,6 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.HistoryRepairRequestDTO;
+import com.fu.flix.dto.IRepairerProfile;
 import com.fu.flix.dto.UserAddressDTO;
 import com.fu.flix.dto.UsingVoucherDTO;
 import com.fu.flix.dto.error.GeneralException;
@@ -47,6 +48,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final DistrictDAO districtDAO;
     private final CityDAO cityDAO;
     private final ImageDAO imageDAO;
+    private final CommentDAO commentDAO;
     private final String COMMA = ", ";
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
@@ -63,7 +65,8 @@ public class CustomerServiceImpl implements CustomerService {
                                CommuneDAO communeDAO,
                                DistrictDAO districtDAO,
                                CityDAO cityDAO,
-                               ImageDAO imageDAO) {
+                               ImageDAO imageDAO,
+                               CommentDAO commentDAO) {
         this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
@@ -77,6 +80,7 @@ public class CustomerServiceImpl implements CustomerService {
         this.districtDAO = districtDAO;
         this.cityDAO = cityDAO;
         this.imageDAO = imageDAO;
+        this.commentDAO = commentDAO;
     }
 
     @Override
@@ -485,6 +489,18 @@ public class CustomerServiceImpl implements CustomerService {
         UpdateCustomerProfileResponse response = new UpdateCustomerProfileResponse();
         response.setMessage(UPDATED_PROFILE_SUCCESS);
 
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
+        Optional<IRepairerProfile> optionalIRepairerProfile = commentDAO.findRepairerProfile(request.getRepairerId());
+        RepairerProfileResponse response = new RepairerProfileResponse();
+
+        if (optionalIRepairerProfile.isPresent()) {
+            IRepairerProfile repairerProfile = optionalIRepairerProfile.get();
+            response.setRepairerProfile(repairerProfile);
+        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

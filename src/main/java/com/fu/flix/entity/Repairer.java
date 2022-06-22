@@ -8,6 +8,7 @@ import lombok.Setter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -24,4 +25,6 @@ public class Repairer {
     private String certificate;
 
     private boolean isRepairing;
+
+    private LocalDateTime acceptedAccountAt;
 }

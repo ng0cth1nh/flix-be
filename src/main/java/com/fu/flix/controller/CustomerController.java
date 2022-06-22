@@ -71,4 +71,9 @@ public class CustomerController {
     public ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(@RequestBody UpdateCustomerProfileRequest request) {
         return customerService.updateCustomerProfile(request);
     }
+
+    @GetMapping("repairer/profile")
+    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
+        return customerService.getRepairerProfile(request);
+    }
 }

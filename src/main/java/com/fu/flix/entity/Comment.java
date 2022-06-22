@@ -27,10 +27,6 @@ public class Comment {
 
     private String requestCode;
 
-    private Long repairerId;
-
-    private Long customerId;
-
     private String type;
 
     @CreationTimestamp

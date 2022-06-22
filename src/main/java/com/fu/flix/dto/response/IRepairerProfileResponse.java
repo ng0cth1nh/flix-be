@@ -1,6 +1,6 @@
-package com.fu.flix.dto;
+package com.fu.flix.dto.response;
 
-public interface IRepairerProfile {
+public interface IRepairerProfileResponse {
     String getRepairerName();
     Double getRating();
     String getExperience();

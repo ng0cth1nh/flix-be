@@ -1,5 +1,6 @@
 package com.fu.flix.controller;
 
+import com.fu.flix.dto.response.IRepairerProfileResponse;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.service.CustomerService;
@@ -73,7 +74,7 @@ public class CustomerController {
     }
 
     @GetMapping("repairer/profile")
-    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
+    public ResponseEntity<IRepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
         return customerService.getRepairerProfile(request);
     }
 }

@@ -1,6 +1,6 @@
 package com.fu.flix.dao;
 
-import com.fu.flix.dto.IRepairerProfile;
+import com.fu.flix.dto.response.IRepairerProfileResponse;
 import com.fu.flix.entity.Comment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -29,5 +29,5 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
             "WHERE rrm.repairer_id = :repairerId " +
             "AND c.type = 'CUSTOMER_COMMENT' " +
             "AND i.status_id = 'DO'", nativeQuery = true)
-    Optional<IRepairerProfile> findRepairerProfile(Long repairerId);
+    Optional<IRepairerProfileResponse> findRepairerProfile(Long repairerId);
 }

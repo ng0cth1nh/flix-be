@@ -2,7 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.HistoryRepairRequestDTO;
-import com.fu.flix.dto.IRepairerProfile;
+import com.fu.flix.dto.response.IRepairerProfileResponse;
 import com.fu.flix.dto.UserAddressDTO;
 import com.fu.flix.dto.UsingVoucherDTO;
 import com.fu.flix.dto.error.GeneralException;
@@ -493,14 +493,9 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
-        Optional<IRepairerProfile> optionalIRepairerProfile = commentDAO.findRepairerProfile(request.getRepairerId());
-        RepairerProfileResponse response = new RepairerProfileResponse();
-
-        if (optionalIRepairerProfile.isPresent()) {
-            IRepairerProfile repairerProfile = optionalIRepairerProfile.get();
-            response.setRepairerProfile(repairerProfile);
-        }
-        return new ResponseEntity<>(response, HttpStatus.OK);
+    public ResponseEntity<IRepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
+        Optional<IRepairerProfileResponse> optionalIRepairerProfile = commentDAO.findRepairerProfile(request.getRepairerId());
+        IRepairerProfileResponse repairerProfile = optionalIRepairerProfile.orElse(null);
+        return new ResponseEntity<>(repairerProfile, HttpStatus.OK);
     }
 }

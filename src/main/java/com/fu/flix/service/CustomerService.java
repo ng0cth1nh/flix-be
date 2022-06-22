@@ -1,5 +1,6 @@
 package com.fu.flix.service;
 
+import com.fu.flix.dto.response.IRepairerProfileResponse;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import org.springframework.http.ResponseEntity;
@@ -26,4 +27,5 @@ public interface CustomerService {
     ResponseEntity<CustomerProfileResponse> getCustomerProfile(CustomerProfileRequest request);
 
     ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request);
+    ResponseEntity<IRepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request);
 }

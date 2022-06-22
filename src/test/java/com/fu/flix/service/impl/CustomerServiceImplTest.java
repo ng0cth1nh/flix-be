@@ -1,8 +1,10 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.dao.CommentDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserAddressDAO;
 import com.fu.flix.dao.UserDAO;
+import com.fu.flix.dto.response.IRepairerProfileResponse;
 import com.fu.flix.dto.request.CancelRequestingRepairRequest;
 import com.fu.flix.dto.request.MainAddressRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
@@ -47,6 +49,9 @@ class CustomerServiceImplTest {
     UserAddressDAO userAddressDAO;
     @Autowired
     UserDAO userDAO;
+
+    @Autowired
+    CommentDAO commentDAO;
 
 
     //    @Test
@@ -186,5 +191,15 @@ class CustomerServiceImplTest {
         UsernamePasswordAuthenticationToken authenticationToken
                 = new UsernamePasswordAuthenticationToken(phone, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
+
+//    @Test
+    void testGetRepairerProfile() {
+        // when
+        IRepairerProfileResponse iRepairerProfileResponse = commentDAO.findRepairerProfile(52L).get();
+
+        // then
+        Assertions.assertEquals("Thợ", iRepairerProfileResponse.getRepairerName());
+        Assertions.assertEquals(1, iRepairerProfileResponse.getSuccessfulRepair());
     }
 }

@@ -1,6 +1,5 @@
 package com.fu.flix.controller;
 
-import com.fu.flix.dto.IRepairerProfileResponse;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.service.CustomerService;

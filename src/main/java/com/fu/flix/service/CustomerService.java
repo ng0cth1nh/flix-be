@@ -1,6 +1,5 @@
 package com.fu.flix.service;
 
-import com.fu.flix.dto.IRepairerProfileResponse;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import org.springframework.http.ResponseEntity;

@@ -1,5 +1,6 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
@@ -46,6 +47,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final CityDAO cityDAO;
     private final ImageDAO imageDAO;
     private final CommentDAO commentDAO;
+    private final AppConf appConf;
     private final String COMMA = ", ";
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
@@ -63,7 +65,8 @@ public class CustomerServiceImpl implements CustomerService {
                                DistrictDAO districtDAO,
                                CityDAO cityDAO,
                                ImageDAO imageDAO,
-                               CommentDAO commentDAO) {
+                               CommentDAO commentDAO,
+                               AppConf appConf) {
         this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
@@ -78,6 +81,7 @@ public class CustomerServiceImpl implements CustomerService {
         this.cityDAO = cityDAO;
         this.imageDAO = imageDAO;
         this.commentDAO = commentDAO;
+        this.appConf = appConf;
     }
 
     @Override
@@ -494,13 +498,43 @@ public class CustomerServiceImpl implements CustomerService {
         RepairerProfileResponse response = new RepairerProfileResponse();
         Long repairerId = request.getRepairerId();
         if (repairerId != null) {
-            IRepairerProfileResponse repairerProfile = commentDAO.findRepairerProfile(repairerId);
+            IRepairerProfile repairerProfile = commentDAO.findRepairerProfile(repairerId);
             ISuccessfulRepair successfulRepair = commentDAO.findSuccessfulRepair(repairerId);
             response.setJointAt(repairerProfile.getJoinAt());
             response.setSuccessfulRepair(successfulRepair.getSuccessfulRepair());
             response.setRepairerName(repairerProfile.getRepairerName());
             response.setRating(repairerProfile.getRating());
             response.setExperience(repairerProfile.getExperience());
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<RepairerCommentResponse> getRepairerComments(RepairerCommentRequest request) {
+        Long repairerId = request.getRepairerId();
+        RepairerCommentResponse response = new RepairerCommentResponse();
+
+        if (repairerId != null) {
+            Integer offset = request.getOffset() == null
+                    ? this.appConf.getOffsetDefault()
+                    : request.getOffset();
+
+            Integer limit = request.getLimit() == null
+                    ? this.appConf.getLimitQueryDefault()
+                    : request.getLimit();
+
+            List<IRepairerComment> repairComments = commentDAO.findRepairComments(repairerId, limit, offset);
+            List<RepairerCommentDTO> repairerCommentDTOs = repairComments.stream()
+                    .map(rc -> {
+                        RepairerCommentDTO dto = new RepairerCommentDTO();
+                        dto.setComment(rc.getComment());
+                        dto.setCustomerId(rc.getCustomerId());
+                        dto.setRating(rc.getRating());
+                        dto.setCustomerName(rc.getCustomerName());
+                        return dto;
+                    }).collect(Collectors.toList());
+            response.setRepairerComments(repairerCommentDTOs);
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);

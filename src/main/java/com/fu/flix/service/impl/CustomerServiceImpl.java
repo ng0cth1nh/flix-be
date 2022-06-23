@@ -1,10 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.*;
-import com.fu.flix.dto.HistoryRepairRequestDTO;
-import com.fu.flix.dto.response.IRepairerProfileResponse;
-import com.fu.flix.dto.UserAddressDTO;
-import com.fu.flix.dto.UsingVoucherDTO;
+import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
@@ -493,9 +490,19 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<IRepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
-        Optional<IRepairerProfileResponse> optionalIRepairerProfile = commentDAO.findRepairerProfile(request.getRepairerId());
-        IRepairerProfileResponse repairerProfile = optionalIRepairerProfile.orElse(null);
-        return new ResponseEntity<>(repairerProfile, HttpStatus.OK);
+    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
+        RepairerProfileResponse response = new RepairerProfileResponse();
+        Long repairerId = request.getRepairerId();
+        if (repairerId != null) {
+            IRepairerProfileResponse repairerProfile = commentDAO.findRepairerProfile(repairerId);
+            ISuccessfulRepair successfulRepair = commentDAO.findSuccessfulRepair(repairerId);
+            response.setJointAt(repairerProfile.getJoinAt());
+            response.setSuccessfulRepair(successfulRepair.getSuccessfulRepair());
+            response.setRepairerName(repairerProfile.getRepairerName());
+            response.setRating(repairerProfile.getRating());
+            response.setExperience(repairerProfile.getExperience());
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

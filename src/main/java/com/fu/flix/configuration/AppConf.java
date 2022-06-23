@@ -16,6 +16,8 @@ public class AppConf {
     private TwilioInfo twilioInfo;
     private Long defaultAvatar;
     private String[] permitAllApis;
+    private Integer limitQueryDefault;
+    private Integer offsetDefault;
 
     @Data
     public static class TwilioInfo {

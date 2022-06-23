@@ -26,5 +26,8 @@ public interface CustomerService {
     ResponseEntity<CustomerProfileResponse> getCustomerProfile(CustomerProfileRequest request);
 
     ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request);
+
     ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request);
+
+    ResponseEntity<RepairerCommentResponse> getRepairerComments(RepairerCommentRequest request);
 }

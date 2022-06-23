@@ -76,4 +76,9 @@ public class CustomerController {
     public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
         return customerService.getRepairerProfile(request);
     }
+
+    @GetMapping("repairer/comment")
+    public ResponseEntity<RepairerCommentResponse> getRepairerProfile(RepairerCommentRequest request) {
+        return customerService.getRepairerComments(request);
+    }
 }

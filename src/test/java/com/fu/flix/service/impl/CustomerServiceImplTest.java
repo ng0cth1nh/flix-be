@@ -4,7 +4,7 @@ import com.fu.flix.dao.CommentDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserAddressDAO;
 import com.fu.flix.dao.UserDAO;
-import com.fu.flix.dto.IRepairerProfileResponse;
+import com.fu.flix.dto.IRepairerProfile;
 import com.fu.flix.dto.ISuccessfulRepair;
 import com.fu.flix.dto.request.CancelRequestingRepairRequest;
 import com.fu.flix.dto.request.MainAddressRequest;
@@ -19,7 +19,6 @@ import com.fu.flix.entity.User;
 import com.fu.flix.entity.UserAddress;
 import com.fu.flix.service.CustomerService;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -198,11 +197,11 @@ class CustomerServiceImplTest {
     //    @Test
     void testGetRepairerProfile() {
         // when
-        IRepairerProfileResponse iRepairerProfileResponse = commentDAO.findRepairerProfile(52L);
+        IRepairerProfile iRepairerProfile = commentDAO.findRepairerProfile(52L);
 
         // then
-        Assertions.assertEquals("Thợ", iRepairerProfileResponse.getRepairerName());
-        Assertions.assertEquals(4.5, iRepairerProfileResponse.getRating());
+        Assertions.assertEquals("Thợ", iRepairerProfile.getRepairerName());
+        Assertions.assertEquals(4.5, iRepairerProfile.getRating());
     }
 
     //    @Test

@@ -23,8 +23,6 @@ public class Invoice {
 
     private String paymentMethodId;
 
-    private String statusId;
-
     private Double totalServiceDetailPrice;
 
     private Double totalOtherPrice;

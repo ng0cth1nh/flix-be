@@ -2,10 +2,12 @@ app:
   secretKey: 'secret'
   lifeTimeToke: 600000 #milliseconds
   lifeTimeRefreshToken: 1800000 #milliseconds
+  limitQueryDefault: 20
+  offsetDefault: 0
   twilioInfo:
-    accountSid: 'ACb90a154f60452edbfba9e5955f9cd40c'
-    authToken: 'd1c1458436c445a536ec2ceaa5eeb713'
-    fromNumber: '+16073006721'
+    accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'
+    authToken: 'b2bdec58830ce248a8e2d60bdfa6205c'
+    fromNumber: '+17579977028'
   defaultAvatar: 1
   permitAllApis: [ '/api/v1/login',
                    '/api/v1/token/refresh',

@@ -27,18 +27,15 @@ import static com.fu.flix.constant.enums.RoleType.*;
 @Transactional
 public class ConfirmedUserServiceImpl implements ConfirmedUserService {
     private final CommentDAO commentDAO;
-    private final InvoiceDAO invoiceDAO;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final UserDAO userDAO;
     private final RepairRequestDAO repairRequestDAO;
 
     public ConfirmedUserServiceImpl(CommentDAO commentDAO,
-                                    InvoiceDAO invoiceDAO,
                                     RepairRequestMatchingDAO repairRequestMatchingDAO,
                                     UserDAO userDAO,
                                     RepairRequestDAO repairRequestDAO) {
         this.commentDAO = commentDAO;
-        this.invoiceDAO = invoiceDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
         this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
@@ -52,13 +49,13 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
             throw new GeneralException(INVALID_REQUEST_CODE);
         }
 
-        Optional<Invoice> optionalInvoice = invoiceDAO.findByRequestCode(requestCode);
-        if (optionalInvoice.isEmpty()) {
+        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+        if (optionalRepairRequest.isEmpty()) {
             throw new GeneralException(INVALID_REQUEST_CODE);
         }
 
-        Invoice invoice = optionalInvoice.get();
-        if (!Status.DONE.getId().equals(invoice.getStatusId())) {
+        RepairRequest repairRequest = optionalRepairRequest.get();
+        if (!Status.DONE.getId().equals(repairRequest.getStatusId())) {
             throw new GeneralException(CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE);
         }
 
@@ -69,7 +66,6 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
             throw new GeneralException(COMMENT_EXISTED);
         }
 
-        RepairRequest repairRequest = repairRequestDAO.findByRequestCode(requestCode).get();
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
 
         Long userId = user.getId();

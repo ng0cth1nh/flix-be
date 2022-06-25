@@ -1,9 +1,9 @@
 package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.RepairerApproveRequest;
-import com.fu.flix.dto.request.RequestingDetailRequest;
+import com.fu.flix.dto.request.RequestingDetailForRepairerRequest;
 import com.fu.flix.dto.response.RepairerApproveResponse;
-import com.fu.flix.dto.response.RequestingDetailResponse;
+import com.fu.flix.dto.response.RequestingDetailForRepairerResponse;
 import com.fu.flix.service.RepairerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +25,7 @@ public class RepairerController {
     }
 
     @GetMapping("request/detail")
-    public ResponseEntity<RequestingDetailResponse> getRepairRequestDetail(RequestingDetailRequest request) {
+    public ResponseEntity<RequestingDetailForRepairerResponse> getRepairRequestDetail(RequestingDetailForRepairerRequest request) {
         return repairerService.getRepairRequestDetail(request);
     }
 }

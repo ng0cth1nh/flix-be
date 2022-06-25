@@ -3,7 +3,7 @@ package com.fu.flix.dto.response;
 import lombok.Data;
 
 @Data
-public class DetailRequestingRepairResponse {
+public class RequestingDetailForCustomerResponse {
     private Long serviceId;
     private String serviceName;
     private Long addressId;

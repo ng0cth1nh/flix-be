@@ -333,12 +333,12 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<DetailRequestingRepairResponse> getDetailFixingRequest(DetailRequestingRepairRequest request) {
+    public ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request) {
         String requestCode = getRequestCode(request.getRequestCode());
         RepairRequest repairRequest = getRepairRequestValidated(requestCode, request.getUsername());
         com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
 
-        DetailRequestingRepairResponse response = new DetailRequestingRepairResponse();
+        RequestingDetailForCustomerResponse response = new RequestingDetailForCustomerResponse();
         response.setServiceId(service.getId());
         response.setServiceName(service.getName());
         response.setAddressId(repairRequest.getAddressId());

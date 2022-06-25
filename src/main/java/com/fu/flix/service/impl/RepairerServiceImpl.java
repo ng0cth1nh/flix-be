@@ -3,9 +3,9 @@ package com.fu.flix.service.impl;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.RepairerApproveRequest;
-import com.fu.flix.dto.request.RequestingDetailRequest;
+import com.fu.flix.dto.request.RequestingDetailForRepairerRequest;
 import com.fu.flix.dto.response.RepairerApproveResponse;
-import com.fu.flix.dto.response.RequestingDetailResponse;
+import com.fu.flix.dto.response.RequestingDetailForRepairerResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.RepairerService;
 import com.fu.flix.util.DateFormatUtil;
@@ -85,9 +85,9 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<RequestingDetailResponse> getRepairRequestDetail(RequestingDetailRequest request) {
+    public ResponseEntity<RequestingDetailForRepairerResponse> getRepairRequestDetail(RequestingDetailForRepairerRequest request) {
         String requestCode = getRequestCode(request.getRequestCode());
-        RequestingDetailResponse response = new RequestingDetailResponse();
+        RequestingDetailForRepairerResponse response = new RequestingDetailForRepairerResponse();
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
 
         if (optionalRepairRequest.isPresent()) {

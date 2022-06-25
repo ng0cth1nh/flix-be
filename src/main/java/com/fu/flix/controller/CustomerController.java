@@ -33,7 +33,7 @@ public class CustomerController {
     }
 
     @GetMapping("request/detail")
-    public ResponseEntity<DetailRequestingRepairResponse> getDetailFixingRequest(DetailRequestingRepairRequest request) {
+    public ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request) {
         return customerService.getDetailFixingRequest(request);
     }
 

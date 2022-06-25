@@ -348,7 +348,6 @@ public class CustomerServiceImpl implements CustomerService {
         response.setPaymentMethodId(repairRequest.getPaymentMethodId());
         response.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
         response.setPrice(getRepairRequestPrice(requestCode));
-
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

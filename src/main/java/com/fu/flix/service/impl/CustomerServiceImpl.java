@@ -224,11 +224,18 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(WRONG_LOCAL_DATE_TIME_FORMAT);
         }
 
-        if (expectFixingDay.isBefore(now)) {
-            throw new GeneralException(EXPECT_FIXING_DAY_MUST_GREATER_OR_EQUAL_NOW);
+        if (isInvalidExpectFixingDay(now, expectFixingDay)) {
+            throw new GeneralException(EXPECT_FIXING_DAY_MUST_START_AFTER_2_HOURS_AND_BEFORE_30_DAYS);
         }
 
         return expectFixingDay;
+    }
+
+    private boolean isInvalidExpectFixingDay(LocalDateTime now, LocalDateTime expectFixingDay) {
+        long minCreateRequestHours = 2L;
+        long maxCreateRequestDays = 30L;
+        return expectFixingDay.isBefore(now.plusHours(minCreateRequestHours))
+                || expectFixingDay.isAfter(now.plusDays(maxCreateRequestDays));
     }
 
     private String getPaymentMethodIdValidated(String paymentMethodId) {

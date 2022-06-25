@@ -11,7 +11,7 @@ public interface CustomerService {
 
     ResponseEntity<HistoryRequestingRepairResponse> getFixingRequestHistories(HistoryRequestingRepairRequest request);
 
-    ResponseEntity<DetailRequestingRepairResponse> getDetailFixingRequest(DetailRequestingRepairRequest request);
+    ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request);
 
     ResponseEntity<MainAddressResponse> getMainAddress(MainAddressRequest request);
 

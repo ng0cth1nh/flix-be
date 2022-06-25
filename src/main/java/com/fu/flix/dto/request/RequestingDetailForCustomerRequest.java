@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class DetailRequestingRepairRequest extends DataRequest{
+public class RequestingDetailForCustomerRequest extends DataRequest{
     private String requestCode;
 }

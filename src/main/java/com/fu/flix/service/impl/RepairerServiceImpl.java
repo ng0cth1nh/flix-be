@@ -51,9 +51,7 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<RepairerApproveResponse> approveRequest(RepairerApproveRequest request) {
-        String requestCode = request.getRequestCode() == null
-                ? Strings.EMPTY
-                : request.getRequestCode();
+        String requestCode = getRequestCode(request.getRequestCode());
 
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
 
@@ -81,6 +79,10 @@ public class RepairerServiceImpl implements RepairerService {
         response.setMessage(APPROVAL_REQUEST_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getRequestCode(String requestCode) {
+        return requestCode == null ? Strings.EMPTY : requestCode;
     }
 
     private RepairRequestMatching buildRepairRequestMatching(String requestCode, Long repairerId) {

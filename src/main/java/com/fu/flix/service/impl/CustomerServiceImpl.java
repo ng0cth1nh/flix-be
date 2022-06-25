@@ -245,9 +245,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<CancelRequestingRepairResponse> cancelFixingRequest(CancelRequestingRepairRequest request) {
-        String requestCode = request.getRequestCode() == null
-                ? Strings.EMPTY
-                : request.getRequestCode();
+        String requestCode = getRequestCode(request.getRequestCode());
 
         RepairRequest repairRequest = getRepairRequestValidated(requestCode, request.getUsername());
         if (!isCancelable(repairRequest)) {
@@ -308,12 +306,13 @@ public class CustomerServiceImpl implements CustomerService {
         List<HistoryRepairRequestDTO> historyRepairRequestDTOS = repairRequests.stream()
                 .map(repairRequest -> {
                     com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
+                    String requestCode = repairRequest.getRequestCode();
 
                     HistoryRepairRequestDTO dto = new HistoryRepairRequestDTO();
-                    dto.setRequestCode(repairRequest.getRequestCode());
+                    dto.setRequestCode(requestCode);
                     dto.setServiceName(service.getName());
                     dto.setDescription(repairRequest.getDescription());
-                    dto.setPrice(getRepairRequestPrice(repairRequest.getRequestCode()));
+                    dto.setPrice(getRepairRequestPrice(requestCode));
                     dto.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
 
                     return dto;
@@ -335,7 +334,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<DetailRequestingRepairResponse> getDetailFixingRequest(DetailRequestingRepairRequest request) {
-        RepairRequest repairRequest = getRepairRequestValidated(request.getRequestCode(), request.getUsername());
+        String requestCode = getRequestCode(request.getRequestCode());
+        RepairRequest repairRequest = getRepairRequestValidated(requestCode, request.getUsername());
         com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
 
         DetailRequestingRepairResponse response = new DetailRequestingRepairResponse();
@@ -347,9 +347,13 @@ public class CustomerServiceImpl implements CustomerService {
         response.setVoucherId(repairRequest.getVoucherId());
         response.setPaymentMethodId(repairRequest.getPaymentMethodId());
         response.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
-        response.setPrice(getRepairRequestPrice(repairRequest.getRequestCode()));
+        response.setPrice(getRepairRequestPrice(requestCode));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getRequestCode(String requestCode) {
+        return requestCode == null ? Strings.EMPTY : requestCode;
     }
 
     private RepairRequest getRepairRequestValidated(String requestCode, String username) {
@@ -370,7 +374,11 @@ public class CustomerServiceImpl implements CustomerService {
 
     private Double getRepairRequestPrice(String requestCode) {
         Optional<Invoice> optionalInvoice = invoiceDAO.findByRequestCode(requestCode);
-        return optionalInvoice.get().getActualProceeds();
+        if (optionalInvoice.isPresent()) {
+            return optionalInvoice.get().getActualProceeds();
+        }
+
+        return 0.0;
     }
 
     @Override

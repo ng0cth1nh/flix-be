@@ -1,16 +1,13 @@
 package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.RepairerApproveRequest;
+import com.fu.flix.dto.request.RequestingDetailRequest;
 import com.fu.flix.dto.response.RepairerApproveResponse;
+import com.fu.flix.dto.response.RequestingDetailResponse;
 import com.fu.flix.service.RepairerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -25,5 +22,10 @@ public class RepairerController {
     @PostMapping("request/approve")
     public ResponseEntity<RepairerApproveResponse> approvalRequest(@RequestBody RepairerApproveRequest request) {
         return repairerService.approveRequest(request);
+    }
+
+    @GetMapping("request/detail")
+    public ResponseEntity<RequestingDetailResponse> getRepairRequestDetail(RequestingDetailRequest request) {
+        return repairerService.getRepairRequestDetail(request);
     }
 }

@@ -1,15 +1,14 @@
 package com.fu.flix.service.impl;
 
-import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.RepairerApproveRequest;
+import com.fu.flix.dto.request.RequestingDetailRequest;
 import com.fu.flix.dto.response.RepairerApproveResponse;
-import com.fu.flix.entity.Invoice;
-import com.fu.flix.entity.RepairRequest;
-import com.fu.flix.entity.RepairRequestMatching;
-import com.fu.flix.entity.Repairer;
+import com.fu.flix.dto.response.RequestingDetailResponse;
+import com.fu.flix.entity.*;
 import com.fu.flix.service.RepairerService;
+import com.fu.flix.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
@@ -17,12 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.Status.APPROVED;
-import static com.fu.flix.constant.enums.Status.PENDING;
+import static com.fu.flix.constant.enums.Status.*;
 
 @Service
 @Slf4j
@@ -31,29 +28,26 @@ public class RepairerServiceImpl implements RepairerService {
     private final RepairerDAO repairerDAO;
     private final RepairRequestDAO repairRequestDAO;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
-    private final InvoiceDAO invoiceDAO;
-    private final AppConf appConf;
-    private final ServiceDAO serviceDAO;
+    private final UserDAO userDAO;
+    private final ImageDAO imageDAO;
+    private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public RepairerServiceImpl(RepairerDAO repairerDAO,
                                RepairRequestDAO repairRequestDAO,
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
-                               InvoiceDAO invoiceDAO,
-                               AppConf appConf,
-                               ServiceDAO serviceDAO) {
+                               UserDAO userDAO,
+                               ImageDAO imageDAO) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
-        this.invoiceDAO = invoiceDAO;
-        this.appConf = appConf;
-        this.serviceDAO = serviceDAO;
+
+        this.userDAO = userDAO;
+        this.imageDAO = imageDAO;
     }
 
     @Override
     public ResponseEntity<RepairerApproveResponse> approveRequest(RepairerApproveRequest request) {
-        String requestCode = request.getRequestCode() == null
-                ? Strings.EMPTY
-                : request.getRequestCode();
+        String requestCode = getRequestCode(request.getRequestCode());
 
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
 
@@ -88,5 +82,52 @@ public class RepairerServiceImpl implements RepairerService {
         repairRequestMatching.setRequestCode(requestCode);
         repairRequestMatching.setRepairerId(repairerId);
         return repairRequestMatching;
+    }
+
+    @Override
+    public ResponseEntity<RequestingDetailResponse> getRepairRequestDetail(RequestingDetailRequest request) {
+        String requestCode = getRequestCode(request.getRequestCode());
+        RequestingDetailResponse response = new RequestingDetailResponse();
+        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+
+        if (optionalRepairRequest.isPresent()) {
+            RepairRequest repairRequest = optionalRepairRequest.get();
+
+            if (isNotPending(repairRequest)) {
+                User repairer = userDAO.findByUsername(request.getUsername()).get();
+                RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+                if (isNotMatchRepairer(repairer, repairRequestMatching)) {
+                    throw new GeneralException(REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_GET_THIS_REQUEST_DETAIL);
+                }
+            }
+
+            Long customerId = repairRequest.getUserId();
+            User customer = userDAO.findById(customerId).get();
+            Image avatarImage = imageDAO.findById(customer.getAvatar()).get();
+
+            response.setCustomerName(customer.getFullName());
+            response.setAvatar(avatarImage.getUrl());
+            response.setCustomerId(customerId);
+            response.setServiceId(repairRequest.getServiceId());
+            response.setAddressId(repairRequest.getAddressId());
+            response.setExpectFixingTime(DateFormatUtil.toString(repairRequest.getExpectStartFixingAt(), DATE_TIME_PATTERN));
+            response.setDescription(repairRequest.getDescription());
+            response.setVoucherId(repairRequest.getVoucherId());
+            response.setPaymentMethodId(repairRequest.getPaymentMethodId());
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private boolean isNotPending(RepairRequest repairRequest) {
+        return !PENDING.getId().equals(repairRequest.getStatusId());
+    }
+
+    private boolean isNotMatchRepairer(User repairer, RepairRequestMatching repairRequestMatching) {
+        return !repairer.getId().equals(repairRequestMatching.getRepairerId());
+    }
+
+    private String getRequestCode(String requestCode) {
+        return requestCode == null ? Strings.EMPTY : requestCode;
     }
 }

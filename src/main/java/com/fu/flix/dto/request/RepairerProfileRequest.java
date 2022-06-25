@@ -1,8 +1,10 @@
 package com.fu.flix.dto.request;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class RepairerProfileRequest extends DataRequest{
     private Long repairerId;
 }

@@ -5,8 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CommentRequest extends DataRequest {
+public class RequestingDetailRequest extends DataRequest {
     private String requestCode;
-    private Integer rating;
-    private String comment;
 }

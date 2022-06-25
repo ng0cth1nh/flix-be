@@ -1,9 +1,11 @@
 package com.fu.flix.dto.request;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-@Data
+@Getter
+@Setter
 public class DataRequest {
     public String getUsername() {
         if (SecurityContextHolder.getContext() != null) {

@@ -43,6 +43,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
+import static com.fu.flix.constant.enums.RoleType.ROLE_CUSTOMER;
+import static com.fu.flix.constant.enums.RoleType.ROLE_PENDING_REPAIRER;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 
@@ -63,6 +65,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final CloudStorageService cloudStorageService;
     private final UserService userService;
     private final RepairerDAO repairerDAO;
+    private final BalanceDAO balanceDAO;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -77,7 +80,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               PasswordEncoder passwordEncoder,
                               CloudStorageService cloudStorageService,
                               UserService userService,
-                              RepairerDAO repairerDAO) {
+                              RepairerDAO repairerDAO,
+                              BalanceDAO balanceDAO) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
@@ -91,6 +95,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.cloudStorageService = cloudStorageService;
         this.userService = userService;
         this.repairerDAO = repairerDAO;
+        this.balanceDAO = balanceDAO;
     }
 
     @Override
@@ -171,8 +176,9 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         String roleType = request.getRoleType().name();
         addRoleToUser(user.getUsername(), roleType);
 
-        if (RoleType.ROLE_PENDING_REPAIRER.equals(RoleType.valueOf(roleType))) {
+        if (ROLE_PENDING_REPAIRER.equals(RoleType.valueOf(roleType))) {
             createRepairer(user);
+            createBalance(user);
         }
 
         saveUserAddress(user.getUsername(), request);
@@ -197,8 +203,17 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         repairerDAO.save(repairer);
     }
 
+    private void createBalance(User user) {
+        Balance balance = new Balance();
+        balance.setUserId(user.getId());
+        balance.setBalance(0.0);
+        balanceDAO.save(balance);
+    }
+
     private void validateRegisterInput(CFRegisterRequest request) {
-        if (isNotValidOTP(request, OTPType.REGISTER)) {
+        if (!isCreatableAccount(request.getRoleType())) {
+            throw new GeneralException(INVALID_ROLE_TYPE);
+        } else if (isNotValidOTP(request, OTPType.REGISTER)) {
             throw new GeneralException(INVALID_OTP);
         } else if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(INVALID_PHONE_NUMBER);
@@ -213,6 +228,10 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         } else if (communeDAO.findById(request.getCommuneId()).isEmpty()) {
             throw new GeneralException(INVALID_COMMUNE);
         }
+    }
+
+    private boolean isCreatableAccount(RoleType roleType) {
+        return ROLE_PENDING_REPAIRER.equals(roleType) || ROLE_CUSTOMER.equals(roleType);
     }
 
     private String getToken(User user, TokenType tokenType) {

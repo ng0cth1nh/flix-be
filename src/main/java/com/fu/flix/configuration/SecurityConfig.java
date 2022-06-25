@@ -1,5 +1,6 @@
 package com.fu.flix.configuration;
 
+import com.fu.flix.filter.CustomAccessDeniedHandler;
 import com.fu.flix.filter.CustomAuthenticationFilter;
 import com.fu.flix.filter.CustomAuthorizationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +73,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .hasAnyAuthority(ROLE_CUSTOMER.name());
 
         http.authorizeRequests().anyRequest().authenticated();
+        http.exceptionHandling().accessDeniedHandler(new CustomAccessDeniedHandler());
         http.addFilter(customAuthenticationFilter);
         http.addFilterBefore(new CustomAuthorizationFilter(this.appConf), UsernamePasswordAuthenticationFilter.class);
     }

@@ -20,6 +20,8 @@ public class Repairer {
     @Id
     private Long userId;
 
+    private String username;
+
     private String experience;
 
     private String certificate;

@@ -37,6 +37,8 @@ public class RepairRequest {
 
     private Long addressId;
 
+    private Double vat;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

@@ -172,7 +172,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         addRoleToUser(user.getUsername(), roleType);
 
         if (RoleType.ROLE_PENDING_REPAIRER.equals(RoleType.valueOf(roleType))) {
-            createRepairer(user.getId());
+            createRepairer(user);
         }
 
         saveUserAddress(user.getUsername(), request);
@@ -190,9 +190,10 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void createRepairer(Long userId) {
+    private void createRepairer(User user) {
         Repairer repairer = new Repairer();
-        repairer.setUserId(userId);
+        repairer.setUserId(user.getId());
+        repairer.setUsername(user.getUsername());
         repairerDAO.save(repairer);
     }
 

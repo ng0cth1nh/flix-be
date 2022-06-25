@@ -23,6 +23,8 @@ public class Invoice {
 
     private String paymentMethodId;
 
+    private Double inspectionPrice;
+
     private Double totalServiceDetailPrice;
 
     private Double totalOtherPrice;
@@ -34,8 +36,6 @@ public class Invoice {
     private Long voucherId;
 
     private Double totalDiscount;
-
-    private Double vat;
 
     private Double actualProceeds;
 

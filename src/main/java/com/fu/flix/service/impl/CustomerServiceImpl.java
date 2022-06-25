@@ -219,7 +219,7 @@ public class CustomerServiceImpl implements CustomerService {
     private boolean isCancelable(RepairRequest repairRequest) {
         String statusId = repairRequest.getStatusId();
         return PENDING.getId().equals(statusId) ||
-                CONFIRMED.getId().equals(statusId);
+                APPROVED.getId().equals(statusId);
     }
 
     private void updateUsedVoucherQuantity(RepairRequest repairRequest) {

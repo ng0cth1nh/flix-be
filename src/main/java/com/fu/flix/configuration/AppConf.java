@@ -18,6 +18,7 @@ public class AppConf {
     private String[] permitAllApis;
     private Integer limitQueryDefault;
     private Integer offsetDefault;
+    private Double vat;
 
     @Data
     public static class TwilioInfo {

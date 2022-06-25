@@ -12,6 +12,7 @@ import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,8 @@ public class CustomerServiceImpl implements CustomerService {
     private final ImageDAO imageDAO;
     private final CommentDAO commentDAO;
     private final AppConf appConf;
+    private final RepairRequestMatchingDAO repairRequestMatchingDAO;
+    private final RepairerDAO repairerDAO;
     private final String COMMA = ", ";
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
@@ -66,7 +69,9 @@ public class CustomerServiceImpl implements CustomerService {
                                CityDAO cityDAO,
                                ImageDAO imageDAO,
                                CommentDAO commentDAO,
-                               AppConf appConf) {
+                               AppConf appConf,
+                               RepairRequestMatchingDAO repairRequestMatchingDAO,
+                               RepairerDAO repairerDAO) {
         this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
@@ -82,6 +87,8 @@ public class CustomerServiceImpl implements CustomerService {
         this.imageDAO = imageDAO;
         this.commentDAO = commentDAO;
         this.appConf = appConf;
+        this.repairRequestMatchingDAO = repairRequestMatchingDAO;
+        this.repairerDAO = repairerDAO;
     }
 
     @Override
@@ -111,7 +118,11 @@ public class CustomerServiceImpl implements CustomerService {
         repairRequest.setDescription(request.getDescription());
         repairRequest.setVoucherId(voucherId);
         repairRequest.setAddressId(request.getAddressId());
+        repairRequest.setVat(this.appConf.getVat());
         repairRequestDAO.save(repairRequest);
+
+        Invoice invoice = buildInvoice(repairRequest);
+        invoiceDAO.save(invoice);
 
         RequestingRepairResponse response = new RequestingRepairResponse();
         response.setRequestCode(repairRequest.getRequestCode());
@@ -119,6 +130,39 @@ public class CustomerServiceImpl implements CustomerService {
         response.setMessage(CREATE_REPAIR_REQUEST_SUCCESSFUL);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private Invoice buildInvoice(RepairRequest repairRequest) {
+        com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
+        Double inspectionPrice = service.getInspectionPrice();
+        Double discount = getVoucherDiscount(inspectionPrice, repairRequest.getVoucherId());
+        Double beforeVat = inspectionPrice - discount;
+
+        Invoice invoice = new Invoice();
+        invoice.setRequestCode(repairRequest.getRequestCode());
+        invoice.setInspectionPrice(beforeVat);
+        invoice.setTotalPrice(beforeVat);
+        invoice.setActualProceeds(beforeVat + beforeVat * repairRequest.getVat());
+        return invoice;
+    }
+
+    private Double getVoucherDiscount(Double inspectionPrice, Long voucherId) {
+        double discount = 0.0;
+        if (voucherId == null) {
+            return discount;
+        }
+
+        Voucher voucher = voucherDAO.findById(voucherId).get();
+        if (voucher.isDiscountMoney()) {
+            DiscountMoney discountMoney = discountMoneyDAO.findByVoucherId(voucherId).get();
+            return discountMoney.getDiscountMoney();
+        }
+
+        DiscountPercent discountPercent = discountPercentDAO.findByVoucherId(voucherId).get();
+        discount = discountPercent.getDiscountPercent() * inspectionPrice;
+        return discount > discountPercent.getMaxDiscountPrice()
+                ? discountPercent.getMaxDiscountPrice()
+                : discount;
     }
 
     private void useInspectionVoucher(UsingVoucherDTO usingVoucherDTO, LocalDateTime now) {
@@ -201,13 +245,20 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<CancelRequestingRepairResponse> cancelFixingRequest(CancelRequestingRepairRequest request) {
-        RepairRequest repairRequest = getRepairRequestValidated(request.getRequestCode(), request.getUsername());
+        String requestCode = request.getRequestCode() == null
+                ? Strings.EMPTY
+                : request.getRequestCode();
+
+        RepairRequest repairRequest = getRepairRequestValidated(requestCode, request.getUsername());
         if (!isCancelable(repairRequest)) {
             throw new GeneralException(ONLY_CAN_CANCEL_REQUEST_PENDING_OR_CONFIRMED);
         }
 
-        updateUsedVoucherQuantity(repairRequest);
+        if (APPROVED.getId().equals(repairRequest.getStatusId())) {
+            updateRepairerStatus(requestCode);
+        }
 
+        updateUsedVoucherQuantity(repairRequest);
         repairRequest.setStatusId(CANCELLED.getId());
 
         CancelRequestingRepairResponse response = new CancelRequestingRepairResponse();
@@ -216,10 +267,16 @@ public class CustomerServiceImpl implements CustomerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    private void updateRepairerStatus(String requestCode) {
+        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+        Repairer repairer = repairerDAO.findByUserId(repairRequestMatching.getRepairerId()).get();
+        repairer.setRepairing(false);
+    }
+
     private boolean isCancelable(RepairRequest repairRequest) {
         String statusId = repairRequest.getStatusId();
         return PENDING.getId().equals(statusId) ||
-                CONFIRMED.getId().equals(statusId);
+                APPROVED.getId().equals(statusId);
     }
 
     private void updateUsedVoucherQuantity(RepairRequest repairRequest) {
@@ -256,7 +313,7 @@ public class CustomerServiceImpl implements CustomerService {
                     dto.setRequestCode(repairRequest.getRequestCode());
                     dto.setServiceName(service.getName());
                     dto.setDescription(repairRequest.getDescription());
-                    dto.setPrice(getRepairRequestPrice(repairRequest, service.getInspectionPrice()));
+                    dto.setPrice(getRepairRequestPrice(repairRequest.getRequestCode()));
                     dto.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
 
                     return dto;
@@ -290,7 +347,7 @@ public class CustomerServiceImpl implements CustomerService {
         response.setVoucherId(repairRequest.getVoucherId());
         response.setPaymentMethodId(repairRequest.getPaymentMethodId());
         response.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
-        response.setPrice(getRepairRequestPrice(repairRequest, service.getInspectionPrice()));
+        response.setPrice(getRepairRequestPrice(repairRequest.getRequestCode()));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -311,29 +368,9 @@ public class CustomerServiceImpl implements CustomerService {
         return repairRequest;
     }
 
-    private Double getRepairRequestPrice(RepairRequest repairRequest, Double inspectionPrice) {
-        Optional<Invoice> optionalInvoice = invoiceDAO.findByRequestCode(repairRequest.getRequestCode());
-        if (optionalInvoice.isPresent()) {
-            return optionalInvoice.get().getActualProceeds();
-        }
-
-        Double discount = getVoucherDiscount(inspectionPrice, repairRequest.getVoucherId());
-        return inspectionPrice - discount;
-    }
-
-    private Double getVoucherDiscount(Double inspectionPrice, Long voucherId) {
-        if (voucherId == null) {
-            return 0.0;
-        }
-
-        Voucher voucher = voucherDAO.findById(voucherId).get();
-        if (voucher.isDiscountMoney()) {
-            DiscountMoney discountMoney = discountMoneyDAO.findByVoucherId(voucherId).get();
-            return discountMoney.getDiscountMoney();
-        }
-
-        DiscountPercent discountPercent = discountPercentDAO.findByVoucherId(voucherId).get();
-        return discountPercent.getDiscountPercent() * inspectionPrice;
+    private Double getRepairRequestPrice(String requestCode) {
+        Optional<Invoice> optionalInvoice = invoiceDAO.findByRequestCode(requestCode);
+        return optionalInvoice.get().getActualProceeds();
     }
 
     @Override

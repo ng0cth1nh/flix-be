@@ -3,7 +3,7 @@ package com.fu.flix.constant.enums;
 public enum Status {
     PENDING("PE"),
     CANCELLED("CC"),
-    CONFIRMED("CF"),
+    APPROVED("AP"),
     DONE("DO"),
     FIXING("FX"),
     PAYMENT_WAITING("PW");

@@ -26,8 +26,6 @@ public class RepairRequestMatching {
 
     private Integer maxRepairInterval;
 
-    private LocalDateTime startFixingAt;
-
     @CreationTimestamp
     private LocalDateTime createdAt;
 

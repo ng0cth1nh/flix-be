@@ -225,14 +225,14 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         if (isInvalidExpectFixingDay(now, expectFixingDay)) {
-            throw new GeneralException(EXPECT_FIXING_DAY_MUST_START_AFTER_2_HOURS_AND_BEFORE_30_DAYS);
+            throw new GeneralException(EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_30_DAYS);
         }
 
         return expectFixingDay;
     }
 
     private boolean isInvalidExpectFixingDay(LocalDateTime now, LocalDateTime expectFixingDay) {
-        long minCreateRequestHours = 2L;
+        long minCreateRequestHours = 1L;
         long maxCreateRequestDays = 30L;
         return expectFixingDay.isBefore(now.plusHours(minCreateRequestHours))
                 || expectFixingDay.isAfter(now.plusDays(maxCreateRequestDays));

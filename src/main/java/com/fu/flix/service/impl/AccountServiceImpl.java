@@ -131,12 +131,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                 String username = decodedJWT.getSubject();
                 User user = userDAO.findByUsername(username).orElse(null);
 
-                String accessToken = JWT.create()
-                        .withJWTId(String.valueOf(user.getId()))
-                        .withSubject(user.getUsername())
-                        .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeToke()))
-                        .withClaim(ROLES, user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
-                        .sign(algorithm);
+                String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
 
                 TokenResponse tokenResponse = new TokenResponse(accessToken, refreshToken);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);

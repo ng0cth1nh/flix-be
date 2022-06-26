@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dto.response.TokenResponse;
+import com.fu.flix.dto.security.UserSecurity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -13,7 +14,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.FilterChain;
@@ -54,15 +54,17 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
                                             HttpServletResponse response,
                                             FilterChain chain,
                                             Authentication authentication) throws IOException {
-        User user = (User) authentication.getPrincipal();
+        UserSecurity user = (UserSecurity) authentication.getPrincipal();
         Algorithm algorithm = Algorithm.HMAC256(this.appConf.getSecretKey().getBytes());
         String accessToken = JWT.create()
+                .withJWTId(String.valueOf(user.getId()))
                 .withSubject(user.getUsername())
                 .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeToke()))
                 .withClaim(ROLES, user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                 .sign(algorithm);
 
         String refreshToken = JWT.create()
+                .withJWTId(String.valueOf(user.getId()))
                 .withSubject(user.getUsername())
                 .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeRefreshToken()))
                 .sign(algorithm);

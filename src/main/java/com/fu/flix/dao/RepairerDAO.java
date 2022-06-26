@@ -8,6 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface RepairerDAO extends JpaRepository<Repairer, Long> {
-    Optional<Repairer> findByUsername(String username);
     Optional<Repairer> findByUserId(Long userId);
 }

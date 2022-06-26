@@ -5,6 +5,7 @@ import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.NotificationDTO;
 import com.fu.flix.dto.request.NotificationRequest;
 import com.fu.flix.dto.response.NotificationResponse;
+import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -35,9 +36,10 @@ class UserServiceImplTest {
     @Test
     void should_get_notifications() {
         // given
+        Long id = 36L;
         String phone = "0865390037";
         NotificationRequest request = new NotificationRequest();
-        setContextUsername(phone);
+        setContextUsername(id, phone);
 
         // when
         ResponseEntity<NotificationResponse> responseEntity = userService.getNotifications(request);
@@ -49,14 +51,14 @@ class UserServiceImplTest {
         Assertions.assertEquals(3, notificationDTOS.size());
     }
 
-    void setContextUsername(String phone) {
+    void setContextUsername(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));
         }
         UsernamePasswordAuthenticationToken authenticationToken
-                = new UsernamePasswordAuthenticationToken(phone, null, authorities);
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone), null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 }

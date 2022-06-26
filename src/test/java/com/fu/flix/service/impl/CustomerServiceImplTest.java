@@ -14,6 +14,7 @@ import com.fu.flix.dto.response.CancelRequestingRepairResponse;
 import com.fu.flix.dto.response.MainAddressResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.dto.response.UserAddressResponse;
+import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.entity.RepairRequest;
 import com.fu.flix.entity.User;
 import com.fu.flix.entity.UserAddress;
@@ -74,9 +75,10 @@ class CustomerServiceImplTest {
     //    @Test
     void test_get_main_address() {
         // given
+        Long id = 36L;
         String phone = "0865390037";
         MainAddressRequest request = new MainAddressRequest();
-        setContextUsername(phone);
+        setContextUsername(id, phone);
 
         // when
         ResponseEntity<MainAddressResponse> responseEntity = customerService.getMainAddress(request);
@@ -91,9 +93,10 @@ class CustomerServiceImplTest {
     //    @Test
     void test_get_user_addresses() {
         // given
+        Long id = 36L;
         String phone = "0865390039";
         UserAddressRequest request = new UserAddressRequest();
-        setContextUsername(phone);
+        setContextUsername(id, phone);
 
         // when
         ResponseEntity<UserAddressResponse> responseEntity = customerService.getCustomerAddresses(request);
@@ -107,6 +110,7 @@ class CustomerServiceImplTest {
     void test_create_fixing_request_response_success() {
 
         // given
+        Long id = 36L;
         RequestingRepairRequest request = new RequestingRepairRequest();
         request.setServiceId(1L);
         request.setAddressId(7L);
@@ -115,7 +119,7 @@ class CustomerServiceImplTest {
         request.setVoucherId(1L);
         request.setPaymentMethodId("C");
 
-        setContextUsername("0865390037");
+        setContextUsername(id, "0865390037");
 
         // when
         ResponseEntity<RequestingRepairResponse> responseEntity = customerService.createFixingRequest(request);
@@ -129,11 +133,12 @@ class CustomerServiceImplTest {
     //    @Test
     void test_cancel_repair_request_success() {
         // given
+        Long id = 36L;
         String requestCode = "87a4c2eb-5413-4237-82b6-9f261c3d1825";
         CancelRequestingRepairRequest request = new CancelRequestingRepairRequest();
         request.setRequestCode(requestCode);
 
-        setContextUsername("0865390037");
+        setContextUsername(id, "0865390037");
 
         // when
         ResponseEntity<CancelRequestingRepairResponse> responseEntity = customerService.cancelFixingRequest(request);
@@ -152,6 +157,7 @@ class CustomerServiceImplTest {
     void test_create_row_on_repair_request_table() {
 
         // given
+        Long id = 36L;
         Long serviceId = 1L;
         Long addressId = 7L;
         String description = "Thợ phải đẹp trai";
@@ -165,7 +171,7 @@ class CustomerServiceImplTest {
         request.setVoucherId(1L);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername("0865390037");
+        setContextUsername(id, "0865390037");
 
         // when
         ResponseEntity<RequestingRepairResponse> responseEntity = customerService.createFixingRequest(request);
@@ -183,14 +189,14 @@ class CustomerServiceImplTest {
         Assertions.assertEquals(paymentMethodId, repairRequest.getPaymentMethodId());
     }
 
-    void setContextUsername(String phone) {
+    void setContextUsername(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));
         }
         UsernamePasswordAuthenticationToken authenticationToken
-                = new UsernamePasswordAuthenticationToken(phone, null, authorities);
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone), null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 

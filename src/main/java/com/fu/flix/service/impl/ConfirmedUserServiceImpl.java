@@ -46,24 +46,24 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         String requestCode = request.getRequestCode();
 
         if (requestCode == null) {
-            throw new GeneralException(INVALID_REQUEST_CODE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
         if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(INVALID_REQUEST_CODE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
         RepairRequest repairRequest = optionalRepairRequest.get();
         if (!Status.DONE.getId().equals(repairRequest.getStatusId())) {
-            throw new GeneralException(CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE);
+            throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE);
         }
 
         User user = userDAO.findByUsername(request.getUsername()).get();
         String commentType = getCommentType(user.getRoles());
         Optional<Comment> optionalComment = commentDAO.findComment(requestCode, commentType);
         if (optionalComment.isPresent()) {
-            throw new GeneralException(COMMENT_EXISTED);
+            throw new GeneralException(HttpStatus.CONFLICT, COMMENT_EXISTED);
         }
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
@@ -72,7 +72,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         Long customerId = repairRequest.getUserId();
         Long repairerId = repairRequestMatching.getRepairerId();
         if (!userId.equals(customerId) && !userId.equals(repairerId)) {
-            throw new GeneralException(USER_AND_REQUEST_CODE_DOES_NOT_MATCH);
+            throw new GeneralException(HttpStatus.GONE, USER_AND_REQUEST_CODE_DOES_NOT_MATCH);
         }
 
         Comment comment = new Comment();
@@ -103,10 +103,10 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
 
     private Integer getRatingValidated(Integer rating) {
         if (rating == null) {
-            throw new GeneralException(RATING_IS_REQUIRED);
+            throw new GeneralException(HttpStatus.GONE, RATING_IS_REQUIRED);
         }
         if (rating > 5 || rating < 1) {
-            throw new GeneralException(RATING_MUST_IN_RANGE_1_TO_5);
+            throw new GeneralException(HttpStatus.GONE, RATING_MUST_IN_RANGE_1_TO_5);
         }
         return rating;
     }

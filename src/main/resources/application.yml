@@ -1,6 +1,6 @@
 app:
   secretKey: 'secret'
-  lifeTimeToke: 5000 #milliseconds
+  lifeTimeToke: 1800000 #milliseconds
   lifeTimeRefreshToken: 3600000 #milliseconds
   limitQueryDefault: 20
   offsetDefault: 0

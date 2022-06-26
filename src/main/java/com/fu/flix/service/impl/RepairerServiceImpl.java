@@ -52,17 +52,17 @@ public class RepairerServiceImpl implements RepairerService {
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
 
         if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(INVALID_REQUEST_CODE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
         RepairRequest repairRequest = optionalRepairRequest.get();
         if (!PENDING.getId().equals(repairRequest.getStatusId())) {
-            throw new GeneralException(JUST_CAN_ACCEPT_PENDING_REQUEST);
+            throw new GeneralException(HttpStatus.CONFLICT, JUST_CAN_ACCEPT_PENDING_REQUEST);
         }
 
         Repairer repairer = repairerDAO.findByUserId(request.getUserId()).get();
         if (repairer.isRepairing()) {
-            throw new GeneralException(CAN_NOT_ACCEPT_REQUEST_WHEN_ON_ANOTHER_FIXING);
+            throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_ACCEPT_REQUEST_WHEN_ON_ANOTHER_FIXING);
         }
         repairer.setRepairing(true);
 
@@ -97,7 +97,7 @@ public class RepairerServiceImpl implements RepairerService {
                 User repairer = userDAO.findByUsername(request.getUsername()).get();
                 RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
                 if (isNotMatchRepairer(repairer, repairRequestMatching)) {
-                    throw new GeneralException(REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_GET_THIS_REQUEST_DETAIL);
+                    throw new GeneralException(HttpStatus.NOT_ACCEPTABLE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_GET_THIS_REQUEST_DETAIL);
                 }
             }
 

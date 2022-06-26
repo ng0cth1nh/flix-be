@@ -133,16 +133,16 @@ public class UserServiceImpl implements UserService {
         String oldPassword = request.getOldPassword();
         boolean matches = passwordEncoder.matches(oldPassword, user.getPassword());
         if (!matches) {
-            throw new GeneralException(WRONG_PASSWORD);
+            throw new GeneralException(HttpStatus.GONE, WRONG_PASSWORD);
         }
 
         String newPassword = request.getNewPassword();
         if (!InputValidation.isPasswordValid(newPassword)) {
-            throw new GeneralException(INVALID_PASSWORD);
+            throw new GeneralException(HttpStatus.GONE, INVALID_PASSWORD);
         }
 
         if (oldPassword.equals(newPassword)) {
-            throw new GeneralException(NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD);
+            throw new GeneralException(HttpStatus.CONFLICT, NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD);
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
@@ -159,7 +159,7 @@ public class UserServiceImpl implements UserService {
 
         String newPassword = request.getNewPassword();
         if (!InputValidation.isPasswordValid(newPassword)) {
-            throw new GeneralException(INVALID_PASSWORD);
+            throw new GeneralException(HttpStatus.GONE, INVALID_PASSWORD);
         }
         user.setPassword(passwordEncoder.encode(newPassword));
 
@@ -182,11 +182,11 @@ public class UserServiceImpl implements UserService {
         try {
             feedback.setType(FeedbackType.valueOf(request.getFeedbackType()).name());
         } catch (Exception e) {
-            throw new GeneralException(INVALID_FEEDBACK_TYPE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_TYPE);
         }
 
         if (requestCode != null && repairRequestDAO.findByRequestCode(requestCode).isEmpty()) {
-            throw new GeneralException(INVALID_REQUEST_CODE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
         feedback.setRequestCode(requestCode);

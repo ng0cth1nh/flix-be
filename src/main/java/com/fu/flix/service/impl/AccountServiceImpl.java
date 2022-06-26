@@ -145,14 +145,14 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                 new ObjectMapper().writeValue(response.getOutputStream(), errors);
             }
         } else {
-            throw new GeneralException(REFRESH_TOKEN_MISSING);
+            throw new GeneralException(HttpStatus.BAD_REQUEST, REFRESH_TOKEN_MISSING);
         }
     }
 
     @Override
     public ResponseEntity<SendRegisterOTPResponse> sendRegisterOTP(SendRegisterOTPRequest request) throws JsonProcessingException {
         if (userDAO.findByUsername(request.getPhone()).isPresent()) {
-            throw new GeneralException(ACCOUNT_EXISTED);
+            throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
         }
 
         SmsRequest sms = getSmsRequest(request, OTPType.REGISTER);
@@ -208,21 +208,21 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
     private void validateRegisterInput(CFRegisterRequest request) {
         if (!isCreatableAccount(request.getRoleType())) {
-            throw new GeneralException(INVALID_ROLE_TYPE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_ROLE_TYPE);
         } else if (isNotValidOTP(request, OTPType.REGISTER)) {
-            throw new GeneralException(INVALID_OTP);
+            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
         } else if (!InputValidation.isPhoneValid(request.getPhone())) {
-            throw new GeneralException(INVALID_PHONE_NUMBER);
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
-            throw new GeneralException(ACCOUNT_EXISTED);
+            throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
         } else if (!InputValidation.isPasswordValid(request.getPassword())) {
-            throw new GeneralException(INVALID_PASSWORD);
+            throw new GeneralException(HttpStatus.GONE, INVALID_PASSWORD);
         } else if (cityDAO.findById(request.getCityId()).isEmpty()) {
-            throw new GeneralException(INVALID_CITY);
+            throw new GeneralException(HttpStatus.GONE, INVALID_CITY);
         } else if (districtDAO.findById(request.getDistrictId()).isEmpty()) {
-            throw new GeneralException(INVALID_DISTRICT);
+            throw new GeneralException(HttpStatus.GONE, INVALID_DISTRICT);
         } else if (communeDAO.findById(request.getCommuneId()).isEmpty()) {
-            throw new GeneralException(INVALID_COMMUNE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
         }
     }
 
@@ -312,7 +312,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         Optional<User> optionalUser = userDAO.findByUsername(request.getPhone());
 
         if (optionalUser.isEmpty()) {
-            throw new GeneralException(ACCOUNT_NOT_FOUND);
+            throw new GeneralException(HttpStatus.NOT_FOUND, ACCOUNT_NOT_FOUND);
         }
 
         SmsRequest sms = getSmsRequest(request, OTPType.FORGOT_PASSWORD);
@@ -349,11 +349,11 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
     private void validateForgotPassInput(CFForgotPassRequest request) {
         if (isNotValidOTP(request, OTPType.FORGOT_PASSWORD)) {
-            throw new GeneralException(INVALID_OTP);
+            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
         } else if (!InputValidation.isPhoneValid(request.getPhone())) {
-            throw new GeneralException(INVALID_PHONE_NUMBER);
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isEmpty()) {
-            throw new GeneralException(ACCOUNT_NOT_FOUND);
+            throw new GeneralException(HttpStatus.NOT_FOUND, ACCOUNT_NOT_FOUND);
         }
     }
 

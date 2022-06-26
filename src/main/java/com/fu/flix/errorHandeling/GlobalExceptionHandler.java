@@ -1,5 +1,6 @@
 package com.fu.flix.errorHandeling;
 
+import com.fu.flix.constant.Constant;
 import com.fu.flix.dto.error.ErrorInfo;
 import com.fu.flix.dto.error.GeneralException;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         err.setTimestamp(LocalDateTime.now());
         err.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         err.setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        err.setMessage(e.getMessage());
+        err.setMessage(Constant.INTERNAL_SERVER_ERROR);
         return ResponseEntityBuilder.build(err);
     }
 }

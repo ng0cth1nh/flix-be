@@ -1,19 +1,18 @@
 package com.fu.flix.filter;
 
 import com.fu.flix.dto.error.GeneralException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 import static com.fu.flix.constant.Constant.ACCESS_DENIED;
 
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        throw new GeneralException(ACCESS_DENIED);
+    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) {
+        throw new GeneralException(HttpStatus.BAD_REQUEST, ACCESS_DENIED);
     }
 }

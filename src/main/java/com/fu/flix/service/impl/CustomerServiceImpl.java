@@ -172,39 +172,39 @@ public class CustomerServiceImpl implements CustomerService {
         Voucher voucher = voucherDAO.findById(voucherId).get();
 
         if (!isMatchPaymentMethod(usingVoucherDTO, voucher)) {
-            throw new GeneralException(PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER);
+            throw new GeneralException(HttpStatus.GONE, PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER);
         }
 
         if (optionalService.isEmpty()) {
-            throw new GeneralException(INVALID_SERVICE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
         }
 
         if (optionalService.get().getInspectionPrice() < voucher.getMinOrderPrice()) {
-            throw new GeneralException(INSPECTION_PRICE_MUST_GREATER_OR_EQUAL_VOUCHER_MIN_PRICE);
+            throw new GeneralException(HttpStatus.GONE, INSPECTION_PRICE_MUST_GREATER_OR_EQUAL_VOUCHER_MIN_PRICE);
         }
 
         if (userVoucher == null) {
-            throw new GeneralException(USER_NOT_HOLD_VOUCHER);
+            throw new GeneralException(HttpStatus.GONE, USER_NOT_HOLD_VOUCHER);
         }
 
         if (userVoucher.getQuantity() <= 0) {
-            throw new GeneralException(USER_NOT_HOLD_VOUCHER);
+            throw new GeneralException(HttpStatus.GONE, USER_NOT_HOLD_VOUCHER);
         }
 
         if (voucher.getRemainQuantity() <= 0) {
-            throw new GeneralException(OUT_OF_VOUCHER);
+            throw new GeneralException(HttpStatus.CONFLICT, OUT_OF_VOUCHER);
         }
 
         if (voucher.getExpireDate().isBefore(now)) {
-            throw new GeneralException(VOUCHER_EXPIRED);
+            throw new GeneralException(HttpStatus.CONFLICT, VOUCHER_EXPIRED);
         }
 
         if (now.isBefore(voucher.getEffectiveDate())) {
-            throw new GeneralException(VOUCHER_BEFORE_EFFECTIVE_DATE);
+            throw new GeneralException(HttpStatus.CONFLICT, VOUCHER_BEFORE_EFFECTIVE_DATE);
         }
 
         if (!voucher.getType().equals(INSPECTION.name())) {
-            throw new GeneralException(VOUCHER_MUST_BE_TYPE_INSPECTION);
+            throw new GeneralException(HttpStatus.CONFLICT, VOUCHER_MUST_BE_TYPE_INSPECTION);
         }
 
         voucher.setRemainQuantity(voucher.getRemainQuantity() - 1);
@@ -221,11 +221,11 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             expectFixingDay = DateFormatUtil.getLocalDateTime(request.getExpectFixingDay(), DATE_TIME_PATTERN);
         } catch (DateTimeParseException e) {
-            throw new GeneralException(WRONG_LOCAL_DATE_TIME_FORMAT);
+            throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_TIME_FORMAT);
         }
 
         if (isInvalidExpectFixingDay(now, expectFixingDay)) {
-            throw new GeneralException(EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_30_DAYS);
+            throw new GeneralException(HttpStatus.CONFLICT, EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_30_DAYS);
         }
 
         return expectFixingDay;
@@ -256,7 +256,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         RepairRequest repairRequest = getRepairRequestValidated(requestCode, request.getUsername());
         if (!isCancelable(repairRequest)) {
-            throw new GeneralException(ONLY_CAN_CANCEL_REQUEST_PENDING_OR_CONFIRMED);
+            throw new GeneralException(HttpStatus.GONE, ONLY_CAN_CANCEL_REQUEST_PENDING_OR_CONFIRMED);
         }
 
         if (APPROVED.getId().equals(repairRequest.getStatusId())) {
@@ -335,7 +335,7 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             return valueOf(status).getId();
         } catch (IllegalArgumentException e) {
-            throw new GeneralException(INVALID_STATUS);
+            throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
         }
     }
 
@@ -365,14 +365,14 @@ public class CustomerServiceImpl implements CustomerService {
     private RepairRequest getRepairRequestValidated(String requestCode, String username) {
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
         if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(INVALID_REQUEST_CODE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
         User user = userDAO.findByUsername(username).get();
         RepairRequest repairRequest = optionalRepairRequest.get();
 
         if (!repairRequest.getUserId().equals(user.getId())) {
-            throw new GeneralException(INVALID_REQUEST_CODE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
         return repairRequest;
@@ -473,10 +473,10 @@ public class CustomerServiceImpl implements CustomerService {
     public ResponseEntity<CreateAddressResponse> createCustomerAddress(CreateAddressRequest request) {
         Optional<Commune> optionalCommune = communeDAO.findById(request.getCommuneId());
         if (optionalCommune.isEmpty()) {
-            throw new GeneralException(INVALID_COMMUNE);
+            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
         }
         if (!InputValidation.isPhoneValid(request.getPhone())) {
-            throw new GeneralException(INVALID_PHONE_NUMBER);
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
         User user = userDAO.findByUsername(request.getUsername()).get();
 
@@ -525,11 +525,11 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             dob = DateFormatUtil.getLocalDate(request.getDateOfBirth(), DATE_PATTERN);
         } catch (DateTimeParseException e) {
-            throw new GeneralException(WRONG_LOCAL_DATE_FORMAT);
+            throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_FORMAT);
         }
 
         if (!InputValidation.isEmailValid(email)) {
-            throw new GeneralException(INVALID_EMAIL);
+            throw new GeneralException(HttpStatus.GONE, INVALID_EMAIL);
         }
 
         User user = userDAO.findByUsername(request.getUsername()).get();

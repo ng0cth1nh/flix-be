@@ -9,6 +9,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +37,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
     @Override
     public String uploadImage(MultipartFile fileStream) throws IOException {
         if (!isImageFile(fileStream.getOriginalFilename())) {
-            throw new GeneralException(FILE_MUST_BE_IMAGE);
+            throw new GeneralException(HttpStatus.GONE, FILE_MUST_BE_IMAGE);
         }
 
         final String fileName = UUID.randomUUID() + fileStream.getOriginalFilename();

@@ -1,14 +1,16 @@
 package com.fu.flix.dto.error;
 
 
-public class GeneralException extends RuntimeException{
-    private String message;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
-    public GeneralException() {}
+public class GeneralException extends ResponseStatusException {
+    public GeneralException(HttpStatus status, String reason) {
+        super(status, reason);
+    }
 
-    public GeneralException(String msg)
-    {
-        super(msg);
-        this.message = msg;
+    @Override
+    public String getMessage() {
+        return super.getReason();
     }
 }

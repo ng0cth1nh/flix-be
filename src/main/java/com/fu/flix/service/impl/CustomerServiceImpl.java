@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.Status.*;
+import static com.fu.flix.constant.enums.TransactionType.PAY_COMMISSIONS;
+import static com.fu.flix.constant.enums.TransactionType.REFUNDS;
 import static com.fu.flix.constant.enums.VoucherType.INSPECTION;
 
 @Service
@@ -51,6 +53,8 @@ public class CustomerServiceImpl implements CustomerService {
     private final AppConf appConf;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final RepairerDAO repairerDAO;
+    private final BalanceDAO balanceDAO;
+    private final TransactionHistoryDAO transactionHistoryDAO;
     private final String COMMA = ", ";
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
@@ -71,7 +75,9 @@ public class CustomerServiceImpl implements CustomerService {
                                CommentDAO commentDAO,
                                AppConf appConf,
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
-                               RepairerDAO repairerDAO) {
+                               RepairerDAO repairerDAO,
+                               BalanceDAO balanceDAO,
+                               TransactionHistoryDAO transactionHistoryDAO) {
         this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
@@ -89,6 +95,8 @@ public class CustomerServiceImpl implements CustomerService {
         this.appConf = appConf;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
         this.repairerDAO = repairerDAO;
+        this.balanceDAO = balanceDAO;
+        this.transactionHistoryDAO = transactionHistoryDAO;
     }
 
     @Override
@@ -256,11 +264,11 @@ public class CustomerServiceImpl implements CustomerService {
 
         RepairRequest repairRequest = getRepairRequestValidated(requestCode, request.getUsername());
         if (!isCancelable(repairRequest)) {
-            throw new GeneralException(HttpStatus.GONE, ONLY_CAN_CANCEL_REQUEST_PENDING_OR_CONFIRMED);
+            throw new GeneralException(HttpStatus.GONE, ONLY_CAN_CANCEL_REQUEST_PENDING_OR_APPROVED);
         }
 
         if (APPROVED.getId().equals(repairRequest.getStatusId())) {
-            updateRepairerStatus(requestCode);
+            updateRepairer(requestCode);
         }
 
         updateUsedVoucherQuantity(repairRequest);
@@ -272,10 +280,32 @@ public class CustomerServiceImpl implements CustomerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void updateRepairerStatus(String requestCode) {
+    private void updateRepairer(String requestCode) {
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
         Repairer repairer = repairerDAO.findByUserId(repairRequestMatching.getRepairerId()).get();
+
+        updateRepairerStatus(repairer);
+        returnMoneyForRepairer(repairer, requestCode);
+    }
+
+    private void updateRepairerStatus(Repairer repairer) {
         repairer.setRepairing(false);
+    }
+
+    private void returnMoneyForRepairer(Repairer repairer, String requestCode) {
+        TransactionHistory commissionsTransaction = transactionHistoryDAO
+                .findByRequestCodeAndType(requestCode, PAY_COMMISSIONS.name()).get();
+        Balance balance = balanceDAO.findByUserId(repairer.getUserId()).get();
+        Double refunds = commissionsTransaction.getAmount();
+
+        balance.setBalance(balance.getBalance() + refunds);
+
+        TransactionHistory refundsTransaction = new TransactionHistory();
+        refundsTransaction.setBalanceId(balance.getId());
+        refundsTransaction.setAmount(refunds);
+        refundsTransaction.setType(REFUNDS.name());
+        refundsTransaction.setRequestCode(requestCode);
+        transactionHistoryDAO.save(refundsTransaction);
     }
 
     private boolean isCancelable(RepairRequest repairRequest) {

@@ -19,6 +19,7 @@ public class AppConf {
     private Integer limitQueryDefault;
     private Integer offsetDefault;
     private Double vat;
+    private Double profitRate;
 
     @Data
     public static class TwilioInfo {

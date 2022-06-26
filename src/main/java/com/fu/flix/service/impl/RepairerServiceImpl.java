@@ -1,5 +1,6 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.RepairerApproveRequest;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.Status.*;
+import static com.fu.flix.constant.enums.TransactionType.PAY_COMMISSIONS;
 
 @Service
 @Slf4j
@@ -30,19 +32,31 @@ public class RepairerServiceImpl implements RepairerService {
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final UserDAO userDAO;
     private final ImageDAO imageDAO;
+    private final InvoiceDAO invoiceDAO;
+    private final BalanceDAO balanceDAO;
+    private final AppConf appConf;
+    private final TransactionHistoryDAO transactionHistoryDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public RepairerServiceImpl(RepairerDAO repairerDAO,
                                RepairRequestDAO repairRequestDAO,
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
                                UserDAO userDAO,
-                               ImageDAO imageDAO) {
+                               ImageDAO imageDAO,
+                               InvoiceDAO invoiceDAO,
+                               BalanceDAO balanceDAO,
+                               AppConf appConf,
+                               TransactionHistoryDAO transactionHistoryDAO) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
 
         this.userDAO = userDAO;
         this.imageDAO = imageDAO;
+        this.invoiceDAO = invoiceDAO;
+        this.balanceDAO = balanceDAO;
+        this.appConf = appConf;
+        this.transactionHistoryDAO = transactionHistoryDAO;
     }
 
     @Override
@@ -64,8 +78,16 @@ public class RepairerServiceImpl implements RepairerService {
         if (repairer.isRepairing()) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_ACCEPT_REQUEST_WHEN_ON_ANOTHER_FIXING);
         }
-        repairer.setRepairing(true);
 
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        Balance balance = balanceDAO.findByUserId(repairer.getUserId()).get();
+        Double neededBalance = invoice.getActualProceeds() * this.appConf.getProfitRate();
+        if (balance.getBalance() < neededBalance) {
+            throw new GeneralException(HttpStatus.CONFLICT, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + neededBalance);
+        }
+
+        minusCommissions(balance, neededBalance, invoice.getRequestCode());
+        repairer.setRepairing(true);
         repairRequest.setStatusId(APPROVED.getId());
 
         RepairRequestMatching repairRequestMatching = buildRepairRequestMatching(requestCode, repairer.getUserId());
@@ -75,6 +97,16 @@ public class RepairerServiceImpl implements RepairerService {
         response.setMessage(APPROVAL_REQUEST_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void minusCommissions(Balance balance, Double neededBalance, String requestCode) {
+        balance.setBalance(balance.getBalance() - neededBalance);
+        TransactionHistory transactionHistory = new TransactionHistory();
+        transactionHistory.setBalanceId(balance.getId());
+        transactionHistory.setAmount(neededBalance);
+        transactionHistory.setType(PAY_COMMISSIONS.name());
+        transactionHistory.setRequestCode(requestCode);
+        transactionHistoryDAO.save(transactionHistory);
     }
 
     private RepairRequestMatching buildRepairRequestMatching(String requestCode, Long repairerId) {

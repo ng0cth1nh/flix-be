@@ -14,8 +14,6 @@ app:
                    '/api/v1/token/refresh',
                    '/api/v1/register/sendOTP',
                    '/api/v1/register/confirm',
-                   '/api/v1/customer/address/list',
-                   '/api/v1/customer/address/main',
                    '/swagger-ui/index.html',
                    '/v2/api-docs',
                    '/swagger-resources',

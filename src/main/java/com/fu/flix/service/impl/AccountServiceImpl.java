@@ -12,6 +12,7 @@ import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.constant.enums.TokenType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.PhoneDTO;
+import com.fu.flix.dto.security.UserSecurity;
 import com.fu.flix.entity.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.*;
@@ -114,7 +115,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             authorities.add(new SimpleGrantedAuthority(role.getName()));
         }
 
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
+        return new UserSecurity(user.getId(), user.getUsername(), user.getPassword(), authorities);
     }
 
     @Override
@@ -131,6 +132,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                 User user = userDAO.findByUsername(username).orElse(null);
 
                 String accessToken = JWT.create()
+                        .withJWTId(String.valueOf(user.getId()))
                         .withSubject(user.getUsername())
                         .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeToke()))
                         .withClaim(ROLES, user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
@@ -199,7 +201,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private void createRepairer(User user) {
         Repairer repairer = new Repairer();
         repairer.setUserId(user.getId());
-        repairer.setUsername(user.getUsername());
         repairerDAO.save(repairer);
     }
 
@@ -241,6 +242,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         switch (tokenType) {
             case ACCESS_TOKEN:
                 token = JWT.create()
+                        .withJWTId(String.valueOf(user.getId()))
                         .withSubject(user.getUsername())
                         .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeToke()))
                         .withClaim(ROLES, user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
@@ -248,6 +250,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                 break;
             case REFRESH_TOKEN:
                 token = JWT.create()
+                        .withJWTId(String.valueOf(user.getId()))
                         .withSubject(user.getUsername())
                         .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeRefreshToken()))
                         .sign(algorithm);

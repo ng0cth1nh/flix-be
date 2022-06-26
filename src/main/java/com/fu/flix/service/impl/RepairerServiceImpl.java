@@ -60,7 +60,7 @@ public class RepairerServiceImpl implements RepairerService {
             throw new GeneralException(JUST_CAN_ACCEPT_PENDING_REQUEST);
         }
 
-        Repairer repairer = repairerDAO.findByUsername(request.getUsername()).get();
+        Repairer repairer = repairerDAO.findByUserId(request.getUserId()).get();
         if (repairer.isRepairing()) {
             throw new GeneralException(CAN_NOT_ACCEPT_REQUEST_WHEN_ON_ANOTHER_FIXING);
         }

@@ -59,4 +59,5 @@ public class Constant {
     public static final String REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_GET_THIS_REQUEST_DETAIL = "REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_GET_THIS_REQUEST_DETAIL";
     public static final String ACCESS_DENIED = "ACCESS_DENIED";
     public static final String INVALID_ROLE_TYPE = "INVALID_ROLE_TYPE";
+    public static final String INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR";
 }

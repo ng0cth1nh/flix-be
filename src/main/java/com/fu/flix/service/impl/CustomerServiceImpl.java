@@ -1,6 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
@@ -259,28 +260,38 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<CancelRequestingRepairResponse> cancelFixingRequest(CancelRequestingRepairRequest request) {
+    public ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request) {
         String requestCode = getRequestCode(request.getRequestCode());
 
-        RepairRequest repairRequest = getRepairRequestValidated(requestCode, request.getUsername());
+        RepairRequest repairRequest = getRepairRequest(requestCode);
+        if (!repairRequest.getUserId().equals(request.getUserId())) {
+            throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CANCEL_THIS_REQUEST);
+        }
+
         if (!isCancelable(repairRequest)) {
             throw new GeneralException(HttpStatus.GONE, ONLY_CAN_CANCEL_REQUEST_PENDING_OR_APPROVED);
         }
 
         if (APPROVED.getId().equals(repairRequest.getStatusId())) {
-            updateRepairer(requestCode);
+            updateRepairerAfterCancelRequest(requestCode);
         }
 
-        updateUsedVoucherQuantity(repairRequest);
-        repairRequest.setStatusId(CANCELLED.getId());
+        updateUsedVoucherQuantityAfterCancelRequest(repairRequest);
+        updateRepairRequest(request, repairRequest);
 
-        CancelRequestingRepairResponse response = new CancelRequestingRepairResponse();
+        CancelRequestForCustomerResponse response = new CancelRequestForCustomerResponse();
         response.setMessage(CANCEL_REPAIR_REQUEST_SUCCESSFUL);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void updateRepairer(String requestCode) {
+    private boolean isCancelable(RepairRequest repairRequest) {
+        String statusId = repairRequest.getStatusId();
+        return PENDING.getId().equals(statusId) || APPROVED.getId().equals(statusId);
+    }
+
+    @Override
+    public void updateRepairerAfterCancelRequest(String requestCode) {
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
         Repairer repairer = repairerDAO.findByUserId(repairRequestMatching.getRepairerId()).get();
 
@@ -308,13 +319,14 @@ public class CustomerServiceImpl implements CustomerService {
         transactionHistoryDAO.save(refundsTransaction);
     }
 
-    private boolean isCancelable(RepairRequest repairRequest) {
-        String statusId = repairRequest.getStatusId();
-        return PENDING.getId().equals(statusId) ||
-                APPROVED.getId().equals(statusId);
+    private void updateRepairRequest(CancelRequestForCustomerRequest request, RepairRequest repairRequest) {
+        repairRequest.setStatusId(CANCELLED.getId());
+        repairRequest.setCancelledByRoleId(RoleType.ROLE_CUSTOMER.getId());
+        repairRequest.setReasonCancel(request.getReason());
     }
 
-    private void updateUsedVoucherQuantity(RepairRequest repairRequest) {
+    @Override
+    public void updateUsedVoucherQuantityAfterCancelRequest(RepairRequest repairRequest) {
         Long voucherId = repairRequest.getVoucherId();
         if (voucherId != null) {
             Voucher voucher = voucherDAO.findById(voucherId).get();
@@ -372,7 +384,11 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request) {
         String requestCode = getRequestCode(request.getRequestCode());
-        RepairRequest repairRequest = getRepairRequestValidated(requestCode, request.getUsername());
+        RepairRequest repairRequest = getRepairRequest(requestCode);
+        if (!repairRequest.getUserId().equals(request.getUserId())) {
+            throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_SEE_THIS_REQUEST);
+        }
+
         com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
 
         RequestingDetailForCustomerResponse response = new RequestingDetailForCustomerResponse();
@@ -392,20 +408,13 @@ public class CustomerServiceImpl implements CustomerService {
         return requestCode == null ? Strings.EMPTY : requestCode;
     }
 
-    private RepairRequest getRepairRequestValidated(String requestCode, String username) {
+    @Override
+    public RepairRequest getRepairRequest(String requestCode) {
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
         if (optionalRepairRequest.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
-
-        User user = userDAO.findByUsername(username).get();
-        RepairRequest repairRequest = optionalRepairRequest.get();
-
-        if (!repairRequest.getUserId().equals(user.getId())) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
-        }
-
-        return repairRequest;
+        return optionalRepairRequest.get();
     }
 
     private Double getRepairRequestPrice(String requestCode) {

@@ -39,6 +39,10 @@ public class RepairRequest {
 
     private Double vat;
 
+    private String cancelledByRoleId;
+
+    private String reasonCancel;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

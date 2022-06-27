@@ -23,7 +23,7 @@ public class CustomerController {
     }
 
     @PostMapping("request/cancel")
-    public ResponseEntity<CancelRequestingRepairResponse> cancelFixingRequest(@RequestBody CancelRequestingRepairRequest request) {
+    public ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(@RequestBody CancelRequestForCustomerRequest request) {
         return customerService.cancelFixingRequest(request);
     }
 

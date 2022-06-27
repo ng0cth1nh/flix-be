@@ -20,6 +20,8 @@ public class AppConf {
     private Integer offsetDefault;
     private Double vat;
     private Double profitRate;
+    private Long minTimeFined;
+    private Double fine;
 
     @Data
     public static class TwilioInfo {

@@ -6,6 +6,8 @@ app:
   offsetDefault: 0
   vat: 0.1
   profitRate: 0.2
+  fine: 20000
+  minTimeFined: 3600 #milliseconds
   twilioInfo:
     accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'
     authToken: 'b2bdec58830ce248a8e2d60bdfa6205c'

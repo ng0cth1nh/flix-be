@@ -2,12 +2,13 @@ package com.fu.flix.service;
 
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
+import com.fu.flix.entity.RepairRequest;
 import org.springframework.http.ResponseEntity;
 
 public interface CustomerService {
     ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request);
 
-    ResponseEntity<CancelRequestingRepairResponse> cancelFixingRequest(CancelRequestingRepairRequest request);
+    ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request);
 
     ResponseEntity<HistoryRequestingRepairResponse> getFixingRequestHistories(HistoryRequestingRepairRequest request);
 
@@ -30,4 +31,8 @@ public interface CustomerService {
     ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request);
 
     ResponseEntity<RepairerCommentResponse> getRepairerComments(RepairerCommentRequest request);
+
+    RepairRequest getRepairRequest(String requestCode);
+    void updateRepairerAfterCancelRequest(String requestCode);
+    void updateUsedVoucherQuantityAfterCancelRequest(RepairRequest repairRequest);
 }

@@ -6,11 +6,11 @@ import com.fu.flix.dao.UserAddressDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.IRepairerProfile;
 import com.fu.flix.dto.ISuccessfulRepair;
-import com.fu.flix.dto.request.CancelRequestingRepairRequest;
+import com.fu.flix.dto.request.CancelRequestForCustomerRequest;
 import com.fu.flix.dto.request.MainAddressRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
 import com.fu.flix.dto.request.UserAddressRequest;
-import com.fu.flix.dto.response.CancelRequestingRepairResponse;
+import com.fu.flix.dto.response.CancelRequestForCustomerResponse;
 import com.fu.flix.dto.response.MainAddressResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.dto.response.UserAddressResponse;
@@ -135,14 +135,14 @@ class CustomerServiceImplTest {
         // given
         Long id = 36L;
         String requestCode = "87a4c2eb-5413-4237-82b6-9f261c3d1825";
-        CancelRequestingRepairRequest request = new CancelRequestingRepairRequest();
+        CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
         request.setRequestCode(requestCode);
 
         setContextUsername(id, "0865390037");
 
         // when
-        ResponseEntity<CancelRequestingRepairResponse> responseEntity = customerService.cancelFixingRequest(request);
-        CancelRequestingRepairResponse response = responseEntity.getBody();
+        ResponseEntity<CancelRequestForCustomerResponse> responseEntity = customerService.cancelFixingRequest(request);
+        CancelRequestForCustomerResponse response = responseEntity.getBody();
 
         RepairRequest repairRequest = repairRequestDAO.findByRequestCode(requestCode).get();
 

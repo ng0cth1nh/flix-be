@@ -1,7 +1,9 @@
 package com.fu.flix.controller;
 
+import com.fu.flix.dto.request.CancelRequestForRepairerRequest;
 import com.fu.flix.dto.request.RepairerApproveRequest;
 import com.fu.flix.dto.request.RequestingDetailForRepairerRequest;
+import com.fu.flix.dto.response.CancelRequestForRepairerResponse;
 import com.fu.flix.dto.response.RepairerApproveResponse;
 import com.fu.flix.dto.response.RequestingDetailForRepairerResponse;
 import com.fu.flix.service.RepairerService;
@@ -27,5 +29,10 @@ public class RepairerController {
     @GetMapping("request/detail")
     public ResponseEntity<RequestingDetailForRepairerResponse> getRepairRequestDetail(RequestingDetailForRepairerRequest request) {
         return repairerService.getRepairRequestDetail(request);
+    }
+
+    @PostMapping("request/cancel")
+    public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(@RequestBody CancelRequestForRepairerRequest request) {
+        return repairerService.cancelFixingRequest(request);
     }
 }

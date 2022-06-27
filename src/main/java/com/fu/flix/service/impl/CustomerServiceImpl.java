@@ -449,7 +449,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .map(userAddress -> {
                     UserAddressDTO dto = new UserAddressDTO();
                     dto.setAddressId(userAddress.getId());
-                    dto.setCustomerName(userAddress.getName());
+                    dto.setCustomerName(user.getFullName());
                     dto.setPhone(userAddress.getPhone());
                     dto.setAddressName(getAddressFormatted(userAddress.getCommuneId(), userAddress.getStreetAddress()));
                     dto.setMainAddress(userAddress.isMainAddress());

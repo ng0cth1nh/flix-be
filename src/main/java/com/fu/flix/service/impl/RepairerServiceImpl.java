@@ -1,13 +1,17 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
+import com.fu.flix.dto.request.CancelRequestForRepairerRequest;
 import com.fu.flix.dto.request.RepairerApproveRequest;
 import com.fu.flix.dto.request.RequestingDetailForRepairerRequest;
+import com.fu.flix.dto.response.CancelRequestForRepairerResponse;
 import com.fu.flix.dto.response.RepairerApproveResponse;
 import com.fu.flix.dto.response.RequestingDetailForRepairerResponse;
 import com.fu.flix.entity.*;
+import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.RepairerService;
 import com.fu.flix.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +21,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.Status.*;
-import static com.fu.flix.constant.enums.TransactionType.PAY_COMMISSIONS;
+import static com.fu.flix.constant.enums.TransactionType.*;
 
 @Service
 @Slf4j
@@ -36,6 +42,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final BalanceDAO balanceDAO;
     private final AppConf appConf;
     private final TransactionHistoryDAO transactionHistoryDAO;
+    private final CustomerService customerService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public RepairerServiceImpl(RepairerDAO repairerDAO,
@@ -46,7 +53,8 @@ public class RepairerServiceImpl implements RepairerService {
                                InvoiceDAO invoiceDAO,
                                BalanceDAO balanceDAO,
                                AppConf appConf,
-                               TransactionHistoryDAO transactionHistoryDAO) {
+                               TransactionHistoryDAO transactionHistoryDAO,
+                               CustomerService customerService) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -57,6 +65,7 @@ public class RepairerServiceImpl implements RepairerService {
         this.balanceDAO = balanceDAO;
         this.appConf = appConf;
         this.transactionHistoryDAO = transactionHistoryDAO;
+        this.customerService = customerService;
     }
 
     @Override
@@ -159,7 +168,66 @@ public class RepairerServiceImpl implements RepairerService {
         return !repairer.getId().equals(repairRequestMatching.getRepairerId());
     }
 
+    @Override
+    public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) {
+        String requestCode = getRequestCode(request.getRequestCode());
+
+        RepairRequest repairRequest = customerService.getRepairRequest(requestCode);
+        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+        if (!repairRequestMatching.getRepairerId().equals(request.getUserId())) {
+            throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CANCEL_THIS_REQUEST);
+        }
+
+        if (!isCancelable(repairRequest)) {
+            throw new GeneralException(HttpStatus.GONE, ONLY_CAN_CANCEL_REQUEST_FIXING_OR_APPROVED);
+        }
+
+        customerService.updateRepairerAfterCancelRequest(requestCode);
+        if (isFined(repairRequest)) {
+            monetaryFine(request.getUserId(), requestCode);
+        }
+
+        customerService.updateUsedVoucherQuantityAfterCancelRequest(repairRequest);
+        updateRepairRequest(request, repairRequest);
+
+        CancelRequestForRepairerResponse response = new CancelRequestForRepairerResponse();
+        response.setMessage(CANCEL_REPAIR_REQUEST_SUCCESSFUL);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void monetaryFine(Long repairerId, String requestCode) {
+        Double fineMoney = this.appConf.getFine();
+        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
+        Balance balance = balanceDAO.findByUserId(repairer.getUserId()).get();
+
+        balance.setBalance(balance.getBalance() - fineMoney);
+
+        TransactionHistory finedTransaction = new TransactionHistory();
+        finedTransaction.setBalanceId(balance.getId());
+        finedTransaction.setAmount(fineMoney);
+        finedTransaction.setType(FINED.name());
+        finedTransaction.setRequestCode(requestCode);
+        transactionHistoryDAO.save(finedTransaction);
+    }
+
     private String getRequestCode(String requestCode) {
         return requestCode == null ? Strings.EMPTY : requestCode;
+    }
+
+    private boolean isCancelable(RepairRequest repairRequest) {
+        String statusId = repairRequest.getStatusId();
+        return APPROVED.getId().equals(statusId) || FIXING.getId().equals(statusId);
+    }
+
+    private void updateRepairRequest(CancelRequestForRepairerRequest request, RepairRequest repairRequest) {
+        repairRequest.setStatusId(CANCELLED.getId());
+        repairRequest.setCancelledByRoleId(RoleType.ROLE_REPAIRER.getId());
+        repairRequest.setReasonCancel(request.getReason());
+    }
+
+    private boolean isFined(RepairRequest repairRequest) {
+        Duration duration = Duration.between(LocalDateTime.now(), repairRequest.getExpectStartFixingAt());
+        return duration.getSeconds() < this.appConf.getMinTimeFined() || FIXING.getId().equals(repairRequest.getStatusId());
     }
 }

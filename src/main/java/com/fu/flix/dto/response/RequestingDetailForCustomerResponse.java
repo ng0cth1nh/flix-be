@@ -4,6 +4,8 @@ import lombok.Data;
 
 @Data
 public class RequestingDetailForCustomerResponse {
+    private String status;
+    private String image;
     private Long serviceId;
     private String serviceName;
     private Long addressId;
@@ -13,4 +15,5 @@ public class RequestingDetailForCustomerResponse {
     private String paymentMethodId;
     private String date;
     private Double price;
+    private Double actualPrice;
 }

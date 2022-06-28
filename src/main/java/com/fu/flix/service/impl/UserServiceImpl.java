@@ -179,11 +179,7 @@ public class UserServiceImpl implements UserService {
         feedback.setDescription(request.getDescription());
         feedback.setStatusId(Status.PENDING.getId());
 
-        try {
-            feedback.setType(FeedbackType.valueOf(request.getFeedbackType()).name());
-        } catch (Exception e) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_TYPE);
-        }
+        feedback.setType(getFeedbackTypeValidated(request.getFeedbackType()));
 
         if (requestCode != null && repairRequestDAO.findByRequestCode(requestCode).isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
@@ -207,5 +203,15 @@ public class UserServiceImpl implements UserService {
         response.setMessage(CREATE_FEEDBACK_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getFeedbackTypeValidated(String feedbackType) {
+        for (FeedbackType t : FeedbackType.values()) {
+            if (t.name().equals(feedbackType)) {
+                return feedbackType;
+            }
+        }
+
+        throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_TYPE);
     }
 }

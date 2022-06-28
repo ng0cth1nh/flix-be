@@ -1,5 +1,5 @@
 package com.fu.flix.dto;
 
-public interface ISuccessfulRepair {
+public interface ISuccessfulRepairDTO {
     Long getSuccessfulRepair();
 }

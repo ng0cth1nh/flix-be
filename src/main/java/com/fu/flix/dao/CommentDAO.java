@@ -1,8 +1,8 @@
 package com.fu.flix.dao;
 
-import com.fu.flix.dto.IRepairerComment;
-import com.fu.flix.dto.IRepairerProfile;
-import com.fu.flix.dto.ISuccessfulRepair;
+import com.fu.flix.dto.IRepairerCommentDTO;
+import com.fu.flix.dto.IRepairerProfileDTO;
+import com.fu.flix.dto.ISuccessfulRepairDTO;
 import com.fu.flix.entity.Comment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -29,7 +29,7 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
             "ON rrm.repairer_id = r.user_id " +
             "WHERE rrm.repairer_id = :repairerId " +
             "AND c.type = 'CUSTOMER_COMMENT'", nativeQuery = true)
-    IRepairerProfile findRepairerProfile(Long repairerId);
+    IRepairerProfileDTO findRepairerProfile(Long repairerId);
 
     @Query(value = "SELECT count(*) as successfulRepair " +
             "FROM invoices i " +
@@ -37,7 +37,7 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
             "ON i.request_code = rrm.request_code " +
             "WHERE rrm.repairer_id = :repairerId " +
             "AND i.status_id = 'DO'", nativeQuery = true)
-    ISuccessfulRepair findSuccessfulRepair(Long repairerId);
+    ISuccessfulRepairDTO findSuccessfulRepair(Long repairerId);
 
     @Query(value = "SELECT rr.user_id as customerId, u.full_name as customerName, c.rating, c.comment " +
             "FROM comments c " +
@@ -50,5 +50,5 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
             "WHERE rrm.repairer_id = :repairerId " +
             "AND c.type = 'CUSTOMER_COMMENT' " +
             "limit :limit offset :offset", nativeQuery = true)
-    List<IRepairerComment> findRepairComments(Long repairerId, Integer limit, Integer offset);
+    List<IRepairerCommentDTO> findRepairComments(Long repairerId, Integer limit, Integer offset);
 }

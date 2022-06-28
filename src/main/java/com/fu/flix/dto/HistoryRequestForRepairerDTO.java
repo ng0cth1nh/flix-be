@@ -1,13 +1,14 @@
 package com.fu.flix.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
-public class HistoryRepairRequestDTO {
+@Getter
+@Setter
+public class HistoryRequestForRepairerDTO {
     private String requestCode;
     private String status;
     private String image;
-    private Long serviceId;
     private String serviceName;
     private String description;
     private Double price;

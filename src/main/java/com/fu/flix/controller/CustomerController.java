@@ -28,7 +28,7 @@ public class CustomerController {
     }
 
     @GetMapping("request/histories")
-    public ResponseEntity<HistoryRequestingRepairResponse> getFixingRequestHistories(HistoryRequestingRepairRequest request) {
+    public ResponseEntity<HistoryRequestForCustomerResponse> getFixingRequestHistories(HistoryRequestForCustomerRequest request) {
         return customerService.getFixingRequestHistories(request);
     }
 

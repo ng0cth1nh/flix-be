@@ -4,8 +4,8 @@ import com.fu.flix.dao.CommentDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserAddressDAO;
 import com.fu.flix.dao.UserDAO;
-import com.fu.flix.dto.IRepairerProfile;
-import com.fu.flix.dto.ISuccessfulRepair;
+import com.fu.flix.dto.IRepairerProfileDTO;
+import com.fu.flix.dto.ISuccessfulRepairDTO;
 import com.fu.flix.dto.request.CancelRequestForCustomerRequest;
 import com.fu.flix.dto.request.MainAddressRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
@@ -203,19 +203,19 @@ class CustomerServiceImplTest {
     //    @Test
     void testGetRepairerProfile() {
         // when
-        IRepairerProfile iRepairerProfile = commentDAO.findRepairerProfile(52L);
+        IRepairerProfileDTO iRepairerProfileDTO = commentDAO.findRepairerProfile(52L);
 
         // then
-        Assertions.assertEquals("Thợ", iRepairerProfile.getRepairerName());
-        Assertions.assertEquals(4.5, iRepairerProfile.getRating());
+        Assertions.assertEquals("Thợ", iRepairerProfileDTO.getRepairerName());
+        Assertions.assertEquals(4.5, iRepairerProfileDTO.getRating());
     }
 
     //    @Test
     void testGetSuccessfulRepair() {
         // when
-        ISuccessfulRepair iSuccessfulRepair = commentDAO.findSuccessfulRepair(52L);
+        ISuccessfulRepairDTO iSuccessfulRepairDTO = commentDAO.findSuccessfulRepair(52L);
 
         // then
-        Assertions.assertEquals(3, iSuccessfulRepair.getSuccessfulRepair());
+        Assertions.assertEquals(3, iSuccessfulRepairDTO.getSuccessfulRepair());
     }
 }

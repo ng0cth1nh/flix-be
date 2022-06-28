@@ -2,12 +2,17 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.RoleType;
+import com.fu.flix.constant.enums.Status;
 import com.fu.flix.dao.*;
+import com.fu.flix.dto.HistoryRequestForRepairerDTO;
+import com.fu.flix.dto.IHistoryRequestForRepairerDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CancelRequestForRepairerRequest;
+import com.fu.flix.dto.request.HistoryRequestForRepairerRequest;
 import com.fu.flix.dto.request.RepairerApproveRequest;
 import com.fu.flix.dto.request.RequestingDetailForRepairerRequest;
 import com.fu.flix.dto.response.CancelRequestForRepairerResponse;
+import com.fu.flix.dto.response.HistoryRequestForRepairerResponse;
 import com.fu.flix.dto.response.RepairerApproveResponse;
 import com.fu.flix.dto.response.RequestingDetailForRepairerResponse;
 import com.fu.flix.entity.*;
@@ -23,7 +28,9 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.Status.*;
@@ -229,5 +236,41 @@ public class RepairerServiceImpl implements RepairerService {
     private boolean isFined(RepairRequest repairRequest) {
         Duration duration = Duration.between(LocalDateTime.now(), repairRequest.getExpectStartFixingAt());
         return duration.getSeconds() < this.appConf.getMinTimeFined() || FIXING.getId().equals(repairRequest.getStatusId());
+    }
+
+    @Override
+    public ResponseEntity<HistoryRequestForRepairerResponse> getFixingRequestHistories(HistoryRequestForRepairerRequest request) {
+        List<IHistoryRequestForRepairerDTO> historyDTOs = repairRequestMatchingDAO
+                .findRequestHistoriesForRepairerByStatus(request.getUserId(), getStatusIdValidated(request.getStatus()));
+
+        List<HistoryRequestForRepairerDTO> requestHistories = historyDTOs.stream()
+                .map(h -> {
+                    HistoryRequestForRepairerDTO dto = new HistoryRequestForRepairerDTO();
+                    dto.setRequestCode(h.getRequestCode());
+                    dto.setStatus(h.getStatus());
+                    dto.setImage(h.getImage());
+                    dto.setServiceName(h.getServiceName());
+                    dto.setDescription(h.getDescription());
+                    dto.setPrice(h.getPrice());
+                    dto.setActualPrice(h.getActualPrice());
+                    dto.setDate(DateFormatUtil.toString(h.getCreatedAt(), DATE_TIME_PATTERN));
+
+                    return dto;
+                }).collect(Collectors.toList());
+
+        HistoryRequestForRepairerResponse response = new HistoryRequestForRepairerResponse();
+        response.setRequestHistories(requestHistories);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getStatusIdValidated(String status) {
+        for (Status s : Status.values()) {
+            if (s.name().equals(status)) {
+                return s.getId();
+            }
+        }
+
+        throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
     }
 }

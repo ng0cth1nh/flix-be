@@ -10,5 +10,5 @@ import java.util.Optional;
 @Repository
 public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
     Optional<RepairRequest> findByRequestCode(String requestCode);
-    List<RepairRequest> findByUserIdAndStatusId(Long userId, String statusId);
+    List<RepairRequest> findByUserIdAndStatusIdOrderByCreatedAtDesc(Long userId, String statusId);
 }

@@ -150,7 +150,7 @@ public class CustomerServiceImpl implements CustomerService {
         Invoice invoice = new Invoice();
         invoice.setRequestCode(repairRequest.getRequestCode());
         invoice.setInspectionPrice(beforeVat);
-        invoice.setTotalPrice(beforeVat);
+        invoice.setTotalPrice(inspectionPrice);
         invoice.setActualProceeds(beforeVat + beforeVat * repairRequest.getVat());
         return invoice;
     }
@@ -348,20 +348,26 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<HistoryRequestingRepairResponse> getFixingRequestHistories(HistoryRequestingRepairRequest request) {
+        String status = getStatusIdValidated(request.getStatus());
         User user = userDAO.findByUsername(request.getUsername()).get();
         List<RepairRequest> repairRequests = repairRequestDAO
-                .findByUserIdAndStatusId(user.getId(), getStatusIdValidated(request.getStatus()));
+                .findByUserIdAndStatusIdOrderByCreatedAtDesc(user.getId(), status);
 
         List<HistoryRepairRequestDTO> historyRepairRequestDTOS = repairRequests.stream()
                 .map(repairRequest -> {
                     com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
                     String requestCode = repairRequest.getRequestCode();
+                    Image image = imageDAO.findById(service.getImageId()).get();
 
                     HistoryRepairRequestDTO dto = new HistoryRepairRequestDTO();
                     dto.setRequestCode(requestCode);
+                    dto.setStatus(status);
+                    dto.setImage(image.getUrl());
+                    dto.setServiceId(service.getId());
                     dto.setServiceName(service.getName());
                     dto.setDescription(repairRequest.getDescription());
-                    dto.setPrice(getRepairRequestPrice(requestCode));
+                    dto.setPrice(getRequestPrice(requestCode, false));
+                    dto.setActualPrice(getRequestPrice(requestCode, true));
                     dto.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
 
                     return dto;
@@ -390,8 +396,11 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
+        Image image = imageDAO.findById(service.getImageId()).get();
 
         RequestingDetailForCustomerResponse response = new RequestingDetailForCustomerResponse();
+        response.setStatus(com.fu.flix.constant.enums.Status.valueOf(repairRequest.getStatusId()).name());
+        response.setImage(image.getUrl());
         response.setServiceId(service.getId());
         response.setServiceName(service.getName());
         response.setAddressId(repairRequest.getAddressId());
@@ -400,7 +409,8 @@ public class CustomerServiceImpl implements CustomerService {
         response.setVoucherId(repairRequest.getVoucherId());
         response.setPaymentMethodId(repairRequest.getPaymentMethodId());
         response.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
-        response.setPrice(getRepairRequestPrice(requestCode));
+        response.setPrice(getRequestPrice(requestCode, false));
+        response.setActualPrice(getRequestPrice(requestCode, true));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -417,10 +427,11 @@ public class CustomerServiceImpl implements CustomerService {
         return optionalRepairRequest.get();
     }
 
-    private Double getRepairRequestPrice(String requestCode) {
+    private Double getRequestPrice(String requestCode, boolean isActualPrice) {
         Optional<Invoice> optionalInvoice = invoiceDAO.findByRequestCode(requestCode);
         if (optionalInvoice.isPresent()) {
-            return optionalInvoice.get().getActualProceeds();
+            Invoice invoice = optionalInvoice.get();
+            return isActualPrice ? invoice.getActualProceeds() : invoice.getTotalPrice();
         }
 
         return 0.0;
@@ -433,7 +444,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         MainAddressResponse response = new MainAddressResponse();
         response.setAddressId(userAddress.getId());
-        response.setCustomerName(userAddress.getName());
+        response.setCustomerName(user.getFullName());
         response.setPhone(userAddress.getPhone());
         response.setAddressName(getAddressFormatted(userAddress.getCommuneId(), userAddress.getStreetAddress()));
 

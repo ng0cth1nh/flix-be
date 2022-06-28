@@ -387,7 +387,7 @@ public class CustomerServiceImpl implements CustomerService {
     private String getStatusIdValidated(String status) {
         for (com.fu.flix.constant.enums.Status s : com.fu.flix.constant.enums.Status.values()) {
             if (s.name().equals(status)) {
-                return status;
+                return s.getId();
             }
         }
 

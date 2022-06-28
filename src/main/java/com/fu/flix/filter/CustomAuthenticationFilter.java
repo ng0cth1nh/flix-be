@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.TokenResponse;
 import com.fu.flix.dto.security.UserSecurity;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -32,12 +34,15 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private final AppConf appConf;
+    private final HandlerExceptionResolver resolver;
 
     @Autowired
     public CustomAuthenticationFilter(AuthenticationManager authenticationManager,
-                                      AppConf appConf) {
+                                      AppConf appConf,
+                                      HandlerExceptionResolver resolver) {
         this.authenticationManager = authenticationManager;
         this.appConf = appConf;
+        this.resolver = resolver;
     }
 
     @Override
@@ -77,11 +82,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request,
                                               HttpServletResponse response,
-                                              AuthenticationException failed) throws IOException {
-        response.setStatus(FORBIDDEN.value());
-        Map<String, String> errors = new HashMap<>();
-        errors.put("message", LOGIN_FAILED);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        new ObjectMapper().writeValue(response.getOutputStream(), errors);
+                                              AuthenticationException failed) {
+        resolver.resolveException(request, response, null, new GeneralException(FORBIDDEN, LOGIN_FAILED));
     }
 }

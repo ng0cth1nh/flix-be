@@ -49,7 +49,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authenticationManagerBean(), this.appConf);
+        CustomAuthenticationFilter customAuthenticationFilter
+                = new CustomAuthenticationFilter(authenticationManagerBean(), this.appConf, resolver);
         customAuthenticationFilter.setFilterProcessesUrl("/api/v1/login");
 
         http.csrf().disable();

@@ -629,4 +629,28 @@ public class CustomerServiceImpl implements CustomerService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<ChooseMainAddressResponse> chooseMainAddress(ChooseMainAddressRequest request) {
+        Long userId = request.getUserId();
+        if (request.getAddressId() == null) {
+            throw new GeneralException(HttpStatus.GONE, ADDRESS_ID_IS_REQUIRED);
+        }
+
+        Optional<UserAddress> optionalSelectedAddress = userAddressDAO
+                .findUserAddressToEdit(userId, request.getAddressId());
+
+        Optional<UserAddress> optionalMainAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(userId, true);
+
+
+        if (optionalSelectedAddress.isPresent() && optionalMainAddress.isPresent()) {
+            optionalMainAddress.get().setMainAddress(false);
+            optionalSelectedAddress.get().setMainAddress(true);
+        }
+
+        ChooseMainAddressResponse response = new ChooseMainAddressResponse();
+        response.setMessage(CHOOSING_MAIN_ADDRESS_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

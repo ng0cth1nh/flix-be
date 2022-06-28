@@ -137,12 +137,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 new ObjectMapper().writeValue(response.getOutputStream(), tokenResponse);
             } catch (Exception exception) {
-
-                response.setStatus(FORBIDDEN.value());
-                Map<String, String> errors = new HashMap<>();
-                errors.put("message", INVALID_REFRESH_TOKEN);
-                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                new ObjectMapper().writeValue(response.getOutputStream(), errors);
+                throw new GeneralException(HttpStatus.GONE, INVALID_REFRESH_TOKEN);
             }
         } else {
             throw new GeneralException(HttpStatus.BAD_REQUEST, REFRESH_TOKEN_MISSING);

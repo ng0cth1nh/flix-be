@@ -81,4 +81,9 @@ public class CustomerController {
     public ResponseEntity<RepairerCommentResponse> getRepairerProfile(RepairerCommentRequest request) {
         return customerService.getRepairerComments(request);
     }
+
+    @PutMapping("address/main")
+    public ResponseEntity<ChooseMainAddressResponse> chooseMainAddress(@RequestBody ChooseMainAddressRequest request) {
+        return customerService.chooseMainAddress(request);
+    }
 }

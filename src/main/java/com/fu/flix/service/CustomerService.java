@@ -35,4 +35,5 @@ public interface CustomerService {
     RepairRequest getRepairRequest(String requestCode);
     void updateRepairerAfterCancelRequest(String requestCode);
     void updateUsedVoucherQuantityAfterCancelRequest(RepairRequest repairRequest);
+    ResponseEntity<ChooseMainAddressResponse> chooseMainAddress(ChooseMainAddressRequest request);
 }

@@ -4,6 +4,7 @@ import com.fu.flix.filter.CustomAccessDeniedHandler;
 import com.fu.flix.filter.CustomAuthenticationFilter;
 import com.fu.flix.filter.CustomAuthorizationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import static com.fu.flix.constant.enums.RoleType.*;
 
@@ -26,13 +28,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final AppConf appConf;
 
+    private final HandlerExceptionResolver resolver;
+
     @Autowired
     public SecurityConfig(UserDetailsService userDetailsService,
                           BCryptPasswordEncoder bCryptPasswordEncoder,
-                          AppConf appConf) {
+                          AppConf appConf,
+                          @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
         this.userDetailsService = userDetailsService;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.appConf = appConf;
+        this.resolver = resolver;
     }
 
     @Override
@@ -52,7 +58,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll();
 
         http.authorizeRequests().antMatchers("/api/v1/repairer/**")
-                        .hasAnyAuthority(ROLE_REPAIRER.name());
+                .hasAnyAuthority(ROLE_REPAIRER.name());
 
         http.authorizeRequests().antMatchers("/api/v1/confirmedUser/**")
                 .hasAnyAuthority(ROLE_CUSTOMER.name(),
@@ -75,7 +81,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().anyRequest().authenticated();
         http.exceptionHandling().accessDeniedHandler(new CustomAccessDeniedHandler());
         http.addFilter(customAuthenticationFilter);
-        http.addFilterBefore(new CustomAuthorizationFilter(this.appConf), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new CustomAuthorizationFilter(this.appConf, resolver), UsernamePasswordAuthenticationFilter.class);
     }
 
     @Bean

@@ -7,14 +7,18 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.security.UserPrincipal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -31,10 +35,12 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
     private final AppConf appConf;
+    private final HandlerExceptionResolver resolver;
 
     @Autowired
-    public CustomAuthorizationFilter(AppConf appConf) {
+    public CustomAuthorizationFilter(AppConf appConf, HandlerExceptionResolver resolver) {
         this.appConf = appConf;
+        this.resolver = resolver;
     }
 
     @Override
@@ -63,25 +69,10 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     filterChain.doFilter(request, response);
                 } catch (Exception exception) {
-                    if (exception instanceof JWTVerificationException) {
-                        log.error("Error logging in: {}", exception.getMessage());
-                        response.setStatus(FORBIDDEN.value());
-                        Map<String, String> errors = new HashMap<>();
-                        errors.put("message", INVALID_TOKEN);
-                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                        new ObjectMapper().writeValue(response.getOutputStream(), errors);
-                        return;
-                    }
-                    throw exception;
+                    resolver.resolveException(request, response, null, exception);
                 }
-
             } else {
-                response.setStatus(FORBIDDEN.value());
-                Map<String, String> errors = new HashMap<>();
-                errors.put("message", INVALID_TOKEN);
-                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                new ObjectMapper().writeValue(response.getOutputStream(), errors);
-                filterChain.doFilter(request, response);
+                resolver.resolveException(request, response, null, new GeneralException(FORBIDDEN, ACCESS_DENIED));
             }
         }
 

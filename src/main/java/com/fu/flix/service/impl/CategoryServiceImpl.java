@@ -1,9 +1,11 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.constant.Constant;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.ServiceDAO;
 import com.fu.flix.dto.SearchServiceDTO;
 import com.fu.flix.dto.ServiceDTO;
+import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.SearchServicesRequest;
 import com.fu.flix.dto.request.ServiceRequest;
 import com.fu.flix.dto.request.ServiceResponse;
@@ -34,7 +36,12 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public ResponseEntity<ServiceResponse> getServicesByCategory(ServiceRequest request) {
-        List<com.fu.flix.entity.Service> services = serviceDAO.findByCategoryId(request.getCategoryId());
+        Long categoryId = request.getCategoryId();
+        if (categoryId == null) {
+            throw new GeneralException(HttpStatus.GONE, Constant.INVALID_CATEGORY_ID);
+        }
+
+        List<com.fu.flix.entity.Service> services = serviceDAO.findByCategoryId(categoryId);
         List<ServiceDTO> serviceDTOS = services.stream()
                 .map(service -> {
                     Optional<Image> optionalImage = imageDAO.findById(service.getImageId());

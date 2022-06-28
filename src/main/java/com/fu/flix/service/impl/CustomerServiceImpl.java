@@ -129,7 +129,7 @@ public class CustomerServiceImpl implements CustomerService {
         repairRequest.setExpectStartFixingAt(expectFixingDay);
         repairRequest.setDescription(request.getDescription());
         repairRequest.setVoucherId(voucherId);
-        repairRequest.setAddressId(request.getAddressId());
+        repairRequest.setAddressId(getAddressIdValidated(request.getAddressId(), userId));
         repairRequest.setVat(this.appConf.getVat());
         repairRequestDAO.save(repairRequest);
 
@@ -142,6 +142,13 @@ public class CustomerServiceImpl implements CustomerService {
         response.setMessage(CREATE_REPAIR_REQUEST_SUCCESSFUL);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private Long getAddressIdValidated(Long addressId, Long userId) {
+        if (addressId == null || userAddressDAO.findUserAddressToEdit(userId, addressId).isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+        }
+        return addressId;
     }
 
     private Invoice buildInvoice(RepairRequest repairRequest) {
@@ -180,7 +187,12 @@ public class CustomerServiceImpl implements CustomerService {
     private void useInspectionVoucher(UsingVoucherDTO usingVoucherDTO, LocalDateTime now) {
         Long voucherId = usingVoucherDTO.getVoucherId();
         UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
-        Optional<com.fu.flix.entity.Service> optionalService = serviceDAO.findById(usingVoucherDTO.getServiceId());
+        Long serviceId = usingVoucherDTO.getServiceId();
+        if (serviceId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
+        }
+
+        Optional<com.fu.flix.entity.Service> optionalService = serviceDAO.findById(serviceId);
         Voucher voucher = voucherDAO.findById(voucherId).get();
 
         if (!isMatchPaymentMethod(usingVoucherDTO, voucher)) {

@@ -47,7 +47,6 @@ import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RoleType.ROLE_CUSTOMER;
 import static com.fu.flix.constant.enums.RoleType.ROLE_PENDING_REPAIRER;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 @Service
 @Transactional
@@ -120,7 +119,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
     @Override
     public void refreshToken(HttpServletRequest request,
-                             HttpServletResponse response) throws IOException {
+                             HttpServletResponse response) {
         String authorizationHeader = request.getHeader(AUTHORIZATION);
         if (authorizationHeader != null && authorizationHeader.startsWith(BEARER)) {
             try {
@@ -146,7 +145,12 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
     @Override
     public ResponseEntity<SendRegisterOTPResponse> sendRegisterOTP(SendRegisterOTPRequest request) throws JsonProcessingException {
-        if (userDAO.findByUsername(request.getPhone()).isPresent()) {
+        String phone = request.getPhone();
+        if (!InputValidation.isPhoneValid(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
+        }
+
+        if (userDAO.findByUsername(phone).isPresent()) {
             throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
         }
 
@@ -304,8 +308,12 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
     @Override
     public ResponseEntity<SendForgotPassOTPResponse> sendForgotPassOTP(SendForgotPassOTPRequest request) throws JsonProcessingException {
-        Optional<User> optionalUser = userDAO.findByUsername(request.getPhone());
+        String phone = request.getPhone();
+        if (!InputValidation.isPhoneValid(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
+        }
 
+        Optional<User> optionalUser = userDAO.findByUsername(phone);
         if (optionalUser.isEmpty()) {
             throw new GeneralException(HttpStatus.NOT_FOUND, ACCOUNT_NOT_FOUND);
         }
@@ -328,9 +336,19 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
     @Override
     public ResponseEntity<CFForgotPassResponse> confirmForgotPassword(CFForgotPassRequest request) {
-        validateForgotPassInput(request);
-        User user = userDAO.findByUsername(request.getPhone()).get();
+        String phone = request.getPhone();
+        if (isNotValidOTP(request, OTPType.FORGOT_PASSWORD)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
+        } else if (!InputValidation.isPhoneValid(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
+        }
 
+        Optional<User> optionalUser = userDAO.findByUsername(phone);
+        if (optionalUser.isEmpty()) {
+            throw new GeneralException(HttpStatus.NOT_FOUND, ACCOUNT_NOT_FOUND);
+        }
+
+        User user = optionalUser.get();
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
 
         OTPInfo otpInfo = getOTPInfo(request, OTPType.FORGOT_PASSWORD);
@@ -340,16 +358,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         response.setAccessToken(accessToken);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private void validateForgotPassInput(CFForgotPassRequest request) {
-        if (isNotValidOTP(request, OTPType.FORGOT_PASSWORD)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
-        } else if (!InputValidation.isPhoneValid(request.getPhone())) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
-        } else if (userDAO.findByUsername(request.getPhone()).isEmpty()) {
-            throw new GeneralException(HttpStatus.NOT_FOUND, ACCOUNT_NOT_FOUND);
-        }
     }
 
     private OTPInfo getOTPInfo(OTPRequest request, OTPType otpType) {

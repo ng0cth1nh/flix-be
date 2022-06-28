@@ -13,6 +13,6 @@ import static com.fu.flix.constant.Constant.ACCESS_DENIED;
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) {
-        throw new GeneralException(HttpStatus.BAD_REQUEST, ACCESS_DENIED);
+        throw new GeneralException(HttpStatus.FORBIDDEN, ACCESS_DENIED);
     }
 }

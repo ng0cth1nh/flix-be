@@ -6,6 +6,7 @@ import com.fu.flix.dao.DistrictDAO;
 import com.fu.flix.dto.CityDTO;
 import com.fu.flix.dto.CommuneDTO;
 import com.fu.flix.dto.DistrictDTO;
+import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CommuneRequest;
 import com.fu.flix.dto.request.DistrictRequest;
 import com.fu.flix.dto.response.CityResponse;
@@ -22,6 +23,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.fu.flix.constant.Constant.INVALID_CITY;
+import static com.fu.flix.constant.Constant.INVALID_DISTRICT;
 
 @Service
 @Slf4j
@@ -57,7 +61,11 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public ResponseEntity<DistrictResponse> getDistrictByCity(DistrictRequest request) {
-        List<District> districts = districtDAO.findByCityId(request.getCityId());
+        String cityId = request.getCityId();
+        if (cityId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_CITY);
+        }
+        List<District> districts = districtDAO.findByCityId(cityId);
         List<DistrictDTO> districtDTOS = districts.stream()
                 .map(district -> {
                     DistrictDTO districtDTO = new DistrictDTO();
@@ -74,7 +82,12 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public ResponseEntity<CommuneResponse> getCommunesByDistrict(CommuneRequest request) {
-        List<Commune> communes = communeDAO.findByDistrictId(request.getDistrictId());
+        String districtId = request.getDistrictId();
+        if (districtId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_DISTRICT);
+        }
+
+        List<Commune> communes = communeDAO.findByDistrictId(districtId);
         List<CommuneDTO> communeDTOS = communes.stream()
                 .map(commune -> {
                     CommuneDTO communeDTO = new CommuneDTO();

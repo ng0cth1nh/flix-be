@@ -56,6 +56,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final RepairerDAO repairerDAO;
     private final BalanceDAO balanceDAO;
     private final TransactionHistoryDAO transactionHistoryDAO;
+    private final StatusDAO statusDAO;
     private final String COMMA = ", ";
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
@@ -78,7 +79,8 @@ public class CustomerServiceImpl implements CustomerService {
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
                                RepairerDAO repairerDAO,
                                BalanceDAO balanceDAO,
-                               TransactionHistoryDAO transactionHistoryDAO) {
+                               TransactionHistoryDAO transactionHistoryDAO,
+                               StatusDAO statusDAO) {
         this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
@@ -98,6 +100,7 @@ public class CustomerServiceImpl implements CustomerService {
         this.repairerDAO = repairerDAO;
         this.balanceDAO = balanceDAO;
         this.transactionHistoryDAO = transactionHistoryDAO;
+        this.statusDAO = statusDAO;
     }
 
     @Override
@@ -347,21 +350,23 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<HistoryRequestingRepairResponse> getFixingRequestHistories(HistoryRequestingRepairRequest request) {
-        String status = getStatusIdValidated(request.getStatus());
+    public ResponseEntity<HistoryRequestForCustomerResponse> getFixingRequestHistories(HistoryRequestForCustomerRequest request) {
+        String statusId = getStatusIdValidated(request.getStatus());
         User user = userDAO.findByUsername(request.getUsername()).get();
-        List<RepairRequest> repairRequests = repairRequestDAO
-                .findByUserIdAndStatusIdOrderByCreatedAtDesc(user.getId(), status);
+        Status status = statusDAO.findById(statusId).get();
 
-        List<HistoryRepairRequestDTO> historyRepairRequestDTOS = repairRequests.stream()
+        List<RepairRequest> repairRequests = repairRequestDAO
+                .findByUserIdAndStatusIdOrderByCreatedAtDesc(user.getId(), statusId);
+
+        List<HistoryRequestForCustomerDTO> requestHistories = repairRequests.stream()
                 .map(repairRequest -> {
                     com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
                     String requestCode = repairRequest.getRequestCode();
                     Image image = imageDAO.findById(service.getImageId()).get();
 
-                    HistoryRepairRequestDTO dto = new HistoryRepairRequestDTO();
+                    HistoryRequestForCustomerDTO dto = new HistoryRequestForCustomerDTO();
                     dto.setRequestCode(requestCode);
-                    dto.setStatus(status);
+                    dto.setStatus(status.getName());
                     dto.setImage(image.getUrl());
                     dto.setServiceId(service.getId());
                     dto.setServiceName(service.getName());
@@ -373,18 +378,20 @@ public class CustomerServiceImpl implements CustomerService {
                     return dto;
                 }).collect(Collectors.toList());
 
-        HistoryRequestingRepairResponse response = new HistoryRequestingRepairResponse();
-        response.setRequestHistories(historyRepairRequestDTOS);
+        HistoryRequestForCustomerResponse response = new HistoryRequestForCustomerResponse();
+        response.setRequestHistories(requestHistories);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private String getStatusIdValidated(String status) {
-        try {
-            return valueOf(status).getId();
-        } catch (IllegalArgumentException e) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
+        for (com.fu.flix.constant.enums.Status s : com.fu.flix.constant.enums.Status.values()) {
+            if (s.name().equals(status)) {
+                return status;
+            }
         }
+
+        throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
     }
 
     @Override
@@ -397,9 +404,10 @@ public class CustomerServiceImpl implements CustomerService {
 
         com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
         Image image = imageDAO.findById(service.getImageId()).get();
+        Status status = statusDAO.findById(repairRequest.getStatusId()).get();
 
         RequestingDetailForCustomerResponse response = new RequestingDetailForCustomerResponse();
-        response.setStatus(com.fu.flix.constant.enums.Status.valueOf(repairRequest.getStatusId()).name());
+        response.setStatus(status.getName());
         response.setImage(image.getUrl());
         response.setServiceId(service.getId());
         response.setServiceName(service.getName());
@@ -599,8 +607,8 @@ public class CustomerServiceImpl implements CustomerService {
         RepairerProfileResponse response = new RepairerProfileResponse();
         Long repairerId = request.getRepairerId();
         if (repairerId != null) {
-            IRepairerProfile repairerProfile = commentDAO.findRepairerProfile(repairerId);
-            ISuccessfulRepair successfulRepair = commentDAO.findSuccessfulRepair(repairerId);
+            IRepairerProfileDTO repairerProfile = commentDAO.findRepairerProfile(repairerId);
+            ISuccessfulRepairDTO successfulRepair = commentDAO.findSuccessfulRepair(repairerId);
             response.setJointAt(repairerProfile.getJoinAt());
             response.setSuccessfulRepair(successfulRepair.getSuccessfulRepair());
             response.setRepairerName(repairerProfile.getRepairerName());
@@ -625,7 +633,7 @@ public class CustomerServiceImpl implements CustomerService {
                     ? this.appConf.getLimitQueryDefault()
                     : request.getLimit();
 
-            List<IRepairerComment> repairComments = commentDAO.findRepairComments(repairerId, limit, offset);
+            List<IRepairerCommentDTO> repairComments = commentDAO.findRepairComments(repairerId, limit, offset);
             List<RepairerCommentDTO> repairerCommentDTOs = repairComments.stream()
                     .map(rc -> {
                         RepairerCommentDTO dto = new RepairerCommentDTO();

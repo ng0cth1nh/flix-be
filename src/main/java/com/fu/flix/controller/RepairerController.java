@@ -1,11 +1,7 @@
 package com.fu.flix.controller;
 
-import com.fu.flix.dto.request.CancelRequestForRepairerRequest;
-import com.fu.flix.dto.request.RepairerApproveRequest;
-import com.fu.flix.dto.request.RequestingDetailForRepairerRequest;
-import com.fu.flix.dto.response.CancelRequestForRepairerResponse;
-import com.fu.flix.dto.response.RepairerApproveResponse;
-import com.fu.flix.dto.response.RequestingDetailForRepairerResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.service.RepairerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -34,5 +30,10 @@ public class RepairerController {
     @PostMapping("request/cancel")
     public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(@RequestBody CancelRequestForRepairerRequest request) {
         return repairerService.cancelFixingRequest(request);
+    }
+
+    @GetMapping("request/histories")
+    public ResponseEntity<HistoryRequestForRepairerResponse> getFixingRequestHistories(HistoryRequestForRepairerRequest request) {
+        return repairerService.getFixingRequestHistories(request);
     }
 }

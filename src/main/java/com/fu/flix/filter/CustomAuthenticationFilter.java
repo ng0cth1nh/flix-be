@@ -8,7 +8,6 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.TokenResponse;
 import com.fu.flix.dto.security.UserSecurity;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,8 +22,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
@@ -36,7 +33,6 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     private final AppConf appConf;
     private final HandlerExceptionResolver resolver;
 
-    @Autowired
     public CustomAuthenticationFilter(AuthenticationManager authenticationManager,
                                       AppConf appConf,
                                       HandlerExceptionResolver resolver) {

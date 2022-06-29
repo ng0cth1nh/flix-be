@@ -7,14 +7,8 @@ import com.fu.flix.dao.*;
 import com.fu.flix.dto.HistoryRequestForRepairerDTO;
 import com.fu.flix.dto.IHistoryRequestForRepairerDTO;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.CancelRequestForRepairerRequest;
-import com.fu.flix.dto.request.HistoryRequestForRepairerRequest;
-import com.fu.flix.dto.request.RepairerApproveRequest;
-import com.fu.flix.dto.request.RequestingDetailForRepairerRequest;
-import com.fu.flix.dto.response.CancelRequestForRepairerResponse;
-import com.fu.flix.dto.response.HistoryRequestForRepairerResponse;
-import com.fu.flix.dto.response.RepairerApproveResponse;
-import com.fu.flix.dto.response.RequestingDetailForRepairerResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.RepairerService;
@@ -218,10 +212,6 @@ public class RepairerServiceImpl implements RepairerService {
         transactionHistoryDAO.save(finedTransaction);
     }
 
-    private String getRequestCode(String requestCode) {
-        return requestCode == null ? Strings.EMPTY : requestCode;
-    }
-
     private boolean isCancelable(RepairRequest repairRequest) {
         String statusId = repairRequest.getStatusId();
         return APPROVED.getId().equals(statusId) || FIXING.getId().equals(statusId);
@@ -272,5 +262,34 @@ public class RepairerServiceImpl implements RepairerService {
         }
 
         throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
+    }
+
+    @Override
+    public ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request) {
+        String requestCode = getRequestCode(request.getRequestCode());
+
+        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+        if (optionalRepairRequest.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
+        RepairRequest repairRequest = optionalRepairRequest.get();
+        if (!FIXING.getId().equals(repairRequest.getStatusId())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_CREATE_INVOICE_WHEN_REQUEST_STATUS_IS_FIXING);
+        }
+
+        repairRequest.setStatusId(PAYMENT_WAITING.getId());
+
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        invoice.setConfirmedByRepairerAt(LocalDateTime.now());
+
+        CreateInvoiceResponse response = new CreateInvoiceResponse();
+        response.setMessage(CREATE_INVOICE_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getRequestCode(String requestCode) {
+        return requestCode == null ? Strings.EMPTY : requestCode;
     }
 }

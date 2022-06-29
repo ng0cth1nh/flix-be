@@ -39,6 +39,8 @@ public class Invoice {
 
     private Double actualProceeds;
 
+    private LocalDateTime confirmedByRepairerAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

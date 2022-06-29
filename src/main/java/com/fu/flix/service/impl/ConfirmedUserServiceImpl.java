@@ -9,6 +9,7 @@ import com.fu.flix.dto.request.CommentRequest;
 import com.fu.flix.dto.response.CommentResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.ConfirmedUserService;
+import com.fu.flix.service.UserValidatorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,17 +29,17 @@ import static com.fu.flix.constant.enums.RoleType.*;
 public class ConfirmedUserServiceImpl implements ConfirmedUserService {
     private final CommentDAO commentDAO;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
-    private final UserDAO userDAO;
     private final RepairRequestDAO repairRequestDAO;
+    private final UserValidatorService userValidatorService;
 
     public ConfirmedUserServiceImpl(CommentDAO commentDAO,
                                     RepairRequestMatchingDAO repairRequestMatchingDAO,
-                                    UserDAO userDAO,
-                                    RepairRequestDAO repairRequestDAO) {
+                                    RepairRequestDAO repairRequestDAO,
+                                    UserValidatorService userValidatorService) {
         this.commentDAO = commentDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
-        this.userDAO = userDAO;
         this.repairRequestDAO = repairRequestDAO;
+        this.userValidatorService = userValidatorService;
     }
 
     @Override
@@ -59,7 +60,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE);
         }
 
-        User user = userDAO.findByUsername(request.getUsername()).get();
+        User user = userValidatorService.getUserValidated(request.getUsername());
         String commentType = getCommentType(user.getRoles());
         Optional<Comment> optionalComment = commentDAO.findComment(requestCode, commentType);
         if (optionalComment.isPresent()) {

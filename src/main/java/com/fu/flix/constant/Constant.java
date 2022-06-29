@@ -40,6 +40,7 @@ public class Constant {
     public static final String INVALID_STATUS = "INVALID_STATUS";
     public static final String FILE_MUST_BE_IMAGE = "FILE_MUST_BE_IMAGE";
     public static final String LOGIN_FAILED = "LOGIN_FAILED";
+    public static final String USER_IS_INACTIVE = "USER_IS_INACTIVE";
     public static final String DELETE_ADDRESS_SUCCESS = "DELETE_ADDRESS_SUCCESS";
     public static final String EDIT_ADDRESS_SUCCESS = "EDIT_ADDRESS_SUCCESS";
     public static final String CREATE_ADDRESS_SUCCESS = "CREATE_ADDRESS_SUCCESS";
@@ -50,6 +51,8 @@ public class Constant {
     public static final String CHANGE_PASSWORD_SUCCESS = "CHANGE_PASSWORD_SUCCESS";
     public static final String NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD = "NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD";
     public static final String ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND";
+    public static final String USER_NAME_IS_REQUIRED = "USER_ID_IS_REQUIRED";
+    public static final String USER_ID_IS_REQUIRED = "USER_ID_IS_REQUIRED";
     public static final String SEND_FORGOT_PASSWORD_OTP_SUCCESS = "SEND_FORGOT_PASSWORD_OTP_SUCCESS";
     public static final String RESET_PASSWORD_SUCCESS = "RESET_PASSWORD_SUCCESS";
     public static final String PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER = "PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER";

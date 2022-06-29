@@ -3,7 +3,6 @@ package com.fu.flix.service.impl;
 import com.fu.flix.dao.CommentDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserAddressDAO;
-import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.IRepairerProfileDTO;
 import com.fu.flix.dto.ISuccessfulRepairDTO;
 import com.fu.flix.dto.request.CancelRequestForCustomerRequest;
@@ -19,6 +18,7 @@ import com.fu.flix.entity.RepairRequest;
 import com.fu.flix.entity.User;
 import com.fu.flix.entity.UserAddress;
 import com.fu.flix.service.CustomerService;
+import com.fu.flix.service.UserValidatorService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +50,7 @@ class CustomerServiceImplTest {
     @Autowired
     UserAddressDAO userAddressDAO;
     @Autowired
-    UserDAO userDAO;
+    UserValidatorService userValidatorService;
 
     @Autowired
     CommentDAO commentDAO;
@@ -60,10 +60,9 @@ class CustomerServiceImplTest {
     void test_get_user_address() {
         // given
         String phone = "0865390037";
-        Optional<User> optionalUser = userDAO.findByUsername(phone);
 
         // when
-        User user = optionalUser.get();
+        User user = userValidatorService.getUserValidated(phone);
         Optional<UserAddress> optionalUserAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(user.getId(), true);
         UserAddress userAddress = optionalUserAddress.get();
 

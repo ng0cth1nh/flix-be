@@ -15,8 +15,10 @@ public class Constant {
     public static final String INVALID_CITY = "INVALID_CITY";
     public static final String INVALID_DISTRICT = "INVALID_DISTRICT";
     public static final String INVALID_COMMUNE = "INVALID_COMMUNE";
+    public static final String STREET_ADDRESS_IS_REQUIRED = "STREET_ADDRESS_IS_REQUIRED";
     public static final String WRONG_LOCAL_DATE_TIME_FORMAT = "WRONG_LOCAL_DATE_TIME_FORMAT";
     public static final String WRONG_LOCAL_DATE_FORMAT = "WRONG_LOCAL_DATE_FORMAT";
+    public static final String FULL_NAME_IS_REQUIRED = "FULL_NAME_IS_REQUIRED";
     public static final String USER_NOT_HOLD_VOUCHER = "USER_NOT_HOLD_VOUCHER";
     public static final String CREATE_REPAIR_REQUEST_SUCCESSFUL = "CREATE_REPAIR_REQUEST_SUCCESSFUL";
     public static final String VOUCHER_EXPIRED = "VOUCHER_EXPIRED";

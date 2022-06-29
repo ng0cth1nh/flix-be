@@ -8,8 +8,10 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
+import com.fu.flix.service.AddressService;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.UserValidatorService;
+import com.fu.flix.service.VoucherService;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.RandomUtil;
@@ -43,12 +45,8 @@ public class CustomerServiceImpl implements CustomerService {
     private final ServiceDAO serviceDAO;
     private final PaymentMethodDAO paymentMethodDAO;
     private final InvoiceDAO invoiceDAO;
-    private final DiscountPercentDAO discountPercentDAO;
-    private final DiscountMoneyDAO discountMoneyDAO;
     private final UserAddressDAO userAddressDAO;
     private final CommuneDAO communeDAO;
-    private final DistrictDAO districtDAO;
-    private final CityDAO cityDAO;
     private final ImageDAO imageDAO;
     private final CommentDAO commentDAO;
     private final AppConf appConf;
@@ -58,7 +56,8 @@ public class CustomerServiceImpl implements CustomerService {
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final StatusDAO statusDAO;
     private final UserValidatorService userValidatorService;
-    private final String COMMA = ", ";
+    private final AddressService addressService;
+    private final VoucherService voucherService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
 
@@ -67,12 +66,8 @@ public class CustomerServiceImpl implements CustomerService {
                                ServiceDAO serviceDAO,
                                PaymentMethodDAO paymentMethodDAO,
                                InvoiceDAO invoiceDAO,
-                               DiscountPercentDAO discountPercentDAO,
-                               DiscountMoneyDAO discountMoneyDAO,
                                UserAddressDAO userAddressDAO,
                                CommuneDAO communeDAO,
-                               DistrictDAO districtDAO,
-                               CityDAO cityDAO,
                                ImageDAO imageDAO,
                                CommentDAO commentDAO,
                                AppConf appConf,
@@ -81,18 +76,16 @@ public class CustomerServiceImpl implements CustomerService {
                                BalanceDAO balanceDAO,
                                TransactionHistoryDAO transactionHistoryDAO,
                                StatusDAO statusDAO,
-                               UserValidatorService userValidatorService) {
+                               UserValidatorService userValidatorService,
+                               AddressService addressService,
+                               VoucherService voucherService) {
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
         this.serviceDAO = serviceDAO;
         this.paymentMethodDAO = paymentMethodDAO;
         this.invoiceDAO = invoiceDAO;
-        this.discountPercentDAO = discountPercentDAO;
-        this.discountMoneyDAO = discountMoneyDAO;
         this.userAddressDAO = userAddressDAO;
         this.communeDAO = communeDAO;
-        this.districtDAO = districtDAO;
-        this.cityDAO = cityDAO;
         this.imageDAO = imageDAO;
         this.commentDAO = commentDAO;
         this.appConf = appConf;
@@ -102,6 +95,8 @@ public class CustomerServiceImpl implements CustomerService {
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.statusDAO = statusDAO;
         this.userValidatorService = userValidatorService;
+        this.addressService = addressService;
+        this.voucherService = voucherService;
     }
 
     @Override
@@ -155,34 +150,17 @@ public class CustomerServiceImpl implements CustomerService {
     private Invoice buildInvoice(RepairRequest repairRequest) {
         com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
         Double inspectionPrice = service.getInspectionPrice();
-        Double discount = getVoucherDiscount(inspectionPrice, repairRequest.getVoucherId());
+        Double discount = voucherService.getVoucherDiscount(inspectionPrice, repairRequest.getVoucherId());
         Double beforeVat = inspectionPrice - discount;
+        Double vatPrice = beforeVat * repairRequest.getVat();
 
         Invoice invoice = new Invoice();
         invoice.setRequestCode(repairRequest.getRequestCode());
         invoice.setInspectionPrice(beforeVat);
         invoice.setTotalPrice(inspectionPrice);
-        invoice.setActualProceeds(beforeVat + beforeVat * repairRequest.getVat());
+        invoice.setActualProceeds(beforeVat + vatPrice);
+        invoice.setVatPrice(vatPrice);
         return invoice;
-    }
-
-    private Double getVoucherDiscount(Double inspectionPrice, Long voucherId) {
-        double discount = 0.0;
-        if (voucherId == null) {
-            return discount;
-        }
-
-        Voucher voucher = voucherDAO.findById(voucherId).get();
-        if (voucher.isDiscountMoney()) {
-            DiscountMoney discountMoney = discountMoneyDAO.findByVoucherId(voucherId).get();
-            return discountMoney.getDiscountMoney();
-        }
-
-        DiscountPercent discountPercent = discountPercentDAO.findByVoucherId(voucherId).get();
-        discount = discountPercent.getDiscountPercent() * inspectionPrice;
-        return discount > discountPercent.getMaxDiscountPrice()
-                ? discountPercent.getMaxDiscountPrice()
-                : discount;
     }
 
     private void useInspectionVoucher(UsingVoucherDTO usingVoucherDTO, LocalDateTime now) {
@@ -411,27 +389,51 @@ public class CustomerServiceImpl implements CustomerService {
     public ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request) {
         String requestCode = getRequestCode(request.getRequestCode());
         RepairRequest repairRequest = getRepairRequest(requestCode);
-        if (!repairRequest.getUserId().equals(request.getUserId())) {
+        Long userId = request.getUserId();
+        if (!repairRequest.getUserId().equals(userId)) {
             throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_SEE_THIS_REQUEST);
         }
 
         com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
-        Image image = imageDAO.findById(service.getImageId()).get();
+        Image serviceImage = imageDAO.findById(service.getImageId()).get();
         Status status = statusDAO.findById(repairRequest.getStatusId()).get();
+        User user = userValidatorService.getUserValidated(userId);
+        VoucherDTO voucherDTO = voucherService.getVoucherInfo(repairRequest.getVoucherId());
+        PaymentMethod paymentMethod = paymentMethodDAO.findById(repairRequest.getPaymentMethodId()).get();
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
 
         RequestingDetailForCustomerResponse response = new RequestingDetailForCustomerResponse();
         response.setStatus(status.getName());
-        response.setImage(image.getUrl());
+        response.setServiceImage(serviceImage.getUrl());
         response.setServiceId(service.getId());
         response.setServiceName(service.getName());
-        response.setAddressId(repairRequest.getAddressId());
+        response.setCustomerAddress(addressService.getAddressFormatted(repairRequest.getAddressId()));
+        response.setCustomerPhone(user.getPhone());
+        response.setCustomerName(user.getFullName());
         response.setExpectFixingDay(DateFormatUtil.toString(repairRequest.getExpectStartFixingAt(), DATE_TIME_PATTERN));
-        response.setDescription(repairRequest.getDescription());
-        response.setVoucherId(repairRequest.getVoucherId());
-        response.setPaymentMethodId(repairRequest.getPaymentMethodId());
+        response.setRequestDescription(repairRequest.getDescription());
+        response.setVoucherDescription(voucherDTO.getVoucherDescription());
+        response.setVoucherDiscount(voucherDTO.getVoucherDiscount());
+        response.setPaymentMethod(paymentMethod.getName());
         response.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
         response.setPrice(getRequestPrice(requestCode, false));
         response.setActualPrice(getRequestPrice(requestCode, true));
+        response.setVatPrice(invoice.getVatPrice());
+        response.setRequestCode(requestCode);
+
+        if (!PENDING.getId().equals(repairRequest.getStatusId())) {
+            RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+            Long repairerId = repairRequestMatching.getRepairerId();
+            User repairer = userValidatorService.getUserValidated(repairerId);
+            UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(repairerId, true).get();
+            Image repairerAvatar = imageDAO.findById(repairer.getAvatar()).get();
+
+            response.setRepairerAddress(addressService.getAddressFormatted(userAddress.getCommuneId(), userAddress.getStreetAddress()));
+            response.setRepairerPhone(repairer.getPhone());
+            response.setRepairerName(repairer.getFullName());
+            response.setRepairerId(repairerId);
+            response.setRepairerAvatar(repairerAvatar.getUrl());
+        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -462,12 +464,13 @@ public class CustomerServiceImpl implements CustomerService {
     public ResponseEntity<MainAddressResponse> getMainAddress(MainAddressRequest request) {
         User user = userValidatorService.getUserValidated(request.getUsername());
         UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(user.getId(), true).get();
+        Long addressId = userAddress.getId();
 
         MainAddressResponse response = new MainAddressResponse();
-        response.setAddressId(userAddress.getId());
+        response.setAddressId(addressId);
         response.setCustomerName(user.getFullName());
         response.setPhone(userAddress.getPhone());
-        response.setAddressName(getAddressFormatted(userAddress.getCommuneId(), userAddress.getStreetAddress()));
+        response.setAddressName(addressService.getAddressFormatted(addressId));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -479,11 +482,12 @@ public class CustomerServiceImpl implements CustomerService {
 
         List<UserAddressDTO> addresses = userAddresses.stream()
                 .map(userAddress -> {
+                    Long addressId = userAddress.getId();
                     UserAddressDTO dto = new UserAddressDTO();
-                    dto.setAddressId(userAddress.getId());
+                    dto.setAddressId(addressId);
                     dto.setCustomerName(user.getFullName());
                     dto.setPhone(userAddress.getPhone());
-                    dto.setAddressName(getAddressFormatted(userAddress.getCommuneId(), userAddress.getStreetAddress()));
+                    dto.setAddressName(addressService.getAddressFormatted(addressId));
                     dto.setMainAddress(userAddress.isMainAddress());
                     return dto;
                 }).collect(Collectors.toList());
@@ -492,13 +496,6 @@ public class CustomerServiceImpl implements CustomerService {
         response.setAddresses(addresses);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    public String getAddressFormatted(String communeId, String streetAddress) {
-        Commune commune = communeDAO.findById(communeId).get();
-        District district = districtDAO.findById(commune.getDistrictId()).get();
-        City city = cityDAO.findById(district.getCityId()).get();
-        return streetAddress + COMMA + commune.getName() + COMMA + district.getName() + COMMA + city.getName();
     }
 
     @Override

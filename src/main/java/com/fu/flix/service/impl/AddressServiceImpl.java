@@ -3,6 +3,7 @@ package com.fu.flix.service.impl;
 import com.fu.flix.dao.CityDAO;
 import com.fu.flix.dao.CommuneDAO;
 import com.fu.flix.dao.DistrictDAO;
+import com.fu.flix.dao.UserAddressDAO;
 import com.fu.flix.dto.CityDTO;
 import com.fu.flix.dto.CommuneDTO;
 import com.fu.flix.dto.DistrictDTO;
@@ -12,9 +13,7 @@ import com.fu.flix.dto.request.DistrictRequest;
 import com.fu.flix.dto.response.CityResponse;
 import com.fu.flix.dto.response.CommuneResponse;
 import com.fu.flix.dto.response.DistrictResponse;
-import com.fu.flix.entity.City;
-import com.fu.flix.entity.Commune;
-import com.fu.flix.entity.District;
+import com.fu.flix.entity.*;
 import com.fu.flix.service.AddressService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,10 +21,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.fu.flix.constant.Constant.INVALID_CITY;
-import static com.fu.flix.constant.Constant.INVALID_DISTRICT;
+import static com.fu.flix.constant.Constant.*;
 
 @Service
 @Slf4j
@@ -33,13 +32,17 @@ public class AddressServiceImpl implements AddressService {
     private final CityDAO cityDAO;
     private final DistrictDAO districtDAO;
     private final CommuneDAO communeDAO;
+    private final UserAddressDAO userAddressDAO;
+    private final String COMMA = ", ";
 
     public AddressServiceImpl(CityDAO cityDAO,
                               DistrictDAO districtDAO,
-                              CommuneDAO communeDAO) {
+                              CommuneDAO communeDAO,
+                              UserAddressDAO userAddressDAO) {
         this.cityDAO = cityDAO;
         this.districtDAO = districtDAO;
         this.communeDAO = communeDAO;
+        this.userAddressDAO = userAddressDAO;
     }
 
     @Override
@@ -100,5 +103,35 @@ public class AddressServiceImpl implements AddressService {
         response.setCommunes(communeDTOS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public String getAddressFormatted(Long addressId) {
+        if (addressId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+        }
+
+        Optional<UserAddress> optionalUserAddress = userAddressDAO.findById(addressId);
+        if (optionalUserAddress.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+        }
+
+        UserAddress userAddress = optionalUserAddress.get();
+        return getAddressFormatted(userAddress.getCommuneId(), userAddress.getStreetAddress());
+    }
+
+    @Override
+    public String getAddressFormatted(String communeId, String streetAddress) {
+        if (communeId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        }
+        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
+        if (optionalCommune.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        }
+        Commune commune = optionalCommune.get();
+        District district = districtDAO.findById(commune.getDistrictId()).get();
+        City city = cityDAO.findById(district.getCityId()).get();
+        return streetAddress + COMMA + commune.getName() + COMMA + district.getName() + COMMA + city.getName();
     }
 }

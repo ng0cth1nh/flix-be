@@ -13,4 +13,6 @@ public interface AddressService {
     ResponseEntity<DistrictResponse> getDistrictByCity(DistrictRequest request);
 
     ResponseEntity<CommuneResponse> getCommunesByDistrict(CommuneRequest request);
+    String getAddressFormatted(Long addressId);
+    String getAddressFormatted(String communeId, String streetAddress);
 }

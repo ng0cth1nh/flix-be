@@ -502,9 +502,13 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<DeleteAddressResponse> deleteCustomerAddress(DeleteAddressRequest request) {
-        User user = userDAO.findByUsername(request.getUsername()).get();
+        Long addressId = request.getAddressId();
+        if (addressId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+        }
+
         Optional<UserAddress> optionalUserAddress = userAddressDAO
-                .findUserAddressToDelete(user.getId(), request.getAddressId());
+                .findUserAddressToDelete(request.getUserId(), addressId);
 
         optionalUserAddress.ifPresent(userAddress -> userAddress.setDeletedAt(LocalDateTime.now()));
 
@@ -517,19 +521,37 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<EditAddressResponse> editCustomerAddress(EditAddressRequest request) {
         Long addressId = request.getAddressId();
-        User user = userDAO.findByUsername(request.getUsername()).get();
+        if (addressId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+        }
+
+        String phone = request.getPhone();
+        if (!InputValidation.isPhoneValid(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
+        }
+
+        String communeId = request.getCommuneId();
+        if (communeId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        }
+
+        String streetAddress = request.getStreetAddress();
+        if (streetAddress == null || streetAddress.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, STREET_ADDRESS_IS_REQUIRED);
+        }
+
         Optional<UserAddress> optionalUserAddress = userAddressDAO
-                .findUserAddressToEdit(user.getId(), addressId);
-        Optional<Commune> optionalCommune = communeDAO.findById(request.getCommuneId());
+                .findUserAddressToEdit(request.getUserId(), addressId);
+        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
 
         if (optionalUserAddress.isPresent() && optionalUserAddress.isPresent()) {
             UserAddress userAddress = optionalUserAddress.get();
             Commune commune = optionalCommune.get();
 
             userAddress.setName(request.getName());
-            userAddress.setPhone(request.getPhone());
+            userAddress.setPhone(phone);
             userAddress.setCommuneId(commune.getId());
-            userAddress.setStreetAddress(request.getStreetAddress());
+            userAddress.setStreetAddress(streetAddress);
         }
 
         EditAddressResponse response = new EditAddressResponse();
@@ -541,23 +563,34 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<CreateAddressResponse> createCustomerAddress(CreateAddressRequest request) {
-        Optional<Commune> optionalCommune = communeDAO.findById(request.getCommuneId());
+        String communeId = request.getCommuneId();
+        if (communeId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        }
+
+        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
         if (optionalCommune.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
         }
-        if (!InputValidation.isPhoneValid(request.getPhone())) {
+
+        String phone = request.getPhone();
+        if (!InputValidation.isPhoneValid(phone)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
-        User user = userDAO.findByUsername(request.getUsername()).get();
+
+        String streetAddress = request.getStreetAddress();
+        if (streetAddress == null || streetAddress.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, STREET_ADDRESS_IS_REQUIRED);
+        }
 
         Commune commune = optionalCommune.get();
 
         UserAddress userAddress = new UserAddress();
-        userAddress.setUserId(user.getId());
+        userAddress.setUserId(request.getUserId());
         userAddress.setMainAddress(false);
-        userAddress.setStreetAddress(request.getStreetAddress());
+        userAddress.setStreetAddress(streetAddress);
         userAddress.setName(request.getFullName());
-        userAddress.setPhone(request.getPhone());
+        userAddress.setPhone(phone);
         userAddress.setCommuneId(commune.getId());
         UserAddress savedUserAddress = userAddressDAO.save(userAddress);
 
@@ -589,21 +622,26 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request) {
-        LocalDate dob;
-        String email = request.getEmail();
+        String fullName = request.getFullName();
+        if (fullName == null || fullName.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, FULL_NAME_IS_REQUIRED);
+        }
 
+        String email = request.getEmail();
+        if (!InputValidation.isEmailValid(email)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_EMAIL);
+        }
+
+        LocalDate dob;
         try {
             dob = DateFormatUtil.getLocalDate(request.getDateOfBirth(), DATE_PATTERN);
         } catch (DateTimeParseException e) {
             throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_FORMAT);
         }
 
-        if (!InputValidation.isEmailValid(email)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_EMAIL);
-        }
 
         User user = userDAO.findByUsername(request.getUsername()).get();
-        user.setFullName(request.getFullName());
+        user.setFullName(fullName);
         user.setDateOfBirth(dob);
         user.setGender(request.isGender());
         user.setEmail(email);
@@ -664,15 +702,15 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<ChooseMainAddressResponse> chooseMainAddress(ChooseMainAddressRequest request) {
         Long userId = request.getUserId();
-        if (request.getAddressId() == null) {
+        Long addressId = request.getAddressId();
+        if (addressId == null) {
             throw new GeneralException(HttpStatus.GONE, ADDRESS_ID_IS_REQUIRED);
         }
 
         Optional<UserAddress> optionalSelectedAddress = userAddressDAO
-                .findUserAddressToEdit(userId, request.getAddressId());
+                .findUserAddressToEdit(userId, addressId);
 
         Optional<UserAddress> optionalMainAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(userId, true);
-
 
         if (optionalSelectedAddress.isPresent() && optionalMainAddress.isPresent()) {
             optionalMainAddress.get().setMainAddress(false);

@@ -36,4 +36,9 @@ public class RepairerController {
     public ResponseEntity<HistoryRequestForRepairerResponse> getFixingRequestHistories(HistoryRequestForRepairerRequest request) {
         return repairerService.getFixingRequestHistories(request);
     }
+
+    @PostMapping("invoice")
+    public ResponseEntity<CreateInvoiceResponse> createInvoice(@RequestBody CreateInvoiceRequest request) {
+        return repairerService.createInvoice(request);
+    }
 }

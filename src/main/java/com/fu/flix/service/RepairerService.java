@@ -1,13 +1,7 @@
 package com.fu.flix.service;
 
-import com.fu.flix.dto.request.CancelRequestForRepairerRequest;
-import com.fu.flix.dto.request.HistoryRequestForRepairerRequest;
-import com.fu.flix.dto.request.RepairerApproveRequest;
-import com.fu.flix.dto.request.RequestingDetailForRepairerRequest;
-import com.fu.flix.dto.response.CancelRequestForRepairerResponse;
-import com.fu.flix.dto.response.HistoryRequestForRepairerResponse;
-import com.fu.flix.dto.response.RepairerApproveResponse;
-import com.fu.flix.dto.response.RequestingDetailForRepairerResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import org.springframework.http.ResponseEntity;
 
 public interface RepairerService {
@@ -18,4 +12,5 @@ public interface RepairerService {
     ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request);
 
     ResponseEntity<HistoryRequestForRepairerResponse> getFixingRequestHistories(HistoryRequestForRepairerRequest request);
+    ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request);
 }

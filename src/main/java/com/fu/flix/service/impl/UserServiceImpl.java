@@ -172,25 +172,32 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException {
         String requestCode = request.getRequestCode();
-        User user = userDAO.findByUsername(request.getUsername()).get();
-        Feedback feedback = new Feedback();
-        feedback.setCreatedById(user.getId());
-        feedback.setTitle(request.getTitle());
-        feedback.setDescription(request.getDescription());
-        feedback.setStatusId(Status.PENDING.getId());
-
-        feedback.setType(getFeedbackTypeValidated(request.getFeedbackType()));
-
-        if (requestCode != null && repairRequestDAO.findByRequestCode(requestCode).isEmpty()) {
+        if (requestCode == null || repairRequestDAO.findByRequestCode(requestCode).isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
+        String title = request.getTitle();
+        if (title == null || title.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, TITLE_IS_REQUIRED);
+        }
+
+        String description = request.getDescription();
+        if (description == null || description.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, DESCRIPTION_IS_REQUIRED);
+        }
+
+        Feedback feedback = new Feedback();
+        feedback.setCreatedById(request.getUserId());
+        feedback.setTitle(title);
+        feedback.setDescription(description);
+        feedback.setStatusId(Status.PENDING.getId());
+        feedback.setType(getFeedbackTypeValidated(request.getFeedbackType()));
         feedback.setRequestCode(requestCode);
 
         for (MultipartFile multipartFile : request.getImages()) {
             String url = cloudStorageService.uploadImage(multipartFile);
             Image image = new Image();
-            image.setName(request.getTitle());
+            image.setName(title);
             image.setUrl(url);
             Image savedImage = imageDAO.save(image);
 

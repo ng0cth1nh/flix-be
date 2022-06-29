@@ -41,6 +41,8 @@ public class Invoice {
 
     private LocalDateTime confirmedByRepairerAt;
 
+    private Double vatPrice;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

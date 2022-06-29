@@ -1,7 +1,6 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.UserAddressDAO;
-import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.NotificationDTO;
 import com.fu.flix.dto.request.NotificationRequest;
 import com.fu.flix.dto.response.NotificationResponse;
@@ -27,8 +26,6 @@ import java.util.List;
 class UserServiceImplTest {
     @Autowired
     UserAddressDAO userAddressDAO;
-    @Autowired
-    UserDAO userDAO;
 
     @Autowired
     UserService userService;

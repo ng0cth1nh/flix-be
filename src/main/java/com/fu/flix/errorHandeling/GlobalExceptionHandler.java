@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -22,7 +23,6 @@ import static com.fu.flix.constant.Constant.WRONG_DATA_TYPE;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-
     @ExceptionHandler({GeneralException.class})
     public ResponseEntity<Object> handleGeneralException(GeneralException e) {
         logger.error(e);

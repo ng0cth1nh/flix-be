@@ -78,7 +78,15 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request,
                                               HttpServletResponse response,
-                                              AuthenticationException failed) {
-        resolver.resolveException(request, response, null, new GeneralException(FORBIDDEN, LOGIN_FAILED));
+                                              AuthenticationException e) {
+        String message;
+        switch (e.getMessage()) {
+            case USER_IS_INACTIVE:
+                message = USER_IS_INACTIVE;
+                break;
+            default:
+                message = LOGIN_FAILED;
+        }
+        resolver.resolveException(request, response, null, new GeneralException(FORBIDDEN, message));
     }
 }

@@ -13,6 +13,7 @@ import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.CloudStorageService;
 import com.fu.flix.service.UserService;
+import com.fu.flix.service.UserValidatorService;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final FeedbackDAO feedbackDAO;
     private final RepairRequestDAO repairRequestDAO;
+    private final UserValidatorService userValidatorService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public UserServiceImpl(ImageDAO imageDAO,
@@ -50,7 +52,8 @@ public class UserServiceImpl implements UserService {
                            NotificationDAO notificationDAO,
                            PasswordEncoder passwordEncoder,
                            FeedbackDAO feedbackDAO,
-                           RepairRequestDAO repairRequestDAO) {
+                           RepairRequestDAO repairRequestDAO,
+                           UserValidatorService userValidatorService) {
         this.imageDAO = imageDAO;
         this.cloudStorageService = cloudStorageService;
         this.userDAO = userDAO;
@@ -59,12 +62,13 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
         this.feedbackDAO = feedbackDAO;
         this.repairRequestDAO = repairRequestDAO;
+        this.userValidatorService = userValidatorService;
     }
 
     @Override
     public ResponseEntity<UpdateAvatarResponse> updateAvatar(UpdateAvatarRequest request) throws IOException {
         MultipartFile avatar = request.getAvatar();
-        User user = userDAO.findByUsername(request.getUsername()).get();
+        User user = userValidatorService.getUserValidated(request.getUsername());
         Image oldImage = imageDAO.findById(user.getAvatar()).get();
 
         if (avatar != null) {
@@ -100,7 +104,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<NotificationResponse> getNotifications(NotificationRequest request) {
-        User user = userDAO.findByUsername(request.getUsername()).get();
+        User user = userValidatorService.getUserValidated(request.getUsername());
         List<Notification> notifications = notificationDAO.findByUserIdAndDeletedAtIsNull(user.getId());
 
         List<NotificationDTO> notificationDTOS = notifications.stream()
@@ -129,7 +133,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<ChangePasswordResponse> changePassword(ChangePasswordRequest request) {
-        User user = userDAO.findByUsername(request.getUsername()).get();
+        User user = userValidatorService.getUserValidated(request.getUsername());
         String oldPassword = request.getOldPassword();
         boolean matches = passwordEncoder.matches(oldPassword, user.getPassword());
         if (!matches) {
@@ -155,7 +159,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest request) {
-        User user = userDAO.findByUsername(request.getUsername()).get();
+        User user = userValidatorService.getUserValidated(request.getUsername());
 
         String newPassword = request.getNewPassword();
         if (!InputValidation.isPasswordValid(newPassword)) {

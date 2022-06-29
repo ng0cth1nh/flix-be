@@ -16,10 +16,7 @@ import com.fu.flix.dto.security.UserSecurity;
 import com.fu.flix.entity.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.*;
-import com.fu.flix.service.AccountService;
-import com.fu.flix.service.CloudStorageService;
-import com.fu.flix.service.SmsService;
-import com.fu.flix.service.UserService;
+import com.fu.flix.service.*;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.PhoneFormatter;
 import com.fu.flix.dto.request.*;
@@ -66,6 +63,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final UserService userService;
     private final RepairerDAO repairerDAO;
     private final BalanceDAO balanceDAO;
+    private final UserValidatorService userValidatorService;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -81,7 +79,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               CloudStorageService cloudStorageService,
                               UserService userService,
                               RepairerDAO repairerDAO,
-                              BalanceDAO balanceDAO) {
+                              BalanceDAO balanceDAO,
+                              UserValidatorService userValidatorService) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
@@ -96,6 +95,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.userService = userService;
         this.repairerDAO = repairerDAO;
         this.balanceDAO = balanceDAO;
+        this.userValidatorService = userValidatorService;
     }
 
     @Override
@@ -103,11 +103,14 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         Optional<User> optionalUser = userDAO.findByUsername(username);
         if (optionalUser.isEmpty()) {
             log.error("User {} not found", username);
-            throw new UsernameNotFoundException("User not found in database");
+            throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
         }
 
         log.info("User {} found in database", username);
         User user = optionalUser.get();
+        if (!user.getIsActive()) {
+            throw new GeneralException(HttpStatus.FORBIDDEN, USER_IS_INACTIVE);
+        }
 
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (Role role : user.getRoles()) {
@@ -313,10 +316,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
 
-        Optional<User> optionalUser = userDAO.findByUsername(phone);
-        if (optionalUser.isEmpty()) {
-            throw new GeneralException(HttpStatus.NOT_FOUND, ACCOUNT_NOT_FOUND);
-        }
+        userValidatorService.getUserValidated(phone);
 
         SmsRequest sms = getSmsRequest(request, OTPType.FORGOT_PASSWORD);
         smsService.sendAndSaveOTP(sms);
@@ -343,12 +343,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
 
-        Optional<User> optionalUser = userDAO.findByUsername(phone);
-        if (optionalUser.isEmpty()) {
-            throw new GeneralException(HttpStatus.NOT_FOUND, ACCOUNT_NOT_FOUND);
-        }
-
-        User user = optionalUser.get();
+        User user = userValidatorService.getUserValidated(phone);
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
 
         OTPInfo otpInfo = getOTPInfo(request, OTPType.FORGOT_PASSWORD);

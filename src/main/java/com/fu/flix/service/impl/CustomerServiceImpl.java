@@ -653,7 +653,6 @@ public class CustomerServiceImpl implements CustomerService {
             response.setRating(repairerProfile.getRating());
             response.setExperience(repairerProfile.getExperience());
         }
-
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

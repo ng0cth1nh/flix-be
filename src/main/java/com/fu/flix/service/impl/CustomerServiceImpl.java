@@ -388,52 +388,34 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request) {
         String requestCode = getRequestCode(request.getRequestCode());
-        RepairRequest repairRequest = getRepairRequest(requestCode);
-        Long userId = request.getUserId();
-        if (!repairRequest.getUserId().equals(userId)) {
-            throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_SEE_THIS_REQUEST);
-        }
-
-        com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
-        Image serviceImage = imageDAO.findById(service.getImageId()).get();
-        Status status = statusDAO.findById(repairRequest.getStatusId()).get();
-        User user = userValidatorService.getUserValidated(userId);
-        VoucherDTO voucherDTO = voucherService.getVoucherInfo(repairRequest.getVoucherId());
-        PaymentMethod paymentMethod = paymentMethodDAO.findById(repairRequest.getPaymentMethodId()).get();
-        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        Long customerId = request.getUserId();
+        IDetailFixingRequestDTO dto = repairRequestDAO.findDetailFixingRequest(customerId, requestCode);
+        VoucherDTO voucherDTO = voucherService.getVoucherInfo(dto.getVoucherId());
 
         RequestingDetailForCustomerResponse response = new RequestingDetailForCustomerResponse();
-        response.setStatus(status.getName());
-        response.setServiceImage(serviceImage.getUrl());
-        response.setServiceId(service.getId());
-        response.setServiceName(service.getName());
-        response.setCustomerAddress(addressService.getAddressFormatted(repairRequest.getAddressId()));
-        response.setCustomerPhone(user.getPhone());
-        response.setCustomerName(user.getFullName());
-        response.setExpectFixingDay(DateFormatUtil.toString(repairRequest.getExpectStartFixingAt(), DATE_TIME_PATTERN));
-        response.setRequestDescription(repairRequest.getDescription());
+        response.setStatus(dto.getStatus());
+        response.setServiceImage(dto.getServiceImage());
+        response.setServiceId(dto.getServiceId());
+        response.setServiceName(dto.getServiceName());
+        response.setCustomerAddress(addressService.getAddressFormatted(dto.getCustomerAddressId()));
+        response.setCustomerPhone(dto.getCustomerPhone());
+        response.setCustomerName(dto.getCustomerName());
+        response.setExpectFixingDay(DateFormatUtil.toString(dto.getExpectFixingDay(), DATE_TIME_PATTERN));
+        response.setRequestDescription(dto.getRequestDescription());
         response.setVoucherDescription(voucherDTO.getVoucherDescription());
         response.setVoucherDiscount(voucherDTO.getVoucherDiscount());
-        response.setPaymentMethod(paymentMethod.getName());
-        response.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
-        response.setPrice(getRequestPrice(requestCode, false));
-        response.setActualPrice(getRequestPrice(requestCode, true));
-        response.setVatPrice(invoice.getVatPrice());
+        response.setPaymentMethod(dto.getPaymentMethod());
+        response.setDate(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
+        response.setPrice(dto.getPrice());
+        response.setActualPrice(dto.getActualPrice());
+        response.setVatPrice(dto.getVatPrice());
         response.setRequestCode(requestCode);
+        response.setRepairerAddress(addressService.getAddressFormatted(dto.getRepairerAddressId()));
+        response.setRepairerPhone(dto.getRepairerPhone());
+        response.setRepairerName(dto.getRepairerName());
+        response.setRepairerId(dto.getRepairerId());
+        response.setRepairerAvatar(dto.getRepairerAvatar());
 
-        if (!PENDING.getId().equals(repairRequest.getStatusId())) {
-            RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-            Long repairerId = repairRequestMatching.getRepairerId();
-            User repairer = userValidatorService.getUserValidated(repairerId);
-            UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(repairerId, true).get();
-            Image repairerAvatar = imageDAO.findById(repairer.getAvatar()).get();
-
-            response.setRepairerAddress(addressService.getAddressFormatted(userAddress.getCommuneId(), userAddress.getStreetAddress()));
-            response.setRepairerPhone(repairer.getPhone());
-            response.setRepairerName(repairer.getFullName());
-            response.setRepairerId(repairerId);
-            response.setRepairerAvatar(repairerAvatar.getUrl());
-        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

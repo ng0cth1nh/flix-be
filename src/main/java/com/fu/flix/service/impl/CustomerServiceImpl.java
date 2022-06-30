@@ -101,9 +101,15 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) {
+        Long userId = request.getUserId();
         LocalDateTime now = LocalDateTime.now();
         Long voucherId = request.getVoucherId();
-        User user = userValidatorService.getUserValidated(request.getUsername());
+        User user = userValidatorService.getUserValidated(userId);
+
+        if (isHaveAnyPaymentWaitingRequest(userId)) {
+            throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CREATE_NEW_REQUEST_WHEN_HAVE_OTHER_PAYMENT_WAITING_REQUEST);
+        }
+
         String paymentMethodID = request.getPaymentMethodId();
         Collection<UserVoucher> userVouchers = user.getUserVouchers();
 
@@ -111,8 +117,6 @@ public class CustomerServiceImpl implements CustomerService {
             UsingVoucherDTO usingVoucherDTO = new UsingVoucherDTO(userVouchers, voucherId, request.getServiceId(), paymentMethodID);
             useInspectionVoucher(usingVoucherDTO, now);
         }
-
-        Long userId = user.getId();
 
         LocalDateTime expectFixingDay = getExpectFixingDay(request, now);
 
@@ -138,6 +142,11 @@ public class CustomerServiceImpl implements CustomerService {
         response.setMessage(CREATE_REPAIR_REQUEST_SUCCESSFUL);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private boolean isHaveAnyPaymentWaitingRequest(Long userId) {
+        List<RepairRequest> repairRequests = repairRequestDAO.findByUserIdAndStatusId(userId, PAYMENT_WAITING.getId());
+        return repairRequests.size() > 0;
     }
 
     private Long getAddressIdValidated(Long addressId, Long userId) {

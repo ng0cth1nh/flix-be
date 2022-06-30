@@ -448,7 +448,6 @@ public class CustomerServiceImpl implements CustomerService {
             Invoice invoice = optionalInvoice.get();
             return isActualPrice ? invoice.getActualProceeds() : invoice.getTotalPrice();
         }
-
         return 0.0;
     }
 

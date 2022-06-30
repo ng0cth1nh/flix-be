@@ -12,5 +12,8 @@ public interface RepairerService {
     ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request);
 
     ResponseEntity<HistoryRequestForRepairerResponse> getFixingRequestHistories(HistoryRequestForRepairerRequest request);
+
     ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request);
+
+    ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(ConfirmInvoicePaidRequest request);
 }

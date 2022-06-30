@@ -1,6 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.PaymentMethod;
 import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.constant.enums.Status;
 import com.fu.flix.dao.*;
@@ -72,7 +73,7 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<RepairerApproveResponse> approveRequest(RepairerApproveRequest request) {
-        String requestCode = getRequestCode(request.getRequestCode());
+        String requestCode = getRequestCodeNotNull(request.getRequestCode());
 
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
 
@@ -129,7 +130,7 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<RequestingDetailForRepairerResponse> getRepairRequestDetail(RequestingDetailForRepairerRequest request) {
-        String requestCode = getRequestCode(request.getRequestCode());
+        String requestCode = getRequestCodeNotNull(request.getRequestCode());
         RequestingDetailForRepairerResponse response = new RequestingDetailForRepairerResponse();
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
 
@@ -172,7 +173,7 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) {
-        String requestCode = getRequestCode(request.getRequestCode());
+        String requestCode = getRequestCodeNotNull(request.getRequestCode());
 
         RepairRequest repairRequest = customerService.getRepairRequest(requestCode);
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
@@ -267,7 +268,7 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request) {
-        String requestCode = getRequestCode(request.getRequestCode());
+        String requestCode = getRequestCodeNotNull(request.getRequestCode());
 
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
         if (optionalRepairRequest.isEmpty()) {
@@ -290,7 +291,37 @@ public class RepairerServiceImpl implements RepairerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private String getRequestCode(String requestCode) {
+    @Override
+    public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(ConfirmInvoicePaidRequest request) {
+        String requestCode = getRequestCodeNotNull(request.getRequestCode());
+        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+        if (optionalRepairRequest.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
+        RepairRequest repairRequest = optionalRepairRequest.get();
+        if (!PaymentMethod.CASH.getId().equals(repairRequest.getPaymentMethodId())) {
+            throw new GeneralException(HttpStatus.GONE, CONFIRM_INVOICE_PAID_ONLY_USE_FOR_PAYMENT_IN_CASH);
+        }
+
+        if (!PAYMENT_WAITING.getId().equals(repairRequest.getStatusId())) {
+            throw new GeneralException(HttpStatus.GONE, CONFIRM_INVOICE_PAID_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
+        }
+
+        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+        if (!repairRequestMatching.getRepairerId().equals(request.getUserId())) {
+            throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_PAID_THIS_INVOICE);
+
+        }
+
+        repairRequest.setStatusId(DONE.getId());
+        ConfirmInvoicePaidResponse response = new ConfirmInvoicePaidResponse();
+        response.setMessage(CONFIRM_INVOICE_PAID_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getRequestCodeNotNull(String requestCode) {
         return requestCode == null ? Strings.EMPTY : requestCode;
     }
 }

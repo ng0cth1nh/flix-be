@@ -25,8 +25,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         }
 
         Optional<User> optionalUser = userDAO.findByUsername(username);
-        User user = getUser(optionalUser);
-        return user;
+        return getUser(optionalUser);
     }
 
     @Override
@@ -36,8 +35,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         }
 
         Optional<User> optionalUser = userDAO.findById(userId);
-        User user = getUser(optionalUser);
-        return user;
+        return getUser(optionalUser);
     }
 
     private User getUser(Optional<User> optionalUser) {

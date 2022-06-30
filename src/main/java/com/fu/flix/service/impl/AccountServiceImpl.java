@@ -63,7 +63,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final UserService userService;
     private final RepairerDAO repairerDAO;
     private final BalanceDAO balanceDAO;
-    private final UserValidatorService userValidatorService;
+    private final ValidatorService validatorService;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -80,7 +80,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               UserService userService,
                               RepairerDAO repairerDAO,
                               BalanceDAO balanceDAO,
-                              UserValidatorService userValidatorService) {
+                              ValidatorService validatorService) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
@@ -95,7 +95,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.userService = userService;
         this.repairerDAO = repairerDAO;
         this.balanceDAO = balanceDAO;
-        this.userValidatorService = userValidatorService;
+        this.validatorService = validatorService;
     }
 
     @Override
@@ -316,7 +316,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
 
-        userValidatorService.getUserValidated(phone);
+        validatorService.getUserValidated(phone);
 
         SmsRequest sms = getSmsRequest(request, OTPType.FORGOT_PASSWORD);
         smsService.sendAndSaveOTP(sms);
@@ -343,7 +343,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
 
-        User user = userValidatorService.getUserValidated(phone);
+        User user = validatorService.getUserValidated(phone);
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
 
         OTPInfo otpInfo = getOTPInfo(request, OTPType.FORGOT_PASSWORD);

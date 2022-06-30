@@ -9,7 +9,7 @@ import com.fu.flix.dto.request.CommentRequest;
 import com.fu.flix.dto.response.CommentResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.ConfirmedUserService;
-import com.fu.flix.service.UserValidatorService;
+import com.fu.flix.service.ValidatorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,16 +30,16 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
     private final CommentDAO commentDAO;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final RepairRequestDAO repairRequestDAO;
-    private final UserValidatorService userValidatorService;
+    private final ValidatorService validatorService;
 
     public ConfirmedUserServiceImpl(CommentDAO commentDAO,
                                     RepairRequestMatchingDAO repairRequestMatchingDAO,
                                     RepairRequestDAO repairRequestDAO,
-                                    UserValidatorService userValidatorService) {
+                                    ValidatorService validatorService) {
         this.commentDAO = commentDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
         this.repairRequestDAO = repairRequestDAO;
-        this.userValidatorService = userValidatorService;
+        this.validatorService = validatorService;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE);
         }
 
-        User user = userValidatorService.getUserValidated(request.getUsername());
+        User user = validatorService.getUserValidated(request.getUsername());
         String commentType = getCommentType(user.getRoles());
         Optional<Comment> optionalComment = commentDAO.findComment(requestCode, commentType);
         if (optionalComment.isPresent()) {

@@ -399,32 +399,33 @@ public class CustomerServiceImpl implements CustomerService {
         String requestCode = getRequestCode(request.getRequestCode());
         Long customerId = request.getUserId();
         IDetailFixingRequestDTO dto = repairRequestDAO.findDetailFixingRequest(customerId, requestCode);
-        VoucherDTO voucherDTO = voucherService.getVoucherInfo(dto.getVoucherId());
 
         RequestingDetailForCustomerResponse response = new RequestingDetailForCustomerResponse();
-        response.setStatus(dto.getStatus());
-        response.setServiceImage(dto.getServiceImage());
-        response.setServiceId(dto.getServiceId());
-        response.setServiceName(dto.getServiceName());
-        response.setCustomerAddress(addressService.getAddressFormatted(dto.getCustomerAddressId()));
-        response.setCustomerPhone(dto.getCustomerPhone());
-        response.setCustomerName(dto.getCustomerName());
-        response.setExpectFixingDay(DateFormatUtil.toString(dto.getExpectFixingDay(), DATE_TIME_PATTERN));
-        response.setRequestDescription(dto.getRequestDescription());
-        response.setVoucherDescription(voucherDTO.getVoucherDescription());
-        response.setVoucherDiscount(voucherDTO.getVoucherDiscount());
-        response.setPaymentMethod(dto.getPaymentMethod());
-        response.setDate(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
-        response.setPrice(dto.getPrice());
-        response.setActualPrice(dto.getActualPrice());
-        response.setVatPrice(dto.getVatPrice());
-        response.setRequestCode(requestCode);
-        response.setRepairerAddress(addressService.getAddressFormatted(dto.getRepairerAddressId()));
-        response.setRepairerPhone(dto.getRepairerPhone());
-        response.setRepairerName(dto.getRepairerName());
-        response.setRepairerId(dto.getRepairerId());
-        response.setRepairerAvatar(dto.getRepairerAvatar());
-
+        if (dto != null) {
+            VoucherDTO voucherDTO = voucherService.getVoucherInfo(dto.getVoucherId());
+            response.setStatus(dto.getStatus());
+            response.setServiceImage(dto.getServiceImage());
+            response.setServiceId(dto.getServiceId());
+            response.setServiceName(dto.getServiceName());
+            response.setCustomerAddress(addressService.getAddressFormatted(dto.getCustomerAddressId()));
+            response.setCustomerPhone(dto.getCustomerPhone());
+            response.setCustomerName(dto.getCustomerName());
+            response.setExpectFixingDay(DateFormatUtil.toString(dto.getExpectFixingDay(), DATE_TIME_PATTERN));
+            response.setRequestDescription(dto.getRequestDescription());
+            response.setVoucherDescription(voucherDTO.getVoucherDescription());
+            response.setVoucherDiscount(voucherDTO.getVoucherDiscount());
+            response.setPaymentMethod(dto.getPaymentMethod());
+            response.setDate(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
+            response.setPrice(dto.getPrice());
+            response.setActualPrice(dto.getActualPrice());
+            response.setVatPrice(dto.getVatPrice());
+            response.setRequestCode(requestCode);
+            response.setRepairerAddress(addressService.getAddressFormatted(dto.getRepairerAddressId()));
+            response.setRepairerPhone(dto.getRepairerPhone());
+            response.setRepairerName(dto.getRepairerName());
+            response.setRepairerId(dto.getRepairerId());
+            response.setRepairerAvatar(dto.getRepairerAvatar());
+        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -447,7 +448,6 @@ public class CustomerServiceImpl implements CustomerService {
             Invoice invoice = optionalInvoice.get();
             return isActualPrice ? invoice.getActualProceeds() : invoice.getTotalPrice();
         }
-
         return 0.0;
     }
 

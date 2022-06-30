@@ -25,7 +25,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON rr.status_id = stt.id " +
             "JOIN users customer " +
             "ON customer.id = rr.user_id " +
-            "JOIN vouchers v " +
+            "LEFT JOIN vouchers v " +
             "ON rr.voucher_id = v.id " +
             "JOIN payment_methods pm " +
             "ON rr.payment_method_id = pm.id " +

@@ -45,4 +45,6 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "AND customer.is_active " +
             "AND customer.id = :customerId", nativeQuery = true)
     IDetailFixingRequestDTO findDetailFixingRequest(Long customerId, String requestCode);
+
+    List<RepairRequest> findByUserIdAndStatusId(Long userId, String statusId);
 }

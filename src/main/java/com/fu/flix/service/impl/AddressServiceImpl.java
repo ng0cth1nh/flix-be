@@ -108,30 +108,16 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public String getAddressFormatted(Long addressId) {
         if (addressId == null) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+            return null;
         }
-
         Optional<UserAddress> optionalUserAddress = userAddressDAO.findById(addressId);
         if (optionalUserAddress.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+            return null;
         }
-
         UserAddress userAddress = optionalUserAddress.get();
-        return getAddressFormatted(userAddress.getCommuneId(), userAddress.getStreetAddress());
-    }
-
-    @Override
-    public String getAddressFormatted(String communeId, String streetAddress) {
-        if (communeId == null) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
-        }
-        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
-        if (optionalCommune.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
-        }
-        Commune commune = optionalCommune.get();
+        Commune commune = communeDAO.findById(userAddress.getCommuneId()).get();
         District district = districtDAO.findById(commune.getDistrictId()).get();
         City city = cityDAO.findById(district.getCityId()).get();
-        return streetAddress + COMMA + commune.getName() + COMMA + district.getName() + COMMA + city.getName();
+        return userAddress.getStreetAddress() + COMMA + commune.getName() + COMMA + district.getName() + COMMA + city.getName();
     }
 }

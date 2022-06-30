@@ -13,7 +13,7 @@ import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.RepairerService;
-import com.fu.flix.service.UserValidatorService;
+import com.fu.flix.service.ValidatorService;
 import com.fu.flix.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -45,7 +45,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final AppConf appConf;
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final CustomerService customerService;
-    private final UserValidatorService userValidatorService;
+    private final ValidatorService validatorService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public RepairerServiceImpl(RepairerDAO repairerDAO,
@@ -57,7 +57,7 @@ public class RepairerServiceImpl implements RepairerService {
                                AppConf appConf,
                                TransactionHistoryDAO transactionHistoryDAO,
                                CustomerService customerService,
-                               UserValidatorService userValidatorService) {
+                               ValidatorService validatorService) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -68,7 +68,7 @@ public class RepairerServiceImpl implements RepairerService {
         this.appConf = appConf;
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.customerService = customerService;
-        this.userValidatorService = userValidatorService;
+        this.validatorService = validatorService;
     }
 
     @Override
@@ -138,7 +138,7 @@ public class RepairerServiceImpl implements RepairerService {
             RepairRequest repairRequest = optionalRepairRequest.get();
 
             if (isNotPending(repairRequest)) {
-                User repairer = userValidatorService.getUserValidated(request.getUsername());
+                User repairer = validatorService.getUserValidated(request.getUsername());
                 RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
                 if (isNotMatchRepairer(repairer, repairRequestMatching)) {
                     throw new GeneralException(HttpStatus.NOT_ACCEPTABLE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_GET_THIS_REQUEST_DETAIL);
@@ -146,7 +146,7 @@ public class RepairerServiceImpl implements RepairerService {
             }
 
             Long customerId = repairRequest.getUserId();
-            User customer = userValidatorService.getUserValidated(customerId);
+            User customer = validatorService.getUserValidated(customerId);
             Image avatarImage = imageDAO.findById(customer.getAvatar()).get();
 
             response.setCustomerName(customer.getFullName());

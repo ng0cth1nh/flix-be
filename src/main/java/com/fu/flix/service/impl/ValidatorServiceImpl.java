@@ -4,17 +4,17 @@ import com.fu.flix.constant.Constant;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.entity.User;
-import com.fu.flix.service.UserValidatorService;
+import com.fu.flix.service.ValidatorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
-public class UserValidatorServiceImpl implements UserValidatorService {
+public class ValidatorServiceImpl implements ValidatorService {
     private final UserDAO userDAO;
 
-    public UserValidatorServiceImpl(UserDAO userDAO) {
+    public ValidatorServiceImpl(UserDAO userDAO) {
         this.userDAO = userDAO;
     }
 

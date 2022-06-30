@@ -10,7 +10,7 @@ import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.AddressService;
 import com.fu.flix.service.CustomerService;
-import com.fu.flix.service.UserValidatorService;
+import com.fu.flix.service.ValidatorService;
 import com.fu.flix.service.VoucherService;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
@@ -55,7 +55,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final BalanceDAO balanceDAO;
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final StatusDAO statusDAO;
-    private final UserValidatorService userValidatorService;
+    private final ValidatorService validatorService;
     private final AddressService addressService;
     private final VoucherService voucherService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -76,7 +76,7 @@ public class CustomerServiceImpl implements CustomerService {
                                BalanceDAO balanceDAO,
                                TransactionHistoryDAO transactionHistoryDAO,
                                StatusDAO statusDAO,
-                               UserValidatorService userValidatorService,
+                               ValidatorService validatorService,
                                AddressService addressService,
                                VoucherService voucherService) {
         this.repairRequestDAO = repairRequestDAO;
@@ -94,7 +94,7 @@ public class CustomerServiceImpl implements CustomerService {
         this.balanceDAO = balanceDAO;
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.statusDAO = statusDAO;
-        this.userValidatorService = userValidatorService;
+        this.validatorService = validatorService;
         this.addressService = addressService;
         this.voucherService = voucherService;
     }
@@ -104,7 +104,7 @@ public class CustomerServiceImpl implements CustomerService {
         Long userId = request.getUserId();
         LocalDateTime now = LocalDateTime.now();
         Long voucherId = request.getVoucherId();
-        User user = userValidatorService.getUserValidated(userId);
+        User user = validatorService.getUserValidated(userId);
 
         if (isHaveAnyPaymentWaitingRequest(userId)) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CREATE_NEW_REQUEST_WHEN_HAVE_OTHER_PAYMENT_WAITING_REQUEST);
@@ -335,7 +335,7 @@ public class CustomerServiceImpl implements CustomerService {
             Voucher voucher = voucherDAO.findById(voucherId).get();
             voucher.setRemainQuantity(voucher.getRemainQuantity() + 1);
 
-            User user = userValidatorService.getUserValidated(repairRequest.getUserId());
+            User user = validatorService.getUserValidated(repairRequest.getUserId());
             Collection<UserVoucher> userVouchers = user.getUserVouchers();
             UserVoucher userVoucher = getUserVoucher(userVouchers, voucherId);
             userVoucher.setQuantity(userVoucher.getQuantity() + 1);
@@ -352,7 +352,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<HistoryRequestForCustomerResponse> getFixingRequestHistories(HistoryRequestForCustomerRequest request) {
         String statusId = getStatusIdValidated(request.getStatus());
-        User user = userValidatorService.getUserValidated(request.getUsername());
+        User user = validatorService.getUserValidated(request.getUsername());
         Status status = statusDAO.findById(statusId).get();
 
         List<RepairRequest> repairRequests = repairRequestDAO
@@ -453,7 +453,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<MainAddressResponse> getMainAddress(MainAddressRequest request) {
-        User user = userValidatorService.getUserValidated(request.getUsername());
+        User user = validatorService.getUserValidated(request.getUsername());
         UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(user.getId(), true).get();
         Long addressId = userAddress.getId();
 
@@ -468,7 +468,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<UserAddressResponse> getCustomerAddresses(UserAddressRequest request) {
-        User user = userValidatorService.getUserValidated(request.getUsername());
+        User user = validatorService.getUserValidated(request.getUsername());
         List<UserAddress> userAddresses = userAddressDAO.findByUserIdAndDeletedAtIsNull(user.getId());
 
         List<UserAddressDTO> addresses = userAddresses.stream()
@@ -592,7 +592,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<CustomerProfileResponse> getCustomerProfile(CustomerProfileRequest request) {
-        User user = userValidatorService.getUserValidated(request.getUsername());
+        User user = validatorService.getUserValidated(request.getUsername());
         Image image = imageDAO.findById(user.getAvatar()).get();
         String dob = user.getDateOfBirth() == null
                 ? null
@@ -628,7 +628,7 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_FORMAT);
         }
 
-        User user = userValidatorService.getUserValidated(request.getUsername());
+        User user = validatorService.getUserValidated(request.getUsername());
         user.setFullName(fullName);
         user.setDateOfBirth(dob);
         user.setGender(request.isGender());

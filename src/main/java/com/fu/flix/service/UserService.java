@@ -16,7 +16,5 @@ public interface UserService {
 
     ResponseEntity<ChangePasswordResponse> changePassword(ChangePasswordRequest request);
 
-    ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest request);
-
     ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException;
 }

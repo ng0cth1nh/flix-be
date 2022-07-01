@@ -2,10 +2,7 @@ package com.fu.flix.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fu.flix.dto.request.*;
-import com.fu.flix.dto.response.CFForgotPassResponse;
-import com.fu.flix.dto.response.CFRegisterResponse;
-import com.fu.flix.dto.response.SendForgotPassOTPResponse;
-import com.fu.flix.dto.response.SendRegisterOTPResponse;
+import com.fu.flix.dto.response.*;
 import org.springframework.http.ResponseEntity;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,4 +20,6 @@ public interface AccountService {
     ResponseEntity<SendForgotPassOTPResponse> sendForgotPassOTP(SendForgotPassOTPRequest request) throws JsonProcessingException;
 
     ResponseEntity<CFForgotPassResponse> confirmForgotPassword(CFForgotPassRequest request);
+
+    ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest request);
 }

@@ -36,11 +36,6 @@ public class UserController {
         return userService.changePassword(request);
     }
 
-    @PutMapping("password/reset")
-    public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
-        return userService.resetPassword(request);
-    }
-
     @PostMapping("feedback")
     public ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException {
         return userService.createFeedback(request);

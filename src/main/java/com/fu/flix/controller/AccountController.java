@@ -1,14 +1,8 @@
 package com.fu.flix.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fu.flix.dto.request.CFForgotPassRequest;
-import com.fu.flix.dto.request.CFRegisterRequest;
-import com.fu.flix.dto.request.SendForgotPassOTPRequest;
-import com.fu.flix.dto.request.SendRegisterOTPRequest;
-import com.fu.flix.dto.response.CFForgotPassResponse;
-import com.fu.flix.dto.response.CFRegisterResponse;
-import com.fu.flix.dto.response.SendForgotPassOTPResponse;
-import com.fu.flix.dto.response.SendRegisterOTPResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.service.AccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -52,5 +46,10 @@ public class AccountController {
     @PostMapping("forgot/password/confirm")
     public ResponseEntity<CFForgotPassResponse> confirmForgotPassword(@RequestBody CFForgotPassRequest request) {
         return accountService.confirmForgotPassword(request);
+    }
+
+    @PutMapping("forgot/password/reset")
+    public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
+        return accountService.resetPassword(request);
     }
 }

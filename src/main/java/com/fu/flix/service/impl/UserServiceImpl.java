@@ -158,22 +158,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest request) {
-        User user = validatorService.getUserValidated(request.getUsername());
-
-        String newPassword = request.getNewPassword();
-        if (!InputValidation.isPasswordValid(newPassword)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_PASSWORD);
-        }
-        user.setPassword(passwordEncoder.encode(newPassword));
-
-        ResetPasswordResponse response = new ResetPasswordResponse();
-        response.setMessage(RESET_PASSWORD_SUCCESS);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @Override
     public ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         if (requestCode == null || repairRequestDAO.findByRequestCode(requestCode).isEmpty()) {

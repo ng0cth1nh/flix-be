@@ -147,6 +147,22 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     @Override
+    public ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest request) {
+        User user = validatorService.getUserValidated(request.getUsername());
+
+        String newPassword = request.getNewPassword();
+        if (!InputValidation.isPasswordValid(newPassword)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PASSWORD);
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        ResetPasswordResponse response = new ResetPasswordResponse();
+        response.setMessage(RESET_PASSWORD_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
     public ResponseEntity<SendRegisterOTPResponse> sendRegisterOTP(SendRegisterOTPRequest request) throws JsonProcessingException {
         String phone = request.getPhone();
         if (!InputValidation.isPhoneValid(phone)) {

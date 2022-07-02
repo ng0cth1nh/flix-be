@@ -309,13 +309,14 @@ public class CustomerServiceImpl implements CustomerService {
     private void returnMoneyForRepairer(Repairer repairer, String requestCode) {
         TransactionHistory commissionsTransaction = transactionHistoryDAO
                 .findByRequestCodeAndType(requestCode, PAY_COMMISSIONS.name()).get();
-        Balance balance = balanceDAO.findByUserId(repairer.getUserId()).get();
+        Long userId = repairer.getUserId();
+        Balance balance = balanceDAO.findByUserId(userId).get();
         Double refunds = commissionsTransaction.getAmount();
 
         balance.setBalance(balance.getBalance() + refunds);
 
         TransactionHistory refundsTransaction = new TransactionHistory();
-        refundsTransaction.setBalanceId(balance.getId());
+        refundsTransaction.setUserId(userId);
         refundsTransaction.setAmount(refunds);
         refundsTransaction.setType(REFUNDS.name());
         refundsTransaction.setRequestCode(requestCode);

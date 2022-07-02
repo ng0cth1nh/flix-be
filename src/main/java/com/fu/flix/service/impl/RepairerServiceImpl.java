@@ -114,7 +114,7 @@ public class RepairerServiceImpl implements RepairerService {
     private void minusCommissions(Balance balance, Double neededBalance, String requestCode) {
         balance.setBalance(balance.getBalance() - neededBalance);
         TransactionHistory transactionHistory = new TransactionHistory();
-        transactionHistory.setBalanceId(balance.getId());
+        transactionHistory.setUserId(balance.getUserId());
         transactionHistory.setAmount(neededBalance);
         transactionHistory.setType(PAY_COMMISSIONS.name());
         transactionHistory.setRequestCode(requestCode);
@@ -207,7 +207,7 @@ public class RepairerServiceImpl implements RepairerService {
         balance.setBalance(balance.getBalance() - fineMoney);
 
         TransactionHistory finedTransaction = new TransactionHistory();
-        finedTransaction.setBalanceId(balance.getId());
+        finedTransaction.setUserId(repairerId);
         finedTransaction.setAmount(fineMoney);
         finedTransaction.setType(FINED.name());
         finedTransaction.setRequestCode(requestCode);

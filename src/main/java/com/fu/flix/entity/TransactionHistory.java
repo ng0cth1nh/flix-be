@@ -21,13 +21,15 @@ public class TransactionHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long balanceId;
-
     private String requestCode;
 
     private Double amount;
 
     private String type;
+
+    private Long userId;
+
+    private Long vnpayTransactionId;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

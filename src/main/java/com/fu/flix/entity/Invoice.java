@@ -21,8 +21,6 @@ public class Invoice {
     @Id
     private String requestCode;
 
-    private String paymentMethodId;
-
     private Double inspectionPrice;
 
     private Double totalServiceDetailPrice;

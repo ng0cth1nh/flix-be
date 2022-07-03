@@ -311,7 +311,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .findByRequestCodeAndType(requestCode, PAY_COMMISSIONS.name()).get();
         Long userId = repairer.getUserId();
         Balance balance = balanceDAO.findByUserId(userId).get();
-        Double refunds = commissionsTransaction.getAmount();
+        Long refunds = commissionsTransaction.getAmount();
 
         balance.setBalance(balance.getBalance() + refunds);
 

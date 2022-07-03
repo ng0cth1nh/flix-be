@@ -93,7 +93,7 @@ public class RepairerServiceImpl implements RepairerService {
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
         Balance balance = balanceDAO.findByUserId(repairer.getUserId()).get();
-        Double neededBalance = invoice.getActualProceeds() * this.appConf.getProfitRate();
+        Long neededBalance = (long) (invoice.getActualProceeds() * this.appConf.getProfitRate());
         if (balance.getBalance() < neededBalance) {
             throw new GeneralException(HttpStatus.CONFLICT, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + neededBalance);
         }
@@ -111,7 +111,7 @@ public class RepairerServiceImpl implements RepairerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void minusCommissions(Balance balance, Double neededBalance, String requestCode) {
+    private void minusCommissions(Balance balance, Long neededBalance, String requestCode) {
         balance.setBalance(balance.getBalance() - neededBalance);
         TransactionHistory transactionHistory = new TransactionHistory();
         transactionHistory.setUserId(balance.getUserId());
@@ -200,7 +200,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     private void monetaryFine(Long repairerId, String requestCode) {
-        Double fineMoney = this.appConf.getFine();
+        Long fineMoney = this.appConf.getFine();
         Repairer repairer = repairerDAO.findByUserId(repairerId).get();
         Balance balance = balanceDAO.findByUserId(repairer.getUserId()).get();
 
@@ -309,11 +309,15 @@ public class RepairerServiceImpl implements RepairerService {
         }
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-        if (!repairRequestMatching.getRepairerId().equals(request.getUserId())) {
+        Long repairerId = request.getUserId();
+        if (!repairRequestMatching.getRepairerId().equals(repairerId)) {
             throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_PAID_THIS_INVOICE);
 
         }
 
+        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
+
+        repairer.setRepairing(false);
         repairRequest.setStatusId(DONE.getId());
         ConfirmInvoicePaidResponse response = new ConfirmInvoicePaidResponse();
         response.setMessage(CONFIRM_INVOICE_PAID_SUCCESS);

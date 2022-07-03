@@ -21,7 +21,7 @@ public class AppConf {
     private Double vat;
     private Double profitRate;
     private Long minTimeFined;
-    private Double fine;
+    private Long fine;
     private VnPayInfo vnPayInfo;
 
     @Data

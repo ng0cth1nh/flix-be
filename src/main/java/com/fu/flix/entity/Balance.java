@@ -23,7 +23,7 @@ public class Balance {
 
     private Long userId;
 
-    private Double balance;
+    private Long balance;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

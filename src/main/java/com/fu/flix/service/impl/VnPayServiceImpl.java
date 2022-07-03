@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,7 @@ import static com.fu.flix.constant.enums.TransactionType.RECEIVE_INVOICE_MONEY;
 
 @Service
 @Slf4j
+@Transactional
 public class VnPayServiceImpl implements VNPayService {
     private final RepairRequestDAO repairRequestDAO;
     private final VnPayTransactionDAO vnPayTransactionDAO;
@@ -40,6 +42,8 @@ public class VnPayServiceImpl implements VNPayService {
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final AppConf.VnPayInfo vnPayInfo;
     private final Integer vnPayAmountRate;
+    private final RepairerDAO repairerDAO;
+
     private final String VN_PAY_SUCCESS_CODE = "00";
     private final String VNP_AMOUNT = "vnp_Amount";
     private final String VNP_TNX_REF = "vnp_TxnRef";
@@ -68,7 +72,8 @@ public class VnPayServiceImpl implements VNPayService {
                             RepairRequestMatchingDAO repairRequestMatchingDAO,
                             BalanceDAO balanceDAO,
                             InvoiceDAO invoiceDAO,
-                            TransactionHistoryDAO transactionHistoryDAO) {
+                            TransactionHistoryDAO transactionHistoryDAO,
+                            RepairerDAO repairerDAO) {
         this.repairRequestDAO = repairRequestDAO;
         this.vnPayTransactionDAO = vnPayTransactionDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -76,6 +81,7 @@ public class VnPayServiceImpl implements VNPayService {
         this.invoiceDAO = invoiceDAO;
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.vnPayInfo = appConf.getVnPayInfo();
+        this.repairerDAO = repairerDAO;
         this.vnPayAmountRate = this.vnPayInfo.getVnPayAmountRate();
     }
 
@@ -182,12 +188,14 @@ public class VnPayServiceImpl implements VNPayService {
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
         Long repairerId = repairRequestMatching.getRepairerId();
-        Double amount = Double.parseDouble(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
+        Long amount = Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
+        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
 
         plusBalanceForRepairer(amount, repairerId);
         VnPayTransaction savedVnPayTransaction = saveVnPayTransaction(requestParams);
         saveCustomerTransactionHistory(requestParams, repairRequest.getUserId(), savedVnPayTransaction.getId());
         saveRepairerTransactionHistory(requestParams, repairerId);
+        repairer.setRepairing(false);
         repairRequest.setStatusId(Status.DONE.getId());
 
         log.info("payment success for request " + requestCode + " success");
@@ -245,7 +253,7 @@ public class VnPayServiceImpl implements VNPayService {
         return repairRequest;
     }
 
-    private void plusBalanceForRepairer(Double amount, Long repairerId) {
+    private void plusBalanceForRepairer(Long amount, Long repairerId) {
         Balance balance = balanceDAO.findByUserId(repairerId).get();
         balance.setBalance(balance.getBalance() + amount);
     }
@@ -270,7 +278,7 @@ public class VnPayServiceImpl implements VNPayService {
     private void saveCustomerTransactionHistory(Map<String, String> requestParams, Long customerId, Long vnPayTransactionId) {
         TransactionHistory transactionHistory = new TransactionHistory();
         transactionHistory.setRequestCode(requestParams.get(VNP_TNX_REF));
-        transactionHistory.setAmount(Double.parseDouble(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate);
+        transactionHistory.setAmount(Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate);
         transactionHistory.setType(CUSTOMER_PAYMENT.name());
         transactionHistory.setUserId(customerId);
         transactionHistory.setVnpayTransactionId(vnPayTransactionId);
@@ -280,7 +288,7 @@ public class VnPayServiceImpl implements VNPayService {
     private void saveRepairerTransactionHistory(Map<String, String> requestParams, Long repairerId) {
         TransactionHistory transactionHistory = new TransactionHistory();
         transactionHistory.setRequestCode(requestParams.get(VNP_TNX_REF));
-        transactionHistory.setAmount(Double.parseDouble(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate);
+        transactionHistory.setAmount(Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate);
         transactionHistory.setType(RECEIVE_INVOICE_MONEY.name());
         transactionHistory.setUserId(repairerId);
         transactionHistoryDAO.save(transactionHistory);

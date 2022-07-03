@@ -181,35 +181,6 @@ public class VnPayServiceImpl implements VNPayService {
     @Override
     public ResponseEntity<CustomerPaymentResponse> responseCustomerPayment(Map<String, String> requestParams) {
         CustomerPaymentResponse response = new CustomerPaymentResponse();
-        response.setMessage("Confirm Success");
-        response.setRspCode("00");
-        return new ResponseEntity<>(response, HttpStatus.OK);
-//        validatePaymentParamsResponse(requestParams);
-//
-//        String requestCode = requestParams.get(VNP_TNX_REF);
-//
-//        RepairRequest repairRequest = getRepairRequestPaymentResponseValidated(requestParams);
-//
-//        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-//        Long repairerId = repairRequestMatching.getRepairerId();
-//        Long amount = Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
-//        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
-//
-//        plusBalanceForRepairer(amount, repairerId);
-//        VnPayTransaction savedVnPayTransaction = saveVnPayTransaction(requestParams);
-//        saveCustomerTransactionHistory(requestParams, repairRequest.getUserId(), savedVnPayTransaction.getId());
-//        saveRepairerTransactionHistory(requestParams, repairerId);
-//        repairer.setRepairing(false);
-//        repairRequest.setStatusId(Status.DONE.getId());
-//
-//        log.info("payment success for request " + requestCode + " success");
-//        CustomerPaymentResponse response = new CustomerPaymentResponse();
-//        response.setMessage(PAYMENT_SUCCESS);
-//
-//        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private void validatePaymentParamsResponse(Map<String, String> requestParams) {
         String vnp_SecureHash = requestParams.get(VNP_SECURE_HASH);
         requestParams.remove(VNP_SECURE_HASH_TYPE);
         requestParams.remove(VNP_SECURE_HASH);
@@ -217,44 +188,71 @@ public class VnPayServiceImpl implements VNPayService {
         // Check checksum
         String signValue = hashAllFields(requestParams);
         if (!signValue.equals(vnp_SecureHash)) {
-            throw new GeneralException(HttpStatus.BAD_REQUEST, INVALID_CHECKSUM);
+            response.setMessage(INVALID_CHECKSUM);
+            response.setRspCode("97");
+            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
 
         String responseCode = requestParams.get(VNP_RESPONSE_CODE);
         if (!VN_PAY_SUCCESS_CODE.equals(responseCode)) {
-            throw new GeneralException(HttpStatus.NOT_ACCEPTABLE, PAYMENT_FAILED);
+            response.setMessage(PAYMENT_FAILED);
+            response.setRspCode("00");
+            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
 
         String requestCode = requestParams.get(VNP_TNX_REF);
         if (isRequestCodeNotFound(requestCode)) {
-            throw new GeneralException(HttpStatus.NOT_FOUND, VNP_TXN_REF_IS_REQUIRED);
+            response.setMessage(VNP_TXN_REF_IS_REQUIRED);
+            response.setRspCode("01");
+            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
 
         if (vnPayTransactionDAO.findByVnpTxnRef(requestCode).isPresent()) {
-            throw new GeneralException(HttpStatus.NOT_FOUND, VNP_TXN_REF_EXISTED_IN_DATABASE);
+            response.setMessage(VNP_TXN_REF_EXISTED_IN_DATABASE);
+            response.setRspCode("02");
+            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
-    }
 
-    private RepairRequest getRepairRequestPaymentResponseValidated(Map<String, String> requestParams) {
-        String requestCode = requestParams.get(VNP_TNX_REF);
+
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
         if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(HttpStatus.CONFLICT, REPAIR_REQUEST_NOT_FOUND);
+            response.setMessage(REPAIR_REQUEST_NOT_FOUND);
+            response.setRspCode("99");
+            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
         Long amount = Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
         if (!invoice.getActualProceeds().equals(amount)) {
             log.info("Actual proceed: " + invoice.getActualProceeds() + ", amount: " + amount);
-            throw new GeneralException(HttpStatus.CONFLICT, AMOUNT_DOES_NOT_MATCH_TO_INVOICE);
+            response.setMessage(AMOUNT_DOES_NOT_MATCH_TO_INVOICE);
+            response.setRspCode("04");
+            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
 
         RepairRequest repairRequest = optionalRepairRequest.get();
         if (!Status.PAYMENT_WAITING.getId().equals(repairRequest.getStatusId())) {
-            throw new GeneralException(HttpStatus.GONE, CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
+            response.setMessage(CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
+            response.setRspCode("99");
+            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
 
-        return repairRequest;
+        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+        Long repairerId = repairRequestMatching.getRepairerId();
+        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
+
+        plusBalanceForRepairer(amount, repairerId);
+        VnPayTransaction savedVnPayTransaction = saveVnPayTransaction(requestParams);
+        saveCustomerTransactionHistory(requestParams, repairRequest.getUserId(), savedVnPayTransaction.getId());
+        saveRepairerTransactionHistory(requestParams, repairerId);
+        repairer.setRepairing(false);
+        repairRequest.setStatusId(Status.DONE.getId());
+
+        log.info("payment success for request " + requestCode + " success");
+        response.setMessage(PAYMENT_SUCCESS);
+        response.setRspCode("00");
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private void plusBalanceForRepairer(Long amount, Long repairerId) {

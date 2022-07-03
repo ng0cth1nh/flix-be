@@ -6,6 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CustomerPaymentResponse {
-    private String Message;
-    private String RspCode;
+    private String message;
+    private String rspCode;
 }

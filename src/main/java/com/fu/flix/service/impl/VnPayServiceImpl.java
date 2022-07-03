@@ -197,20 +197,20 @@ public class VnPayServiceImpl implements VNPayService {
         if (!VN_PAY_SUCCESS_CODE.equals(responseCode)) {
             response.setMessage(PAYMENT_FAILED);
             response.setRspCode("00");
-            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         String requestCode = requestParams.get(VNP_TNX_REF);
         if (isRequestCodeNotFound(requestCode)) {
             response.setMessage(VNP_TXN_REF_IS_REQUIRED);
             response.setRspCode("01");
-            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         if (vnPayTransactionDAO.findByVnpTxnRef(requestCode).isPresent()) {
             response.setMessage(VNP_TXN_REF_EXISTED_IN_DATABASE);
             response.setRspCode("02");
-            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
 
@@ -218,7 +218,7 @@ public class VnPayServiceImpl implements VNPayService {
         if (optionalRepairRequest.isEmpty()) {
             response.setMessage(REPAIR_REQUEST_NOT_FOUND);
             response.setRspCode("99");
-            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
@@ -227,14 +227,14 @@ public class VnPayServiceImpl implements VNPayService {
             log.info("Actual proceed: " + invoice.getActualProceeds() + ", amount: " + amount);
             response.setMessage(AMOUNT_DOES_NOT_MATCH_TO_INVOICE);
             response.setRspCode("04");
-            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         RepairRequest repairRequest = optionalRepairRequest.get();
         if (!Status.PAYMENT_WAITING.getId().equals(repairRequest.getStatusId())) {
             response.setMessage(CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
             response.setRspCode("99");
-            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();

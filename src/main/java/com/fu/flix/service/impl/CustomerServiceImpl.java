@@ -158,10 +158,10 @@ public class CustomerServiceImpl implements CustomerService {
 
     private Invoice buildInvoice(RepairRequest repairRequest) {
         com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
-        Double inspectionPrice = service.getInspectionPrice();
-        Double discount = voucherService.getVoucherDiscount(inspectionPrice, repairRequest.getVoucherId());
-        Double beforeVat = inspectionPrice - discount;
-        Double vatPrice = beforeVat * repairRequest.getVat();
+        Long inspectionPrice = service.getInspectionPrice();
+        Long discount = voucherService.getVoucherDiscount(inspectionPrice, repairRequest.getVoucherId());
+        Long beforeVat = inspectionPrice - discount;
+        Long vatPrice = (long) (beforeVat * repairRequest.getVat());
 
         Invoice invoice = new Invoice();
         invoice.setRequestCode(repairRequest.getRequestCode());
@@ -443,13 +443,13 @@ public class CustomerServiceImpl implements CustomerService {
         return optionalRepairRequest.get();
     }
 
-    private Double getRequestPrice(String requestCode, boolean isActualPrice) {
+    private Long getRequestPrice(String requestCode, boolean isActualPrice) {
         Optional<Invoice> optionalInvoice = invoiceDAO.findByRequestCode(requestCode);
         if (optionalInvoice.isPresent()) {
             Invoice invoice = optionalInvoice.get();
             return isActualPrice ? invoice.getActualProceeds() : invoice.getTotalPrice();
         }
-        return 0.0;
+        return 0L;
     }
 
     @Override

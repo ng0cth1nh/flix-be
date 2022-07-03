@@ -52,8 +52,8 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
-    public Double getVoucherDiscount(Double money, Long voucherId) {
-        double discount = 0.0;
+    public Long getVoucherDiscount(Long money, Long voucherId) {
+        long discount = 0;
         if (voucherId == null) {
             return discount;
         }
@@ -70,7 +70,7 @@ public class VoucherServiceImpl implements VoucherService {
         }
 
         DiscountPercent discountPercent = discountPercentDAO.findByVoucherId(voucherId).get();
-        discount = discountPercent.getDiscountPercent() * money;
+        discount = (long) (discountPercent.getDiscountPercent() * money);
         return discount > discountPercent.getMaxDiscountPrice()
                 ? discountPercent.getMaxDiscountPrice()
                 : discount;

@@ -21,25 +21,25 @@ public class Invoice {
     @Id
     private String requestCode;
 
-    private Double inspectionPrice;
+    private Long inspectionPrice;
 
-    private Double totalServiceDetailPrice;
+    private Long totalServiceDetailPrice;
 
-    private Double totalOtherPrice;
+    private Long totalOtherPrice;
 
-    private Double totalAccessoryPrice;
+    private Long totalAccessoryPrice;
 
-    private Double totalPrice;
+    private Long totalPrice;
 
     private Long voucherId;
 
-    private Double totalDiscount;
+    private Long totalDiscount;
 
-    private Double actualProceeds;
+    private Long actualProceeds;
 
     private LocalDateTime confirmedByRepairerAt;
 
-    private Double vatPrice;
+    private Long vatPrice;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

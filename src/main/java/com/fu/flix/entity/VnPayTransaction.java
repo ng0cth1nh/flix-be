@@ -1,8 +1,9 @@
 package com.fu.flix.entity;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -10,26 +11,39 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Data
-@Table(name = "services")
+@Getter
+@Setter
+@Table(name = "vnpay_transactions")
 @NoArgsConstructor
 @AllArgsConstructor
-public class Service {
+public class VnPayTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private Long amount;
 
-    private Long imageId;
+    private String bankCode;
 
-    private Long inspectionPrice;
+    private String bankTranNo;
 
-    private String description;
+    private String cardType;
 
-    private Long categoryId;
+    private String orderInfo;
 
-    private boolean isActive;
+    private String payDate;
+
+    private String responseCode;
+
+    private String tmnCode;
+
+    private String transactionNo;
+
+    private String transactionStatus;
+
+    private String vnpTxnRef;
+
+    private String secureHash;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

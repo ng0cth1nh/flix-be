@@ -19,5 +19,5 @@ public class DiscountPercent {
 
     private Double discountPercent;
 
-    private Double maxDiscountPrice;
+    private Long maxDiscountPrice;
 }

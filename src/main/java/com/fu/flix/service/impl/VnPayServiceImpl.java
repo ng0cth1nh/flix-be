@@ -180,29 +180,33 @@ public class VnPayServiceImpl implements VNPayService {
 
     @Override
     public ResponseEntity<CustomerPaymentResponse> responseCustomerPayment(Map<String, String> requestParams) {
-        validatePaymentParamsResponse(requestParams);
-
-        String requestCode = requestParams.get(VNP_TNX_REF);
-
-        RepairRequest repairRequest = getRepairRequestPaymentResponseValidated(requestParams);
-
-        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-        Long repairerId = repairRequestMatching.getRepairerId();
-        Long amount = Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
-        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
-
-        plusBalanceForRepairer(amount, repairerId);
-        VnPayTransaction savedVnPayTransaction = saveVnPayTransaction(requestParams);
-        saveCustomerTransactionHistory(requestParams, repairRequest.getUserId(), savedVnPayTransaction.getId());
-        saveRepairerTransactionHistory(requestParams, repairerId);
-        repairer.setRepairing(false);
-        repairRequest.setStatusId(Status.DONE.getId());
-
-        log.info("payment success for request " + requestCode + " success");
         CustomerPaymentResponse response = new CustomerPaymentResponse();
-        response.setMessage(PAYMENT_SUCCESS);
-
+        response.setMessage("Confirm Success");
+        response.setRspCode("00");
         return new ResponseEntity<>(response, HttpStatus.OK);
+//        validatePaymentParamsResponse(requestParams);
+//
+//        String requestCode = requestParams.get(VNP_TNX_REF);
+//
+//        RepairRequest repairRequest = getRepairRequestPaymentResponseValidated(requestParams);
+//
+//        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+//        Long repairerId = repairRequestMatching.getRepairerId();
+//        Long amount = Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
+//        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
+//
+//        plusBalanceForRepairer(amount, repairerId);
+//        VnPayTransaction savedVnPayTransaction = saveVnPayTransaction(requestParams);
+//        saveCustomerTransactionHistory(requestParams, repairRequest.getUserId(), savedVnPayTransaction.getId());
+//        saveRepairerTransactionHistory(requestParams, repairerId);
+//        repairer.setRepairing(false);
+//        repairRequest.setStatusId(Status.DONE.getId());
+//
+//        log.info("payment success for request " + requestCode + " success");
+//        CustomerPaymentResponse response = new CustomerPaymentResponse();
+//        response.setMessage(PAYMENT_SUCCESS);
+//
+//        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private void validatePaymentParamsResponse(Map<String, String> requestParams) {

@@ -188,7 +188,7 @@ public class VnPayServiceImpl implements VNPayService {
         // Check checksum
         String signValue = hashAllFields(requestParams);
         if (!signValue.equals(vnp_SecureHash)) {
-            response.setMessage(INVALID_CHECKSUM);
+            response.setMessage("Invalid Checksum");
             response.setRspCode("97");
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }

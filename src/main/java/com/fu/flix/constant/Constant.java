@@ -4,7 +4,6 @@ public class Constant {
     public static final String ROLES = "roles";
     public static final String BEARER = "Bearer ";
     public static final String INVALID_REFRESH_TOKEN = "INVALID_REFRESH_TOKEN";
-    public static final String INVALID_TOKEN = "INVALID_TOKEN";
     public static final String REFRESH_TOKEN_MISSING = "REFRESH_TOKEN_MISSING";
     public static final String NEW_ACCOUNT_VALID = "NEW_ACCOUNT_VALID";
     public static final String ACCOUNT_EXISTED = "ACCOUNT_EXISTED";
@@ -28,6 +27,18 @@ public class Constant {
     public static final String OUT_OF_VOUCHER = "OUT_OF_VOUCHER";
     public static final String EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_30_DAYS = "EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_30_DAYS";
     public static final String INVALID_REQUEST_CODE = "INVALID_REQUEST_CODE";
+    public static final String CREATE_PAYMENT_URL_SUCCESS = "CREATE_PAYMENT_URL_SUCCESS";
+    public static final String PAYMENT_SUCCESS = "PAYMENT_SUCCESS";
+    public static final String PAYMENT_FAILED = "PAYMENT_FAILED";
+    public static final String VNP_TXN_REF_IS_REQUIRED = "VNP_TXN_REF_IS_REQUIRED";
+
+    public static final String VNP_TXN_REF_EXISTED_IN_DATABASE = "VNP_TXN_REF_EXISTED_IN_DATABASE";
+    public static final String REPAIR_REQUEST_NOT_FOUND = "REPAIR_REQUEST_NOT_FOUND";
+    public static final String AMOUNT_DOES_NOT_MATCH_TO_INVOICE = "AMOUNT_DOES_NOT_MATCH_TO_INVOICE";
+    public static final String INVALID_CHECKSUM = "INVALID_CHECKSUM";
+    public static final String CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING = "CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING";
+
+    public static final String PAYMENT_METHOD_MUST_BE_VN_PAY = "PAYMENT_METHOD_MUST_BE_VN_PAY";
     public static final String CONFIRM_INVOICE_PAID_ONLY_USE_FOR_PAYMENT_IN_CASH = "CONFIRM_INVOICE_PAID_ONLY_USE_FOR_PAYMENT_IN_CASH";
     public static final String CONFIRM_INVOICE_PAID_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING = "CONFIRM_INVOICE_PAID_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING";
     public static final String TITLE_IS_REQUIRED = "TITLE_IS_REQUIRED";
@@ -79,9 +90,11 @@ public class Constant {
     public static final String WRONG_DATA_TYPE = "WRONG_DATA_TYPE";
     public static final String BALANCE_MUST_GREATER_THAN_OR_EQUAL_ = "BALANCE_MUST_GREATER_THAN_OR_EQUAL_";
     public static final String USER_DOES_NOT_HAVE_PERMISSION_TO_CANCEL_THIS_REQUEST = "USER_DOES_NOT_HAVE_PERMISSION_TO_CANCEL_THIS_REQUEST";
-    public static final String USER_DOES_NOT_HAVE_PERMISSION_TO_SEE_THIS_REQUEST = "USER_DOES_NOT_HAVE_PERMISSION_TO_SEE_THIS_REQUEST";
     public static final String INVALID_CATEGORY_ID = "INVALID_CATEGORY_ID";
     public static final String TOKEN_EXPIRED = "TOKEN_EXPIRED";
     public static final String JUST_CAN_CREATE_INVOICE_WHEN_REQUEST_STATUS_IS_FIXING = "JUST_CAN_CREATE_INVOICE_WHEN_REQUEST_STATUS_IS_FIXING";
     public static final String CREATE_INVOICE_SUCCESS = "CREATE_INVOICE_SUCCESS";
+    public static final String INVALID_IP_ADDRESS = "INVALID_IP_ADDRESS";
+    public static final String KEY_AND_DATA_FOR_HMAC_SHA512_IS_REQUIRED = "KEY_AND_DATA_FOR_HMAC_SHA512_IS_REQUIRED";
+    public static final String REQUEST_CODE_IS_REQUIRED = "REQUEST_CODE_IS_REQUIRED";
 }

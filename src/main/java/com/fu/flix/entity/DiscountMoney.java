@@ -18,5 +18,5 @@ public class DiscountMoney {
     @Id
     private Long voucherId;
 
-    private Double discountMoney;
+    private Long discountMoney;
 }

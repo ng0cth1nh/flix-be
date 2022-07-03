@@ -22,6 +22,7 @@ public class AppConf {
     private Double profitRate;
     private Long minTimeFined;
     private Double fine;
+    private VnPayInfo vnPayInfo;
 
     @Data
     public static class TwilioInfo {
@@ -29,4 +30,19 @@ public class AppConf {
         private String authToken;
         private String fromNumber;
     }
+
+    @Data
+    public static class VnPayInfo {
+        private String version;
+        private String command;
+        private String tmnCode;
+        private String locate;
+        private Integer vnPayAmountRate;
+        private String datePattern;
+        private String currCode;
+        private String secureHash;
+        private String payUrl;
+        private String returnUrl;
+    }
+
 }

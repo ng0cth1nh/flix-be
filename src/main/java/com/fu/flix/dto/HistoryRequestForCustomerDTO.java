@@ -10,7 +10,7 @@ public class HistoryRequestForCustomerDTO {
     private Long serviceId;
     private String serviceName;
     private String description;
-    private Double price;
-    private Double actualPrice;
+    private Long price;
+    private Long actualPrice;
     private String date;
 }

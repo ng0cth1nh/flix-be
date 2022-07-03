@@ -80,12 +80,10 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
                                               HttpServletResponse response,
                                               AuthenticationException e) {
         String message;
-        switch (e.getMessage()) {
-            case USER_IS_INACTIVE:
-                message = USER_IS_INACTIVE;
-                break;
-            default:
-                message = LOGIN_FAILED;
+        if (USER_IS_INACTIVE.equals(e.getMessage())) {
+            message = USER_IS_INACTIVE;
+        } else {
+            message = LOGIN_FAILED;
         }
         resolver.resolveException(request, response, null, new GeneralException(FORBIDDEN, message));
     }

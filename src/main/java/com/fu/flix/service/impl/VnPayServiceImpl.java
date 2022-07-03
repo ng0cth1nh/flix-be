@@ -213,7 +213,6 @@ public class VnPayServiceImpl implements VNPayService {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
         if (optionalRepairRequest.isEmpty()) {
             response.setMessage(REPAIR_REQUEST_NOT_FOUND);

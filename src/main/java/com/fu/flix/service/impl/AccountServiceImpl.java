@@ -220,7 +220,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private void createBalance(User user) {
         Balance balance = new Balance();
         balance.setUserId(user.getId());
-        balance.setBalance(0.0);
+        balance.setBalance(0L);
         balanceDAO.save(balance);
     }
 

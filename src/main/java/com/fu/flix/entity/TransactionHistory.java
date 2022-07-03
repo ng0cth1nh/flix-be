@@ -23,7 +23,7 @@ public class TransactionHistory {
 
     private String requestCode;
 
-    private Double amount;
+    private Long amount;
 
     private String type;
 

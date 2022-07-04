@@ -189,34 +189,34 @@ public class VnPayServiceImpl implements VNPayService {
         String signValue = hashAllFields(requestParams);
         if (!signValue.equals(vnp_SecureHash)) {
             response.setMessage(INVALID_CHECKSUM);
-            response.setRspCode("97");
+            response.setRspCode(VN_PAY_RESPONSE.get(INVALID_CHECKSUM));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         String responseCode = requestParams.get(VNP_RESPONSE_CODE);
         if (!VN_PAY_SUCCESS_CODE.equals(responseCode)) {
             response.setMessage(PAYMENT_FAILED);
-            response.setRspCode("00");
+            response.setRspCode(VN_PAY_RESPONSE.get(PAYMENT_FAILED));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         String requestCode = requestParams.get(VNP_TNX_REF);
         if (isRequestCodeNotFound(requestCode)) {
             response.setMessage(VNP_TXN_REF_IS_REQUIRED);
-            response.setRspCode("01");
+            response.setRspCode(VN_PAY_RESPONSE.get(VNP_TXN_REF_IS_REQUIRED));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         if (vnPayTransactionDAO.findByVnpTxnRef(requestCode).isPresent()) {
             response.setMessage(VNP_TXN_REF_EXISTED_IN_DATABASE);
-            response.setRspCode("02");
+            response.setRspCode(VN_PAY_RESPONSE.get(VNP_TXN_REF_EXISTED_IN_DATABASE));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
         if (optionalRepairRequest.isEmpty()) {
             response.setMessage(REPAIR_REQUEST_NOT_FOUND);
-            response.setRspCode("99");
+            response.setRspCode(VN_PAY_RESPONSE.get(REPAIR_REQUEST_NOT_FOUND));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
@@ -225,14 +225,14 @@ public class VnPayServiceImpl implements VNPayService {
         if (!invoice.getActualProceeds().equals(amount)) {
             log.info("Actual proceed: " + invoice.getActualProceeds() + ", amount: " + amount);
             response.setMessage(AMOUNT_DOES_NOT_MATCH_TO_INVOICE);
-            response.setRspCode("04");
+            response.setRspCode(VN_PAY_RESPONSE.get(AMOUNT_DOES_NOT_MATCH_TO_INVOICE));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         RepairRequest repairRequest = optionalRepairRequest.get();
         if (!Status.PAYMENT_WAITING.getId().equals(repairRequest.getStatusId())) {
             response.setMessage(CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
-            response.setRspCode("99");
+            response.setRspCode(VN_PAY_RESPONSE.get(CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
@@ -247,9 +247,9 @@ public class VnPayServiceImpl implements VNPayService {
         repairer.setRepairing(false);
         repairRequest.setStatusId(Status.DONE.getId());
 
-        log.info("payment success for request " + requestCode + " success");
+        log.info("user id: " + repairRequest.getUserId() + "payment success for request " + requestCode + " success");
         response.setMessage(PAYMENT_SUCCESS);
-        response.setRspCode("00");
+        response.setRspCode(VN_PAY_RESPONSE.get(PAYMENT_SUCCESS));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

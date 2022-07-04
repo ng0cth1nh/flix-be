@@ -16,4 +16,6 @@ public interface RepairerService {
     ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request);
 
     ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(ConfirmInvoicePaidRequest request);
+    ResponseEntity<ConfirmFixingResponse> confirmFixing(ConfirmFixingRequest request);
+
 }

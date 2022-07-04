@@ -325,6 +325,35 @@ public class RepairerServiceImpl implements RepairerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Override
+    public ResponseEntity<ConfirmFixingResponse> confirmFixing(ConfirmFixingRequest request) {
+        String requestCode = getRequestCodeNotNull(request.getRequestCode());
+        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+
+        if (optionalRepairRequest.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
+        RepairRequest repairRequest = optionalRepairRequest.get();
+        if (!APPROVED.getId().equals(repairRequest.getStatusId())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_CONFIRM_FIXING_WHEN_REQUEST_STATUS_APPROVED);
+        }
+
+        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+        if (repairRequest.getUserId().equals(repairRequestMatching.getRepairerId())) {
+            throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_FIXING_THIS_REQUEST);
+        }
+
+        repairRequest.setStatusId(FIXING.getId());
+
+        ConfirmFixingResponse response = new ConfirmFixingResponse();
+        response.setMessage(CONFIRM_FIXING_SUCCESS);
+        response.setStatus(FIXING.name());
+        response.setRequestCode(requestCode);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     private String getRequestCodeNotNull(String requestCode) {
         return requestCode == null ? Strings.EMPTY : requestCode;
     }

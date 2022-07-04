@@ -2,7 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.constant.enums.CommentType;
 import com.fu.flix.constant.enums.RoleType;
-import com.fu.flix.constant.enums.Status;
+import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CommentRequest;
@@ -56,7 +56,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         }
 
         RepairRequest repairRequest = optionalRepairRequest.get();
-        if (!Status.DONE.getId().equals(repairRequest.getStatusId())) {
+        if (!RequestStatus.DONE.getId().equals(repairRequest.getStatusId())) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE);
         }
 

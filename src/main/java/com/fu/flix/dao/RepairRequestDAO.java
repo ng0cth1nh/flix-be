@@ -1,6 +1,7 @@
 package com.fu.flix.dao;
 
-import com.fu.flix.dto.IDetailFixingRequestDTO;
+import com.fu.flix.dto.IDetailFixingRequestForCustomerDTO;
+import com.fu.flix.dto.IDetailFixingRequestForRepairerDTO;
 import com.fu.flix.dto.IRequestingDTO;
 import com.fu.flix.entity.RepairRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -45,7 +46,37 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "WHERE rr.request_code = :requestCode " +
             "AND customer.is_active " +
             "AND customer.id = :customerId", nativeQuery = true)
-    IDetailFixingRequestDTO findDetailFixingRequest(Long customerId, String requestCode);
+    IDetailFixingRequestForCustomerDTO findDetailFixingRequestForCustomer(Long customerId, String requestCode);
+
+    @Query(value = "SELECT stt.name as status, sv_img.url as serviceImage, sv.id as serviceId, sv.name as serviceName, customer.id as customerId," +
+            " avatar.url as avatar, ua.id as addressId, customer.phone as customerPhone, customer.full_name as customerName, rr.expect_start_fixing_at as expectFixingTime," +
+            " rr.description as requestDescription, v.id as voucherId, pm.name as paymentMethod, rr.created_at as createdAt, iv.total_price as price," +
+            " iv.actual_proceeds as actualPrice, iv.vat_price as vatPrice, rr.request_code as requestCode " +
+            "FROM repair_requests rr " +
+            "JOIN repair_requests_matching rrm " +
+            "ON rr.request_code = rrm.request_code " +
+            "JOIN status stt " +
+            "ON rr.status_id = stt.id " +
+            "JOIN services sv " +
+            "ON sv.id = rr.service_id " +
+            "JOIN images sv_img " +
+            "ON sv_img.id = sv.image_id " +
+            "JOIN users customer " +
+            "ON customer.id = rr.user_id " +
+            "JOIN images avatar " +
+            "ON avatar.id = customer.avatar " +
+            "JOIN user_addresses ua " +
+            "ON ua.id = rr.address_id " +
+            "LEFT JOIN vouchers v " +
+            "ON rr.voucher_id = v.id " +
+            "JOIN payment_methods pm " +
+            "ON rr.payment_method_id = pm.id " +
+            "LEFT JOIN invoices iv " +
+            "ON iv.request_code = rr.request_code " +
+            "WHERE rr.status_id <> 'PE' " +
+            "AND rr.request_code = :requestCode " +
+            "AND rrm.repairer_id = :repairerId", nativeQuery = true)
+    IDetailFixingRequestForRepairerDTO findDetailFixingRequestForRepairer(Long repairerId, String requestCode);
 
     List<RepairRequest> findByUserIdAndStatusId(Long userId, String statusId);
 

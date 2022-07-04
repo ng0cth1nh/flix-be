@@ -2,7 +2,7 @@ package com.fu.flix.dto;
 
 import java.time.LocalDateTime;
 
-public interface IDetailFixingRequestDTO {
+public interface IDetailFixingRequestForCustomerDTO {
     String getStatus();
 
     String getServiceImage();
@@ -27,11 +27,11 @@ public interface IDetailFixingRequestDTO {
 
     LocalDateTime getCreatedAt();
 
-    Double getPrice();
+    Long getPrice();
 
-    Double getActualPrice();
+    Long getActualPrice();
 
-    Double getVatPrice();
+    Long getVatPrice();
 
     String getRequestCode();
 

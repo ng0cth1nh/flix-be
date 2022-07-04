@@ -4,13 +4,23 @@ import lombok.Data;
 
 @Data
 public class RequestingDetailForRepairerResponse {
-    private String customerName;
-    private String avatar;
-    private Long customerId;
+    private String status;
+    private String serviceImage;
     private Long serviceId;
-    private Long addressId;
+    private String serviceName;
+    private Long customerId;
+    private String avatar;
+    private String customerAddress;
+    private String customerPhone;
+    private String customerName;
     private String expectFixingTime;
-    private String description;
-    private Long voucherId;
-    private String paymentMethodId;
+    private String requestDescription;
+    private String voucherDescription;
+    private String voucherDiscount;
+    private String paymentMethod;
+    private String date;
+    private Long price;
+    private Long actualPrice;
+    private Long vatPrice;
+    private String requestCode;
 }

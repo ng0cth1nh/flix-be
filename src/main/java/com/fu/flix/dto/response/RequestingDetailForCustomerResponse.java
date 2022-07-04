@@ -17,9 +17,9 @@ public class RequestingDetailForCustomerResponse {
     private String voucherDiscount;
     private String paymentMethod;
     private String date;
-    private Double price;
-    private Double actualPrice;
-    private Double vatPrice;
+    private Long price;
+    private Long actualPrice;
+    private Long vatPrice;
     private String requestCode;
     private String repairerAddress;
     private String repairerPhone;

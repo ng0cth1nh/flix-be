@@ -6,18 +6,12 @@ import com.fu.flix.constant.enums.RepairerSuggestionType;
 import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.dao.*;
-import com.fu.flix.dto.HistoryRequestForRepairerDTO;
-import com.fu.flix.dto.IHistoryRequestForRepairerDTO;
-import com.fu.flix.dto.IRequestingDTO;
-import com.fu.flix.dto.RequestingDTO;
+import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
-import com.fu.flix.service.AddressService;
-import com.fu.flix.service.CustomerService;
-import com.fu.flix.service.RepairerService;
-import com.fu.flix.service.ValidatorService;
+import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -45,42 +39,39 @@ public class RepairerServiceImpl implements RepairerService {
     private final RepairerDAO repairerDAO;
     private final RepairRequestDAO repairRequestDAO;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
-    private final ImageDAO imageDAO;
     private final InvoiceDAO invoiceDAO;
     private final BalanceDAO balanceDAO;
     private final AppConf appConf;
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final CustomerService customerService;
-    private final ValidatorService validatorService;
     private final UserAddressDAO userAddressDAO;
     private final AddressService addressService;
+    private final VoucherService voucherService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public RepairerServiceImpl(RepairerDAO repairerDAO,
                                RepairRequestDAO repairRequestDAO,
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
-                               ImageDAO imageDAO,
                                InvoiceDAO invoiceDAO,
                                BalanceDAO balanceDAO,
                                AppConf appConf,
                                TransactionHistoryDAO transactionHistoryDAO,
                                CustomerService customerService,
-                               ValidatorService validatorService,
                                UserAddressDAO userAddressDAO,
-                               AddressService addressService) {
+                               AddressService addressService,
+                               VoucherService voucherService) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
 
-        this.imageDAO = imageDAO;
         this.invoiceDAO = invoiceDAO;
         this.balanceDAO = balanceDAO;
         this.appConf = appConf;
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.customerService = customerService;
-        this.validatorService = validatorService;
         this.userAddressDAO = userAddressDAO;
         this.addressService = addressService;
+        this.voucherService = voucherService;
     }
 
     @Override
@@ -144,43 +135,31 @@ public class RepairerServiceImpl implements RepairerService {
     public ResponseEntity<RequestingDetailForRepairerResponse> getRepairRequestDetail(RequestingDetailForRepairerRequest request) {
         String requestCode = getRequestCodeNotNull(request.getRequestCode());
         RequestingDetailForRepairerResponse response = new RequestingDetailForRepairerResponse();
-        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+        IDetailFixingRequestForRepairerDTO dto = repairRequestDAO.findDetailFixingRequestForRepairer(request.getUserId(), requestCode);
 
-        if (optionalRepairRequest.isPresent()) {
-            RepairRequest repairRequest = optionalRepairRequest.get();
-
-            if (isNotPending(repairRequest)) {
-                User repairer = validatorService.getUserValidated(request.getUsername());
-                RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-                if (isNotMatchRepairer(repairer, repairRequestMatching)) {
-                    throw new GeneralException(HttpStatus.NOT_ACCEPTABLE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_GET_THIS_REQUEST_DETAIL);
-                }
-            }
-
-            Long customerId = repairRequest.getUserId();
-            User customer = validatorService.getUserValidated(customerId);
-            Image avatarImage = imageDAO.findById(customer.getAvatar()).get();
-
-            response.setCustomerName(customer.getFullName());
-            response.setAvatar(avatarImage.getUrl());
-            response.setCustomerId(customerId);
-            response.setServiceId(repairRequest.getServiceId());
-            response.setAddressId(repairRequest.getAddressId());
-            response.setExpectFixingTime(DateFormatUtil.toString(repairRequest.getExpectStartFixingAt(), DATE_TIME_PATTERN));
-            response.setDescription(repairRequest.getDescription());
-            response.setVoucherId(repairRequest.getVoucherId());
-            response.setPaymentMethodId(repairRequest.getPaymentMethodId());
+        if (dto != null) {
+            VoucherDTO voucherDTO = voucherService.getVoucherInfo(dto.getVoucherId());
+            response.setStatus(dto.getStatus());
+            response.setServiceImage(dto.getServiceImage());
+            response.setServiceId(dto.getServiceId());
+            response.setServiceName(dto.getServiceName());
+            response.setCustomerId(dto.getCustomerId());
+            response.setAvatar(dto.getAvatar());
+            response.setCustomerAddress(addressService.getAddressFormatted(dto.getAddressId()));
+            response.setCustomerPhone(dto.getCustomerPhone());
+            response.setCustomerName(dto.getCustomerName());
+            response.setExpectFixingTime(DateFormatUtil.toString(dto.getExpectFixingTime(), DATE_TIME_PATTERN));
+            response.setRequestDescription(dto.getRequestDescription());
+            response.setVoucherDescription(voucherDTO.getVoucherDescription());
+            response.setVoucherDiscount(voucherDTO.getVoucherDiscount());
+            response.setPaymentMethod(dto.getPaymentMethod());
+            response.setDate(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
+            response.setPrice(dto.getPrice());
+            response.setActualPrice(dto.getActualPrice());
+            response.setVatPrice(dto.getVatPrice());
+            response.setRequestCode(requestCode);
         }
-
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private boolean isNotPending(RepairRequest repairRequest) {
-        return !PENDING.getId().equals(repairRequest.getStatusId());
-    }
-
-    private boolean isNotMatchRepairer(User repairer, RepairRequestMatching repairRequestMatching) {
-        return !repairer.getId().equals(repairRequestMatching.getRepairerId());
     }
 
     @Override

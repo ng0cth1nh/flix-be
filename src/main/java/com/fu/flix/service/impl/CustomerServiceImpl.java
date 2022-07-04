@@ -400,7 +400,7 @@ public class CustomerServiceImpl implements CustomerService {
     public ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request) {
         String requestCode = getRequestCode(request.getRequestCode());
         Long customerId = request.getUserId();
-        IDetailFixingRequestDTO dto = repairRequestDAO.findDetailFixingRequest(customerId, requestCode);
+        IDetailFixingRequestForCustomerDTO dto = repairRequestDAO.findDetailFixingRequestForCustomer(customerId, requestCode);
 
         RequestingDetailForCustomerResponse response = new RequestingDetailForCustomerResponse();
         if (dto != null) {

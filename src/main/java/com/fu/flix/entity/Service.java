@@ -23,6 +23,8 @@ public class Service {
 
     private Long imageId;
 
+    private Long iconId;
+
     private Long inspectionPrice;
 
     private String description;

@@ -1,6 +1,7 @@
 package com.fu.flix.dao;
 
 import com.fu.flix.dto.IDetailFixingRequestDTO;
+import com.fu.flix.dto.IRequestingDTO;
 import com.fu.flix.entity.RepairRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -49,4 +50,50 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
     List<RepairRequest> findByUserIdAndStatusId(Long userId, String statusId);
 
     Optional<RepairRequest> findByUserIdAndRequestCode(Long userId, String requestCode);
+
+    @Query(value = "SELECT customer.full_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime," +
+            " rr.address_id as addressId, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
+            "FROM repair_requests rr " +
+            "JOIN user_addresses ua " +
+            "ON rr.address_id = ua.id " +
+            "JOIN communes c " +
+            "ON ua.commune_id = c.id " +
+            "JOIN districts d " +
+            "ON c.district_id = d.id " +
+            "JOIN users customer " +
+            "ON customer.id = rr.user_id " +
+            "JOIN images avatar " +
+            "ON avatar.id = customer.avatar " +
+            "JOIN services sv " +
+            "ON sv.id = rr.service_id " +
+            "JOIN  images icon " +
+            "ON icon.id = sv.icon_id " +
+            "WHERE rr.status_id = 'PE' " +
+            "AND rr.service_id in (:serviceIds) " +
+            "AND district_id = :districtId", nativeQuery = true)
+    List<IRequestingDTO> findPendingRequestByDistrict(List<Long> serviceIds, String districtId);
+
+    @Query(value = "SELECT customer.full_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime," +
+            " rr.address_id as addressId, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
+            "FROM repair_requests rr " +
+            "JOIN user_addresses ua " +
+            "ON rr.address_id = ua.id " +
+            "JOIN communes c " +
+            "ON ua.commune_id = c.id " +
+            "JOIN districts d " +
+            "ON c.district_id = d.id " +
+            "JOIN users customer " +
+            "ON customer.id = rr.user_id " +
+            "JOIN images avatar " +
+            "ON avatar.id = customer.avatar " +
+            "JOIN services sv " +
+            "ON sv.id = rr.service_id " +
+            "JOIN  images icon " +
+            "ON icon.id = sv.icon_id " +
+            "JOIN cities ct " +
+            "ON d.city_id = ct.id " +
+            "WHERE rr.status_id = 'PE' " +
+            "AND rr.service_id in (:serviceIds) " +
+            "AND ct.id = :cityId", nativeQuery = true)
+    List<IRequestingDTO> findPendingRequestByCity(List<Long> serviceIds, String cityId);
 }

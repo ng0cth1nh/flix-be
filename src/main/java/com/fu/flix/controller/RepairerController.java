@@ -51,4 +51,9 @@ public class RepairerController {
     public ResponseEntity<ConfirmFixingResponse> confirmFixing(@RequestBody ConfirmFixingRequest request) {
         return repairerService.confirmFixing(request);
     }
+
+    @GetMapping("request/list/suggestion")
+    public ResponseEntity<RepairerSuggestionResponse> getSuggestionRequestList(RepairerSuggestionRequest request) {
+        return repairerService.getSuggestionRequestList(request);
+    }
 }

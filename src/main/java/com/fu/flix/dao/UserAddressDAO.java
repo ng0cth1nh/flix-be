@@ -24,4 +24,23 @@ public interface UserAddressDAO extends JpaRepository<UserAddress, Long> {
             "AND id = :id " +
             "AND deleted_at IS NULL", nativeQuery = true)
     Optional<UserAddress> findUserAddressToEdit(Long userId, Long id);
+
+    @Query(value = "SELECT d.id as districtId " +
+            "FROM districts d " +
+            "JOIN communes c " +
+            "ON c.district_id = d.id " +
+            "JOIN user_addresses ua " +
+            "ON ua.commune_id = c.id " +
+            "WHERE ua.id = :userAddressId", nativeQuery = true)
+    String findDistrictIdByUserAddressId(Long userAddressId);
+
+    @Query(value = "SELECT ct.id as cityId " +
+            "FROM districts d " +
+            "JOIN communes c " +
+            "ON c.district_id = d.id " +
+            "JOIN user_addresses ua " +
+            "ON ua.commune_id = c.id " +
+            "JOIN cities ct ON ct.id = d.city_id " +
+            "WHERE ua.id = :userAddressId", nativeQuery = true)
+    String findCityIdByUserAddressId(Long userAddressId);
 }

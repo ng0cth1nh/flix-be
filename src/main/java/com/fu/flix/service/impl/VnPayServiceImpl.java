@@ -2,7 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.PaymentMethod;
-import com.fu.flix.constant.enums.Status;
+import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CustomerPaymentUrlRequest;
@@ -169,7 +169,7 @@ public class VnPayServiceImpl implements VNPayService {
         }
 
         RepairRequest repairRequest = optionalRepairRequest.get();
-        if (!Status.PAYMENT_WAITING.getId().equals(repairRequest.getStatusId())) {
+        if (!RequestStatus.PAYMENT_WAITING.getId().equals(repairRequest.getStatusId())) {
             throw new GeneralException(HttpStatus.GONE, CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
         }
 
@@ -230,7 +230,7 @@ public class VnPayServiceImpl implements VNPayService {
         }
 
         RepairRequest repairRequest = optionalRepairRequest.get();
-        if (!Status.PAYMENT_WAITING.getId().equals(repairRequest.getStatusId())) {
+        if (!RequestStatus.PAYMENT_WAITING.getId().equals(repairRequest.getStatusId())) {
             response.setMessage(CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
             response.setRspCode(VN_PAY_RESPONSE.get(CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING));
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -245,7 +245,7 @@ public class VnPayServiceImpl implements VNPayService {
         saveCustomerTransactionHistory(requestParams, repairRequest.getUserId(), savedVnPayTransaction.getId());
         saveRepairerTransactionHistory(requestParams, repairerId);
         repairer.setRepairing(false);
-        repairRequest.setStatusId(Status.DONE.getId());
+        repairRequest.setStatusId(RequestStatus.DONE.getId());
 
         log.info("user id: " + repairRequest.getUserId() + "payment success for request " + requestCode + " success");
         response.setMessage(PAYMENT_SUCCESS);

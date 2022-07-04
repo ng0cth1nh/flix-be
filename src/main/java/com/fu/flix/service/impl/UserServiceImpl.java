@@ -4,7 +4,6 @@ package com.fu.flix.service.impl;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.Constant;
 import com.fu.flix.constant.enums.FeedbackType;
-import com.fu.flix.constant.enums.Status;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.NotificationDTO;
 import com.fu.flix.dto.error.GeneralException;
@@ -29,6 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
+import static com.fu.flix.constant.enums.FeedbackStatus.PENDING;
 
 @Service
 @Slf4j
@@ -178,7 +178,7 @@ public class UserServiceImpl implements UserService {
         feedback.setCreatedById(request.getUserId());
         feedback.setTitle(title);
         feedback.setDescription(description);
-        feedback.setStatusId(Status.PENDING.getId());
+        feedback.setStatusId(PENDING.getId());
         feedback.setType(getFeedbackTypeValidated(request.getFeedbackType()));
         feedback.setRequestCode(requestCode);
 

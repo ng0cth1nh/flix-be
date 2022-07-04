@@ -36,7 +36,7 @@ import java.util.Optional;
 
 import static com.fu.flix.constant.Constant.CANCEL_REPAIR_REQUEST_SUCCESSFUL;
 import static com.fu.flix.constant.Constant.CREATE_REPAIR_REQUEST_SUCCESSFUL;
-import static com.fu.flix.constant.enums.Status.PENDING;
+import static com.fu.flix.constant.enums.RequestStatus.PENDING;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

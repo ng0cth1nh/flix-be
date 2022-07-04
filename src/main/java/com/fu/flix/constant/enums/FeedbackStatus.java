@@ -1,16 +1,14 @@
 package com.fu.flix.constant.enums;
 
-public enum Status {
-    PENDING("PE"),
-    CANCELLED("CC"),
-    APPROVED("AP"),
+public enum FeedbackStatus {
+    PROCESSING("PR"),
+    REJECTED("RJ"),
     DONE("DO"),
-    FIXING("FX"),
-    PAYMENT_WAITING("PW");
+    PENDING("PE");
 
     private final String id;
 
-    Status(String id) {
+    FeedbackStatus(String id) {
         this.id = id;
     }
 

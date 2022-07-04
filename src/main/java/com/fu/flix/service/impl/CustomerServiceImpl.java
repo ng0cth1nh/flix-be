@@ -1,6 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
@@ -31,7 +32,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.Status.*;
+import static com.fu.flix.constant.enums.RequestStatus.*;
 import static com.fu.flix.constant.enums.TransactionType.PAY_COMMISSIONS;
 import static com.fu.flix.constant.enums.TransactionType.REFUNDS;
 import static com.fu.flix.constant.enums.VoucherType.INSPECTION;
@@ -386,7 +387,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private String getStatusIdValidated(String status) {
-        for (com.fu.flix.constant.enums.Status s : com.fu.flix.constant.enums.Status.values()) {
+        for (RequestStatus s : RequestStatus.values()) {
             if (s.name().equals(status)) {
                 return s.getId();
             }

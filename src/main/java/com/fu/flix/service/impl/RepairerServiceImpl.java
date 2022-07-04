@@ -3,7 +3,7 @@ package com.fu.flix.service.impl;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.PaymentMethod;
 import com.fu.flix.constant.enums.RoleType;
-import com.fu.flix.constant.enums.Status;
+import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.HistoryRequestForRepairerDTO;
 import com.fu.flix.dto.IHistoryRequestForRepairerDTO;
@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.Status.*;
+import static com.fu.flix.constant.enums.RequestStatus.*;
 import static com.fu.flix.constant.enums.TransactionType.*;
 
 @Service
@@ -257,7 +257,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     private String getStatusIdValidated(String status) {
-        for (Status s : Status.values()) {
+        for (RequestStatus s : RequestStatus.values()) {
             if (s.name().equals(status)) {
                 return s.getId();
             }

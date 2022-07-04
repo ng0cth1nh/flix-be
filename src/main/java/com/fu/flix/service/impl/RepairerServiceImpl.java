@@ -2,15 +2,19 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.PaymentMethod;
+import com.fu.flix.constant.enums.RepairerSuggestionType;
 import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.HistoryRequestForRepairerDTO;
 import com.fu.flix.dto.IHistoryRequestForRepairerDTO;
+import com.fu.flix.dto.IRequestingDTO;
+import com.fu.flix.dto.RequestingDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
+import com.fu.flix.service.AddressService;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.RepairerService;
 import com.fu.flix.service.ValidatorService;
@@ -24,11 +28,13 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
+import static com.fu.flix.constant.enums.RepairerSuggestionType.SUGGESTED;
 import static com.fu.flix.constant.enums.RequestStatus.*;
 import static com.fu.flix.constant.enums.TransactionType.*;
 
@@ -46,6 +52,8 @@ public class RepairerServiceImpl implements RepairerService {
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final CustomerService customerService;
     private final ValidatorService validatorService;
+    private final UserAddressDAO userAddressDAO;
+    private final AddressService addressService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public RepairerServiceImpl(RepairerDAO repairerDAO,
@@ -57,7 +65,9 @@ public class RepairerServiceImpl implements RepairerService {
                                AppConf appConf,
                                TransactionHistoryDAO transactionHistoryDAO,
                                CustomerService customerService,
-                               ValidatorService validatorService) {
+                               ValidatorService validatorService,
+                               UserAddressDAO userAddressDAO,
+                               AddressService addressService) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -69,6 +79,8 @@ public class RepairerServiceImpl implements RepairerService {
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.customerService = customerService;
         this.validatorService = validatorService;
+        this.userAddressDAO = userAddressDAO;
+        this.addressService = addressService;
     }
 
     @Override
@@ -356,5 +368,58 @@ public class RepairerServiceImpl implements RepairerService {
 
     private String getRequestCodeNotNull(String requestCode) {
         return requestCode == null ? Strings.EMPTY : requestCode;
+    }
+
+    @Override
+    public ResponseEntity<RepairerSuggestionResponse> getSuggestionRequestList(RepairerSuggestionRequest request) {
+        String type = getRepairerSuggestionTypeValidated(request.getType());
+
+        Long userId = request.getUserId();
+        UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(userId, true).get();
+        Long userAddressId = userAddress.getId();
+
+        Repairer repairer = repairerDAO.findByUserId(userId).get();
+        Collection<com.fu.flix.entity.Service> services = repairer.getServices();
+        List<Long> serviceIds = services.stream()
+                .map(com.fu.flix.entity.Service::getId)
+                .collect(Collectors.toList());
+
+        List<IRequestingDTO> iRequestingDTOS;
+        if (SUGGESTED.name().equals(type)) {
+            String districtId = userAddressDAO.findDistrictIdByUserAddressId(userAddressId);
+            iRequestingDTOS = repairRequestDAO.findPendingRequestByDistrict(serviceIds, districtId);
+        } else {
+            String cityId = userAddressDAO.findCityIdByUserAddressId(userAddressId);
+            iRequestingDTOS = repairRequestDAO.findPendingRequestByCity(serviceIds, cityId);
+        }
+
+        List<RequestingDTO> requestLists = iRequestingDTOS.stream()
+                .map(iRequestingDTO -> {
+                    RequestingDTO dto = new RequestingDTO();
+                    dto.setCustomerName(iRequestingDTO.getCustomerName());
+                    dto.setAvatar(iRequestingDTO.getAvatar());
+                    dto.setServiceName(iRequestingDTO.getServiceName());
+                    dto.setExpectFixingTime(DateFormatUtil.toString(iRequestingDTO.getExpectFixingTime(), DATE_TIME_PATTERN));
+                    dto.setAddress(addressService.getAddressFormatted(iRequestingDTO.getAddressId()));
+                    dto.setDescription(iRequestingDTO.getDescription());
+                    dto.setRequestCode(iRequestingDTO.getRequestCode());
+                    dto.setIconImage(iRequestingDTO.getIconImage());
+                    dto.setCreatedAt(iRequestingDTO.getCreatedAt());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        RepairerSuggestionResponse response = new RepairerSuggestionResponse();
+        response.setRequestLists(requestLists);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getRepairerSuggestionTypeValidated(String type) {
+        for (RepairerSuggestionType t : RepairerSuggestionType.values()) {
+            if (t.name().equals(type)) {
+                return type;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_REPAIRER_SUGGESTION_TYPE);
     }
 }

@@ -46,4 +46,9 @@ public class RepairerController {
     public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(@RequestBody ConfirmInvoicePaidRequest request) {
         return repairerService.confirmInvoicePaid(request);
     }
+
+    @PutMapping("request/confirmFixing")
+    public ResponseEntity<ConfirmFixingResponse> confirmFixing(@RequestBody ConfirmFixingRequest request) {
+        return repairerService.confirmFixing(request);
+    }
 }

@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserAddressDAO extends JpaRepository<UserAddress, Long> {
+    void deleteAllByUserId(Long userId);
+
     Optional<UserAddress> findByUserIdAndIsMainAddressAndDeletedAtIsNull(Long userId, boolean isMainAddress);
 
     List<UserAddress> findByUserIdAndDeletedAtIsNull(Long userId);

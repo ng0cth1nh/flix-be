@@ -68,9 +68,14 @@ public class CategoryServiceImpl implements CategoryService {
 
         List<SearchServiceDTO> searchServiceDTOS = services.stream()
                 .map(service -> {
+                    Image icon = imageDAO.findById(service.getIconId()).get();
+                    Image image = imageDAO.findById(service.getImageId()).get();
+
                     SearchServiceDTO dto = new SearchServiceDTO();
                     dto.setServiceId(service.getId());
                     dto.setServiceName(service.getName());
+                    dto.setIcon(icon.getUrl());
+                    dto.setImage(image.getUrl());
                     return dto;
                 }).collect(Collectors.toList());
 

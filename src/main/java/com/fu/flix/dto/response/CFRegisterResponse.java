@@ -6,4 +6,5 @@ import lombok.Data;
 public class CFRegisterResponse {
     private String accessToken;
     private String refreshToken;
+    private String message;
 }

@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface RepairerDAO extends JpaRepository<Repairer, Long> {
     Optional<Repairer> findByUserId(Long userId);
+    void deleteByUserId(Long userId);
 }

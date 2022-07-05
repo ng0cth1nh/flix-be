@@ -55,8 +55,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final RedisDAO redisDAO;
     private final SmsService smsService;
     private final CommuneDAO communeDAO;
-    private final DistrictDAO districtDAO;
-    private final CityDAO cityDAO;
     private final UserAddressDAO userAddressDAO;
     private final PasswordEncoder passwordEncoder;
     private final CloudStorageService cloudStorageService;
@@ -72,8 +70,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               RedisDAO redisDAO,
                               SmsService smsService,
                               CommuneDAO communeDAO,
-                              DistrictDAO districtDAO,
-                              CityDAO cityDAO,
                               UserAddressDAO userAddressDAO,
                               PasswordEncoder passwordEncoder,
                               CloudStorageService cloudStorageService,
@@ -87,8 +83,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.redisDAO = redisDAO;
         this.smsService = smsService;
         this.communeDAO = communeDAO;
-        this.districtDAO = districtDAO;
-        this.cityDAO = cityDAO;
         this.userAddressDAO = userAddressDAO;
         this.passwordEncoder = passwordEncoder;
         this.cloudStorageService = cloudStorageService;
@@ -188,7 +182,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         User user = buildUser(request, request.getAvatar());
         userDAO.save(user);
 
-        String roleType = request.getRoleType().name();
+        String roleType = request.getRoleType();
         addRoleToUser(user.getUsername(), roleType);
 
         if (ROLE_PENDING_REPAIRER.equals(RoleType.valueOf(roleType))) {
@@ -207,6 +201,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         CFRegisterResponse response = new CFRegisterResponse();
         response.setAccessToken(accessToken);
         response.setRefreshToken(refreshToken);
+        response.setMessage(CONFIRM_REGISTER_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -225,7 +220,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     private void validateRegisterInput(CFRegisterRequest request) {
-        if (!isCreatableAccount(request.getRoleType())) {
+        if (!isRoleTypeValid(request.getRoleType())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_ROLE_TYPE);
         } else if (isNotValidOTP(request, OTPType.REGISTER)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
@@ -235,10 +230,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
         } else if (!InputValidation.isPasswordValid(request.getPassword())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PASSWORD);
-        } else if (cityDAO.findById(request.getCityId()).isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_CITY);
-        } else if (districtDAO.findById(request.getDistrictId()).isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_DISTRICT);
         } else if (communeDAO.findById(request.getCommuneId()).isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
         } else if (!InputValidation.isFullNameValid(request.getFullName())) {
@@ -246,8 +237,17 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         }
     }
 
-    private boolean isCreatableAccount(RoleType roleType) {
-        return ROLE_PENDING_REPAIRER.equals(roleType) || ROLE_CUSTOMER.equals(roleType);
+    private boolean isRoleTypeValid(String roleType) {
+        for (RoleType t : RoleType.values()) {
+            if (t.name().equals(roleType) && isCreatableAccount(roleType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isCreatableAccount(String roleType) {
+        return ROLE_PENDING_REPAIRER.name().equals(roleType) || ROLE_CUSTOMER.name().equals(roleType);
     }
 
     private String getToken(User user, TokenType tokenType) {

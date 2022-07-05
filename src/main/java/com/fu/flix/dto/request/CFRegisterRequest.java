@@ -13,9 +13,7 @@ public class CFRegisterRequest extends OTPRequest {
     private MultipartFile avatar;
     private String fullName;
     private String password;
-    private String cityId;
-    private String districtId;
     private String communeId;
     private String streetAddress;
-    private RoleType roleType;
+    private String roleType;
 }

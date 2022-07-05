@@ -1,5 +1,6 @@
 package com.fu.flix.util;
 
+import java.text.Normalizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,8 +41,15 @@ public class InputValidation {
         if (fullName == null) {
             return false;
         }
+        fullName = removeAccent(fullName);
         Pattern pattern = Pattern.compile(FULL_NAME, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(fullName);
         return matcher.matches();
+    }
+
+    public static String removeAccent(String s) {
+        String temp = Normalizer.normalize(s, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(temp).replaceAll("");
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -127,4 +128,93 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "AND rr.service_id in (:serviceIds) " +
             "AND ct.id = :cityId", nativeQuery = true)
     List<IRequestingDTO> findPendingRequestByCity(List<Long> serviceIds, String cityId);
+
+    @Query(value = "SELECT customer.full_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime," +
+            " rr.address_id as addressId, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
+            "FROM repair_requests rr " +
+            "JOIN user_addresses ua " +
+            "ON rr.address_id = ua.id " +
+            "JOIN communes c " +
+            "ON ua.commune_id = c.id " +
+            "JOIN users customer " +
+            "ON customer.id = rr.user_id " +
+            "JOIN images avatar " +
+            "ON avatar.id = customer.avatar " +
+            "JOIN services sv " +
+            "ON sv.id = rr.service_id " +
+            "JOIN  images icon " +
+            "ON icon.id = sv.icon_id " +
+            "WHERE rr.status_id = 'PE' " +
+            "AND rr.service_id in (:serviceIds) " +
+            "AND c.id = :communeId", nativeQuery = true)
+    List<IRequestingDTO> findPendingRequestByCommune(List<Long> serviceIds, String communeId);
+
+    @Query(value = "SELECT customer.full_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime," +
+            " rr.address_id as addressId, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
+            "FROM repair_requests rr " +
+            "JOIN user_addresses ua " +
+            "ON rr.address_id = ua.id " +
+            "JOIN communes c " +
+            "ON ua.commune_id = c.id " +
+            "JOIN users customer " +
+            "ON customer.id = rr.user_id " +
+            "JOIN images avatar " +
+            "ON avatar.id = customer.avatar " +
+            "JOIN services sv " +
+            "ON sv.id = rr.service_id " +
+            "JOIN  images icon " +
+            "ON icon.id = sv.icon_id " +
+            "WHERE rr.status_id = 'PE' " +
+            "AND rr.service_id in (:serviceIds) " +
+            "AND c.id = :communeId " +
+            "AND rr.expect_start_fixing_at >= :start AND rr.expect_start_fixing_at <= :end", nativeQuery = true)
+    List<IRequestingDTO> filterPendingRequestByCommune(List<Long> serviceIds, String communeId, LocalDateTime start, LocalDateTime end);
+
+    @Query(value = "SELECT customer.full_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime," +
+            " rr.address_id as addressId, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
+            "FROM repair_requests rr " +
+            "JOIN user_addresses ua " +
+            "ON rr.address_id = ua.id " +
+            "JOIN communes c " +
+            "ON ua.commune_id = c.id " +
+            "JOIN districts d " +
+            "ON c.district_id = d.id " +
+            "JOIN users customer " +
+            "ON customer.id = rr.user_id " +
+            "JOIN images avatar " +
+            "ON avatar.id = customer.avatar " +
+            "JOIN services sv " +
+            "ON sv.id = rr.service_id " +
+            "JOIN  images icon " +
+            "ON icon.id = sv.icon_id " +
+            "JOIN cities ct " +
+            "ON d.city_id = ct.id " +
+            "WHERE rr.status_id = 'PE' " +
+            "AND rr.service_id in (:serviceIds) " +
+            "AND ct.id = :cityId " +
+            "AND rr.expect_start_fixing_at >= :start AND rr.expect_start_fixing_at <= :end", nativeQuery = true)
+    List<IRequestingDTO> filterPendingRequestByCity(List<Long> serviceIds, String cityId, LocalDateTime start, LocalDateTime end);
+
+    @Query(value = "SELECT customer.full_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime," +
+            " rr.address_id as addressId, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
+            "FROM repair_requests rr " +
+            "JOIN user_addresses ua " +
+            "ON rr.address_id = ua.id " +
+            "JOIN communes c " +
+            "ON ua.commune_id = c.id " +
+            "JOIN districts d " +
+            "ON c.district_id = d.id " +
+            "JOIN users customer " +
+            "ON customer.id = rr.user_id " +
+            "JOIN images avatar " +
+            "ON avatar.id = customer.avatar " +
+            "JOIN services sv " +
+            "ON sv.id = rr.service_id " +
+            "JOIN  images icon " +
+            "ON icon.id = sv.icon_id " +
+            "WHERE rr.status_id = 'PE' " +
+            "AND rr.service_id in (:serviceIds) " +
+            "AND district_id = :districtId " +
+            "AND rr.expect_start_fixing_at >= :start AND rr.expect_start_fixing_at <= :end", nativeQuery = true)
+    List<IRequestingDTO> filterPendingRequestByDistrict(List<Long> serviceIds, String districtId, LocalDateTime start, LocalDateTime end);
 }

@@ -8,6 +8,6 @@ import java.util.List;
 
 @Setter
 @Getter
-public class RepairerSuggestionResponse {
-    private List<RequestingDTO> requestLists;
+public class RequestingSuggestionResponse {
+    private List<RequestingDTO> requestList;
 }

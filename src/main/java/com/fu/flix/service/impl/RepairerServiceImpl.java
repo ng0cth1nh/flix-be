@@ -1,10 +1,8 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.*;
 import com.fu.flix.constant.enums.PaymentMethod;
-import com.fu.flix.constant.enums.RepairerSuggestionType;
-import com.fu.flix.constant.enums.RoleType;
-import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
@@ -21,7 +19,10 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +49,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final AddressService addressService;
     private final VoucherService voucherService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private final String DATE_PATTERN = "dd-MM-yyyy";
 
     public RepairerServiceImpl(RepairerDAO repairerDAO,
                                RepairRequestDAO repairRequestDAO,
@@ -350,7 +352,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<RepairerSuggestionResponse> getSuggestionRequestList(RepairerSuggestionRequest request) {
+    public ResponseEntity<RequestingSuggestionResponse> getSuggestionRequestList(RequestingSuggestionRequest request) {
         String type = getRepairerSuggestionTypeValidated(request.getType());
 
         Long userId = request.getUserId();
@@ -372,7 +374,69 @@ public class RepairerServiceImpl implements RepairerService {
             iRequestingDTOS = repairRequestDAO.findPendingRequestByCity(serviceIds, cityId);
         }
 
-        List<RequestingDTO> requestLists = iRequestingDTOS.stream()
+        List<RequestingDTO> requestLists = getRequestList(iRequestingDTOS);
+
+        RequestingSuggestionResponse response = new RequestingSuggestionResponse();
+        response.setRequestList(requestLists);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getRepairerSuggestionTypeValidated(String type) {
+        for (RepairerSuggestionType t : RepairerSuggestionType.values()) {
+            if (t.name().equals(type)) {
+                return type;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_REPAIRER_SUGGESTION_TYPE);
+    }
+
+    @Override
+    public ResponseEntity<RequestingFilterResponse> getFilterRequestList(RequestingFilterRequest request) {
+        List<Long> serviceIds = request.getServiceIds();
+        if (serviceIds == null || serviceIds.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_IDS_ARE_REQUIRED);
+        }
+
+        LocalDateTime start = getFilterDateValidated(request.getStartDate()).atTime(LocalTime.MIN);
+        LocalDateTime end = getFilterDateValidated(request.getEndDate()).atTime(LocalTime.MAX);
+
+        String locationType = getLocationTypeValidated(request.getLocationType());
+        String locationId = request.getLocationId();
+        List<IRequestingDTO> iRequestingDTOS;
+        switch (LocationType.valueOf(locationType)) {
+            case CITY:
+                iRequestingDTOS = repairRequestDAO.filterPendingRequestByCity(serviceIds, locationId, start, end);
+                break;
+            case DISTRICT:
+                iRequestingDTOS = repairRequestDAO.filterPendingRequestByDistrict(serviceIds, locationId, start, end);
+                break;
+            default:
+                iRequestingDTOS = repairRequestDAO.filterPendingRequestByCommune(serviceIds, locationId, start, end);
+                break;
+        }
+
+        List<RequestingDTO> requestLists = getRequestList(iRequestingDTOS);
+        RequestingFilterResponse response = new RequestingFilterResponse();
+        response.setRequestList(requestLists);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private LocalDate getFilterDateValidated(String strDate) {
+        if (strDate == null) {
+            throw new GeneralException(HttpStatus.GONE, START_DATE_AND_END_DATE_ARE_REQUIRED);
+        }
+
+        try {
+            return DateFormatUtil.getLocalDate(strDate, DATE_PATTERN);
+        } catch (DateTimeParseException e) {
+            throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_FORMAT);
+        }
+    }
+
+    private List<RequestingDTO> getRequestList(List<IRequestingDTO> iRequestingDTOS) {
+        return iRequestingDTOS.stream()
                 .map(iRequestingDTO -> {
                     RequestingDTO dto = new RequestingDTO();
                     dto.setCustomerName(iRequestingDTO.getCustomerName());
@@ -386,19 +450,14 @@ public class RepairerServiceImpl implements RepairerService {
                     dto.setCreatedAt(iRequestingDTO.getCreatedAt());
                     return dto;
                 }).collect(Collectors.toList());
-
-        RepairerSuggestionResponse response = new RepairerSuggestionResponse();
-        response.setRequestLists(requestLists);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private String getRepairerSuggestionTypeValidated(String type) {
-        for (RepairerSuggestionType t : RepairerSuggestionType.values()) {
+    private String getLocationTypeValidated(String type) {
+        for (LocationType t : LocationType.values()) {
             if (t.name().equals(type)) {
                 return type;
             }
         }
-        throw new GeneralException(HttpStatus.GONE, INVALID_REPAIRER_SUGGESTION_TYPE);
+        throw new GeneralException(HttpStatus.GONE, INVALID_LOCATION_TYPE);
     }
 }

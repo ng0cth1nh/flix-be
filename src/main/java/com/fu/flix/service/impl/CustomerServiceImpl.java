@@ -614,8 +614,8 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request) {
         String fullName = request.getFullName();
-        if (fullName == null || fullName.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, FULL_NAME_IS_REQUIRED);
+        if (!InputValidation.isFullNameValid(fullName)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         }
 
         String email = request.getEmail();

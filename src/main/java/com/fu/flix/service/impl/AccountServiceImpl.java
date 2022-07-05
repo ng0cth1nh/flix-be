@@ -241,6 +241,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_DISTRICT);
         } else if (communeDAO.findById(request.getCommuneId()).isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        } else if (!InputValidation.isFullNameValid(request.getFullName())) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         }
     }
 

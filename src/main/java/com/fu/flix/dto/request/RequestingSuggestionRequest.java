@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RepairerSuggestionRequest extends DataRequest{
+public class RequestingSuggestionRequest extends DataRequest{
     private String type;
 }

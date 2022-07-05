@@ -19,6 +19,8 @@ public interface RepairerService {
 
     ResponseEntity<ConfirmFixingResponse> confirmFixing(ConfirmFixingRequest request);
 
-    ResponseEntity<RepairerSuggestionResponse> getSuggestionRequestList(RepairerSuggestionRequest request);
+    ResponseEntity<RequestingSuggestionResponse> getSuggestionRequestList(RequestingSuggestionRequest request);
+
+    ResponseEntity<RequestingFilterResponse> getFilterRequestList(RequestingFilterRequest request);
 
 }

@@ -53,7 +53,12 @@ public class RepairerController {
     }
 
     @GetMapping("request/list/suggestion")
-    public ResponseEntity<RepairerSuggestionResponse> getSuggestionRequestList(RepairerSuggestionRequest request) {
+    public ResponseEntity<RequestingSuggestionResponse> getSuggestionRequestList(RequestingSuggestionRequest request) {
         return repairerService.getSuggestionRequestList(request);
+    }
+
+    @GetMapping("request/list/filter")
+    public ResponseEntity<RequestingFilterResponse> getFilterRequestList(RequestingFilterRequest request) {
+        return repairerService.getFilterRequestList(request);
     }
 }

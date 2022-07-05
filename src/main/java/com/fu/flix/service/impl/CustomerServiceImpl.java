@@ -623,12 +623,7 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, INVALID_EMAIL);
         }
 
-        LocalDate dob;
-        try {
-            dob = DateFormatUtil.getLocalDate(request.getDateOfBirth(), DATE_PATTERN);
-        } catch (DateTimeParseException e) {
-            throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_FORMAT);
-        }
+        LocalDate dob = getDateOfBirthValidated(request.getDateOfBirth());
 
         User user = validatorService.getUserValidated(request.getUsername());
         user.setFullName(fullName);
@@ -640,6 +635,18 @@ public class CustomerServiceImpl implements CustomerService {
         response.setMessage(UPDATED_PROFILE_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private LocalDate getDateOfBirthValidated(String strDob) {
+        if (strDob == null) {
+            return null;
+        }
+
+        try {
+            return DateFormatUtil.getLocalDate(strDob, DATE_PATTERN);
+        } catch (DateTimeParseException e) {
+            throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_FORMAT);
+        }
     }
 
     @Override

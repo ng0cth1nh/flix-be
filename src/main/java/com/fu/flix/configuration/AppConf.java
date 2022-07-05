@@ -3,12 +3,14 @@ package com.fu.flix.configuration;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @Configuration
 @EnableSwagger2
 @ConfigurationProperties(prefix = "app")
 @Data
+@Component
 public class AppConf {
     private String secretKey;
     private Long lifeTimeToke;

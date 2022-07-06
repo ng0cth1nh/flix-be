@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.ea.async.Async;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -33,6 +35,7 @@ import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.OTPType.FORGOT_PASSWORD;
@@ -269,7 +272,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         ResponseEntity<CFRegisterResponse> responseEntity = underTest.confirmRegister(request);
         CFRegisterResponse response = responseEntity.getBody();
 
@@ -279,7 +282,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_wrong_role_type_and_otp_is_null() throws IOException {
+    public void test_confirm_otp_request_when_wrong_role_type_and_otp_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -307,7 +310,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -315,7 +318,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_role_type_is_empty_and_otp_is_null() throws IOException {
+    public void test_confirm_otp_request_when_role_type_is_empty_and_otp_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -343,7 +346,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -351,7 +354,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_role_type_is_null_and_otp_is_null() throws IOException {
+    public void test_confirm_otp_request_when_role_type_is_null_and_otp_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -378,7 +381,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -386,7 +389,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_street_address_is_null() throws IOException {
+    public void test_confirm_otp_request_when_street_address_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -416,7 +419,7 @@ class AccountServiceImplTest {
         otpInfo.setOtp(otp);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -424,7 +427,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_street_address_is_empty() throws IOException {
+    public void test_confirm_otp_request_when_street_address_is_empty() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -456,7 +459,7 @@ class AccountServiceImplTest {
         otpInfo.setOtp(otp);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -464,7 +467,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_commune_is_null() throws IOException {
+    public void test_confirm_otp_request_when_commune_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -494,7 +497,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -502,7 +505,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_commune_is_empty() throws IOException {
+    public void test_confirm_otp_request_when_commune_is_empty() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -532,7 +535,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -540,7 +543,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_commune_is_abcde() throws IOException {
+    public void test_confirm_otp_request_when_commune_is_abcde() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -570,7 +573,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -578,7 +581,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_commune_is_abc05() throws IOException {
+    public void test_confirm_otp_request_when_commune_is_abc05() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -608,7 +611,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -616,7 +619,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_commune_is_0() throws IOException {
+    public void test_confirm_otp_request_when_commune_is_0() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -646,7 +649,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -685,7 +688,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         ResponseEntity<CFRegisterResponse> responseEntity = underTest.confirmRegister(request);
         CFRegisterResponse response = responseEntity.getBody();
 
@@ -707,7 +710,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_password_is_123() throws IOException {
+    public void test_confirm_otp_request_when_password_is_123() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -738,7 +741,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -777,7 +780,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         ResponseEntity<CFRegisterResponse> responseEntity = underTest.confirmRegister(request);
         CFRegisterResponse response = responseEntity.getBody();
 
@@ -787,7 +790,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_password_have_white_space() throws IOException {
+    public void test_confirm_otp_request_when_password_have_white_space() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -818,7 +821,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -826,7 +829,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_when_password_length_greater_than_10() throws IOException {
+    public void test_confirm_otp_request_when_password_length_greater_than_10() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -857,7 +860,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -865,7 +868,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_password_is_abcdefgh() throws IOException {
+    public void test_confirm_otp_request_fail_when_password_is_abcdefgh() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -896,7 +899,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -904,7 +907,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_password_is_12345678() throws IOException {
+    public void test_confirm_otp_request_fail_when_password_is_12345678() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -935,7 +938,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -943,7 +946,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_password_have_special_character() throws IOException {
+    public void test_confirm_otp_request_fail_when_password_have_special_character() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -974,7 +977,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -982,7 +985,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_password_is_empty() throws IOException {
+    public void test_confirm_otp_request_fail_when_password_is_empty() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1013,7 +1016,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -1021,7 +1024,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_password_is_null() throws IOException {
+    public void test_confirm_otp_request_fail_when_password_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1051,7 +1054,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -1059,7 +1062,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_full_name_contain_number() throws IOException {
+    public void test_confirm_otp_request_fail_when_full_name_contain_number() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1090,7 +1093,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -1098,7 +1101,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_full_name_is_empty() throws IOException {
+    public void test_confirm_otp_request_fail_when_full_name_is_empty() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1129,7 +1132,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -1137,7 +1140,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_full_name_is_null() throws IOException {
+    public void test_confirm_otp_request_fail_when_full_name_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1167,7 +1170,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -1175,7 +1178,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_full_name_contain_number_and_special_character() throws IOException {
+    public void test_confirm_otp_request_fail_when_full_name_contain_number_and_special_character() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1206,7 +1209,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -1240,7 +1243,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         ResponseEntity<CFRegisterResponse> responseEntity = underTest.confirmRegister(request);
         CFRegisterResponse response = responseEntity.getBody();
 
@@ -1250,7 +1253,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_avatar_do_not_have_file_extension() throws IOException {
+    public void test_confirm_otp_request_fail_when_avatar_do_not_have_file_extension() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1281,7 +1284,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -1289,7 +1292,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_avatar_file_extension_is_ptt() throws IOException {
+    public void test_confirm_otp_request_fail_when_avatar_file_extension_is_ptt() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1320,7 +1323,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -1328,7 +1331,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_avatar_file_extension_is_txt() throws IOException {
+    public void test_confirm_otp_request_fail_when_avatar_file_extension_is_txt() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1359,7 +1362,7 @@ class AccountServiceImplTest {
         otpInfo.setOtpType(REGISTER);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
 
         // then
@@ -1451,7 +1454,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_forgot_password_success() throws JsonProcessingException {
+    public void test_confirm_forgot_password_success() {
         // given
         CFForgotPassRequest request = new CFForgotPassRequest();
         String phone = "0585943270";
@@ -1465,7 +1468,7 @@ class AccountServiceImplTest {
         otpInfo.setOtp(otp);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         ResponseEntity<CFForgotPassResponse> responseEntity = underTest.confirmForgotPassword(request);
         CFForgotPassResponse response = responseEntity.getBody();
         String accessToken = response.getAccessToken();
@@ -1594,7 +1597,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_forgot_password_fail_when_otp_is_wrong() throws JsonProcessingException {
+    public void test_confirm_forgot_password_fail_when_otp_is_wrong() {
         // given
         CFForgotPassRequest request = new CFForgotPassRequest();
         String phone = "0585943270";
@@ -1608,11 +1611,21 @@ class AccountServiceImplTest {
         otpInfo.setOtp(123456);
 
         // when
-        redisDAO.saveOTP(otpInfo);
+        awaitSaveOTP(otpInfo);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmForgotPassword(request));
 
         // then
         Assertions.assertEquals(INVALID_OTP, exception.getMessage());
     }
 
+    private void awaitSaveOTP(OTPInfo otpInfo) {
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            try {
+                redisDAO.saveOTP(otpInfo);
+            } catch (JsonProcessingException e) {
+                throw new GeneralException(HttpStatus.INTERNAL_SERVER_ERROR, SAVE_OTP_FAILED);
+            }
+        });
+        Async.await(future);
+    }
 }

@@ -6,6 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class OTPRequest {
-    private int otp;
+    private Integer otp;
     private String phone;
 }

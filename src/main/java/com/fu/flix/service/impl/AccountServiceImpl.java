@@ -230,11 +230,25 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
         } else if (!InputValidation.isPasswordValid(request.getPassword())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PASSWORD);
-        } else if (communeDAO.findById(request.getCommuneId()).isEmpty()) {
+        } else if (isNotValidCommune(request.getCommuneId())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
         } else if (!InputValidation.isFullNameValid(request.getFullName())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
+        } else if (isNotValidStreetAddress(request.getStreetAddress())) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_STREET_ADDRESS);
         }
+    }
+
+    private boolean isNotValidCommune(String communeId) {
+        if (communeId == null) {
+            return true;
+        }
+        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
+        return optionalCommune.isEmpty();
+    }
+
+    private boolean isNotValidStreetAddress(String streetAddress) {
+        return streetAddress == null || streetAddress.trim().isEmpty();
     }
 
     private boolean isRoleTypeValid(String roleType) {
@@ -355,10 +369,12 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     @Override
     public ResponseEntity<CFForgotPassResponse> confirmForgotPassword(CFForgotPassRequest request) {
         String phone = request.getPhone();
+        if (!InputValidation.isPhoneValid(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
+        }
+
         if (isNotValidOTP(request, OTPType.FORGOT_PASSWORD)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
-        } else if (!InputValidation.isPhoneValid(phone)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
 
         User user = validatorService.getUserValidated(phone);

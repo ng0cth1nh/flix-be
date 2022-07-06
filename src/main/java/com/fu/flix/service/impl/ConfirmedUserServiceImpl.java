@@ -1,5 +1,6 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.CommentType;
 import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.constant.enums.RequestStatus;
@@ -32,16 +33,18 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final RepairRequestDAO repairRequestDAO;
     private final ValidatorService validatorService;
-    private final int MAX_COMMENT_LENGTH = 250;
+    private final AppConf appConf;
 
     public ConfirmedUserServiceImpl(CommentDAO commentDAO,
                                     RepairRequestMatchingDAO repairRequestMatchingDAO,
                                     RepairRequestDAO repairRequestDAO,
-                                    ValidatorService validatorService) {
+                                    ValidatorService validatorService,
+                                    AppConf appConf) {
         this.commentDAO = commentDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.validatorService = validatorService;
+        this.appConf = appConf;
     }
 
     @Override
@@ -54,7 +57,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         String commentContent = request.getComment() == null
                 ? Strings.EMPTY
                 : request.getComment().trim();
-        if (commentContent.length() > MAX_COMMENT_LENGTH) {
+        if (commentContent.length() > this.appConf.getDescriptionMaxLength()) {
             throw new GeneralException(HttpStatus.GONE, EXCEEDED_COMMENT_LENGTH_ALLOWED);
         }
 

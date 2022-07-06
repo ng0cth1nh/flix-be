@@ -44,7 +44,6 @@ public class CustomerServiceImpl implements CustomerService {
     private final RepairRequestDAO repairRequestDAO;
     private final VoucherDAO voucherDAO;
     private final ServiceDAO serviceDAO;
-    private final PaymentMethodDAO paymentMethodDAO;
     private final InvoiceDAO invoiceDAO;
     private final UserAddressDAO userAddressDAO;
     private final CommuneDAO communeDAO;
@@ -65,7 +64,6 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerServiceImpl(RepairRequestDAO repairRequestDAO,
                                VoucherDAO voucherDAO,
                                ServiceDAO serviceDAO,
-                               PaymentMethodDAO paymentMethodDAO,
                                InvoiceDAO invoiceDAO,
                                UserAddressDAO userAddressDAO,
                                CommuneDAO communeDAO,
@@ -83,7 +81,6 @@ public class CustomerServiceImpl implements CustomerService {
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
         this.serviceDAO = serviceDAO;
-        this.paymentMethodDAO = paymentMethodDAO;
         this.invoiceDAO = invoiceDAO;
         this.userAddressDAO = userAddressDAO;
         this.communeDAO = communeDAO;
@@ -103,17 +100,20 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) {
         Long userId = request.getUserId();
-        LocalDateTime now = LocalDateTime.now();
-        Long voucherId = request.getVoucherId();
-        User user = validatorService.getUserValidated(userId);
-
         if (isHaveAnyPaymentWaitingRequest(userId)) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CREATE_NEW_REQUEST_WHEN_HAVE_OTHER_PAYMENT_WAITING_REQUEST);
         }
 
-        String paymentMethodID = request.getPaymentMethodId();
-        Collection<UserVoucher> userVouchers = user.getUserVouchers();
+        String description = request.getDescription();
+        if (description != null && description.length() > this.appConf.getDescriptionMaxLength()) {
+            throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
+        }
 
+        User user = validatorService.getUserValidated(userId);
+        Collection<UserVoucher> userVouchers = user.getUserVouchers();
+        LocalDateTime now = LocalDateTime.now();
+        Long voucherId = request.getVoucherId();
+        String paymentMethodID = getPaymentMethodIdValidated(request.getPaymentMethodId());
         if (voucherId != null) {
             UsingVoucherDTO usingVoucherDTO = new UsingVoucherDTO(userVouchers, voucherId, request.getServiceId(), paymentMethodID);
             useInspectionVoucher(usingVoucherDTO, now);
@@ -125,10 +125,10 @@ public class CustomerServiceImpl implements CustomerService {
         repairRequest.setRequestCode(RandomUtil.generateCode());
         repairRequest.setUserId(userId);
         repairRequest.setServiceId(request.getServiceId());
-        repairRequest.setPaymentMethodId(getPaymentMethodIdValidated(paymentMethodID));
+        repairRequest.setPaymentMethodId(paymentMethodID);
         repairRequest.setStatusId(PENDING.getId());
         repairRequest.setExpectStartFixingAt(expectFixingDay);
-        repairRequest.setDescription(request.getDescription());
+        repairRequest.setDescription(description);
         repairRequest.setVoucherId(voucherId);
         repairRequest.setAddressId(getAddressIdValidated(request.getAddressId(), userId));
         repairRequest.setVat(this.appConf.getVat());
@@ -148,6 +148,15 @@ public class CustomerServiceImpl implements CustomerService {
     private boolean isHaveAnyPaymentWaitingRequest(Long userId) {
         List<RepairRequest> repairRequests = repairRequestDAO.findByUserIdAndStatusId(userId, PAYMENT_WAITING.getId());
         return repairRequests.size() > 0;
+    }
+
+    private String getPaymentMethodIdValidated(String id) {
+        for (com.fu.flix.constant.enums.PaymentMethod pm : com.fu.flix.constant.enums.PaymentMethod.values()) {
+            if (pm.getId().equals(id)) {
+                return id;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_PAYMENT_METHOD);
     }
 
     private Long getAddressIdValidated(Long addressId, Long userId) {
@@ -175,19 +184,22 @@ public class CustomerServiceImpl implements CustomerService {
 
     private void useInspectionVoucher(UsingVoucherDTO usingVoucherDTO, LocalDateTime now) {
         Long voucherId = usingVoucherDTO.getVoucherId();
-        UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
+        Optional<Voucher> optionalVoucher = voucherDAO.findById(voucherId);
+        if (optionalVoucher.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_VOUCHER);
+        }
+
+        Voucher voucher = optionalVoucher.get();
+        if (!isMatchPaymentMethod(usingVoucherDTO, voucher)) {
+            throw new GeneralException(HttpStatus.GONE, PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER);
+        }
+
         Long serviceId = usingVoucherDTO.getServiceId();
         if (serviceId == null) {
             throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
         }
 
         Optional<com.fu.flix.entity.Service> optionalService = serviceDAO.findById(serviceId);
-        Voucher voucher = voucherDAO.findById(voucherId).get();
-
-        if (!isMatchPaymentMethod(usingVoucherDTO, voucher)) {
-            throw new GeneralException(HttpStatus.GONE, PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER);
-        }
-
         if (optionalService.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
         }
@@ -196,6 +208,7 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, INSPECTION_PRICE_MUST_GREATER_OR_EQUAL_VOUCHER_MIN_PRICE);
         }
 
+        UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
         if (userVoucher == null) {
             throw new GeneralException(HttpStatus.GONE, USER_NOT_HOLD_VOUCHER);
         }
@@ -230,9 +243,14 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private LocalDateTime getExpectFixingDay(RequestingRepairRequest request, LocalDateTime now) {
+        String strDateTime = request.getExpectFixingDay();
+        if (strDateTime == null) {
+            throw new GeneralException(HttpStatus.GONE, EXPECT_FIXING_DAY_IS_REQUIRED);
+        }
+
         LocalDateTime expectFixingDay;
         try {
-            expectFixingDay = DateFormatUtil.getLocalDateTime(request.getExpectFixingDay(), DATE_TIME_PATTERN);
+            expectFixingDay = DateFormatUtil.getLocalDateTime(strDateTime, DATE_TIME_PATTERN);
         } catch (DateTimeParseException e) {
             throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_TIME_FORMAT);
         }
@@ -249,18 +267,6 @@ public class CustomerServiceImpl implements CustomerService {
         long maxCreateRequestDays = 30L;
         return expectFixingDay.isBefore(now.plusHours(minCreateRequestHours))
                 || expectFixingDay.isAfter(now.plusDays(maxCreateRequestDays));
-    }
-
-    private String getPaymentMethodIdValidated(String paymentMethodId) {
-        String cashID = com.fu.flix.constant.enums.PaymentMethod.CASH.getId();
-        if (paymentMethodId == null) {
-            return cashID;
-        }
-
-        Optional<PaymentMethod> optionalPaymentMethod = paymentMethodDAO.findById(paymentMethodId);
-        return optionalPaymentMethod.isPresent()
-                ? paymentMethodId
-                : cashID;
     }
 
     @Override

@@ -25,6 +25,7 @@ public class AppConf {
     private Long minTimeFined;
     private Long fine;
     private VnPayInfo vnPayInfo;
+    private Long descriptionMaxLength;
 
     @Data
     public static class TwilioInfo {

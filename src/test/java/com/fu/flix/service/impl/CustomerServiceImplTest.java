@@ -3,47 +3,38 @@ package com.fu.flix.service.impl;
 import com.fu.flix.dao.CommentDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserAddressDAO;
-import com.fu.flix.dto.IRepairerProfileDTO;
-import com.fu.flix.dto.ISuccessfulRepairDTO;
-import com.fu.flix.dto.request.CancelRequestForCustomerRequest;
-import com.fu.flix.dto.request.MainAddressRequest;
+import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.RequestingRepairRequest;
-import com.fu.flix.dto.request.UserAddressRequest;
-import com.fu.flix.dto.response.CancelRequestForCustomerResponse;
-import com.fu.flix.dto.response.MainAddressResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
-import com.fu.flix.dto.response.UserAddressResponse;
 import com.fu.flix.dto.security.UserPrincipal;
-import com.fu.flix.entity.RepairRequest;
-import com.fu.flix.entity.User;
-import com.fu.flix.entity.UserAddress;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.ValidatorService;
+import com.fu.flix.util.DateFormatUtil;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Optional;
 
-import static com.fu.flix.constant.Constant.CANCEL_REPAIR_REQUEST_SUCCESSFUL;
-import static com.fu.flix.constant.Constant.CREATE_REPAIR_REQUEST_SUCCESSFUL;
+import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.PENDING;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@Transactional
 class CustomerServiceImplTest {
 
     @Autowired
-    CustomerService customerService;
+    CustomerService underTest;
 
     @Autowired
     RepairRequestDAO repairRequestDAO;
@@ -51,141 +42,436 @@ class CustomerServiceImplTest {
     UserAddressDAO userAddressDAO;
     @Autowired
     ValidatorService validatorService;
+    String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @Autowired
     CommentDAO commentDAO;
 
-
-    //    @Test
-    void test_get_user_address() {
+    @Test
+    public void test_create_fixing_request_success() {
         // given
-        String phone = "0865390037";
+        Long serviceId = 1L;
+        Long addressId = 7L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
 
-        // when
-        User user = validatorService.getUserValidated(phone);
-        Optional<UserAddress> optionalUserAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(user.getId(), true);
-        UserAddress userAddress = optionalUserAddress.get();
-
-        // then
-        Assertions.assertEquals(phone, userAddress.getPhone());
-        Assertions.assertEquals("00001", userAddress.getCommuneId());
-    }
-
-    //    @Test
-    void test_get_main_address() {
-        // given
-        Long id = 36L;
-        String phone = "0865390037";
-        MainAddressRequest request = new MainAddressRequest();
-        setContextUsername(id, phone);
-
-        // when
-        ResponseEntity<MainAddressResponse> responseEntity = customerService.getMainAddress(request);
-        MainAddressResponse mainAddressResponse = responseEntity.getBody();
-
-        // then
-        Assertions.assertEquals(phone, mainAddressResponse.getPhone());
-        Assertions.assertEquals("Sơn Tùng MTP", mainAddressResponse.getCustomerName());
-        Assertions.assertEquals("68 Hoàng Hoa Thám, Phường Phúc Xá, Quận Ba Đình, Thành phố Hà Nội", mainAddressResponse.getAddressName());
-    }
-
-    //    @Test
-    void test_get_user_addresses() {
-        // given
-        Long id = 36L;
-        String phone = "0865390039";
-        UserAddressRequest request = new UserAddressRequest();
-        setContextUsername(id, phone);
-
-        // when
-        ResponseEntity<UserAddressResponse> responseEntity = customerService.getCustomerAddresses(request);
-        UserAddressResponse userAddressResponse = responseEntity.getBody();
-
-        // then
-        Assertions.assertEquals(1, userAddressResponse.getAddresses().size());
-    }
-
-    //        @Test
-    void test_create_fixing_request_response_success() {
-
-        // given
-        Long id = 36L;
         RequestingRepairRequest request = new RequestingRepairRequest();
-        request.setServiceId(1L);
-        request.setAddressId(7L);
-        request.setExpectFixingDay("2022-06-20 13:00:00");
-        request.setDescription("Thợ phải đẹp trai");
-        request.setVoucherId(1L);
-        request.setPaymentMethodId("C");
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(id, "0865390037");
+        setContextUsername(36L, "0865390037");
 
         // when
-        ResponseEntity<RequestingRepairResponse> responseEntity = customerService.createFixingRequest(request);
-        RequestingRepairResponse response = responseEntity.getBody();
+        RequestingRepairResponse response = underTest.createFixingRequest(request).getBody();
 
         // then
         Assertions.assertEquals(CREATE_REPAIR_REQUEST_SUCCESSFUL, response.getMessage());
         Assertions.assertEquals(PENDING.name(), response.getStatus());
     }
 
-    //    @Test
-    void test_cancel_repair_request_success() {
+    @Test
+    public void test_create_fixing_request_fail_when_wrong_address_id() {
         // given
-        Long id = 36L;
-        String requestCode = "87a4c2eb-5413-4237-82b6-9f261c3d1825";
-        CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
-        request.setRequestCode(requestCode);
-
-        setContextUsername(id, "0865390037");
-
-        // when
-        ResponseEntity<CancelRequestForCustomerResponse> responseEntity = customerService.cancelFixingRequest(request);
-        CancelRequestForCustomerResponse response = responseEntity.getBody();
-
-        RepairRequest repairRequest = repairRequestDAO.findByRequestCode(requestCode).get();
-
-        // then
-        Assertions.assertEquals("C", repairRequest.getStatusId());
-        Assertions.assertEquals(CANCEL_REPAIR_REQUEST_SUCCESSFUL, response.getMessage());
-
-    }
-
-
-    //    @Test
-    void test_create_row_on_repair_request_table() {
-
-        // given
-        Long id = 36L;
         Long serviceId = 1L;
-        Long addressId = 7L;
+        Long addressId = 0L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
         String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
         String paymentMethodId = "C";
 
         RequestingRepairRequest request = new RequestingRepairRequest();
         request.setServiceId(serviceId);
-        request.setAddressId(addressId);
-        request.setExpectFixingDay("2022-06-20 13:00:00");
+        request.setVoucherId(voucherId);
         request.setDescription(description);
-        request.setVoucherId(1L);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(id, "0865390037");
+        setContextUsername(36L, "0865390037");
 
         // when
-        ResponseEntity<RequestingRepairResponse> responseEntity = customerService.createFixingRequest(request);
-        RequestingRepairResponse response = responseEntity.getBody();
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
 
-        Optional<RepairRequest> optional = repairRequestDAO.findByRequestCode(response.getRequestCode());
-        RepairRequest repairRequest = optional.get();
+        // then
+        Assertions.assertEquals(INVALID_ADDRESS, exception.getMessage());
+    }
 
-        Assertions.assertEquals(36, repairRequest.getUserId());
-        Assertions.assertEquals(serviceId, repairRequest.getServiceId());
-        Assertions.assertEquals(addressId, repairRequest.getAddressId());
-        Assertions.assertEquals(LocalDateTime.of(2022, 06, 20, 13, 0, 0),
-                repairRequest.getExpectStartFixingAt());
-        Assertions.assertEquals(description, repairRequest.getDescription());
-        Assertions.assertEquals(paymentMethodId, repairRequest.getPaymentMethodId());
+    @Test
+    public void test_create_fixing_request_fail_when_address_id_is_null() {
+        // given
+        Long serviceId = 1L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(null);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(INVALID_ADDRESS, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_expect_fixing_day_is_empty() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 0L;
+        String expectFixingDay = "";
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(WRONG_LOCAL_DATE_TIME_FORMAT, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_expect_fixing_day_is_null() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 0L;
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(null);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(EXPECT_FIXING_DAY_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_payment_method_is_not_valid_for_voucher() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 7L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "V";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_success_when_description_and_voucher_are_null_and_payment_method_is_VNPAY() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 7L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String paymentMethodId = "V";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(null);
+        request.setDescription(null);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        RequestingRepairResponse response = underTest.createFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_REPAIR_REQUEST_SUCCESSFUL, response.getMessage());
+        Assertions.assertEquals(PENDING.name(), response.getStatus());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_invalid_voucher_id() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 0L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 0L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(INVALID_VOUCHER, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_invalid_payment_method_id() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 0L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "a";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PAYMENT_METHOD, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_payment_method_id_is_empty() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 0L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PAYMENT_METHOD, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_payment_method_id_is_null() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 0L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(null);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PAYMENT_METHOD, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_invalid_service_id() {
+        // given
+        Long serviceId = 0L;
+        Long addressId = 0L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(INVALID_SERVICE, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_service_id_is_null() {
+        // given
+        Long addressId = 0L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(null);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(INVALID_SERVICE, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_fixing_day_is_more_than_today_30_days() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 0L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(30L).plusSeconds(1L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_30_DAYS, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_fixing_day_is_less_than_now_plus_1_hour() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 0L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusMinutes(59), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_30_DAYS, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_description_length_is_2501() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 0L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2), DATE_TIME_PATTERN);
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription("t".repeat(2501));
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setContextUsername(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(EXCEEDED_DESCRIPTION_LENGTH_ALLOWED, exception.getMessage());
     }
 
     void setContextUsername(Long id, String phone) {
@@ -199,22 +485,4 @@ class CustomerServiceImplTest {
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 
-    //    @Test
-    void testGetRepairerProfile() {
-        // when
-        IRepairerProfileDTO iRepairerProfileDTO = commentDAO.findRepairerProfile(52L);
-
-        // then
-        Assertions.assertEquals("Thợ", iRepairerProfileDTO.getRepairerName());
-        Assertions.assertEquals(4.5, iRepairerProfileDTO.getRating());
-    }
-
-    //    @Test
-    void testGetSuccessfulRepair() {
-        // when
-        ISuccessfulRepairDTO iSuccessfulRepairDTO = commentDAO.findSuccessfulRepair(52L);
-
-        // then
-        Assertions.assertEquals(3, iSuccessfulRepairDTO.getSuccessfulRepair());
-    }
 }

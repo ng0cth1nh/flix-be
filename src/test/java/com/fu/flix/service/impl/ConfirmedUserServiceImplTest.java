@@ -200,13 +200,13 @@ class ConfirmedUserServiceImplTest {
     }
 
     @Test
-    public void test_comment_fail_when_comment_length_is_251() {
+    public void test_comment_fail_when_comment_length_is_2501() {
         // given
         String requestCode = "030722WGR4WV";
         CommentRequest request = new CommentRequest();
         request.setRequestCode(requestCode);
         request.setRating(null);
-        request.setComment("t".repeat(251));
+        request.setComment("t".repeat(2501));
         setContextUsername(48L, "0962706248");
 
         // when

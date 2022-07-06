@@ -11,6 +11,7 @@ import com.fu.flix.entity.*;
 import com.fu.flix.service.ConfirmedUserService;
 import com.fu.flix.service.ValidatorService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final RepairRequestDAO repairRequestDAO;
     private final ValidatorService validatorService;
+    private final int MAX_COMMENT_LENGTH = 250;
 
     public ConfirmedUserServiceImpl(CommentDAO commentDAO,
                                     RepairRequestMatchingDAO repairRequestMatchingDAO,
@@ -45,9 +47,15 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
     @Override
     public ResponseEntity<CommentResponse> createComment(CommentRequest request) {
         String requestCode = request.getRequestCode();
-
-        if (requestCode == null) {
+        if (requestCode == null || requestCode.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
+        String commentContent = request.getComment() == null
+                ? Strings.EMPTY
+                : request.getComment().trim();
+        if (commentContent.length() > MAX_COMMENT_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, EXCEEDED_COMMENT_LENGTH_ALLOWED);
         }
 
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
@@ -78,7 +86,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
 
         Comment comment = new Comment();
         comment.setRating(getRatingValidated(request.getRating()));
-        comment.setComment(request.getComment());
+        comment.setComment(commentContent);
         comment.setRequestCode(requestCode);
         comment.setType(commentType);
 

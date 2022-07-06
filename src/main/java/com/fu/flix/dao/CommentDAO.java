@@ -14,6 +14,8 @@ import java.util.Optional;
 @Repository
 public interface CommentDAO extends JpaRepository<Comment, Long> {
 
+    void deleteByRequestCodeAndType(String requestCode, String type);
+
     @Query(value = "SELECT * FROM comments " +
             "WHERE request_code = :requestCode " +
             "AND type = :type", nativeQuery = true)

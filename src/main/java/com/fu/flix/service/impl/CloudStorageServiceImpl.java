@@ -36,7 +36,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
 
     @Override
     public String uploadImage(MultipartFile fileStream) throws IOException {
-        if (!isImageFile(fileStream.getOriginalFilename())) {
+        if (!isImageFile(fileStream)) {
             throw new GeneralException(HttpStatus.GONE, FILE_MUST_BE_IMAGE);
         }
 
@@ -53,13 +53,21 @@ public class CloudStorageServiceImpl implements CloudStorageService {
         return blobInfo.getMediaLink();
     }
 
-    private static boolean isImageFile(String fileName) {
-        if (fileName != null && fileName.contains(".")) {
-            String[] allowedExt = {".jpg", ".jpeg", ".png", ".gif"};
-            for (String ext : allowedExt) {
-                if (fileName.endsWith(ext)) {
-                    return true;
-                }
+    private static boolean isImageFile(MultipartFile fileStream) {
+        if (fileStream != null) {
+            String fileName = fileStream.getOriginalFilename();
+            if (fileName != null && fileName.contains(".")) {
+                return isValidImageExtension(fileName);
+            }
+        }
+        return false;
+    }
+
+    private static boolean isValidImageExtension(String fileName) {
+        String[] allowedExt = {".jpg", ".jpeg", ".png", ".gif"};
+        for (String ext : allowedExt) {
+            if (fileName.endsWith(ext)) {
+                return true;
             }
         }
         return false;

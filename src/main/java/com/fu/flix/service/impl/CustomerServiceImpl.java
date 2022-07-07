@@ -467,7 +467,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         MainAddressResponse response = new MainAddressResponse();
         response.setAddressId(addressId);
-        response.setCustomerName(user.getFullName());
+        response.setCustomerName(userAddress.getName());
         response.setPhone(userAddress.getPhone());
         response.setAddressName(addressService.getAddressFormatted(addressId));
 

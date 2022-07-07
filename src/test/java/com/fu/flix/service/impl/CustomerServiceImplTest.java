@@ -5,10 +5,7 @@ import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserAddressDAO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
-import com.fu.flix.dto.response.CancelRequestForCustomerResponse;
-import com.fu.flix.dto.response.HistoryRequestForCustomerResponse;
-import com.fu.flix.dto.response.RequestingDetailForCustomerResponse;
-import com.fu.flix.dto.response.RequestingRepairResponse;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.RepairerService;
@@ -799,6 +796,22 @@ class CustomerServiceImplTest {
         Assertions.assertNull(response.getRequestCode());
         Assertions.assertNull(response.getPrice());
         Assertions.assertNull(response.getDate());
+    }
+
+    @Test
+    public void test_get_main_address_success() {
+        // given
+        MainAddressRequest request = new MainAddressRequest();
+
+        // when
+        setUserContext(36L, "0865390037");
+        MainAddressResponse response = underTest.getMainAddress(request).getBody();
+
+        // then
+        Assertions.assertEquals("Nha tho duc ba, Phường Phúc Xá, Quận Ba Đình, Thành phố Hà Nội", response.getAddressName());
+        Assertions.assertEquals("0969696969", response.getPhone());
+        Assertions.assertEquals(7L, response.getAddressId());
+        Assertions.assertEquals("Faker", response.getCustomerName());
     }
 
     void setUserContext(Long id, String phone) {

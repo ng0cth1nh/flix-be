@@ -1,6 +1,5 @@
 package com.fu.flix.service.impl;
 
-import com.fu.flix.constant.enums.CommentType;
 import com.fu.flix.dao.CommentDAO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CommentRequest;
@@ -54,7 +53,6 @@ class ConfirmedUserServiceImplTest {
 
         // then
         Assertions.assertEquals(COMMENT_SUCCESS, response.getMessage());
-        clearCustomerComment(requestCode);
     }
 
     @Test
@@ -75,7 +73,6 @@ class ConfirmedUserServiceImplTest {
 
         // then
         Assertions.assertEquals(COMMENT_SUCCESS, response.getMessage());
-        clearCustomerComment(requestCode);
     }
 
     @Test
@@ -96,11 +93,6 @@ class ConfirmedUserServiceImplTest {
 
         // then
         Assertions.assertEquals(COMMENT_SUCCESS, response.getMessage());
-        clearCustomerComment(requestCode);
-    }
-
-    private void clearCustomerComment(String requestCode) {
-        commentDAO.deleteByRequestCodeAndType(requestCode, CommentType.CUSTOMER_COMMENT.name());
     }
 
     @Test
@@ -176,7 +168,6 @@ class ConfirmedUserServiceImplTest {
 
         // then
         Assertions.assertEquals(COMMENT_SUCCESS, response.getMessage());
-        clearCustomerComment(requestCode);
     }
 
     @Test
@@ -196,7 +187,6 @@ class ConfirmedUserServiceImplTest {
 
         // then
         Assertions.assertEquals(COMMENT_SUCCESS, response.getMessage());
-        clearCustomerComment(requestCode);
     }
 
     @Test

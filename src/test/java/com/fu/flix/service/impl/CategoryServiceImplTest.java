@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 import static com.fu.flix.constant.Constant.INVALID_CATEGORY_ID;
@@ -22,6 +23,7 @@ import static com.fu.flix.constant.Constant.INVALID_KEY_WORD;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@Transactional
 class CategoryServiceImplTest {
 
     @Autowired

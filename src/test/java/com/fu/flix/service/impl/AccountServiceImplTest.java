@@ -33,7 +33,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
@@ -278,7 +277,6 @@ class AccountServiceImplTest {
 
         // then
         Assertions.assertEquals(CONFIRM_REGISTER_SUCCESS, response.getMessage());
-        cleanUser(phone);
     }
 
     @Test
@@ -694,19 +692,6 @@ class AccountServiceImplTest {
 
         // then
         Assertions.assertEquals(CONFIRM_REGISTER_SUCCESS, response.getMessage());
-        cleanUser(phone);
-    }
-
-    private void cleanUser(String phone) {
-        User user = userDAO.findByUsername(phone).get();
-        user.setRoles(new ArrayList<>());
-        userDAO.save(user);
-
-        Long userId = user.getId();
-        balanceDAO.deleteByUserId(userId);
-        userAddressDAO.deleteAllByUserId(userId);
-        repairerDAO.deleteByUserId(userId);
-        userDAO.deleteById(userId);
     }
 
     @Test
@@ -786,7 +771,6 @@ class AccountServiceImplTest {
 
         // then
         Assertions.assertEquals(CONFIRM_REGISTER_SUCCESS, response.getMessage());
-        cleanUser(phone);
     }
 
     @Test
@@ -1249,7 +1233,6 @@ class AccountServiceImplTest {
 
         // then
         Assertions.assertEquals(CONFIRM_REGISTER_SUCCESS, response.getMessage());
-        cleanUser(phone);
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.fu.flix.service.impl;
 import com.fu.flix.dao.CommentDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserAddressDAO;
+import com.fu.flix.dto.UserAddressDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
@@ -25,6 +26,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.PENDING;
@@ -812,6 +814,24 @@ class CustomerServiceImplTest {
         Assertions.assertEquals("0969696969", response.getPhone());
         Assertions.assertEquals(7L, response.getAddressId());
         Assertions.assertEquals("Faker", response.getCustomerName());
+    }
+
+    @Test
+    public void test_get_customer_addresses_success() {
+        // given
+        UserAddressRequest request = new UserAddressRequest();
+
+        // when
+        setUserContext(36L, "0865390037");
+        UserAddressResponse response = underTest.getCustomerAddresses(request).getBody();
+        List<UserAddressDTO> addresses = response.getAddresses();
+
+        // then
+        Assertions.assertNotNull(addresses);
+        Assertions.assertEquals("Nha tho duc ba, Phường Phúc Xá, Quận Ba Đình, Thành phố Hà Nội", addresses.get(0).getAddressName());
+        Assertions.assertEquals("0969696969", addresses.get(0).getPhone());
+        Assertions.assertEquals(7L, addresses.get(0).getAddressId());
+        Assertions.assertEquals("Faker", addresses.get(0).getCustomerName());
     }
 
     void setUserContext(Long id, String phone) {

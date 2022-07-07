@@ -484,7 +484,7 @@ public class CustomerServiceImpl implements CustomerService {
                     Long addressId = userAddress.getId();
                     UserAddressDTO dto = new UserAddressDTO();
                     dto.setAddressId(addressId);
-                    dto.setCustomerName(user.getFullName());
+                    dto.setCustomerName(userAddress.getName());
                     dto.setPhone(userAddress.getPhone());
                     dto.setAddressName(addressService.getAddressFormatted(addressId));
                     dto.setMainAddress(userAddress.isMainAddress());

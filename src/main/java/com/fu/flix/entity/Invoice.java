@@ -49,6 +49,9 @@ public class Invoice {
     @OneToMany(mappedBy = "invoice")
     private Collection<InvoiceAccessory> invoiceAccessories;
 
+    @OneToMany(mappedBy = "invoice")
+    private Collection<InvoiceOtherPrice> invoiceOtherPrices;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

@@ -811,7 +811,6 @@ class AccountServiceImplTest {
         // then
         Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
     }
-
     @Test
     public void test_confirm_otp_request_when_password_length_greater_than_10() {
         // given

@@ -573,6 +573,11 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<CreateAddressResponse> createCustomerAddress(CreateAddressRequest request) {
+        String fullName = request.getFullName();
+        if (!InputValidation.isNameValid(fullName)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
+        }
+
         String communeId = request.getCommuneId();
         if (communeId == null) {
             throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
@@ -599,7 +604,7 @@ public class CustomerServiceImpl implements CustomerService {
         userAddress.setUserId(request.getUserId());
         userAddress.setMainAddress(false);
         userAddress.setStreetAddress(streetAddress);
-        userAddress.setName(request.getFullName());
+        userAddress.setName(fullName);
         userAddress.setPhone(phone);
         userAddress.setCommuneId(commune.getId());
         UserAddress savedUserAddress = userAddressDAO.save(userAddress);

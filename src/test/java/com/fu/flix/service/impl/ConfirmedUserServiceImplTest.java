@@ -45,7 +45,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(comment);
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         ResponseEntity<CommentResponse> responseEntity = confirmedUserService.createComment(request);
@@ -65,7 +65,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(comment);
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         ResponseEntity<CommentResponse> responseEntity = confirmedUserService.createComment(request);
@@ -85,7 +85,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(comment);
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         ResponseEntity<CommentResponse> responseEntity = confirmedUserService.createComment(request);
@@ -105,7 +105,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(comment);
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> confirmedUserService.createComment(request));
@@ -124,7 +124,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(comment);
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> confirmedUserService.createComment(request));
@@ -142,7 +142,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(null);
         request.setComment(comment);
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> confirmedUserService.createComment(request));
@@ -160,7 +160,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(null);
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         ResponseEntity<CommentResponse> responseEntity = confirmedUserService.createComment(request);
@@ -179,7 +179,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment("");
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         ResponseEntity<CommentResponse> responseEntity = confirmedUserService.createComment(request);
@@ -197,7 +197,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(null);
         request.setComment("t".repeat(2501));
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> confirmedUserService.createComment(request));
@@ -215,7 +215,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(4);
         request.setComment(comment);
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> confirmedUserService.createComment(request));
@@ -233,7 +233,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(requestCode);
         request.setRating(4);
         request.setComment(comment);
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> confirmedUserService.createComment(request));
@@ -250,7 +250,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode(null);
         request.setRating(4);
         request.setComment(comment);
-        setContextUsername(48L, "0962706248");
+        serUserContext(48L, "0962706248");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> confirmedUserService.createComment(request));
@@ -267,7 +267,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode("030722WGR4WV");
         request.setRating(4);
         request.setComment(comment);
-        setContextUsername(36L, "0865390037");
+        serUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> confirmedUserService.createComment(request));
@@ -284,7 +284,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode("08AEFEMWQGWQ");
         request.setRating(4);
         request.setComment(comment);
-        setContextUsername(36L, "0865390037");
+        serUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> confirmedUserService.createComment(request));
@@ -301,7 +301,7 @@ class ConfirmedUserServiceImplTest {
         request.setRequestCode("030722NCUGTU");
         request.setRating(4);
         request.setComment(comment);
-        setContextUsername(48L, "0865390037");
+        serUserContext(48L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> confirmedUserService.createComment(request));
@@ -310,7 +310,7 @@ class ConfirmedUserServiceImplTest {
         Assertions.assertEquals(CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE, exception.getMessage());
     }
 
-    void setContextUsername(Long id, String phone) {
+    void serUserContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {

@@ -4,10 +4,15 @@ import com.fu.flix.dao.CommentDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserAddressDAO;
 import com.fu.flix.dto.error.GeneralException;
+import com.fu.flix.dto.request.CancelRequestForCustomerRequest;
+import com.fu.flix.dto.request.ConfirmFixingRequest;
+import com.fu.flix.dto.request.RepairerApproveRequest;
 import com.fu.flix.dto.request.RequestingRepairRequest;
+import com.fu.flix.dto.response.CancelRequestForCustomerResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.service.CustomerService;
+import com.fu.flix.service.RepairerService;
 import com.fu.flix.service.ValidatorService;
 import com.fu.flix.util.DateFormatUtil;
 import org.junit.jupiter.api.Assertions;
@@ -47,6 +52,9 @@ class CustomerServiceImplTest {
     @Autowired
     CommentDAO commentDAO;
 
+    @Autowired
+    RepairerService repairerService;
+
     @Test
     public void test_create_fixing_request_success() {
         // given
@@ -65,7 +73,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         RequestingRepairResponse response = underTest.createFixingRequest(request).getBody();
@@ -93,7 +101,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -119,7 +127,7 @@ class CustomerServiceImplTest {
         request.setAddressId(null);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -146,7 +154,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -172,7 +180,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -199,7 +207,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -224,7 +232,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         RequestingRepairResponse response = underTest.createFixingRequest(request).getBody();
@@ -252,7 +260,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -279,7 +287,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -306,7 +314,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -332,7 +340,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(null);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -359,7 +367,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -385,7 +393,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -412,7 +420,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -439,7 +447,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -465,7 +473,7 @@ class CustomerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setContextUsername(36L, "0865390037");
+        setUserContext(36L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
@@ -474,7 +482,164 @@ class CustomerServiceImplTest {
         Assertions.assertEquals(EXCEEDED_DESCRIPTION_LENGTH_ALLOWED, exception.getMessage());
     }
 
-    void setContextUsername(Long id, String phone) {
+    @Test
+    public void test_cancel_PENDING_request_success() {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390037");
+        String reason = "Thợ không đẹp trai";
+        CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
+        request.setRequestCode(requestCode);
+        request.setReason(reason);
+
+        // when
+        setUserContext(36L, "0865390037");
+        CancelRequestForCustomerResponse response = underTest.cancelFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertEquals(CANCEL_REPAIR_REQUEST_SUCCESSFUL, response.getMessage());
+    }
+
+    @Test
+    public void test_cancel_request_success_when_reason_is_null() {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390037");
+        CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
+        request.setRequestCode(requestCode);
+        request.setReason(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        CancelRequestForCustomerResponse response = underTest.cancelFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertEquals(CANCEL_REPAIR_REQUEST_SUCCESSFUL, response.getMessage());
+    }
+
+    @Test
+    public void test_cancel_request_success_when_reason_is_empty() {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390037");
+        CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
+        request.setRequestCode(requestCode);
+        request.setReason("");
+
+        // when
+        setUserContext(36L, "0865390037");
+        CancelRequestForCustomerResponse response = underTest.cancelFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertEquals(CANCEL_REPAIR_REQUEST_SUCCESSFUL, response.getMessage());
+    }
+
+    @Test
+    public void test_cancel_APPROVED_request_success() {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390037");
+        approvalRequest(requestCode);
+        String reason = "Thợ không đẹp trai";
+        CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
+        request.setRequestCode(requestCode);
+        request.setReason(reason);
+
+        // when
+        setUserContext(36L, "0865390037");
+        CancelRequestForCustomerResponse response = underTest.cancelFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertEquals(CANCEL_REPAIR_REQUEST_SUCCESSFUL, response.getMessage());
+    }
+
+    @Test
+    public void test_cancel_FIXING_request_fail() {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390037");
+        approvalRequest(requestCode);
+        confirmFixing(requestCode);
+
+        String reason = "Thợ không đẹp trai";
+        CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
+        request.setRequestCode(requestCode);
+        request.setReason(reason);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(ONLY_CAN_CANCEL_REQUEST_PENDING_OR_APPROVED, exception.getMessage());
+    }
+
+    private void approvalRequest(String requestCode) {
+        setUserContext(56L, "0865390056");
+        RepairerApproveRequest request = new RepairerApproveRequest();
+        request.setRequestCode(requestCode);
+        repairerService.approveRequest(request);
+    }
+
+    private void confirmFixing(String requestCode) {
+        setUserContext(56L, "0865390056");
+        ConfirmFixingRequest request = new ConfirmFixingRequest();
+        request.setRequestCode(requestCode);
+        repairerService.confirmFixing(request);
+    }
+
+
+    private String createFixingRequest(Long userId, String phone) {
+        setUserContext(userId, phone);
+        Long serviceId = 1L;
+        Long addressId = 7L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        RequestingRepairResponse response = underTest.createFixingRequest(request).getBody();
+        return response.getRequestCode();
+    }
+
+    @Test
+    public void test_cancel_request_fail_when_request_code_is_empty() {
+        // given
+        String requestCode = "";
+        String reason = "Thợ không đẹp trai";
+        CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
+        request.setRequestCode(requestCode);
+        request.setReason(reason);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_cancel_request_fail_when_request_code_is_null() {
+        // given
+        String reason = "Thợ không đẹp trai";
+        CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
+        request.setRequestCode(null);
+        request.setReason(reason);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+
+    void setUserContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {

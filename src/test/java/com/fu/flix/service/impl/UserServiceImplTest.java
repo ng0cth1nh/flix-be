@@ -38,7 +38,7 @@ class UserServiceImplTest {
         Long id = 36L;
         String phone = "0865390037";
         NotificationRequest request = new NotificationRequest();
-        setContextUsername(id, phone);
+        setUserContext(id, phone);
 
         // when
         ResponseEntity<NotificationResponse> responseEntity = userService.getNotifications(request);
@@ -50,7 +50,7 @@ class UserServiceImplTest {
         Assertions.assertEquals(3, notificationDTOS.size());
     }
 
-    void setContextUsername(Long id, String phone) {
+    void setUserContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {

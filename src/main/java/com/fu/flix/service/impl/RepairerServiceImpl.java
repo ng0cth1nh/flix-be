@@ -482,7 +482,7 @@ public class RepairerServiceImpl implements RepairerService {
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
         if (!request.getUserId().equals(repairRequestMatching.getRepairerId())) {
-            throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_INVOICE_FOR_THIS_REQUEST);
+            throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_SUB_SERVICES_FOR_THIS_INVOICE);
         }
 
         RepairRequest repairRequest = optionalRepairRequest.get();

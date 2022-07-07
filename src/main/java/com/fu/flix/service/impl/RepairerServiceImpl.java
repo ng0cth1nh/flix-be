@@ -48,6 +48,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final UserAddressDAO userAddressDAO;
     private final AddressService addressService;
     private final VoucherService voucherService;
+    private final SubServiceDAO subServiceDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
 
@@ -61,7 +62,8 @@ public class RepairerServiceImpl implements RepairerService {
                                CustomerService customerService,
                                UserAddressDAO userAddressDAO,
                                AddressService addressService,
-                               VoucherService voucherService) {
+                               VoucherService voucherService,
+                               SubServiceDAO subServiceDAO) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -74,6 +76,7 @@ public class RepairerServiceImpl implements RepairerService {
         this.userAddressDAO = userAddressDAO;
         this.addressService = addressService;
         this.voucherService = voucherService;
+        this.subServiceDAO = subServiceDAO;
     }
 
     @Override
@@ -263,16 +266,18 @@ public class RepairerServiceImpl implements RepairerService {
     public ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request) {
         String requestCode = getRequestCodeNotNull(request.getRequestCode());
 
-        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO
+                .findByRequestCodeAndStatusId(requestCode, FIXING.getId());
         if (optionalRepairRequest.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
-        RepairRequest repairRequest = optionalRepairRequest.get();
-        if (!FIXING.getId().equals(repairRequest.getStatusId())) {
-            throw new GeneralException(HttpStatus.GONE, JUST_CAN_CREATE_INVOICE_WHEN_REQUEST_STATUS_IS_FIXING);
+        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+        if (!request.getUserId().equals(repairRequestMatching.getRepairerId())) {
+            throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_INVOICE_FOR_THIS_REQUEST);
         }
 
+        RepairRequest repairRequest = optionalRepairRequest.get();
         repairRequest.setStatusId(PAYMENT_WAITING.getId());
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
@@ -459,5 +464,46 @@ public class RepairerServiceImpl implements RepairerService {
             }
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_LOCATION_TYPE);
+    }
+
+    @Override
+    public ResponseEntity<AddSubServicesToInvoiceResponse> addSubServicesToInvoice(AddSubServicesToInvoiceRequest request) {
+        List<Long> subServiceIds = request.getSubServiceIds();
+        if (subServiceIds == null || subServiceIds.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_ID_IS_REQUIRED);
+        }
+
+        String requestCode = getRequestCodeNotNull(request.getRequestCode());
+        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO
+                .findByRequestCodeAndStatusId(requestCode, FIXING.getId());
+        if (optionalRepairRequest.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
+        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+        if (!request.getUserId().equals(repairRequestMatching.getRepairerId())) {
+            throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_INVOICE_FOR_THIS_REQUEST);
+        }
+
+        RepairRequest repairRequest = optionalRepairRequest.get();
+
+        Collection<SubService> subServices = subServiceDAO.findSubServices(subServiceIds, repairRequest.getServiceId());
+        if (subServices.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SUB_SERVICE_ID);
+        }
+
+        Long totalSubServicePrice = 0L;
+        for (SubService subService : subServices) {
+            totalSubServicePrice += subService.getPrice();
+        }
+
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        invoice.getSubServices().addAll(subServices);
+        invoice.setTotalSubServicePrice(totalSubServicePrice);
+        invoice.setTotalPrice(invoice.getTotalPrice() + totalSubServicePrice);
+        invoice.setVatPrice(invoice.getVatPrice() + (long) (totalSubServicePrice * repairRequest.getVat()));
+
+
+        return null;
     }
 }

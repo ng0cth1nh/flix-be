@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface SubServiceDAO extends JpaRepository<SubService, Long> {
-    @Query(value = "SELECT * FROM sub_services where id in (:subServicesId) AND service_id = :serviceId", nativeQuery = true)
+    @Query(value = "SELECT * FROM sub_services where id in (:subServiceIds) AND service_id = :serviceId", nativeQuery = true)
     List<SubService> findSubServices(List<Long> subServiceIds, Long serviceId);
 }

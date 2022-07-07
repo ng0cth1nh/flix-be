@@ -23,4 +23,6 @@ public interface RepairerService {
 
     ResponseEntity<RequestingFilterResponse> getFilterRequestList(RequestingFilterRequest request);
 
+    ResponseEntity<AddSubServicesToInvoiceResponse> addSubServicesToInvoice(AddSubServicesToInvoiceRequest request);
+
 }

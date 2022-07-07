@@ -31,9 +31,6 @@ public class SubService {
 
     private Boolean isActive;
 
-    @OneToMany(mappedBy = "subService")
-    private Collection<InvoiceSubService> invoiceSubServices;
-
     @CreationTimestamp
     private LocalDateTime createdAt;
 

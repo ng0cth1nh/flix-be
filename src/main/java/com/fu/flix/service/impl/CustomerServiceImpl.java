@@ -35,7 +35,6 @@ import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.*;
 import static com.fu.flix.constant.enums.TransactionType.PAY_COMMISSIONS;
 import static com.fu.flix.constant.enums.TransactionType.REFUNDS;
-import static com.fu.flix.constant.enums.VoucherType.INSPECTION;
 
 @Service
 @Slf4j
@@ -116,7 +115,7 @@ public class CustomerServiceImpl implements CustomerService {
         String paymentMethodID = getPaymentMethodIdValidated(request.getPaymentMethodId());
         if (voucherId != null) {
             UsingVoucherDTO usingVoucherDTO = new UsingVoucherDTO(userVouchers, voucherId, request.getServiceId(), paymentMethodID);
-            useInspectionVoucher(usingVoucherDTO, now);
+            useVoucher(usingVoucherDTO, now);
         }
 
         LocalDateTime expectFixingDay = getExpectFixingDay(request, now);
@@ -167,9 +166,10 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private Invoice buildInvoice(RepairRequest repairRequest) {
+        Long voucherId = repairRequest.getVoucherId();
         com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
         Long inspectionPrice = service.getInspectionPrice();
-        Long discount = voucherService.getVoucherDiscount(inspectionPrice, repairRequest.getVoucherId());
+        Long discount = voucherService.getVoucherDiscount(inspectionPrice, voucherId);
         Long beforeVat = inspectionPrice - discount;
         Long vatPrice = (long) (beforeVat * repairRequest.getVat());
 
@@ -179,10 +179,13 @@ public class CustomerServiceImpl implements CustomerService {
         invoice.setTotalPrice(inspectionPrice);
         invoice.setActualProceeds(beforeVat + vatPrice);
         invoice.setVatPrice(vatPrice);
+        invoice.setVoucherId(voucherId);
+        invoice.setTotalDiscount(discount);
+
         return invoice;
     }
 
-    private void useInspectionVoucher(UsingVoucherDTO usingVoucherDTO, LocalDateTime now) {
+    private void useVoucher(UsingVoucherDTO usingVoucherDTO, LocalDateTime now) {
         Long voucherId = usingVoucherDTO.getVoucherId();
         Optional<Voucher> optionalVoucher = voucherDAO.findById(voucherId);
         if (optionalVoucher.isEmpty()) {
@@ -227,10 +230,6 @@ public class CustomerServiceImpl implements CustomerService {
 
         if (now.isBefore(voucher.getEffectiveDate())) {
             throw new GeneralException(HttpStatus.CONFLICT, VOUCHER_BEFORE_EFFECTIVE_DATE);
-        }
-
-        if (!voucher.getType().equals(INSPECTION.name())) {
-            throw new GeneralException(HttpStatus.CONFLICT, VOUCHER_MUST_BE_TYPE_INSPECTION);
         }
 
         voucher.setRemainQuantity(voucher.getRemainQuantity() - 1);

@@ -398,8 +398,8 @@ class CustomerServiceImplTest {
     public void test_create_fixing_request_fail_when_fixing_day_is_more_than_today_30_days() {
         // given
         Long serviceId = 1L;
-        Long addressId = 0L;
-        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(30L).plusSeconds(1L), DATE_TIME_PATTERN);
+        Long addressId = 7L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(31L), DATE_TIME_PATTERN);
         String description = "Thợ phải đẹp trai";
         Long voucherId = 1L;
         String paymentMethodId = "C";

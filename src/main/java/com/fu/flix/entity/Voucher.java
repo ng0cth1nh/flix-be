@@ -24,7 +24,7 @@ public class Voucher {
 
     private String description;
 
-    private Double minOrderPrice;
+    private Long minOrderPrice;
 
     private Long remainQuantity;
 

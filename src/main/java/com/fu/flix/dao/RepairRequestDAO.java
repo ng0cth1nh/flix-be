@@ -54,7 +54,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             " rr.description as requestDescription, v.id as voucherId, pm.name as paymentMethod, rr.created_at as createdAt, iv.total_price as price," +
             " iv.actual_proceeds as actualPrice, iv.vat_price as vatPrice, rr.request_code as requestCode " +
             "FROM repair_requests rr " +
-            "JOIN repair_requests_matching rrm " +
+            "LEFT JOIN repair_requests_matching rrm " +
             "ON rr.request_code = rrm.request_code " +
             "JOIN status stt " +
             "ON rr.status_id = stt.id " +
@@ -74,9 +74,11 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON rr.payment_method_id = pm.id " +
             "LEFT JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
-            "WHERE rr.status_id <> 'PE' " +
-            "AND rr.request_code = :requestCode " +
-            "AND rrm.repairer_id = :repairerId", nativeQuery = true)
+            "WHERE rr.request_code = :requestCode " +
+            "AND (" +
+            "   CASE WHEN rr.status_id <> 'PE' " +
+            "   THEN rrm.repairer_id = :repairerId END" +
+            "    )", nativeQuery = true)
     IDetailFixingRequestForRepairerDTO findDetailFixingRequestForRepairer(Long repairerId, String requestCode);
 
     List<RepairRequest> findByUserIdAndStatusId(Long userId, String statusId);

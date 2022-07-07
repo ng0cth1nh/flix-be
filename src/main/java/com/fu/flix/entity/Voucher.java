@@ -1,6 +1,5 @@
 package com.fu.flix.entity;
 
-import com.fu.flix.constant.enums.VoucherType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,8 +23,6 @@ public class Voucher {
     private String code;
 
     private String description;
-
-    private String type;
 
     private Double minOrderPrice;
 

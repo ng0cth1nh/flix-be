@@ -6,11 +6,9 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 
 @Entity
@@ -43,8 +41,12 @@ public class Invoice {
 
     private Long vatPrice;
 
-    @OneToMany(mappedBy = "invoice")
-    private Collection<InvoiceSubService> invoiceSubServices;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "invoice_sub_services",
+            joinColumns = @JoinColumn(name = "request_code"),
+            inverseJoinColumns = @JoinColumn(name = "sub_service_id"))
+    private Collection<SubService> subServices = new ArrayList<>();
 
     @OneToMany(mappedBy = "invoice")
     private Collection<InvoiceAccessory> invoiceAccessories;

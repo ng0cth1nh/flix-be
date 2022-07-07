@@ -1476,6 +1476,25 @@ class CustomerServiceImplTest {
         Assertions.assertEquals(INVALID_FULL_NAME, exception.getMessage());
     }
 
+    @Test
+    public void test_getCustomerProfile_success() {
+        // given
+        CustomerProfileRequest request = new CustomerProfileRequest();
+
+        // when
+        setUserContext(36L, "0865390037");
+        CustomerProfileResponse response = underTest.getCustomerProfile(request).getBody();
+
+        // then
+        Assertions.assertEquals("https://storage.googleapis.com/download/storage/v1/b/flix_public/" +
+                        "o/4492f2aa-fd13-4190-b75b-62d4173384e9e43756fc-8a23-4b46-9454-a4e5cd1eea52.jpg?generation=1655141000031817&alt=media",
+                response.getAvatarUrl());
+        Assertions.assertEquals("0865390037", response.getPhone());
+        Assertions.assertEquals("thang@gmail.com", response.getEmail());
+        Assertions.assertEquals("08-03-2000", response.getDateOfBirth());
+        Assertions.assertEquals(false, response.getGender());
+        Assertions.assertEquals("Faker", response.getFullName());
+    }
 
     void setUserContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};

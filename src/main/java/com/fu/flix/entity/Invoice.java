@@ -8,8 +8,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Entity
 @Data
@@ -23,7 +25,7 @@ public class Invoice {
 
     private Long inspectionPrice;
 
-    private Long totalServiceDetailPrice;
+    private Long totalSubServicePrice;
 
     private Long totalOtherPrice;
 
@@ -40,6 +42,12 @@ public class Invoice {
     private LocalDateTime confirmedByRepairerAt;
 
     private Long vatPrice;
+
+    @OneToMany(mappedBy = "invoice")
+    private Collection<InvoiceSubService> invoiceSubServices;
+
+    @OneToMany(mappedBy = "invoice")
+    private Collection<InvoiceAccessory> invoiceAccessories;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

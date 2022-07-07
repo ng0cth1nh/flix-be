@@ -4,11 +4,10 @@ import com.fu.flix.dao.CommentDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserAddressDAO;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.CancelRequestForCustomerRequest;
-import com.fu.flix.dto.request.ConfirmFixingRequest;
-import com.fu.flix.dto.request.RepairerApproveRequest;
-import com.fu.flix.dto.request.RequestingRepairRequest;
+import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.CancelRequestForCustomerResponse;
+import com.fu.flix.dto.response.HistoryRequestForCustomerResponse;
+import com.fu.flix.dto.response.RequestingDetailForCustomerResponse;
 import com.fu.flix.dto.response.RequestingRepairResponse;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.service.CustomerService;
@@ -638,6 +637,169 @@ class CustomerServiceImplTest {
         Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
     }
 
+    @Test
+    public void test_getFixingRequestHistories_success_when_status_is_CANCELLED() {
+        // given
+        String status = "CANCELLED";
+        HistoryRequestForCustomerRequest request = new HistoryRequestForCustomerRequest();
+        request.setStatus(status);
+
+        // when
+        setUserContext(36L, "0865390037");
+        HistoryRequestForCustomerResponse response = underTest.getFixingRequestHistories(request).getBody();
+
+        // then
+        Assertions.assertTrue(response.getRequestHistories().size() > 0);
+    }
+
+    @Test
+    public void test_getFixingRequestHistories_success_when_status_is_DONE() {
+        // given
+        String status = "DONE";
+        HistoryRequestForCustomerRequest request = new HistoryRequestForCustomerRequest();
+        request.setStatus(status);
+
+        // when
+        setUserContext(36L, "0865390037");
+        HistoryRequestForCustomerResponse response = underTest.getFixingRequestHistories(request).getBody();
+
+        // then
+        Assertions.assertTrue(response.getRequestHistories().size() > 0);
+    }
+
+    @Test
+    public void test_getFixingRequestHistories_success_when_status_is_PENDING() {
+        // given
+        String status = "PENDING";
+        HistoryRequestForCustomerRequest request = new HistoryRequestForCustomerRequest();
+        request.setStatus(status);
+
+        // when
+        setUserContext(36L, "0865390037");
+        HistoryRequestForCustomerResponse response = underTest.getFixingRequestHistories(request).getBody();
+
+        // then
+        Assertions.assertTrue(response.getRequestHistories().size() > 0);
+    }
+
+    @Test
+    public void test_getFixingRequestHistories_success_when_status_is_PAYMENT_WAITING() {
+        // given
+        String status = "PAYMENT_WAITING";
+        HistoryRequestForCustomerRequest request = new HistoryRequestForCustomerRequest();
+        request.setStatus(status);
+
+        // when
+        setUserContext(36L, "0865390037");
+        HistoryRequestForCustomerResponse response = underTest.getFixingRequestHistories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRequestHistories());
+    }
+
+    @Test
+    public void test_getFixingRequestHistories_fail_when_status_is_empty() {
+        // given
+        String status = "";
+        HistoryRequestForCustomerRequest request = new HistoryRequestForCustomerRequest();
+        request.setStatus(status);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixingRequestHistories(request));
+
+        // then
+        Assertions.assertEquals(INVALID_STATUS, exception.getMessage());
+    }
+
+    @Test
+    public void test_getFixingRequestHistories_fail_when_status_is_null() {
+        // given
+        HistoryRequestForCustomerRequest request = new HistoryRequestForCustomerRequest();
+        request.setStatus(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixingRequestHistories(request));
+
+        // then
+        Assertions.assertEquals(INVALID_STATUS, exception.getMessage());
+    }
+
+    @Test
+    public void test_getDetailFixingRequest_success() {
+        // given
+        RequestingDetailForCustomerRequest request = new RequestingDetailForCustomerRequest();
+        String requestCode = "PZ32QDKGDWO4";
+        request.setRequestCode(requestCode);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RequestingDetailForCustomerResponse response = underTest.getDetailFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertEquals(requestCode, response.getRequestCode());
+        Assertions.assertEquals("Tivi", response.getServiceName());
+    }
+
+    @Test
+    public void test_getDetailFixingRequest_fail_when_request_code_is_invalid() {
+        // given
+        RequestingDetailForCustomerRequest request = new RequestingDetailForCustomerRequest();
+        String requestCode = "TEST123";
+        request.setRequestCode(requestCode);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RequestingDetailForCustomerResponse response = underTest.getDetailFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertNull(response.getServiceName());
+        Assertions.assertNull(response.getActualPrice());
+        Assertions.assertNull(response.getCustomerName());
+        Assertions.assertNull(response.getRequestCode());
+        Assertions.assertNull(response.getPrice());
+        Assertions.assertNull(response.getDate());
+    }
+
+    @Test
+    public void test_getDetailFixingRequest_fail_when_request_code_is_empty() {
+        // given
+        RequestingDetailForCustomerRequest request = new RequestingDetailForCustomerRequest();
+        String requestCode = "";
+        request.setRequestCode(requestCode);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RequestingDetailForCustomerResponse response = underTest.getDetailFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertNull(response.getServiceName());
+        Assertions.assertNull(response.getActualPrice());
+        Assertions.assertNull(response.getCustomerName());
+        Assertions.assertNull(response.getRequestCode());
+        Assertions.assertNull(response.getPrice());
+        Assertions.assertNull(response.getDate());
+    }
+
+    @Test
+    public void test_getDetailFixingRequest_fail_when_request_code_is_null() {
+        // given
+        RequestingDetailForCustomerRequest request = new RequestingDetailForCustomerRequest();
+        request.setRequestCode(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RequestingDetailForCustomerResponse response = underTest.getDetailFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertNull(response.getServiceName());
+        Assertions.assertNull(response.getActualPrice());
+        Assertions.assertNull(response.getCustomerName());
+        Assertions.assertNull(response.getRequestCode());
+        Assertions.assertNull(response.getPrice());
+        Assertions.assertNull(response.getDate());
+    }
 
     void setUserContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};

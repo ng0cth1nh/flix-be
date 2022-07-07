@@ -680,7 +680,7 @@ class CustomerServiceImplTest {
         HistoryRequestForCustomerResponse response = underTest.getFixingRequestHistories(request).getBody();
 
         // then
-        Assertions.assertTrue(response.getRequestHistories().size() > 0);
+        Assertions.assertNotNull(response.getRequestHistories());
     }
 
     @Test

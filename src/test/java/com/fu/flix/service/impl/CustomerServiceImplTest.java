@@ -834,6 +834,389 @@ class CustomerServiceImplTest {
         Assertions.assertEquals("Faker", addresses.get(0).getCustomerName());
     }
 
+    @Test
+    public void test_deleteCustomerAddress_success() {
+        // given
+        DeleteAddressRequest request = new DeleteAddressRequest();
+        request.setAddressId(21L);
+
+        // when
+        setUserContext(36L, "0865390037");
+        DeleteAddressResponse response = underTest.deleteCustomerAddress(request).getBody();
+
+        // then
+        Assertions.assertEquals(DELETE_ADDRESS_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_deleteCustomerAddress_fail_when_wrong_address_id() {
+        // given
+        DeleteAddressRequest request = new DeleteAddressRequest();
+        request.setAddressId(0L);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.deleteCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_ADDRESS, exception.getMessage());
+    }
+
+    @Test
+    public void test_deleteCustomerAddress_fail_when_try_to_delete_main_address() {
+        // given
+        DeleteAddressRequest request = new DeleteAddressRequest();
+        request.setAddressId(7L);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.deleteCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_ADDRESS, exception.getMessage());
+    }
+
+    @Test
+    public void test_deleteCustomerAddress_fail_when_address_id_is_null() {
+        // given
+        DeleteAddressRequest request = new DeleteAddressRequest();
+        request.setAddressId(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.deleteCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_ADDRESS, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_success() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        EditAddressResponse response = underTest.editCustomerAddress(request).getBody();
+
+        // then
+        Assertions.assertEquals(EDIT_ADDRESS_SUCCESS, response.getMessage());
+        Assertions.assertEquals(21L, response.getAddressId());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_street_address_is_null() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress(null);
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(STREET_ADDRESS_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_street_address_is_empty() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(STREET_ADDRESS_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_commune_id_is_empty() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_commune_id_is_null() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId(null);
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_commune_id_is_wrong() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("abcde");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_commune_id_is_0() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("0");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_phone_is_shorter_than_required() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("08653900");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_phone_is_null() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone(null);
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_phone_is_longer_than_required() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("08653900311");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_phone_is_abc() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("abc");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+    }
+
+
+    @Test
+    public void test_edit_customer_address_fail_when_phone_is_empty() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_success_when_name_does_not_trim() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("  Nhung Nguyễn   ");
+
+        // when
+        setUserContext(36L, "0865390037");
+        EditAddressResponse response = underTest.editCustomerAddress(request).getBody();
+
+        // then
+        Assertions.assertEquals(EDIT_ADDRESS_SUCCESS, response.getMessage());
+        Assertions.assertEquals(21L, response.getAddressId());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_name_is_empty() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_NAME, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_name_is_null() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_NAME, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_name_contain_special_character() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(21L);
+        request.setName("Nhung @123");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_NAME, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_address_id_is_wrong() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(0L);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_ADDRESS, exception.getMessage());
+    }
+
+    @Test
+    public void test_edit_customer_address_fail_when_address_id_is_null() {
+        // given
+        EditAddressRequest request = new EditAddressRequest();
+        request.setPhone("0865390031");
+        request.setStreetAddress("Đường 30m Hòa Lạc");
+        request.setCommuneId("00006");
+        request.setAddressId(null);
+        request.setName("Nguyễn Thị Hồng Nhung");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.editCustomerAddress(request));
+
+        // then
+        Assertions.assertEquals(INVALID_ADDRESS, exception.getMessage());
+    }
+
     void setUserContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();

@@ -506,8 +506,11 @@ public class CustomerServiceImpl implements CustomerService {
 
         Optional<UserAddress> optionalUserAddress = userAddressDAO
                 .findUserAddressToDelete(request.getUserId(), addressId);
+        if (optionalUserAddress.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+        }
 
-        optionalUserAddress.ifPresent(userAddress -> userAddress.setDeletedAt(LocalDateTime.now()));
+        optionalUserAddress.get().setDeletedAt(LocalDateTime.now());
 
         DeleteAddressResponse response = new DeleteAddressResponse();
         response.setMessage(DELETE_ADDRESS_SUCCESS);
@@ -517,9 +520,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<EditAddressResponse> editCustomerAddress(EditAddressRequest request) {
-        Long addressId = request.getAddressId();
-        if (addressId == null) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+        String name = request.getName();
+        if (!InputValidation.isNameValid(name)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_NAME);
         }
 
         String phone = request.getPhone();
@@ -527,9 +530,9 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
 
-        String communeId = request.getCommuneId();
-        if (communeId == null) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        Long addressId = request.getAddressId();
+        if (addressId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
         }
 
         String streetAddress = request.getStreetAddress();
@@ -537,19 +540,29 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, STREET_ADDRESS_IS_REQUIRED);
         }
 
+        String communeId = request.getCommuneId();
+        if (communeId == null || communeId.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        }
+
         Optional<UserAddress> optionalUserAddress = userAddressDAO
                 .findUserAddressToEdit(request.getUserId(), addressId);
-        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
-
-        if (optionalUserAddress.isPresent() && optionalUserAddress.isPresent()) {
-            UserAddress userAddress = optionalUserAddress.get();
-            Commune commune = optionalCommune.get();
-
-            userAddress.setName(request.getName());
-            userAddress.setPhone(phone);
-            userAddress.setCommuneId(commune.getId());
-            userAddress.setStreetAddress(streetAddress);
+        if (optionalUserAddress.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
         }
+
+        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
+        if (optionalCommune.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        }
+
+        UserAddress userAddress = optionalUserAddress.get();
+        Commune commune = optionalCommune.get();
+
+        userAddress.setName(name);
+        userAddress.setPhone(phone);
+        userAddress.setCommuneId(commune.getId());
+        userAddress.setStreetAddress(streetAddress);
 
         EditAddressResponse response = new EditAddressResponse();
         response.setAddressId(addressId);
@@ -620,7 +633,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request) {
         String fullName = request.getFullName();
-        if (!InputValidation.isFullNameValid(fullName)) {
+        if (!InputValidation.isNameValid(fullName)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         }
 

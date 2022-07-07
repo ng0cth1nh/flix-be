@@ -8,7 +8,7 @@ public class InputValidation {
     private static final String PHONE_REGEX = "^(03|05|07|08|09|01[2|6|8|9])([0-9]{8})$";
     private static final String PASSWORD_REGEX = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,10}$";
     private static final String EMAIL_REGEX = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
-    private static final String FULL_NAME = "^[a-zA-Z\\s]{3,}$";
+    private static final String NAME_REGEX = "^[a-zA-Z\\s]{3,}$";
 
     public static boolean isPhoneValid(String phoneNumber) {
         if (phoneNumber == null) {
@@ -37,13 +37,13 @@ public class InputValidation {
         return matcher.matches();
     }
 
-    public static boolean isFullNameValid(String fullName) {
-        if (fullName == null) {
+    public static boolean isNameValid(String name) {
+        if (name == null) {
             return false;
         }
-        fullName = removeAccent(fullName);
-        Pattern pattern = Pattern.compile(FULL_NAME, Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(fullName);
+        name = removeAccent(name);
+        Pattern pattern = Pattern.compile(NAME_REGEX, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(name);
         return matcher.matches();
     }
 

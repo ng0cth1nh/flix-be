@@ -77,7 +77,8 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "WHERE rr.request_code = :requestCode " +
             "AND (" +
             "   CASE WHEN rr.status_id <> 'PE' " +
-            "   THEN rrm.repairer_id = :repairerId END" +
+            "   THEN rrm.repairer_id = :repairerId " +
+            "   END" +
             "    )", nativeQuery = true)
     IDetailFixingRequestForRepairerDTO findDetailFixingRequestForRepairer(Long repairerId, String requestCode);
 

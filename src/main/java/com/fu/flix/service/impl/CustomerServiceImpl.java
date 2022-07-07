@@ -175,7 +175,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         Invoice invoice = new Invoice();
         invoice.setRequestCode(repairRequest.getRequestCode());
-        invoice.setInspectionPrice(beforeVat);
+        invoice.setInspectionPrice(inspectionPrice);
         invoice.setTotalPrice(inspectionPrice);
         invoice.setActualProceeds(beforeVat + vatPrice);
         invoice.setVatPrice(vatPrice);
@@ -207,10 +207,6 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
         }
 
-        if (optionalService.get().getInspectionPrice() < voucher.getMinOrderPrice()) {
-            throw new GeneralException(HttpStatus.GONE, INSPECTION_PRICE_MUST_GREATER_OR_EQUAL_VOUCHER_MIN_PRICE);
-        }
-
         UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
         if (userVoucher == null) {
             throw new GeneralException(HttpStatus.GONE, USER_NOT_HOLD_VOUCHER);
@@ -218,10 +214,6 @@ public class CustomerServiceImpl implements CustomerService {
 
         if (userVoucher.getQuantity() <= 0) {
             throw new GeneralException(HttpStatus.GONE, USER_NOT_HOLD_VOUCHER);
-        }
-
-        if (voucher.getRemainQuantity() <= 0) {
-            throw new GeneralException(HttpStatus.CONFLICT, OUT_OF_VOUCHER);
         }
 
         if (voucher.getExpireDate().isBefore(now)) {
@@ -232,7 +224,6 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.CONFLICT, VOUCHER_BEFORE_EFFECTIVE_DATE);
         }
 
-        voucher.setRemainQuantity(voucher.getRemainQuantity() - 1);
         userVoucher.setQuantity(userVoucher.getQuantity() - 1);
     }
 
@@ -339,9 +330,6 @@ public class CustomerServiceImpl implements CustomerService {
     public void updateUsedVoucherQuantityAfterCancelRequest(RepairRequest repairRequest) {
         Long voucherId = repairRequest.getVoucherId();
         if (voucherId != null) {
-            Voucher voucher = voucherDAO.findById(voucherId).get();
-            voucher.setRemainQuantity(voucher.getRemainQuantity() + 1);
-
             User user = validatorService.getUserValidated(repairRequest.getUserId());
             Collection<UserVoucher> userVouchers = user.getUserVouchers();
             UserVoucher userVoucher = getUserVoucher(userVouchers, voucherId);

@@ -492,18 +492,28 @@ public class RepairerServiceImpl implements RepairerService {
             throw new GeneralException(HttpStatus.GONE, INVALID_SUB_SERVICE_ID);
         }
 
-        Long totalSubServicePrice = 0L;
-        for (SubService subService : subServices) {
-            totalSubServicePrice += subService.getPrice();
-        }
-
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
-        invoice.getSubServices().addAll(subServices);
+        Long totalSubServicePrice = subServices.stream().mapToLong(SubService::getPrice).sum();
+
         invoice.setTotalSubServicePrice(totalSubServicePrice);
-        invoice.setTotalPrice(invoice.getTotalPrice() + totalSubServicePrice);
-        invoice.setVatPrice(invoice.getVatPrice() + (long) (totalSubServicePrice * repairRequest.getVat()));
+        invoice.getSubServices().addAll(subServices);
+        updateCommonInvoiceMoney(invoice, totalSubServicePrice, repairRequest.getVat());
 
+        AddSubServicesToInvoiceResponse response = new AddSubServicesToInvoiceResponse();
+        response.setMessage(ADD_SUB_SERVICE_TO_INVOICE_SUCCESS);
 
-        return null;
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void updateCommonInvoiceMoney(Invoice invoice, Long addingMoney, Double vat) {
+        long newTotalPrice = invoice.getTotalPrice() + addingMoney;
+        long newTotalDiscount = voucherService.getVoucherDiscount(newTotalPrice, invoice.getVoucherId());
+        long beforeVat = newTotalPrice - newTotalDiscount;
+        long newVatPrice = (long) (beforeVat * vat);
+
+        invoice.setTotalPrice(newTotalPrice);
+        invoice.setTotalDiscount(newTotalDiscount);
+        invoice.setVatPrice(newVatPrice);
+        invoice.setActualProceeds(beforeVat + newVatPrice);
     }
 }

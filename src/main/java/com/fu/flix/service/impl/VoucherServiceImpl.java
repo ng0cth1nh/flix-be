@@ -64,6 +64,10 @@ public class VoucherServiceImpl implements VoucherService {
         }
 
         Voucher voucher = optionalVoucher.get();
+        if (money < voucher.getMinOrderPrice()) {
+            return discount;
+        }
+
         if (voucher.isDiscountMoney()) {
             DiscountMoney discountMoney = discountMoneyDAO.findByVoucherId(voucherId).get();
             return discountMoney.getDiscountMoney();

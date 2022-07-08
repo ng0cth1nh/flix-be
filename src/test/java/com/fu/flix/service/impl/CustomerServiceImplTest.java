@@ -772,15 +772,10 @@ class CustomerServiceImplTest {
 
         // when
         setUserContext(36L, "0865390037");
-        RequestingDetailForCustomerResponse response = underTest.getDetailFixingRequest(request).getBody();
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getDetailFixingRequest(request));
 
         // then
-        Assertions.assertNull(response.getServiceName());
-        Assertions.assertNull(response.getActualPrice());
-        Assertions.assertNull(response.getCustomerName());
-        Assertions.assertNull(response.getRequestCode());
-        Assertions.assertNull(response.getPrice());
-        Assertions.assertNull(response.getDate());
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
     }
 
     @Test
@@ -791,15 +786,10 @@ class CustomerServiceImplTest {
 
         // when
         setUserContext(36L, "0865390037");
-        RequestingDetailForCustomerResponse response = underTest.getDetailFixingRequest(request).getBody();
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getDetailFixingRequest(request));
 
         // then
-        Assertions.assertNull(response.getServiceName());
-        Assertions.assertNull(response.getActualPrice());
-        Assertions.assertNull(response.getCustomerName());
-        Assertions.assertNull(response.getRequestCode());
-        Assertions.assertNull(response.getPrice());
-        Assertions.assertNull(response.getDate());
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
     }
 
     @Test

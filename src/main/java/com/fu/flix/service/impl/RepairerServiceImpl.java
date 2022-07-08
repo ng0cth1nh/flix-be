@@ -49,6 +49,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final VoucherService voucherService;
     private final SubServiceDAO subServiceDAO;
     private final RequestService requestService;
+    private final AccessoryDAO accessoryDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
 
@@ -64,7 +65,8 @@ public class RepairerServiceImpl implements RepairerService {
                                AddressService addressService,
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
-                               RequestService requestService) {
+                               RequestService requestService,
+                               AccessoryDAO accessoryDAO) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -79,6 +81,7 @@ public class RepairerServiceImpl implements RepairerService {
         this.voucherService = voucherService;
         this.subServiceDAO = subServiceDAO;
         this.requestService = requestService;
+        this.accessoryDAO = accessoryDAO;
     }
 
     @Override
@@ -464,6 +467,9 @@ public class RepairerServiceImpl implements RepairerService {
 
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
+        if (!FIXING.getId().equals(repairRequest.getStatusId())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_ADD_SUB_SERVICES_WHEN_REQUEST_STATUS_IS_FIXING);
+        }
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
         if (!request.getUserId().equals(repairRequestMatching.getRepairerId())) {
@@ -496,6 +502,53 @@ public class RepairerServiceImpl implements RepairerService {
     private boolean isDuplicateSubService(Collection<SubService> subServices, Collection<SubService> oldSubServices) {
         return subServices.stream()
                 .anyMatch(subService -> oldSubServices.stream()
+                        .anyMatch(oldSubService -> oldSubService.getId().equals(subService.getId())));
+    }
+
+    @Override
+    public ResponseEntity<AddAccessoriesToInvoiceResponse> addAccessoriesToInvoice(AddAccessoriesToInvoiceRequest request) {
+        List<Long> accessoryIds = request.getAccessoryIds();
+        if (accessoryIds == null || accessoryIds.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, ACCESSORY_ID_IS_REQUIRED);
+        }
+
+        String requestCode = request.getRequestCode();
+        RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
+        if (!FIXING.getId().equals(repairRequest.getStatusId())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_ADD_ACCESSORIES_WHEN_REQUEST_STATUS_IS_FIXING);
+        }
+
+        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+        if (!request.getUserId().equals(repairRequestMatching.getRepairerId())) {
+            throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_ACCESSORIES_FOR_THIS_INVOICE);
+        }
+
+        Collection<Accessory> accessories = accessoryDAO.findAccessories(accessoryIds, repairRequest.getServiceId());
+        if (accessories.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ACCESSORY_ID);
+        }
+
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        Collection<Accessory> oldAccessories = invoice.getAccessories();
+        if (isDuplicateAccessory(accessories, oldAccessories)) {
+            throw new GeneralException(HttpStatus.CONFLICT, DUPLICATE_ACCESSORY_ID);
+        }
+
+        oldAccessories.addAll(accessories);
+        long addingMoney = accessories.stream().mapToLong(Accessory::getPrice).sum();
+        long totalAccessoryPrice = invoice.getTotalAccessoryPrice() + addingMoney;
+        invoice.setTotalAccessoryPrice(totalAccessoryPrice);
+        updateCommonInvoiceMoney(invoice, addingMoney, repairRequest.getVat());
+
+        AddAccessoriesToInvoiceResponse response = new AddAccessoriesToInvoiceResponse();
+        response.setMessage(ADD_ACCESSORIES_TO_INVOICE_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private boolean isDuplicateAccessory(Collection<Accessory> accessories, Collection<Accessory> oldAccessories) {
+        return accessories.stream()
+                .anyMatch(subService -> oldAccessories.stream()
                         .anyMatch(oldSubService -> oldSubService.getId().equals(subService.getId())));
     }
 

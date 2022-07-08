@@ -41,15 +41,19 @@ public class Invoice {
 
     private Long vatPrice;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "invoice_sub_services",
             joinColumns = @JoinColumn(name = "request_code"),
             inverseJoinColumns = @JoinColumn(name = "sub_service_id"))
     private Collection<SubService> subServices = new ArrayList<>();
 
-    @OneToMany(mappedBy = "invoice")
-    private Collection<InvoiceAccessory> invoiceAccessories;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "invoice_accessories",
+            joinColumns = @JoinColumn(name = "request_code"),
+            inverseJoinColumns = @JoinColumn(name = "accessory_id"))
+    private Collection<Accessory> accessories = new ArrayList<>();
 
     @OneToMany(mappedBy = "invoice")
     private Collection<InvoiceOtherPrice> invoiceOtherPrices;

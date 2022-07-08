@@ -16,8 +16,6 @@ import java.util.Optional;
 public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
     Optional<RepairRequest> findByRequestCode(String requestCode);
 
-    Optional<RepairRequest> findByRequestCodeAndStatusId(String requestCode, String statusId);
-
     List<RepairRequest> findByUserIdAndStatusIdOrderByCreatedAtDesc(Long userId, String statusId);
 
     @Query(value = "SELECT stt.name as status, i_sv.url as serviceImage, sv.id as serviceId, sv.name as serviceName, c_address.id as customerAddressId, customer.phone as customerPhone, customer.full_name as customerName, rr.expect_start_fixing_at as expectFixingDay, rr.description as requestDescription, v.id as voucherId, pm.name as paymentMethod, rr.created_at as createdAt, iv.total_price as price, iv.actual_proceeds as actualPrice, iv.vat_price as vatPrice, rr.request_code as requestCode, r_address.id as repairerAddressId, repairer.phone as repairerPhone, repairer.full_name as repairerName, repairer.id as repairerId, repairer_avatar.url  as repairerAvatar " +

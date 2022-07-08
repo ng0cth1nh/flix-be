@@ -7,7 +7,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 @Getter
 @Setter
-public class DataRequest {
+public abstract class DataRequest {
     public String getUsername() {
         if (SecurityContextHolder.getContext() != null) {
             if (SecurityContextHolder.getContext().getAuthentication() != null) {

@@ -66,4 +66,9 @@ public class RepairerController {
     public ResponseEntity<AddSubServicesToInvoiceResponse> addSubServicesToInvoice(@RequestBody AddSubServicesToInvoiceRequest request) {
         return repairerService.addSubServicesToInvoice(request);
     }
+
+    @PostMapping("request/fixedAccessory")
+    public ResponseEntity<AddAccessoriesToInvoiceResponse> addAccessoriesToInvoice(@RequestBody AddAccessoriesToInvoiceRequest request) {
+        return repairerService.addAccessoriesToInvoice(request);
+    }
 }

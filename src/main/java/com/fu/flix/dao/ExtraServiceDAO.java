@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ExtraServiceDAO extends JpaRepository<ExtraService, Long> {
+    void deleteAllByRequestCode(String requestCode);
 }

@@ -499,27 +499,24 @@ public class RepairerServiceImpl implements RepairerService {
         }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        Double vat = repairRequest.getVat();
+
         Collection<SubService> oldSubServices = invoice.getSubServices();
-        if (isDuplicateSubService(subServices, oldSubServices)) {
-            throw new GeneralException(HttpStatus.CONFLICT, DUPLICATE_SUB_SERVICE_ID);
-        }
+
+        oldSubServices.clear();
+        long minusMoney = invoice.getTotalSubServicePrice();
+        invoice.setTotalSubServicePrice(0L);
+        minusCommonInvoiceMoney(invoice, minusMoney, vat);
 
         oldSubServices.addAll(subServices);
-        long addingMoney = subServices.stream().mapToLong(SubService::getPrice).sum();
-        long totalSubServicePrice = invoice.getTotalSubServicePrice() + addingMoney;
-        invoice.setTotalSubServicePrice(totalSubServicePrice);
-        plusCommonInvoiceMoney(invoice, addingMoney, repairRequest.getVat());
+        long plusMoney = subServices.stream().mapToLong(SubService::getPrice).sum();
+        invoice.setTotalSubServicePrice(plusMoney);
+        plusCommonInvoiceMoney(invoice, plusMoney, vat);
 
         AddSubServicesToInvoiceResponse response = new AddSubServicesToInvoiceResponse();
-        response.setMessage(ADD_SUB_SERVICE_TO_INVOICE_SUCCESS);
+        response.setMessage(PUT_SUB_SERVICE_TO_INVOICE_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private boolean isDuplicateSubService(Collection<SubService> subServices, Collection<SubService> oldSubServices) {
-        return subServices.stream()
-                .anyMatch(subService -> oldSubServices.stream()
-                        .anyMatch(oldSubService -> oldSubService.getId().equals(subService.getId())));
     }
 
     @Override
@@ -546,27 +543,24 @@ public class RepairerServiceImpl implements RepairerService {
         }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        Double vat = repairRequest.getVat();
+
         Collection<Accessory> oldAccessories = invoice.getAccessories();
-        if (isDuplicateAccessory(accessories, oldAccessories)) {
-            throw new GeneralException(HttpStatus.CONFLICT, DUPLICATE_ACCESSORY_ID);
-        }
+
+        oldAccessories.clear();
+        long minusMoney = invoice.getTotalAccessoryPrice();
+        invoice.setTotalAccessoryPrice(0L);
+        minusCommonInvoiceMoney(invoice, minusMoney, vat);
 
         oldAccessories.addAll(accessories);
-        long addingMoney = accessories.stream().mapToLong(Accessory::getPrice).sum();
-        long totalAccessoryPrice = invoice.getTotalAccessoryPrice() + addingMoney;
-        invoice.setTotalAccessoryPrice(totalAccessoryPrice);
-        plusCommonInvoiceMoney(invoice, addingMoney, repairRequest.getVat());
+        long plusMoney = accessories.stream().mapToLong(Accessory::getPrice).sum();
+        invoice.setTotalAccessoryPrice(plusMoney);
+        plusCommonInvoiceMoney(invoice, plusMoney, vat);
 
         AddAccessoriesToInvoiceResponse response = new AddAccessoriesToInvoiceResponse();
-        response.setMessage(ADD_ACCESSORIES_TO_INVOICE_SUCCESS);
+        response.setMessage(PUT_ACCESSORIES_TO_INVOICE_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private boolean isDuplicateAccessory(Collection<Accessory> accessories, Collection<Accessory> oldAccessories) {
-        return accessories.stream()
-                .anyMatch(subService -> oldAccessories.stream()
-                        .anyMatch(oldSubService -> oldSubService.getId().equals(subService.getId())));
     }
 
     @Override
@@ -592,14 +586,19 @@ public class RepairerServiceImpl implements RepairerService {
         }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        Double vat = repairRequest.getVat();
 
-        long addingMoney = saveAndReturnExtraServicesTotalPrice(extraServiceDTOs, requestCode);
-        long totalExtraServicePrice = invoice.getTotalExtraServicePrice() + addingMoney;
-        invoice.setTotalExtraServicePrice(totalExtraServicePrice);
-        plusCommonInvoiceMoney(invoice, addingMoney, repairRequest.getVat());
+        extraServiceDAO.deleteAllByRequestCode(requestCode);
+        long minusMoney = invoice.getTotalExtraServicePrice();
+        invoice.setTotalExtraServicePrice(0L);
+        minusCommonInvoiceMoney(invoice, minusMoney, vat);
+
+        long plusMoney = saveAndReturnExtraServicesTotalPrice(extraServiceDTOs, requestCode);
+        invoice.setTotalExtraServicePrice(plusMoney);
+        plusCommonInvoiceMoney(invoice, plusMoney, vat);
 
         AddExtraServiceToInvoiceResponse response = new AddExtraServiceToInvoiceResponse();
-        response.setMessage(ADD_EXTRA_SERVICE_TO_INVOICE_SUCCESS);
+        response.setMessage(PUT_EXTRA_SERVICE_TO_INVOICE_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -647,8 +646,17 @@ public class RepairerServiceImpl implements RepairerService {
         return totalExtraServicePrice;
     }
 
-    private void plusCommonInvoiceMoney(Invoice invoice, Long addingMoney, Double vat) {
-        long newTotalPrice = invoice.getTotalPrice() + addingMoney;
+    private void minusCommonInvoiceMoney(Invoice invoice, Long minusMoney, Double vat) {
+        long newTotalPrice = invoice.getTotalPrice() - minusMoney;
+        updateCommonInvoiceMoney(invoice, vat, newTotalPrice);
+    }
+
+    private void plusCommonInvoiceMoney(Invoice invoice, Long plusMoney, Double vat) {
+        long newTotalPrice = invoice.getTotalPrice() + plusMoney;
+        updateCommonInvoiceMoney(invoice, vat, newTotalPrice);
+    }
+
+    private void updateCommonInvoiceMoney(Invoice invoice, Double vat, long newTotalPrice) {
         long newTotalDiscount = voucherService.getVoucherDiscount(newTotalPrice, invoice.getVoucherId());
         long beforeVat = newTotalPrice - newTotalDiscount;
         long newVatPrice = (long) (beforeVat * vat);

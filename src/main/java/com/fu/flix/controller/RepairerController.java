@@ -61,4 +61,9 @@ public class RepairerController {
     public ResponseEntity<RequestingFilterResponse> getFilterRequestList(RequestingFilterRequest request) {
         return repairerService.getFilterRequestList(request);
     }
+
+    @PostMapping("request/fixedSubService")
+    public ResponseEntity<AddSubServicesToInvoiceResponse> addSubServicesToInvoice(@RequestBody AddSubServicesToInvoiceRequest request) {
+        return repairerService.addSubServicesToInvoice(request);
+    }
 }

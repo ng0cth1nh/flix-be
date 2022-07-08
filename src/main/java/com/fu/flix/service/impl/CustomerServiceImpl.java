@@ -180,6 +180,9 @@ public class CustomerServiceImpl implements CustomerService {
         invoice.setVatPrice(vatPrice);
         invoice.setVoucherId(voucherId);
         invoice.setTotalDiscount(discount);
+        invoice.setTotalAccessoryPrice(0L);
+        invoice.setTotalOtherPrice(0L);
+        invoice.setTotalSubServicePrice(0L);
 
         return invoice;
     }

@@ -132,7 +132,6 @@ public class RepairerServiceImpl implements RepairerService {
         return repairRequestMatching;
     }
 
-
     @Override
     public ResponseEntity<RequestingDetailForRepairerResponse> getRepairRequestDetail(RequestingDetailForRepairerRequest request) {
         String requestCode = request.getRequestCode();
@@ -477,16 +476,27 @@ public class RepairerServiceImpl implements RepairerService {
         }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
-        Long totalSubServicePrice = subServices.stream().mapToLong(SubService::getPrice).sum();
+        Collection<SubService> oldSubServices = invoice.getSubServices();
+        if (isDuplicateSubService(subServices, oldSubServices)) {
+            throw new GeneralException(HttpStatus.CONFLICT, DUPLICATE_SUB_SERVICE_ID);
+        }
 
+        oldSubServices.addAll(subServices);
+        long addingMoney = subServices.stream().mapToLong(SubService::getPrice).sum();
+        long totalSubServicePrice = invoice.getTotalSubServicePrice() + addingMoney;
         invoice.setTotalSubServicePrice(totalSubServicePrice);
-        invoice.getSubServices().addAll(subServices);
-        updateCommonInvoiceMoney(invoice, totalSubServicePrice, repairRequest.getVat());
+        updateCommonInvoiceMoney(invoice, addingMoney, repairRequest.getVat());
 
         AddSubServicesToInvoiceResponse response = new AddSubServicesToInvoiceResponse();
         response.setMessage(ADD_SUB_SERVICE_TO_INVOICE_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private boolean isDuplicateSubService(Collection<SubService> subServices, Collection<SubService> oldSubServices) {
+        return subServices.stream()
+                .anyMatch(subService -> oldSubServices.stream()
+                        .anyMatch(oldSubService -> oldSubService.getId().equals(subService.getId())));
     }
 
     private void updateCommonInvoiceMoney(Invoice invoice, Long addingMoney, Double vat) {

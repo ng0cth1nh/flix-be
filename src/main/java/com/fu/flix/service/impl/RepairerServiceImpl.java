@@ -686,4 +686,31 @@ public class RepairerServiceImpl implements RepairerService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<SearchAccessoriesResponse> searchAccessoriesByService(SearchAccessoriesRequest request) {
+        String keyword = request.getKeyword();
+        if (keyword == null || keyword.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+        Long serviceId = request.getServiceId();
+        if (serviceId == null) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_ID_IS_REQUIRED);
+        }
+
+        List<Accessory> accessories = accessoryDAO.searchAccessoriesByService(keyword, serviceId);
+        List<AccessoryDTO> accessoryDTOS = accessories.stream()
+                .map(accessory -> {
+                    AccessoryDTO dto = new AccessoryDTO();
+                    dto.setId(accessory.getId());
+                    dto.setName(accessory.getName());
+                    dto.setPrice(accessory.getPrice());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        SearchAccessoriesResponse response = new SearchAccessoriesResponse();
+        response.setAccessories(accessoryDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

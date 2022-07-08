@@ -77,8 +77,13 @@ public class RepairerController {
         return repairerService.addExtraServiceToInvoice(request);
     }
 
-    @GetMapping("fixedSubServices")
+    @GetMapping("subServices")
     public ResponseEntity<SearchSubServicesResponse> searchSubServicesByService(SearchSubServicesRequest request) {
         return repairerService.searchSubServicesByService(request);
+    }
+
+    @GetMapping("accessories")
+    public ResponseEntity<SearchAccessoriesResponse> searchAccessoriesByService(SearchAccessoriesRequest request) {
+        return repairerService.searchAccessoriesByService(request);
     }
 }

@@ -56,6 +56,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final ExtraServiceDAO extraServiceDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
+    private final Long DESCRIPTION_MAX_LENGTH;
 
     public RepairerServiceImpl(RepairerDAO repairerDAO,
                                RepairRequestDAO repairRequestDAO,
@@ -88,6 +89,7 @@ public class RepairerServiceImpl implements RepairerService {
         this.requestService = requestService;
         this.accessoryDAO = accessoryDAO;
         this.extraServiceDAO = extraServiceDAO;
+        this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
     }
 
     @Override
@@ -611,7 +613,7 @@ public class RepairerServiceImpl implements RepairerService {
             return true;
         }
 
-        if (!InputValidation.isDescriptionValid(extraServiceDTO.getDescription(), this.appConf.getDescriptionMaxLength())) {
+        if (!InputValidation.isDescriptionValid(extraServiceDTO.getDescription(), DESCRIPTION_MAX_LENGTH)) {
             return true;
         }
 

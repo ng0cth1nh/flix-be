@@ -476,7 +476,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<AddSubServicesToInvoiceResponse> addSubServicesToInvoice(AddSubServicesToInvoiceRequest request) {
+    public ResponseEntity<AddSubServicesToInvoiceResponse> putSubServicesToInvoice(AddSubServicesToInvoiceRequest request) {
         List<Long> subServiceIds = request.getSubServiceIds();
         if (CollectionUtils.isEmpty(subServiceIds)) {
             throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_ID_IS_REQUIRED);
@@ -523,7 +523,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<AddAccessoriesToInvoiceResponse> addAccessoriesToInvoice(AddAccessoriesToInvoiceRequest request) {
+    public ResponseEntity<AddAccessoriesToInvoiceResponse> putAccessoriesToInvoice(AddAccessoriesToInvoiceRequest request) {
         List<Long> accessoryIds = request.getAccessoryIds();
         if (CollectionUtils.isEmpty(accessoryIds)) {
             throw new GeneralException(HttpStatus.GONE, ACCESSORY_ID_IS_REQUIRED);
@@ -570,7 +570,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<AddExtraServiceToInvoiceResponse> addExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request) {
+    public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request) {
         Collection<ExtraServiceDTO> extraServiceDTOs = request.getExtraServices();
         if (CollectionUtils.isEmpty(extraServiceDTOs)) {
             throw new GeneralException(HttpStatus.GONE, EXTRA_SERVICE_IS_REQUIRED);

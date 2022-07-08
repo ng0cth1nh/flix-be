@@ -23,11 +23,11 @@ public interface RepairerService {
 
     ResponseEntity<RequestingFilterResponse> getFilterRequestList(RequestingFilterRequest request);
 
-    ResponseEntity<AddSubServicesToInvoiceResponse> addSubServicesToInvoice(AddSubServicesToInvoiceRequest request);
+    ResponseEntity<AddSubServicesToInvoiceResponse> putSubServicesToInvoice(AddSubServicesToInvoiceRequest request);
 
-    ResponseEntity<AddAccessoriesToInvoiceResponse> addAccessoriesToInvoice(AddAccessoriesToInvoiceRequest request);
+    ResponseEntity<AddAccessoriesToInvoiceResponse> putAccessoriesToInvoice(AddAccessoriesToInvoiceRequest request);
 
-    ResponseEntity<AddExtraServiceToInvoiceResponse> addExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request);
+    ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request);
 
     ResponseEntity<SearchSubServicesResponse> searchSubServicesByService(SearchSubServicesRequest request);
     ResponseEntity<SearchAccessoriesResponse> searchAccessoriesByService(SearchAccessoriesRequest request);

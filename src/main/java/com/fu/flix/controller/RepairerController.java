@@ -62,19 +62,19 @@ public class RepairerController {
         return repairerService.getFilterRequestList(request);
     }
 
-    @PostMapping("request/fixedSubService")
-    public ResponseEntity<AddSubServicesToInvoiceResponse> addSubServicesToInvoice(@RequestBody AddSubServicesToInvoiceRequest request) {
-        return repairerService.addSubServicesToInvoice(request);
+    @PutMapping("request/fixedSubService")
+    public ResponseEntity<AddSubServicesToInvoiceResponse> putSubServicesToInvoice(@RequestBody AddSubServicesToInvoiceRequest request) {
+        return repairerService.putSubServicesToInvoice(request);
     }
 
-    @PostMapping("request/fixedAccessory")
-    public ResponseEntity<AddAccessoriesToInvoiceResponse> addAccessoriesToInvoice(@RequestBody AddAccessoriesToInvoiceRequest request) {
-        return repairerService.addAccessoriesToInvoice(request);
+    @PutMapping("request/fixedAccessory")
+    public ResponseEntity<AddAccessoriesToInvoiceResponse> putAccessoriesToInvoice(@RequestBody AddAccessoriesToInvoiceRequest request) {
+        return repairerService.putAccessoriesToInvoice(request);
     }
 
-    @PostMapping("request/fixedExtraService")
-    public ResponseEntity<AddExtraServiceToInvoiceResponse> addExtraServiceToInvoice(@RequestBody AddExtraServiceToInvoiceRequest request) {
-        return repairerService.addExtraServiceToInvoice(request);
+    @PutMapping("request/fixedExtraService")
+    public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(@RequestBody AddExtraServiceToInvoiceRequest request) {
+        return repairerService.putExtraServiceToInvoice(request);
     }
 
     @GetMapping("subServices")

@@ -9,15 +9,11 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
-import com.fu.flix.service.AddressService;
-import com.fu.flix.service.CustomerService;
-import com.fu.flix.service.ValidatorService;
-import com.fu.flix.service.VoucherService;
+import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -57,6 +53,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final ValidatorService validatorService;
     private final AddressService addressService;
     private final VoucherService voucherService;
+    private final RequestService requestService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
 
@@ -76,7 +73,8 @@ public class CustomerServiceImpl implements CustomerService {
                                StatusDAO statusDAO,
                                ValidatorService validatorService,
                                AddressService addressService,
-                               VoucherService voucherService) {
+                               VoucherService voucherService,
+                               RequestService requestService) {
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
         this.serviceDAO = serviceDAO;
@@ -94,6 +92,7 @@ public class CustomerServiceImpl implements CustomerService {
         this.validatorService = validatorService;
         this.addressService = addressService;
         this.voucherService = voucherService;
+        this.requestService = requestService;
     }
 
     @Override
@@ -261,9 +260,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request) {
-        String requestCode = getRequestCode(request.getRequestCode());
+        String requestCode = request.getRequestCode();
+        RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
-        RepairRequest repairRequest = getRepairRequest(requestCode);
         if (!repairRequest.getUserId().equals(request.getUserId())) {
             throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CANCEL_THIS_REQUEST);
         }
@@ -391,7 +390,11 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request) {
-        String requestCode = getRequestCode(request.getRequestCode());
+        String requestCode = request.getRequestCode();
+        if (requestService.isEmptyRequestCode(requestCode)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
         Long customerId = request.getUserId();
         IDetailFixingRequestForCustomerDTO dto = repairRequestDAO.findDetailFixingRequestForCustomer(customerId, requestCode);
 
@@ -422,19 +425,6 @@ public class CustomerServiceImpl implements CustomerService {
             response.setRepairerAvatar(dto.getRepairerAvatar());
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private String getRequestCode(String requestCode) {
-        return requestCode == null ? Strings.EMPTY : requestCode;
-    }
-
-    @Override
-    public RepairRequest getRepairRequest(String requestCode) {
-        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
-        if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
-        }
-        return optionalRepairRequest.get();
     }
 
     private Long getRequestPrice(String requestCode, boolean isActualPrice) {

@@ -12,7 +12,6 @@ import com.fu.flix.entity.*;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -49,6 +48,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final AddressService addressService;
     private final VoucherService voucherService;
     private final SubServiceDAO subServiceDAO;
+    private final RequestService requestService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
 
@@ -63,7 +63,8 @@ public class RepairerServiceImpl implements RepairerService {
                                UserAddressDAO userAddressDAO,
                                AddressService addressService,
                                VoucherService voucherService,
-                               SubServiceDAO subServiceDAO) {
+                               SubServiceDAO subServiceDAO,
+                               RequestService requestService) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -77,19 +78,14 @@ public class RepairerServiceImpl implements RepairerService {
         this.addressService = addressService;
         this.voucherService = voucherService;
         this.subServiceDAO = subServiceDAO;
+        this.requestService = requestService;
     }
 
     @Override
     public ResponseEntity<RepairerApproveResponse> approveRequest(RepairerApproveRequest request) {
-        String requestCode = getRequestCodeNotNull(request.getRequestCode());
+        String requestCode = request.getRequestCode();
+        RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
-        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
-
-        if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
-        }
-
-        RepairRequest repairRequest = optionalRepairRequest.get();
         if (!PENDING.getId().equals(repairRequest.getStatusId())) {
             throw new GeneralException(HttpStatus.CONFLICT, JUST_CAN_ACCEPT_PENDING_REQUEST);
         }
@@ -138,7 +134,11 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<RequestingDetailForRepairerResponse> getRepairRequestDetail(RequestingDetailForRepairerRequest request) {
-        String requestCode = getRequestCodeNotNull(request.getRequestCode());
+        String requestCode = request.getRequestCode();
+        if (requestService.isEmptyRequestCode(requestCode)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
         RequestingDetailForRepairerResponse response = new RequestingDetailForRepairerResponse();
         IDetailFixingRequestForRepairerDTO dto = repairRequestDAO.findDetailFixingRequestForRepairer(request.getUserId(), requestCode);
 
@@ -169,14 +169,22 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) {
-        String requestCode = getRequestCodeNotNull(request.getRequestCode());
+        String requestCode = request.getRequestCode();
+        if (requestService.isEmptyRequestCode(requestCode)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
 
-        RepairRequest repairRequest = customerService.getRepairRequest(requestCode);
+        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+        if (optionalRepairRequest.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
         if (!repairRequestMatching.getRepairerId().equals(request.getUserId())) {
             throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CANCEL_THIS_REQUEST);
         }
 
+        RepairRequest repairRequest = optionalRepairRequest.get();
         if (!isCancelable(repairRequest)) {
             throw new GeneralException(HttpStatus.GONE, ONLY_CAN_CANCEL_REQUEST_FIXING_OR_APPROVED);
         }
@@ -264,20 +272,14 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request) {
-        String requestCode = getRequestCodeNotNull(request.getRequestCode());
-
-        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO
-                .findByRequestCodeAndStatusId(requestCode, FIXING.getId());
-        if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
-        }
+        String requestCode = request.getRequestCode();
+        RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
         if (!request.getUserId().equals(repairRequestMatching.getRepairerId())) {
             throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_INVOICE_FOR_THIS_REQUEST);
         }
 
-        RepairRequest repairRequest = optionalRepairRequest.get();
         repairRequest.setStatusId(PAYMENT_WAITING.getId());
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
@@ -291,13 +293,9 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(ConfirmInvoicePaidRequest request) {
-        String requestCode = getRequestCodeNotNull(request.getRequestCode());
-        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
-        if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
-        }
+        String requestCode = request.getRequestCode();
+        RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
-        RepairRequest repairRequest = optionalRepairRequest.get();
         if (!PaymentMethod.CASH.getId().equals(repairRequest.getPaymentMethodId())) {
             throw new GeneralException(HttpStatus.GONE, CONFIRM_INVOICE_PAID_ONLY_USE_FOR_PAYMENT_IN_CASH);
         }
@@ -325,14 +323,9 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<ConfirmFixingResponse> confirmFixing(ConfirmFixingRequest request) {
-        String requestCode = getRequestCodeNotNull(request.getRequestCode());
-        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
+        String requestCode = request.getRequestCode();
+        RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
-        if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
-        }
-
-        RepairRequest repairRequest = optionalRepairRequest.get();
         if (!APPROVED.getId().equals(repairRequest.getStatusId())) {
             throw new GeneralException(HttpStatus.GONE, JUST_CAN_CONFIRM_FIXING_WHEN_REQUEST_STATUS_APPROVED);
         }
@@ -350,10 +343,6 @@ public class RepairerServiceImpl implements RepairerService {
         response.setRequestCode(requestCode);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private String getRequestCodeNotNull(String requestCode) {
-        return requestCode == null ? Strings.EMPTY : requestCode;
     }
 
     @Override
@@ -473,19 +462,13 @@ public class RepairerServiceImpl implements RepairerService {
             throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_ID_IS_REQUIRED);
         }
 
-        String requestCode = getRequestCodeNotNull(request.getRequestCode());
-        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO
-                .findByRequestCodeAndStatusId(requestCode, FIXING.getId());
-        if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
-        }
+        String requestCode = request.getRequestCode();
+        RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
         if (!request.getUserId().equals(repairRequestMatching.getRepairerId())) {
             throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_SUB_SERVICES_FOR_THIS_INVOICE);
         }
-
-        RepairRequest repairRequest = optionalRepairRequest.get();
 
         Collection<SubService> subServices = subServiceDAO.findSubServices(subServiceIds, repairRequest.getServiceId());
         if (subServices.isEmpty()) {

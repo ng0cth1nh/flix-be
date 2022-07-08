@@ -76,4 +76,9 @@ public class RepairerController {
     public ResponseEntity<AddExtraServiceToInvoiceResponse> addExtraServiceToInvoice(@RequestBody AddExtraServiceToInvoiceRequest request) {
         return repairerService.addExtraServiceToInvoice(request);
     }
+
+    @GetMapping("fixedSubServices")
+    public ResponseEntity<SearchSubServicesResponse> searchSubServicesByService(SearchSubServicesRequest request) {
+        return repairerService.searchSubServicesByService(request);
+    }
 }

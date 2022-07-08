@@ -658,4 +658,32 @@ public class RepairerServiceImpl implements RepairerService {
         invoice.setVatPrice(newVatPrice);
         invoice.setActualProceeds(beforeVat + newVatPrice);
     }
+
+    @Override
+    public ResponseEntity<SearchSubServicesResponse> searchSubServicesByService(SearchSubServicesRequest request) {
+        String keyword = request.getKeyword();
+        if (keyword == null || keyword.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        Long serviceId = request.getServiceId();
+        if (serviceId == null) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_ID_IS_REQUIRED);
+        }
+
+        List<SubService> subServices = subServiceDAO.searchSubServicesByService(keyword, serviceId);
+        List<SubServiceDTO> subServiceDTOS = subServices.stream()
+                .map(subService -> {
+                    SubServiceDTO dto = new SubServiceDTO();
+                    dto.setId(subService.getId());
+                    dto.setName(subService.getName());
+                    dto.setPrice(subService.getPrice());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        SearchSubServicesResponse response = new SearchSubServicesResponse();
+        response.setSubServices(subServiceDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

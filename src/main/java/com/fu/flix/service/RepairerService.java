@@ -29,4 +29,6 @@ public interface RepairerService {
 
     ResponseEntity<AddExtraServiceToInvoiceResponse> addExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request);
 
+    ResponseEntity<SearchSubServicesResponse> searchSubServicesByService(SearchSubServicesRequest request);
+
 }

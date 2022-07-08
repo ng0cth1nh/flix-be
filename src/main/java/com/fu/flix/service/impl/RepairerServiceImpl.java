@@ -132,6 +132,7 @@ public class RepairerServiceImpl implements RepairerService {
         return repairRequestMatching;
     }
 
+
     @Override
     public ResponseEntity<RequestingDetailForRepairerResponse> getRepairRequestDetail(RequestingDetailForRepairerRequest request) {
         String requestCode = request.getRequestCode();

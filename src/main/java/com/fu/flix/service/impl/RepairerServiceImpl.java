@@ -495,7 +495,7 @@ public class RepairerServiceImpl implements RepairerService {
 
         Collection<SubService> subServices = subServiceDAO.findSubServices(subServiceIds, repairRequest.getServiceId());
         if (subServices.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_SUB_SERVICE_ID);
+            throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_NOT_FOUND);
         }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
@@ -542,7 +542,7 @@ public class RepairerServiceImpl implements RepairerService {
 
         Collection<Accessory> accessories = accessoryDAO.findAccessories(accessoryIds, repairRequest.getServiceId());
         if (accessories.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_ACCESSORY_ID);
+            throw new GeneralException(HttpStatus.GONE, ACCESSORY_NOT_FOUND);
         }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();

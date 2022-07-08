@@ -9,6 +9,9 @@ import java.util.List;
 
 @Repository
 public interface AccessoryDAO extends JpaRepository<Accessory, Long> {
-    @Query(value = "SELECT * FROM accessories where id in (:accessoryIds) AND service_id = :serviceId", nativeQuery = true)
+    @Query(value = "SELECT * FROM accessories " +
+            "WHERE id IN (:accessoryIds) " +
+            "AND service_id = :serviceId " +
+            "AND is_active", nativeQuery = true)
     List<Accessory> findAccessories(List<Long> accessoryIds, Long serviceId);
 }

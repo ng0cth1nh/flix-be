@@ -27,4 +27,6 @@ public class Accessory {
     private Integer insuranceTime;
 
     private String country;
+
+    private Boolean isActive;
 }

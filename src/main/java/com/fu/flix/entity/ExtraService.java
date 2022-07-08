@@ -6,15 +6,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.Collection;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "other_prices")
+@Table(name = "extra_services")
 @NoArgsConstructor
 @AllArgsConstructor
-public class OtherPrice {
+public class ExtraService {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,8 +22,9 @@ public class OtherPrice {
 
     private Long price;
 
+    private Integer insuranceTime;
+
     private String description;
 
-    @OneToMany(mappedBy = "otherPrice")
-    private Collection<InvoiceOtherPrice> invoiceOtherPrices;
+    private String requestCode;
 }

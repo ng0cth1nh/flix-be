@@ -47,6 +47,14 @@ public class InputValidation {
         return matcher.matches();
     }
 
+    public static boolean isDescriptionValid(String description, Long maxLength) {
+        if (description == null) {
+            return true;
+        }
+
+        return description.length() < maxLength;
+    }
+
     public static String removeAccent(String s) {
         String temp = Normalizer.normalize(s, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");

@@ -11,10 +11,12 @@ import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
+import com.fu.flix.util.InputValidation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.transaction.Transactional;
 import java.time.Duration;
@@ -22,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +53,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final SubServiceDAO subServiceDAO;
     private final RequestService requestService;
     private final AccessoryDAO accessoryDAO;
+    private final ExtraServiceDAO extraServiceDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
 
@@ -66,7 +70,8 @@ public class RepairerServiceImpl implements RepairerService {
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
                                RequestService requestService,
-                               AccessoryDAO accessoryDAO) {
+                               AccessoryDAO accessoryDAO,
+                               ExtraServiceDAO extraServiceDAO) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -82,6 +87,7 @@ public class RepairerServiceImpl implements RepairerService {
         this.subServiceDAO = subServiceDAO;
         this.requestService = requestService;
         this.accessoryDAO = accessoryDAO;
+        this.extraServiceDAO = extraServiceDAO;
     }
 
     @Override
@@ -470,7 +476,7 @@ public class RepairerServiceImpl implements RepairerService {
     @Override
     public ResponseEntity<AddSubServicesToInvoiceResponse> addSubServicesToInvoice(AddSubServicesToInvoiceRequest request) {
         List<Long> subServiceIds = request.getSubServiceIds();
-        if (subServiceIds == null || subServiceIds.isEmpty()) {
+        if (CollectionUtils.isEmpty(subServiceIds)) {
             throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_ID_IS_REQUIRED);
         }
 
@@ -500,7 +506,7 @@ public class RepairerServiceImpl implements RepairerService {
         long addingMoney = subServices.stream().mapToLong(SubService::getPrice).sum();
         long totalSubServicePrice = invoice.getTotalSubServicePrice() + addingMoney;
         invoice.setTotalSubServicePrice(totalSubServicePrice);
-        updateCommonInvoiceMoney(invoice, addingMoney, repairRequest.getVat());
+        plusCommonInvoiceMoney(invoice, addingMoney, repairRequest.getVat());
 
         AddSubServicesToInvoiceResponse response = new AddSubServicesToInvoiceResponse();
         response.setMessage(ADD_SUB_SERVICE_TO_INVOICE_SUCCESS);
@@ -517,7 +523,7 @@ public class RepairerServiceImpl implements RepairerService {
     @Override
     public ResponseEntity<AddAccessoriesToInvoiceResponse> addAccessoriesToInvoice(AddAccessoriesToInvoiceRequest request) {
         List<Long> accessoryIds = request.getAccessoryIds();
-        if (accessoryIds == null || accessoryIds.isEmpty()) {
+        if (CollectionUtils.isEmpty(accessoryIds)) {
             throw new GeneralException(HttpStatus.GONE, ACCESSORY_ID_IS_REQUIRED);
         }
 
@@ -547,7 +553,7 @@ public class RepairerServiceImpl implements RepairerService {
         long addingMoney = accessories.stream().mapToLong(Accessory::getPrice).sum();
         long totalAccessoryPrice = invoice.getTotalAccessoryPrice() + addingMoney;
         invoice.setTotalAccessoryPrice(totalAccessoryPrice);
-        updateCommonInvoiceMoney(invoice, addingMoney, repairRequest.getVat());
+        plusCommonInvoiceMoney(invoice, addingMoney, repairRequest.getVat());
 
         AddAccessoriesToInvoiceResponse response = new AddAccessoriesToInvoiceResponse();
         response.setMessage(ADD_ACCESSORIES_TO_INVOICE_SUCCESS);
@@ -561,7 +567,85 @@ public class RepairerServiceImpl implements RepairerService {
                         .anyMatch(oldSubService -> oldSubService.getId().equals(subService.getId())));
     }
 
-    private void updateCommonInvoiceMoney(Invoice invoice, Long addingMoney, Double vat) {
+    @Override
+    public ResponseEntity<AddExtraServiceToInvoiceResponse> addExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request) {
+        Collection<ExtraServiceDTO> extraServiceDTOs = request.getExtraServices();
+        if (CollectionUtils.isEmpty(extraServiceDTOs)) {
+            throw new GeneralException(HttpStatus.GONE, EXTRA_SERVICE_IS_REQUIRED);
+        }
+
+        if (isInvalidExtraServices(extraServiceDTOs)) {
+            throw new GeneralException(HttpStatus.GONE, LIST_EXTRA_SERVICES_CONTAIN_INVALID_ELEMENT);
+        }
+
+        String requestCode = request.getRequestCode();
+        RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
+        if (!FIXING.getId().equals(repairRequest.getStatusId())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_ADD_EXTRA_SERVICE_WHEN_REQUEST_STATUS_IS_FIXING);
+        }
+
+        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+        if (!request.getUserId().equals(repairRequestMatching.getRepairerId())) {
+            throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_EXTRA_SERVICE_FOR_THIS_INVOICE);
+        }
+
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+
+        long addingMoney = saveAndReturnExtraServicesTotalPrice(extraServiceDTOs, requestCode);
+        long totalExtraServicePrice = invoice.getTotalExtraServicePrice() + addingMoney;
+        invoice.setTotalExtraServicePrice(totalExtraServicePrice);
+        plusCommonInvoiceMoney(invoice, addingMoney, repairRequest.getVat());
+
+        AddExtraServiceToInvoiceResponse response = new AddExtraServiceToInvoiceResponse();
+        response.setMessage(ADD_EXTRA_SERVICE_TO_INVOICE_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private boolean isInvalidExtraServices(Collection<ExtraServiceDTO> extraServicesInput) {
+        return extraServicesInput.stream().anyMatch(this::isInvalidExtraService);
+    }
+
+    private boolean isInvalidExtraService(ExtraServiceDTO extraServiceDTO) {
+        if (!InputValidation.isNameValid(extraServiceDTO.getName())) {
+            return true;
+        }
+
+        if (!InputValidation.isDescriptionValid(extraServiceDTO.getDescription(), this.appConf.getDescriptionMaxLength())) {
+            return true;
+        }
+
+        Long price = extraServiceDTO.getPrice();
+        if (price == null || price < 0) {
+            return true;
+        }
+
+        Integer insuranceTime = extraServiceDTO.getInsuranceTime();
+        return insuranceTime != null && insuranceTime < 0;
+    }
+
+    private long saveAndReturnExtraServicesTotalPrice(Collection<ExtraServiceDTO> extraServiceDTOs, String requestCode) {
+        long totalExtraServicePrice = 0L;
+        Collection<ExtraService> extraServices = new ArrayList<>();
+
+        for (ExtraServiceDTO dto : extraServiceDTOs) {
+            long price = dto.getPrice();
+            totalExtraServicePrice += price;
+
+            ExtraService extraService = new ExtraService();
+            extraService.setName(dto.getName());
+            extraService.setPrice(price);
+            extraService.setDescription(dto.getDescription());
+            extraService.setRequestCode(requestCode);
+            extraService.setInsuranceTime(dto.getInsuranceTime());
+            extraServices.add(extraService);
+        }
+
+        extraServiceDAO.saveAll(extraServices);
+        return totalExtraServicePrice;
+    }
+
+    private void plusCommonInvoiceMoney(Invoice invoice, Long addingMoney, Double vat) {
         long newTotalPrice = invoice.getTotalPrice() + addingMoney;
         long newTotalDiscount = voucherService.getVoucherDiscount(newTotalPrice, invoice.getVoucherId());
         long beforeVat = newTotalPrice - newTotalDiscount;

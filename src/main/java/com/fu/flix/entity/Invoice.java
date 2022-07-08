@@ -25,7 +25,7 @@ public class Invoice {
 
     private Long totalSubServicePrice;
 
-    private Long totalOtherPrice;
+    private Long totalExtraServicePrice;
 
     private Long totalAccessoryPrice;
 
@@ -54,9 +54,6 @@ public class Invoice {
             joinColumns = @JoinColumn(name = "request_code"),
             inverseJoinColumns = @JoinColumn(name = "accessory_id"))
     private Collection<Accessory> accessories = new ArrayList<>();
-
-    @OneToMany(mappedBy = "invoice")
-    private Collection<InvoiceOtherPrice> invoiceOtherPrices;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

@@ -197,7 +197,7 @@ public class RepairerServiceImpl implements RepairerService {
             monetaryFine(request.getUserId(), requestCode);
         }
 
-        customerService.updateUsedVoucherQuantityAfterCancelRequest(repairRequest);
+        customerService.refundVoucher(repairRequest);
         updateRepairRequest(request, repairRequest);
 
         CancelRequestForRepairerResponse response = new CancelRequestForRepairerResponse();
@@ -288,10 +288,19 @@ public class RepairerServiceImpl implements RepairerService {
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
         invoice.setConfirmedByRepairerAt(LocalDateTime.now());
 
+        if (isCanNotApplyVoucherToInvoice(invoice)) {
+            customerService.refundVoucher(repairRequest);
+        }
+
         CreateInvoiceResponse response = new CreateInvoiceResponse();
         response.setMessage(CREATE_INVOICE_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private boolean isCanNotApplyVoucherToInvoice(Invoice invoice) {
+        Long voucherId = invoice.getVoucherId();
+        return voucherId != null && invoice.getTotalPrice() < voucherService.getVoucherMinOrderPrice(voucherId);
     }
 
     @Override

@@ -278,7 +278,7 @@ public class CustomerServiceImpl implements CustomerService {
             updateRepairerAfterCancelRequest(requestCode);
         }
 
-        updateUsedVoucherQuantityAfterCancelRequest(repairRequest);
+        refundVoucher(repairRequest);
         updateRepairRequest(request, repairRequest);
 
         CancelRequestForCustomerResponse response = new CancelRequestForCustomerResponse();
@@ -329,7 +329,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public void updateUsedVoucherQuantityAfterCancelRequest(RepairRequest repairRequest) {
+    public void refundVoucher(RepairRequest repairRequest) {
         Long voucherId = repairRequest.getVoucherId();
         if (voucherId != null) {
             User user = validatorService.getUserValidated(repairRequest.getUserId());

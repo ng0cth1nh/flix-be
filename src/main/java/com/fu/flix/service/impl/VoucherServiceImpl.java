@@ -79,4 +79,19 @@ public class VoucherServiceImpl implements VoucherService {
                 ? discountPercent.getMaxDiscountPrice()
                 : discount;
     }
+
+    @Override
+    public Long getVoucherMinOrderPrice(Long voucherId) {
+        long min = 0;
+        if (voucherId == null) {
+            return min;
+        }
+
+        Optional<Voucher> optionalVoucher = voucherDAO.findById(voucherId);
+        if (optionalVoucher.isEmpty()) {
+            return min;
+        }
+
+        return optionalVoucher.get().getMinOrderPrice();
+    }
 }

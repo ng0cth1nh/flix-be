@@ -13,6 +13,7 @@ import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -493,7 +494,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     private boolean isInvalidExtraService(ExtraServiceInputDTO extraServiceInputDTO) {
-        if (!InputValidation.isNameValid(extraServiceInputDTO.getName(), NAME_MAX_LENGTH)) {
+        if (Strings.isEmpty(extraServiceInputDTO.getName())) {
             return true;
         }
 

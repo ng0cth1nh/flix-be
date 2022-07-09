@@ -118,7 +118,7 @@ class InputValidationTest {
     @Test
     void should_valid_full_name() {
         // given
-        String fullName = "tụ";
+        String fullName = "Doan U";
 
         // when
         boolean check = InputValidation.isNameValid(fullName, 250L);

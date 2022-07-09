@@ -58,7 +58,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                         authorities.add(new SimpleGrantedAuthority(role));
                     }
                     UsernamePasswordAuthenticationToken authenticationToken
-                            = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, username), null, authorities);
+                            = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, username, roles), null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     filterChain.doFilter(request, response);
                 } catch (Exception exception) {

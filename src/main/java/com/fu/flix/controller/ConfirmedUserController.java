@@ -1,14 +1,13 @@
 package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.CommentRequest;
+import com.fu.flix.dto.request.GetInvoiceRequest;
 import com.fu.flix.dto.response.CommentResponse;
+import com.fu.flix.dto.response.GetInvoiceResponse;
 import com.fu.flix.service.ConfirmedUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -23,5 +22,10 @@ public class ConfirmedUserController {
     @PostMapping("comment")
     public ResponseEntity<CommentResponse> createComment(@RequestBody CommentRequest request) {
         return confirmedUserService.createComment(request);
+    }
+
+    @GetMapping("request/invoice")
+    public ResponseEntity<GetInvoiceResponse> getInvoice(GetInvoiceRequest request) {
+        return confirmedUserService.getInvoice(request);
     }
 }

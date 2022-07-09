@@ -1493,7 +1493,7 @@ class CustomerServiceImplTest {
             authorities.add(new SimpleGrantedAuthority(role));
         }
         UsernamePasswordAuthenticationToken authenticationToken
-                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone), null, authorities);
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 

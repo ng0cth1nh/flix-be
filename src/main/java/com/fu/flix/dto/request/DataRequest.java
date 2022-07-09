@@ -31,4 +31,16 @@ public abstract class DataRequest {
 
         return null;
     }
+
+    public String[] getRoles() {
+        if (SecurityContextHolder.getContext() != null) {
+            if (SecurityContextHolder.getContext().getAuthentication() != null) {
+                if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() != null) {
+                    return ((UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getRoles();
+                }
+            }
+        }
+
+        return null;
+    }
 }

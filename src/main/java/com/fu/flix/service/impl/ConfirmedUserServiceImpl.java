@@ -5,18 +5,16 @@ import com.fu.flix.constant.enums.CommentType;
 import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.dao.*;
-import com.fu.flix.dto.IInvoiceDTO;
-import com.fu.flix.dto.VoucherDTO;
+import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CommentRequest;
+import com.fu.flix.dto.request.GetFixedServiceRequest;
 import com.fu.flix.dto.request.GetInvoiceRequest;
 import com.fu.flix.dto.response.CommentResponse;
+import com.fu.flix.dto.response.GetFixedServiceResponse;
 import com.fu.flix.dto.response.GetInvoiceResponse;
 import com.fu.flix.entity.*;
-import com.fu.flix.service.AddressService;
-import com.fu.flix.service.ConfirmedUserService;
-import com.fu.flix.service.ValidatorService;
-import com.fu.flix.service.VoucherService;
+import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -27,10 +25,14 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.Constant.RATING_MUST_IN_RANGE_1_TO_5;
+import static com.fu.flix.constant.enums.RequestStatus.DONE;
+import static com.fu.flix.constant.enums.RequestStatus.PAYMENT_WAITING;
 import static com.fu.flix.constant.enums.RoleType.*;
 
 @Service
@@ -45,6 +47,8 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
     private final AppConf appConf;
     private final AddressService addressService;
     private final VoucherService voucherService;
+    private final RequestService requestService;
+    private final ExtraServiceDAO extraServiceDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public ConfirmedUserServiceImpl(CommentDAO commentDAO,
@@ -54,7 +58,9 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
                                     InvoiceDAO invoiceDAO,
                                     AppConf appConf,
                                     AddressService addressService,
-                                    VoucherService voucherService) {
+                                    VoucherService voucherService,
+                                    RequestService requestService,
+                                    ExtraServiceDAO extraServiceDAO) {
         this.commentDAO = commentDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
         this.repairRequestDAO = repairRequestDAO;
@@ -63,6 +69,8 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         this.appConf = appConf;
         this.addressService = addressService;
         this.voucherService = voucherService;
+        this.requestService = requestService;
+        this.extraServiceDAO = extraServiceDAO;
     }
 
     @Override
@@ -188,7 +196,80 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Override
+    public ResponseEntity<GetFixedServiceResponse> getFixedServices(GetFixedServiceRequest request) {
+        String requestCode = request.getRequestCode();
+        RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
+        Long userId = request.getUserId();
+
+        if (canNotGetFixedServices(repairRequest.getStatusId())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_GET_FIXED_SERVICES_WHEN_REQUEST_STATUS_IS_PAYMENT_WAITING_OR_DONE);
+        }
+
+        if (isCustomer(request.getRoles())) {
+            if (!userId.equals(repairRequest.getUserId())) {
+                throw new GeneralException(HttpStatus.GONE, CUSTOMER_DOES_NOT_HAVE_PERMISSION_TO_GET_FIXED_SERVICES_FOR_THIS_INVOICE);
+            }
+        } else {
+            RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+            if (!userId.equals(repairRequestMatching.getRepairerId())) {
+                throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_GET_FIXED_SERVICES_FOR_THIS_INVOICE);
+            }
+        }
+
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        GetFixedServiceResponse response = new GetFixedServiceResponse();
+        List<SubServiceOutputDTO> subServiceDTOs = getSubServiceDTOs(invoice);
+        List<AccessoryOutputDTO> accessoryDTOs = getAccessoryDTOs(invoice);
+        List<ExtraServiceOutputDTO> extraServiceDTOs = getExtraServiceDTOs(requestCode);
+        response.setExtraServices(extraServiceDTOs);
+        response.setSubServices(subServiceDTOs);
+        response.setAccessories(accessoryDTOs);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private boolean canNotGetFixedServices(String statusId) {
+        return !PAYMENT_WAITING.getId().equals(statusId) && !DONE.getId().equals(statusId);
+    }
+
     private boolean isCustomer(String[] roles) {
         return Arrays.stream(roles).anyMatch(r -> ROLE_CUSTOMER.name().equals(r));
+    }
+
+    private List<SubServiceOutputDTO> getSubServiceDTOs(Invoice invoice) {
+        return invoice.getSubServices().stream()
+                .map(subService -> {
+                    SubServiceOutputDTO dto = new SubServiceOutputDTO();
+                    dto.setId(subService.getId());
+                    dto.setName(subService.getName());
+                    dto.setPrice(subService.getPrice());
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+    private List<AccessoryOutputDTO> getAccessoryDTOs(Invoice invoice) {
+        return invoice.getAccessories().stream()
+                .map(accessory -> {
+                    AccessoryOutputDTO dto = new AccessoryOutputDTO();
+                    dto.setId(accessory.getId());
+                    dto.setName(accessory.getName());
+                    dto.setPrice(accessory.getPrice());
+                    dto.setInsuranceTime(accessory.getInsuranceTime());
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+    private List<ExtraServiceOutputDTO> getExtraServiceDTOs(String requestCode) {
+        return extraServiceDAO.findByRequestCode(requestCode).stream()
+                .map(extraService -> {
+                    ExtraServiceOutputDTO dto = new ExtraServiceOutputDTO();
+                    dto.setId(extraService.getId());
+                    dto.setName(extraService.getName());
+                    dto.setPrice(extraService.getPrice());
+                    dto.setDescription(extraService.getDescription());
+                    dto.setInsuranceTime(extraService.getInsuranceTime());
+                    return dto;
+                }).collect(Collectors.toList());
     }
 }

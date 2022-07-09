@@ -37,8 +37,11 @@ public class InputValidation {
         return matcher.matches();
     }
 
-    public static boolean isNameValid(String name) {
+    public static boolean isNameValid(String name, Long maxLength) {
         if (name == null) {
+            return false;
+        }
+        if (name.length() > maxLength) {
             return false;
         }
         name = removeAccent(name);

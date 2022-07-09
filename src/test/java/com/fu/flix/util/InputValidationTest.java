@@ -121,7 +121,7 @@ class InputValidationTest {
         String fullName = "Lê Hồ";
 
         // when
-        boolean check = InputValidation.isNameValid(fullName);
+        boolean check = InputValidation.isNameValid(fullName, 250L);
 
         // then
         Assertions.assertTrue(check);

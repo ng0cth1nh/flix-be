@@ -62,6 +62,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final RepairerDAO repairerDAO;
     private final BalanceDAO balanceDAO;
     private final ValidatorService validatorService;
+    private final Long NAME_MAX_LENGTH;
 
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -90,6 +91,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.repairerDAO = repairerDAO;
         this.balanceDAO = balanceDAO;
         this.validatorService = validatorService;
+        this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
     }
 
     @Override
@@ -232,7 +234,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_PASSWORD);
         } else if (isNotValidCommune(request.getCommuneId())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
-        } else if (!InputValidation.isNameValid(request.getFullName())) {
+        } else if (!InputValidation.isNameValid(request.getFullName(), NAME_MAX_LENGTH)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         } else if (isNotValidStreetAddress(request.getStreetAddress())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_STREET_ADDRESS);

@@ -56,6 +56,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final RequestService requestService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
+    private final Long NAME_MAX_LENGTH;
 
     public CustomerServiceImpl(RepairRequestDAO repairRequestDAO,
                                VoucherDAO voucherDAO,
@@ -93,6 +94,7 @@ public class CustomerServiceImpl implements CustomerService {
         this.addressService = addressService;
         this.voucherService = voucherService;
         this.requestService = requestService;
+        this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
     }
 
     @Override
@@ -501,7 +503,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<EditAddressResponse> editCustomerAddress(EditAddressRequest request) {
         String name = request.getName();
-        if (!InputValidation.isNameValid(name)) {
+        if (!InputValidation.isNameValid(name, NAME_MAX_LENGTH)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_NAME);
         }
 
@@ -554,7 +556,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<CreateAddressResponse> createCustomerAddress(CreateAddressRequest request) {
         String fullName = request.getFullName();
-        if (!InputValidation.isNameValid(fullName)) {
+        if (!InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         }
 
@@ -618,7 +620,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request) {
         String fullName = request.getFullName();
-        if (!InputValidation.isNameValid(fullName)) {
+        if (!InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         }
 

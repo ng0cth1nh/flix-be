@@ -56,7 +56,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
 
         String commentContent = request.getComment() == null
                 ? Strings.EMPTY
-                : request.getComment().trim();
+                : request.getComment();
         if (commentContent.length() > this.appConf.getDescriptionMaxLength()) {
             throw new GeneralException(HttpStatus.GONE, EXCEEDED_COMMENT_LENGTH_ALLOWED);
         }

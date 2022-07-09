@@ -250,7 +250,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     private boolean isNotValidStreetAddress(String streetAddress) {
-        return streetAddress == null || streetAddress.trim().isEmpty();
+        return streetAddress == null || streetAddress.isEmpty();
     }
 
     private boolean isRoleTypeValid(String roleType) {

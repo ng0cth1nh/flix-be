@@ -5,9 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ExtraServiceDTO {
+public class SubServiceOutputDTO {
+    private Long id;
     private String name;
-    private String description;
     private Long price;
-    private Integer insuranceTime;
 }

@@ -61,6 +61,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().antMatchers("/api/v1/repairer/**")
                 .hasAnyAuthority(ROLE_REPAIRER.name());
 
+        http.authorizeRequests().antMatchers("/api/v1/commonRepairer/**")
+                .hasAnyAuthority(ROLE_REPAIRER.name(),
+                        ROLE_PENDING_REPAIRER.name());
+
         http.authorizeRequests().antMatchers("/api/v1/confirmedUser/**")
                 .hasAnyAuthority(ROLE_CUSTOMER.name(),
                         ROLE_REPAIRER.name());

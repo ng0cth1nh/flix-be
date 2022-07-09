@@ -52,16 +52,6 @@ public class RepairerController {
         return repairerService.confirmFixing(request);
     }
 
-    @GetMapping("request/list/suggestion")
-    public ResponseEntity<RequestingSuggestionResponse> getSuggestionRequestList(RequestingSuggestionRequest request) {
-        return repairerService.getSuggestionRequestList(request);
-    }
-
-    @GetMapping("request/list/filter")
-    public ResponseEntity<RequestingFilterResponse> getFilterRequestList(RequestingFilterRequest request) {
-        return repairerService.getFilterRequestList(request);
-    }
-
     @PutMapping("request/fixedSubService")
     public ResponseEntity<AddSubServicesToInvoiceResponse> putSubServicesToInvoice(@RequestBody AddSubServicesToInvoiceRequest request) {
         return repairerService.putSubServicesToInvoice(request);
@@ -75,15 +65,5 @@ public class RepairerController {
     @PutMapping("request/fixedExtraService")
     public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(@RequestBody AddExtraServiceToInvoiceRequest request) {
         return repairerService.putExtraServiceToInvoice(request);
-    }
-
-    @GetMapping("subServices")
-    public ResponseEntity<SearchSubServicesResponse> searchSubServicesByService(SearchSubServicesRequest request) {
-        return repairerService.searchSubServicesByService(request);
-    }
-
-    @GetMapping("accessories")
-    public ResponseEntity<SearchAccessoriesResponse> searchAccessoriesByService(SearchAccessoriesRequest request) {
-        return repairerService.searchAccessoriesByService(request);
     }
 }

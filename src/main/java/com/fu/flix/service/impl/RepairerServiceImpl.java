@@ -20,10 +20,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.transaction.Transactional;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +28,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.RepairerSuggestionType.SUGGESTED;
 import static com.fu.flix.constant.enums.RequestStatus.*;
 import static com.fu.flix.constant.enums.TransactionType.*;
 
@@ -47,7 +43,6 @@ public class RepairerServiceImpl implements RepairerService {
     private final AppConf appConf;
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final CustomerService customerService;
-    private final UserAddressDAO userAddressDAO;
     private final AddressService addressService;
     private final VoucherService voucherService;
     private final SubServiceDAO subServiceDAO;
@@ -55,7 +50,6 @@ public class RepairerServiceImpl implements RepairerService {
     private final AccessoryDAO accessoryDAO;
     private final ExtraServiceDAO extraServiceDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    private final String DATE_PATTERN = "dd-MM-yyyy";
     private final Long DESCRIPTION_MAX_LENGTH;
     private final Long NAME_MAX_LENGTH;
 
@@ -67,7 +61,6 @@ public class RepairerServiceImpl implements RepairerService {
                                AppConf appConf,
                                TransactionHistoryDAO transactionHistoryDAO,
                                CustomerService customerService,
-                               UserAddressDAO userAddressDAO,
                                AddressService addressService,
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
@@ -83,7 +76,6 @@ public class RepairerServiceImpl implements RepairerService {
         this.appConf = appConf;
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.customerService = customerService;
-        this.userAddressDAO = userAddressDAO;
         this.addressService = addressService;
         this.voucherService = voucherService;
         this.subServiceDAO = subServiceDAO;
@@ -367,115 +359,6 @@ public class RepairerServiceImpl implements RepairerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @Override
-    public ResponseEntity<RequestingSuggestionResponse> getSuggestionRequestList(RequestingSuggestionRequest request) {
-        String type = getRepairerSuggestionTypeValidated(request.getType());
-
-        Long userId = request.getUserId();
-        UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(userId, true).get();
-        Long userAddressId = userAddress.getId();
-
-        Repairer repairer = repairerDAO.findByUserId(userId).get();
-        Collection<com.fu.flix.entity.Service> services = repairer.getServices();
-        List<Long> serviceIds = services.stream()
-                .map(com.fu.flix.entity.Service::getId)
-                .collect(Collectors.toList());
-
-        List<IRequestingDTO> iRequestingDTOS;
-        if (SUGGESTED.name().equals(type)) {
-            String districtId = userAddressDAO.findDistrictIdByUserAddressId(userAddressId);
-            iRequestingDTOS = repairRequestDAO.findPendingRequestByDistrict(serviceIds, districtId);
-        } else {
-            String cityId = userAddressDAO.findCityIdByUserAddressId(userAddressId);
-            iRequestingDTOS = repairRequestDAO.findPendingRequestByCity(serviceIds, cityId);
-        }
-
-        List<RequestingDTO> requestLists = getRequestList(iRequestingDTOS);
-
-        RequestingSuggestionResponse response = new RequestingSuggestionResponse();
-        response.setRequestList(requestLists);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private String getRepairerSuggestionTypeValidated(String type) {
-        for (RepairerSuggestionType t : RepairerSuggestionType.values()) {
-            if (t.name().equals(type)) {
-                return type;
-            }
-        }
-        throw new GeneralException(HttpStatus.GONE, INVALID_REPAIRER_SUGGESTION_TYPE);
-    }
-
-    @Override
-    public ResponseEntity<RequestingFilterResponse> getFilterRequestList(RequestingFilterRequest request) {
-        List<Long> serviceIds = request.getServiceIds();
-        if (serviceIds == null || serviceIds.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, SERVICE_IDS_ARE_REQUIRED);
-        }
-
-        LocalDateTime start = getFilterDateValidated(request.getStartDate()).atTime(LocalTime.MIN);
-        LocalDateTime end = getFilterDateValidated(request.getEndDate()).atTime(LocalTime.MAX);
-
-        String locationType = getLocationTypeValidated(request.getLocationType());
-        String locationId = request.getLocationId();
-        List<IRequestingDTO> iRequestingDTOS;
-        switch (LocationType.valueOf(locationType)) {
-            case CITY:
-                iRequestingDTOS = repairRequestDAO.filterPendingRequestByCity(serviceIds, locationId, start, end);
-                break;
-            case DISTRICT:
-                iRequestingDTOS = repairRequestDAO.filterPendingRequestByDistrict(serviceIds, locationId, start, end);
-                break;
-            default:
-                iRequestingDTOS = repairRequestDAO.filterPendingRequestByCommune(serviceIds, locationId, start, end);
-                break;
-        }
-
-        List<RequestingDTO> requestLists = getRequestList(iRequestingDTOS);
-        RequestingFilterResponse response = new RequestingFilterResponse();
-        response.setRequestList(requestLists);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private LocalDate getFilterDateValidated(String strDate) {
-        if (strDate == null) {
-            throw new GeneralException(HttpStatus.GONE, START_DATE_AND_END_DATE_ARE_REQUIRED);
-        }
-
-        try {
-            return DateFormatUtil.getLocalDate(strDate, DATE_PATTERN);
-        } catch (DateTimeParseException e) {
-            throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_FORMAT);
-        }
-    }
-
-    private List<RequestingDTO> getRequestList(List<IRequestingDTO> iRequestingDTOS) {
-        return iRequestingDTOS.stream()
-                .map(iRequestingDTO -> {
-                    RequestingDTO dto = new RequestingDTO();
-                    dto.setCustomerName(iRequestingDTO.getCustomerName());
-                    dto.setAvatar(iRequestingDTO.getAvatar());
-                    dto.setServiceName(iRequestingDTO.getServiceName());
-                    dto.setExpectFixingTime(DateFormatUtil.toString(iRequestingDTO.getExpectFixingTime(), DATE_TIME_PATTERN));
-                    dto.setAddress(addressService.getAddressFormatted(iRequestingDTO.getAddressId()));
-                    dto.setDescription(iRequestingDTO.getDescription());
-                    dto.setRequestCode(iRequestingDTO.getRequestCode());
-                    dto.setIconImage(iRequestingDTO.getIconImage());
-                    dto.setCreatedAt(iRequestingDTO.getCreatedAt());
-                    return dto;
-                }).collect(Collectors.toList());
-    }
-
-    private String getLocationTypeValidated(String type) {
-        for (LocationType t : LocationType.values()) {
-            if (t.name().equals(type)) {
-                return type;
-            }
-        }
-        throw new GeneralException(HttpStatus.GONE, INVALID_LOCATION_TYPE);
-    }
 
     @Override
     public ResponseEntity<AddSubServicesToInvoiceResponse> putSubServicesToInvoice(AddSubServicesToInvoiceRequest request) {
@@ -567,12 +450,12 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request) {
-        Collection<ExtraServiceDTO> extraServiceDTOs = request.getExtraServices();
-        if (CollectionUtils.isEmpty(extraServiceDTOs)) {
+        Collection<ExtraServiceInputDTO> extraServiceInputDTOS = request.getExtraServices();
+        if (CollectionUtils.isEmpty(extraServiceInputDTOS)) {
             throw new GeneralException(HttpStatus.GONE, EXTRA_SERVICE_IS_REQUIRED);
         }
 
-        if (isInvalidExtraServices(extraServiceDTOs)) {
+        if (isInvalidExtraServices(extraServiceInputDTOS)) {
             throw new GeneralException(HttpStatus.GONE, LIST_EXTRA_SERVICES_CONTAIN_INVALID_ELEMENT);
         }
 
@@ -595,7 +478,7 @@ public class RepairerServiceImpl implements RepairerService {
         invoice.setTotalExtraServicePrice(0L);
         minusCommonInvoiceMoney(invoice, minusMoney, vat);
 
-        long plusMoney = saveAndReturnExtraServicesTotalPrice(extraServiceDTOs, requestCode);
+        long plusMoney = saveAndReturnExtraServicesTotalPrice(extraServiceInputDTOS, requestCode);
         invoice.setTotalExtraServicePrice(plusMoney);
         plusCommonInvoiceMoney(invoice, plusMoney, vat);
 
@@ -605,33 +488,33 @@ public class RepairerServiceImpl implements RepairerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private boolean isInvalidExtraServices(Collection<ExtraServiceDTO> extraServicesInput) {
+    private boolean isInvalidExtraServices(Collection<ExtraServiceInputDTO> extraServicesInput) {
         return extraServicesInput.stream().anyMatch(this::isInvalidExtraService);
     }
 
-    private boolean isInvalidExtraService(ExtraServiceDTO extraServiceDTO) {
-        if (!InputValidation.isNameValid(extraServiceDTO.getName(), NAME_MAX_LENGTH)) {
+    private boolean isInvalidExtraService(ExtraServiceInputDTO extraServiceInputDTO) {
+        if (!InputValidation.isNameValid(extraServiceInputDTO.getName(), NAME_MAX_LENGTH)) {
             return true;
         }
 
-        if (!InputValidation.isDescriptionValid(extraServiceDTO.getDescription(), DESCRIPTION_MAX_LENGTH)) {
+        if (!InputValidation.isDescriptionValid(extraServiceInputDTO.getDescription(), DESCRIPTION_MAX_LENGTH)) {
             return true;
         }
 
-        Long price = extraServiceDTO.getPrice();
+        Long price = extraServiceInputDTO.getPrice();
         if (price == null || price < 0) {
             return true;
         }
 
-        Integer insuranceTime = extraServiceDTO.getInsuranceTime();
+        Integer insuranceTime = extraServiceInputDTO.getInsuranceTime();
         return insuranceTime != null && insuranceTime < 0;
     }
 
-    private long saveAndReturnExtraServicesTotalPrice(Collection<ExtraServiceDTO> extraServiceDTOs, String requestCode) {
+    private long saveAndReturnExtraServicesTotalPrice(Collection<ExtraServiceInputDTO> extraServiceInputDTOS, String requestCode) {
         long totalExtraServicePrice = 0L;
         Collection<ExtraService> extraServices = new ArrayList<>();
 
-        for (ExtraServiceDTO dto : extraServiceDTOs) {
+        for (ExtraServiceInputDTO dto : extraServiceInputDTOS) {
             long price = dto.getPrice();
             totalExtraServicePrice += price;
 
@@ -667,60 +550,5 @@ public class RepairerServiceImpl implements RepairerService {
         invoice.setTotalDiscount(newTotalDiscount);
         invoice.setVatPrice(newVatPrice);
         invoice.setActualProceeds(beforeVat + newVatPrice);
-    }
-
-    @Override
-    public ResponseEntity<SearchSubServicesResponse> searchSubServicesByService(SearchSubServicesRequest request) {
-        String keyword = request.getKeyword();
-        if (keyword == null || keyword.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
-
-        Long serviceId = request.getServiceId();
-        if (serviceId == null) {
-            throw new GeneralException(HttpStatus.GONE, SERVICE_ID_IS_REQUIRED);
-        }
-
-        List<SubService> subServices = subServiceDAO.searchSubServicesByService(keyword, serviceId);
-        List<SubServiceDTO> subServiceDTOS = subServices.stream()
-                .map(subService -> {
-                    SubServiceDTO dto = new SubServiceDTO();
-                    dto.setId(subService.getId());
-                    dto.setName(subService.getName());
-                    dto.setPrice(subService.getPrice());
-                    return dto;
-                }).collect(Collectors.toList());
-
-        SearchSubServicesResponse response = new SearchSubServicesResponse();
-        response.setSubServices(subServiceDTOS);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @Override
-    public ResponseEntity<SearchAccessoriesResponse> searchAccessoriesByService(SearchAccessoriesRequest request) {
-        String keyword = request.getKeyword();
-        if (keyword == null || keyword.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
-        Long serviceId = request.getServiceId();
-        if (serviceId == null) {
-            throw new GeneralException(HttpStatus.GONE, SERVICE_ID_IS_REQUIRED);
-        }
-
-        List<Accessory> accessories = accessoryDAO.searchAccessoriesByService(keyword, serviceId);
-        List<AccessoryDTO> accessoryDTOS = accessories.stream()
-                .map(accessory -> {
-                    AccessoryDTO dto = new AccessoryDTO();
-                    dto.setId(accessory.getId());
-                    dto.setName(accessory.getName());
-                    dto.setPrice(accessory.getPrice());
-                    return dto;
-                }).collect(Collectors.toList());
-
-        SearchAccessoriesResponse response = new SearchAccessoriesResponse();
-        response.setAccessories(accessoryDTOS);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

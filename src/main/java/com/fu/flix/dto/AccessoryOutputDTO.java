@@ -5,8 +5,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SubServiceDTO {
+public class AccessoryOutputDTO {
     private Long id;
     private String name;
     private Long price;
+    private Integer insuranceTime;
 }

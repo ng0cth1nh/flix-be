@@ -205,7 +205,6 @@ class CustomerServiceImplTest {
         request.setExpectFixingDay(expectFixingDay);
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
-
         setUserContext(36L, "0865390037");
 
         // when

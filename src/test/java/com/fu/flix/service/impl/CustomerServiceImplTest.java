@@ -756,7 +756,7 @@ class CustomerServiceImplTest {
         Assertions.assertNull(response.getActualPrice());
         Assertions.assertNull(response.getCustomerName());
         Assertions.assertNull(response.getRequestCode());
-        Assertions.assertNull(response.getPrice());
+        Assertions.assertNull(response.getTotalPrice());
         Assertions.assertNull(response.getDate());
     }
 

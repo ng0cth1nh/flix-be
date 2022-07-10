@@ -18,7 +18,12 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
 
     List<RepairRequest> findByUserIdAndStatusIdOrderByCreatedAtDesc(Long userId, String statusId);
 
-    @Query(value = "SELECT stt.name as status, i_sv.url as serviceImage, sv.id as serviceId, sv.name as serviceName, c_address.id as customerAddressId, customer.phone as customerPhone, customer.full_name as customerName, rr.expect_start_fixing_at as expectFixingDay, rr.description as requestDescription, v.id as voucherId, pm.name as paymentMethod, rr.created_at as createdAt, iv.total_price as price, iv.actual_proceeds as actualPrice, iv.vat_price as vatPrice, rr.request_code as requestCode, r_address.id as repairerAddressId, repairer.phone as repairerPhone, repairer.full_name as repairerName, repairer.id as repairerId, repairer_avatar.url  as repairerAvatar " +
+    @Query(value = "SELECT stt.name as status, i_sv.url as serviceImage, sv.id as serviceId, sv.name as serviceName, c_address.id as customerAddressId," +
+            " customer.phone as customerPhone, customer.full_name as customerName, rr.expect_start_fixing_at as expectFixingDay, rr.description as requestDescription, " +
+            "v.id as voucherId, pm.name as paymentMethod, rr.created_at as createdAt, iv.total_price as totalPrice, iv.actual_proceeds as actualPrice, " +
+            "iv.vat_price as vatPrice, rr.request_code as requestCode, r_address.id as repairerAddressId, repairer.phone as repairerPhone, " +
+            "repairer.full_name as repairerName, repairer.id as repairerId, repairer_avatar.url  as repairerAvatar, iv.inspection_price as inspectionPrice, " +
+            "iv.total_discount as totalDiscount " +
             "FROM repair_requests rr " +
             "JOIN services sv " +
             "ON rr.service_id = sv.id " +
@@ -51,8 +56,9 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
 
     @Query(value = "SELECT stt.name as status, sv_img.url as serviceImage, sv.id as serviceId, sv.name as serviceName, customer.id as customerId," +
             " avatar.url as avatar, ua.id as addressId, customer.phone as customerPhone, customer.full_name as customerName, rr.expect_start_fixing_at as expectFixingTime," +
-            " rr.description as requestDescription, v.id as voucherId, pm.name as paymentMethod, rr.created_at as createdAt, iv.total_price as price," +
-            " iv.actual_proceeds as actualPrice, iv.vat_price as vatPrice, rr.request_code as requestCode " +
+            " rr.description as requestDescription, v.id as voucherId, pm.name as paymentMethod, rr.created_at as createdAt, iv.total_price as totalPrice," +
+            " iv.actual_proceeds as actualPrice, iv.vat_price as vatPrice, rr.request_code as requestCode, iv.inspection_price as inspectionPrice," +
+            "iv.total_discount as totalDiscount " +
             "FROM repair_requests rr " +
             "LEFT JOIN repair_requests_matching rrm " +
             "ON rr.request_code = rrm.request_code " +

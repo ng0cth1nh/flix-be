@@ -19,8 +19,10 @@ public class RequestingDetailForRepairerResponse {
     private String voucherDiscount;
     private String paymentMethod;
     private String date;
-    private Long price;
+    private Long totalPrice;
     private Long actualPrice;
     private Long vatPrice;
     private String requestCode;
+    private Long inspectionPrice;
+    private Long totalDiscount;
 }

@@ -165,10 +165,12 @@ public class RepairerServiceImpl implements RepairerService {
             response.setVoucherDiscount(voucherDTO.getVoucherDiscount());
             response.setPaymentMethod(dto.getPaymentMethod());
             response.setDate(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
-            response.setPrice(dto.getPrice());
+            response.setTotalPrice(dto.getTotalPrice());
             response.setActualPrice(dto.getActualPrice());
             response.setVatPrice(dto.getVatPrice());
             response.setRequestCode(requestCode);
+            response.setInspectionPrice(dto.getInspectionPrice());
+            response.setTotalDiscount(dto.getTotalDiscount());
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

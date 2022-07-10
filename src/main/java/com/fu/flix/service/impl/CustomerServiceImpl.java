@@ -419,7 +419,7 @@ public class CustomerServiceImpl implements CustomerService {
             response.setVoucherDiscount(voucherDTO.getVoucherDiscount());
             response.setPaymentMethod(dto.getPaymentMethod());
             response.setDate(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
-            response.setPrice(dto.getPrice());
+            response.setTotalPrice(dto.getTotalPrice());
             response.setActualPrice(dto.getActualPrice());
             response.setVatPrice(dto.getVatPrice());
             response.setRequestCode(requestCode);
@@ -428,6 +428,8 @@ public class CustomerServiceImpl implements CustomerService {
             response.setRepairerName(dto.getRepairerName());
             response.setRepairerId(dto.getRepairerId());
             response.setRepairerAvatar(dto.getRepairerAvatar());
+            response.setInspectionPrice(dto.getInspectionPrice());
+            response.setTotalDiscount(dto.getTotalDiscount());
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

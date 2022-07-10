@@ -198,7 +198,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         userDAO.save(user);
 
         addRoleToUser(user.getUsername(), ROLE_CUSTOMER.name());
-
         saveCustomerUserAddress(user.getUsername(), request);
 
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
@@ -223,7 +222,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         userDAO.save(user);
 
         addRoleToUser(user.getUsername(), ROLE_PENDING_REPAIRER.name());
-
         saveRepairerUserAddress(user.getUsername(), request);
 
         createRepairer(user, request);
@@ -245,45 +243,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void createRepairer(User user, CFRegisterRepairerRequest request) {
-        Repairer repairer = new Repairer();
-        repairer.setUserId(user.getId());
-        repairer.setExperienceDescription(request.getExperienceDescription());
-        repairer.setExperienceYear(request.getExperienceYear());
-        repairerDAO.save(repairer);
-    }
-
-    private void createBalance(User user) {
-        Balance balance = new Balance();
-        balance.setUserId(user.getId());
-        balance.setBalance(0L);
-        balanceDAO.save(balance);
-    }
-
-    private void createIdentityCard(User user, CFRegisterRepairerRequest request) throws IOException {
-        IdentityCard identityCard = new IdentityCard();
-        identityCard.setIdentityCardNumber(request.getIdentityCardNumber());
-        identityCard.setType(request.getIdentityCardType());
-        identityCard.setRepairerId(user.getId());
-        identityCard = postFrontIdentityImage(identityCard, request.getFrontImage());
-        identityCard = postBackSideIdentityImage(identityCard, request.getBackSideImage());
-        identityCardDAO.save(identityCard);
-    }
-
-    private void createCertificates(User user, List<MultipartFile> certificateFiles) throws IOException {
-        List<Certificate> certificates = new ArrayList<>();
-
-        for (MultipartFile file : certificateFiles) {
-            String url = cloudStorageService.uploadCertificateFile(file);
-            Certificate certificate = new Certificate();
-            certificate.setRepairerId(user.getId());
-            certificate.setUrl(url);
-            certificates.add(certificate);
-        }
-
-        certificateDAO.saveAll(certificates);
-    }
-
     private void validateRegisterCustomerInput(CFRegisterCustomerRequest request) {
         if (isNotValidOTP(request, OTPType.REGISTER)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
@@ -300,6 +259,17 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         } else if (isInvalidStreetAddress(request.getStreetAddress())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_STREET_ADDRESS);
         }
+    }
+
+    private User buildCustomerUser(CFRegisterCustomerRequest registerAccount, MultipartFile avatar) throws IOException {
+        User user = new User();
+        user.setFullName(registerAccount.getFullName());
+        user.setPhone(registerAccount.getPhone());
+        user.setIsActive(true);
+        user.setUsername(registerAccount.getPhone());
+        user.setPassword(passwordEncoder.encode(registerAccount.getPassword()));
+        user = postUserAvatar(user, avatar);
+        return user;
     }
 
     private void validateRegisterRepairerInput(CFRegisterRepairerRequest request) {
@@ -342,14 +312,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         }
     }
 
-    private boolean isInvalidImage(MultipartFile file) {
-        return file == null || !cloudStorageService.isImageFile(file);
-    }
-
-    private boolean isIdentityCardExisted(String card) {
-        return identityCardDAO.findByIdentityCardNumber(card).isPresent();
-    }
-
     private boolean isInvalidCommune(String communeId) {
         if (Strings.isEmpty(communeId)) {
             return true;
@@ -362,8 +324,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return Strings.isEmpty(streetAddress) || streetAddress.length() > NAME_MAX_LENGTH;
     }
 
-    private boolean isInvalidExperienceYears(Integer experienceYear) {
-        return experienceYear == null || experienceYear < 0;
+    private boolean isInvalidExperienceDescription(String experienceDescription) {
+        return Strings.isEmpty(experienceDescription) || experienceDescription.length() > DESCRIPTION_MAX_LENGTH;
     }
 
     private boolean isEmptyCertificates(List<MultipartFile> certificates) {
@@ -379,8 +341,12 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return false;
     }
 
-    private boolean isInvalidExperienceDescription(String experienceDescription) {
-        return Strings.isEmpty(experienceDescription) || experienceDescription.length() > DESCRIPTION_MAX_LENGTH;
+    private boolean isInvalidExperienceYears(Integer experienceYear) {
+        return experienceYear == null || experienceYear < 0;
+    }
+
+    private boolean isInvalidImage(MultipartFile file) {
+        return file == null || !cloudStorageService.isImageFile(file);
     }
 
     private boolean isInvalidIdentityCardType(String type) {
@@ -390,6 +356,92 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             }
         }
         return true;
+    }
+
+    private boolean isIdentityCardExisted(String card) {
+        return identityCardDAO.findByIdentityCardNumber(card).isPresent();
+    }
+
+    private User buildRepairerUser(CFRegisterRepairerRequest registerAccount, MultipartFile avatar) throws IOException {
+        User user = new User();
+        user.setFullName(registerAccount.getFullName());
+        user.setPhone(registerAccount.getPhone());
+        user.setIsActive(true);
+        user.setUsername(registerAccount.getPhone());
+        user.setPassword(passwordEncoder.encode(registerAccount.getPassword()));
+        user.setGender(registerAccount.getGender());
+        user.setDateOfBirth(DateFormatUtil.getLocalDate(registerAccount.getDateOfBirth(), DATE_PATTERN));
+        user = postUserAvatar(user, avatar);
+        return user;
+    }
+
+    private void addRoleToUser(String username, String roleName) {
+        log.info("adding role {} to user {}", roleName, username);
+        Optional<User> optionalUser = userDAO.findByUsername(username);
+        Optional<Role> optionalRole = roleDAO.findByName(roleName);
+
+        if (optionalUser.isPresent() && optionalRole.isPresent()) {
+            User user = optionalUser.get();
+            Role role = optionalRole.get();
+            user.getRoles().add(role);
+        }
+    }
+
+    public void saveCustomerUserAddress(String username, CFRegisterCustomerRequest registerAccount) {
+        saveUserAddress(username,
+                registerAccount.getCommuneId(),
+                registerAccount.getStreetAddress(),
+                registerAccount.getFullName(),
+                registerAccount.getPhone()
+        );
+    }
+
+    public void saveRepairerUserAddress(String username, CFRegisterRepairerRequest registerAccount) {
+        saveUserAddress(username,
+                registerAccount.getCommuneId(),
+                registerAccount.getStreetAddress(),
+                registerAccount.getFullName(),
+                registerAccount.getPhone()
+        );
+    }
+
+    private void createRepairer(User user, CFRegisterRepairerRequest request) {
+        Repairer repairer = new Repairer();
+        repairer.setUserId(user.getId());
+        repairer.setExperienceDescription(request.getExperienceDescription());
+        repairer.setExperienceYear(request.getExperienceYear());
+        repairerDAO.save(repairer);
+    }
+
+    private void createBalance(User user) {
+        Balance balance = new Balance();
+        balance.setUserId(user.getId());
+        balance.setBalance(0L);
+        balanceDAO.save(balance);
+    }
+
+    private void createIdentityCard(User user, CFRegisterRepairerRequest request) throws IOException {
+        IdentityCard identityCard = new IdentityCard();
+        identityCard.setIdentityCardNumber(request.getIdentityCardNumber());
+        identityCard.setType(request.getIdentityCardType());
+        identityCard.setRepairerId(user.getId());
+        identityCard = postFrontIdentityImage(identityCard, request.getFrontImage());
+        identityCard = postBackSideIdentityImage(identityCard, request.getBackSideImage());
+        identityCardDAO.save(identityCard);
+    }
+
+    private void createCertificates(User user, List<MultipartFile> certificateFiles) throws IOException {
+        List<Certificate> certificates = new ArrayList<>();
+
+        for (MultipartFile file : certificateFiles) {
+            String url = cloudStorageService.uploadCertificateFile(file);
+            Certificate certificate = new Certificate();
+            certificate.setRepairerId(user.getId());
+            certificate.setUrl(url);
+            certificates.add(certificate);
+        }
+
+        certificateDAO.saveAll(certificates);
     }
 
     private String getToken(User user, TokenType tokenType) {
@@ -417,29 +469,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return token;
     }
 
-    private User buildCustomerUser(CFRegisterCustomerRequest registerAccount, MultipartFile avatar) throws IOException {
-        User user = new User();
-        user.setFullName(registerAccount.getFullName());
-        user.setPhone(registerAccount.getPhone());
-        user.setIsActive(true);
-        user.setUsername(registerAccount.getPhone());
-        user.setPassword(passwordEncoder.encode(registerAccount.getPassword()));
-        user = postUserAvatar(user, avatar);
-        return user;
-    }
-
-    private User buildRepairerUser(CFRegisterRepairerRequest registerAccount, MultipartFile avatar) throws IOException {
-        User user = new User();
-        user.setFullName(registerAccount.getFullName());
-        user.setPhone(registerAccount.getPhone());
-        user.setIsActive(true);
-        user.setUsername(registerAccount.getPhone());
-        user.setPassword(passwordEncoder.encode(registerAccount.getPassword()));
-        user.setGender(registerAccount.getGender());
-        user.setDateOfBirth(DateFormatUtil.getLocalDate(registerAccount.getDateOfBirth(), DATE_PATTERN));
-        user = postUserAvatar(user, avatar);
-        return user;
-    }
 
     public User postUserAvatar(User user, MultipartFile avatar) throws IOException {
         if (avatar != null) {
@@ -473,23 +502,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return identityCard;
     }
 
-    public void saveCustomerUserAddress(String username, CFRegisterCustomerRequest registerAccount) {
-        saveUserAddress(username,
-                registerAccount.getCommuneId(),
-                registerAccount.getStreetAddress(),
-                registerAccount.getFullName(),
-                registerAccount.getPhone()
-        );
-    }
-
-    public void saveRepairerUserAddress(String username, CFRegisterRepairerRequest registerAccount) {
-        saveUserAddress(username,
-                registerAccount.getCommuneId(),
-                registerAccount.getStreetAddress(),
-                registerAccount.getFullName(),
-                registerAccount.getPhone()
-        );
-    }
 
     private void saveUserAddress(String username, String communeId, String streetAddress, String fullName, String phone) {
         Optional<User> optionalUser = userDAO.findByUsername(username);
@@ -507,18 +519,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             userAddress.setPhone(phone);
             userAddress.setCommuneId(commune.getId());
             userAddressDAO.save(userAddress);
-        }
-    }
-
-    private void addRoleToUser(String username, String roleName) {
-        log.info("adding role {} to user {}", roleName, username);
-        Optional<User> optionalUser = userDAO.findByUsername(username);
-        Optional<Role> optionalRole = roleDAO.findByName(roleName);
-
-        if (optionalUser.isPresent() && optionalRole.isPresent()) {
-            User user = optionalUser.get();
-            Role role = optionalRole.get();
-            user.getRoles().add(role);
         }
     }
 

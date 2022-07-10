@@ -18,7 +18,8 @@ app:
   permitAllApis: [ '/api/v1/login',
                    '/api/v1/token/refresh',
                    '/api/v1/register/sendOTP',
-                   '/api/v1/register/confirm',
+                   '/api/v1/register/customer/confirm',
+                   '/api/v1/register/repairer/confirm',
                    '/swagger-ui/index.html',
                    '/v2/api-docs',
                    '/swagger-resources',
@@ -50,9 +51,9 @@ spring:
     password: S$s.(QQl6mXrG,eJ
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
-    host: 34.134.183.253
+    host: localhost
     port: 6379
-    password: ''
+    password:
   jackson:
     serialization:
       FAIL_ON_EMPTY_BEANS: false

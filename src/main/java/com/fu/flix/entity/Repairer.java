@@ -20,9 +20,9 @@ public class Repairer {
     @Id
     private Long userId;
 
-    private String experience;
+    private String experienceDescription;
 
-    private String certificate;
+    private Integer experienceYear;
 
     private boolean isRepairing;
 

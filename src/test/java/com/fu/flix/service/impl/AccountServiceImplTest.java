@@ -11,7 +11,7 @@ import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CFForgotPassRequest;
-import com.fu.flix.dto.request.CFRegisterRequest;
+import com.fu.flix.dto.request.CFRegisterCustomerRequest;
 import com.fu.flix.dto.request.SendForgotPassOTPRequest;
 import com.fu.flix.dto.request.SendRegisterOTPRequest;
 import com.fu.flix.dto.response.*;
@@ -240,7 +240,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    public void test_confirm_otp_request_success() throws IOException {
+    public void test_confirm_register_customer_success() throws IOException {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -251,17 +251,15 @@ class AccountServiceImplTest {
         String password = "123abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -272,122 +270,15 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        ResponseEntity<CFRegisterResponse> responseEntity = underTest.confirmRegister(request);
-        CFRegisterResponse response = responseEntity.getBody();
+        ResponseEntity<CFRegisterCustomerResponse> responseEntity = underTest.confirmRegisterCustomer(request);
+        CFRegisterCustomerResponse response = responseEntity.getBody();
 
         // then
         Assertions.assertEquals(CONFIRM_REGISTER_SUCCESS, response.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_when_wrong_role_type_and_otp_is_null() {
-        // given
-        MockMultipartFile avatar = new MockMultipartFile(
-                "avatar",
-                "filename.jpeg",
-                MediaType.IMAGE_JPEG_VALUE,
-                "avatar".getBytes());
-        String fullName = "Nguyễn Thị Hồng Nhung";
-        String password = "123abc";
-        String communeId = "00006";
-        String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "customer";
-        String phone = "0865390031";
-
-        CFRegisterRequest request = new CFRegisterRequest();
-        request.setAvatar(avatar);
-        request.setFullName(fullName);
-        request.setPassword(password);
-        request.setCommuneId(communeId);
-        request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
-        request.setPhone(phone);
-
-        OTPInfo otpInfo = new OTPInfo();
-        otpInfo.setUsername(phone);
-        otpInfo.setOtpType(REGISTER);
-
-        // when
-        awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
-
-        // then
-        Assertions.assertEquals(INVALID_ROLE_TYPE, exception.getMessage());
-    }
-
-    @Test
-    public void test_confirm_otp_request_when_role_type_is_empty_and_otp_is_null() {
-        // given
-        MockMultipartFile avatar = new MockMultipartFile(
-                "avatar",
-                "filename.png",
-                MediaType.IMAGE_PNG_VALUE,
-                "avatar".getBytes());
-        String fullName = "Nguyễn Thị Hồng Nhung";
-        String password = "123abc";
-        String communeId = "00006";
-        String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "";
-        String phone = "0865390031";
-
-        CFRegisterRequest request = new CFRegisterRequest();
-        request.setAvatar(avatar);
-        request.setFullName(fullName);
-        request.setPassword(password);
-        request.setCommuneId(communeId);
-        request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
-        request.setPhone(phone);
-
-        OTPInfo otpInfo = new OTPInfo();
-        otpInfo.setUsername(phone);
-        otpInfo.setOtpType(REGISTER);
-
-        // when
-        awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
-
-        // then
-        Assertions.assertEquals(INVALID_ROLE_TYPE, exception.getMessage());
-    }
-
-    @Test
-    public void test_confirm_otp_request_when_role_type_is_null_and_otp_is_null() {
-        // given
-        MockMultipartFile avatar = new MockMultipartFile(
-                "avatar",
-                "filename.gif",
-                MediaType.IMAGE_GIF_VALUE,
-                "avatar".getBytes());
-
-        String fullName = "Nguyễn Thị Hồng Nhung";
-        String password = "123abc";
-        String communeId = "00006";
-        String streetAddress = "Đường 30m Hòa Lạc";
-        String phone = "0865390031";
-
-        CFRegisterRequest request = new CFRegisterRequest();
-        request.setAvatar(avatar);
-        request.setFullName(fullName);
-        request.setPassword(password);
-        request.setCommuneId(communeId);
-        request.setStreetAddress(streetAddress);
-        request.setPhone(phone);
-
-        OTPInfo otpInfo = new OTPInfo();
-        otpInfo.setUsername(phone);
-        otpInfo.setOtpType(REGISTER);
-
-        // when
-        awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
-
-        // then
-        Assertions.assertEquals(INVALID_ROLE_TYPE, exception.getMessage());
-    }
-
-    @Test
-    public void test_confirm_otp_request_when_street_address_is_null() {
+    public void test_confirm_register_customer_when_street_address_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -398,17 +289,15 @@ class AccountServiceImplTest {
         String fullName = "Nguyễn Thị Hồng Nhung";
         String password = "123abc";
         String communeId = "00006";
-        String roleTpe = "ROLE_CUSTOMER";
         String phone = "0865390031";
         int otp = 123456;
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setPhone(phone);
-        request.setRoleType(roleTpe);
         request.setOtp(otp);
 
         OTPInfo otpInfo = new OTPInfo();
@@ -418,14 +307,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_STREET_ADDRESS, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_when_street_address_is_empty() {
+    public void test_confirm_register_customer_when_street_address_is_empty() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -436,18 +325,16 @@ class AccountServiceImplTest {
         String fullName = "Nguyễn Thị Hồng Nhung";
         String password = "123abc";
         String communeId = "00006";
-        String roleTpe = "ROLE_CUSTOMER";
         String phone = "0865390031";
         String streetAddress = "";
         int otp = 123456;
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setPhone(phone);
-        request.setRoleType(roleTpe);
         request.setOtp(otp);
         request.setStreetAddress(streetAddress);
 
@@ -458,14 +345,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_STREET_ADDRESS, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_when_commune_is_null() {
+    public void test_confirm_register_customer_when_commune_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -475,17 +362,15 @@ class AccountServiceImplTest {
         String fullName = "Nguyễn Thị Hồng Nhung";
         String password = "123abc";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(null);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -496,14 +381,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_when_commune_is_empty() {
+    public void test_confirm_register_customer_when_commune_is_empty() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -513,17 +398,15 @@ class AccountServiceImplTest {
         String fullName = "Nguyễn Thị Hồng Nhung";
         String password = "123abc";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId("");
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -534,14 +417,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_when_commune_is_abcde() {
+    public void test_confirm_register_customer_when_commune_is_abcde() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -551,17 +434,15 @@ class AccountServiceImplTest {
         String fullName = "Nguyễn Thị Hồng Nhung";
         String password = "123abc";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId("abcde");
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -572,14 +453,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_when_commune_is_abc05() {
+    public void test_confirm_register_customer_when_commune_is_abc05() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -589,17 +470,15 @@ class AccountServiceImplTest {
         String fullName = "Nguyễn Thị Hồng Nhung";
         String password = "123abc";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId("abc05");
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -610,14 +489,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_when_commune_is_0() {
+    public void test_confirm_register_customer_when_commune_is_0() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -627,17 +506,15 @@ class AccountServiceImplTest {
         String fullName = "Nguyễn Thị Hồng Nhung";
         String password = "123abc";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId("0");
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -648,14 +525,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_success_with_role_CUSTOMER() throws IOException {
+    public void test_confirm_register_customer_success_with_role_CUSTOMER() throws IOException {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -666,17 +543,15 @@ class AccountServiceImplTest {
         String password = "123abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_CUSTOMER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -687,15 +562,15 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        ResponseEntity<CFRegisterResponse> responseEntity = underTest.confirmRegister(request);
-        CFRegisterResponse response = responseEntity.getBody();
+        ResponseEntity<CFRegisterCustomerResponse> responseEntity = underTest.confirmRegisterCustomer(request);
+        CFRegisterCustomerResponse response = responseEntity.getBody();
 
         // then
         Assertions.assertEquals(CONFIRM_REGISTER_SUCCESS, response.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_when_password_is_123() {
+    public void test_confirm_register_customer_when_password_is_123() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -706,17 +581,15 @@ class AccountServiceImplTest {
         String password = "123";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -727,14 +600,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_success_when_password_is_12345abcde() throws IOException {
+    public void test_confirm_register_customer_success_when_password_is_12345abcde() throws IOException {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -745,17 +618,15 @@ class AccountServiceImplTest {
         String password = "12345abcde";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -766,15 +637,15 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        ResponseEntity<CFRegisterResponse> responseEntity = underTest.confirmRegister(request);
-        CFRegisterResponse response = responseEntity.getBody();
+        ResponseEntity<CFRegisterCustomerResponse> responseEntity = underTest.confirmRegisterCustomer(request);
+        CFRegisterCustomerResponse response = responseEntity.getBody();
 
         // then
         Assertions.assertEquals(CONFIRM_REGISTER_SUCCESS, response.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_when_password_have_white_space() {
+    public void test_confirm_register_customer_when_password_have_white_space() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -785,17 +656,15 @@ class AccountServiceImplTest {
         String password = "123 abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -806,14 +675,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_when_password_length_greater_than_10() {
+    public void test_confirm_register_customer_when_password_length_greater_than_10() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -824,17 +693,15 @@ class AccountServiceImplTest {
         String password = "123456abcdefg";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -845,14 +712,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_password_is_abcdefgh() {
+    public void test_confirm_register_customer_fail_when_password_is_abcdefgh() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -863,17 +730,15 @@ class AccountServiceImplTest {
         String password = "abcdefgh";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -884,14 +749,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_password_is_12345678() {
+    public void test_confirm_register_customer_fail_when_password_is_12345678() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -902,17 +767,15 @@ class AccountServiceImplTest {
         String password = "abcdefgh";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -923,14 +786,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_password_have_special_character() {
+    public void test_confirm_register_customer_fail_when_password_have_special_character() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -941,17 +804,15 @@ class AccountServiceImplTest {
         String password = "123abc@";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -962,14 +823,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_password_is_empty() {
+    public void test_confirm_register_customer_fail_when_password_is_empty() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -980,17 +841,15 @@ class AccountServiceImplTest {
         String password = "";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -1001,14 +860,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_password_is_null() {
+    public void test_confirm_register_customer_fail_when_password_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1018,17 +877,15 @@ class AccountServiceImplTest {
         String fullName = "Nguyễn Thị Hồng Nhung";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(null);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -1039,14 +896,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_full_name_contain_number() {
+    public void test_confirm_register_customer_fail_when_full_name_contain_number() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1057,17 +914,15 @@ class AccountServiceImplTest {
         String password = "123abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_CUSTOMER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -1078,14 +933,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_FULL_NAME, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_full_name_is_empty() {
+    public void test_confirm_register_customer_fail_when_full_name_is_empty() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1096,17 +951,15 @@ class AccountServiceImplTest {
         String password = "123abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_CUSTOMER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -1117,14 +970,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_FULL_NAME, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_full_name_is_null() {
+    public void test_confirm_register_customer_fail_when_full_name_is_null() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1134,17 +987,15 @@ class AccountServiceImplTest {
         String password = "123abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_CUSTOMER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(null);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -1155,14 +1006,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_FULL_NAME, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_full_name_contain_number_and_special_character() {
+    public void test_confirm_register_customer_fail_when_full_name_contain_number_and_special_character() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1173,17 +1024,15 @@ class AccountServiceImplTest {
         String password = "123abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_CUSTOMER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -1194,30 +1043,28 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(INVALID_FULL_NAME, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_success_when_avatar_is_null() throws IOException {
+    public void test_confirm_register_customer_success_when_avatar_is_null() throws IOException {
         // given
         String fullName = "Nguyễn Thị Hồng Nhung";
         String password = "123abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(null);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -1228,15 +1075,15 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        ResponseEntity<CFRegisterResponse> responseEntity = underTest.confirmRegister(request);
-        CFRegisterResponse response = responseEntity.getBody();
+        ResponseEntity<CFRegisterCustomerResponse> responseEntity = underTest.confirmRegisterCustomer(request);
+        CFRegisterCustomerResponse response = responseEntity.getBody();
 
         // then
         Assertions.assertEquals(CONFIRM_REGISTER_SUCCESS, response.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_avatar_do_not_have_file_extension() {
+    public void test_confirm_register_customer_fail_when_avatar_do_not_have_file_extension() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1247,17 +1094,15 @@ class AccountServiceImplTest {
         String password = "123abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -1268,14 +1113,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(FILE_MUST_BE_IMAGE, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_avatar_file_extension_is_ptt() {
+    public void test_confirm_register_customer_fail_when_avatar_file_extension_is_ptt() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1286,17 +1131,15 @@ class AccountServiceImplTest {
         String password = "123abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -1307,14 +1150,14 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(FILE_MUST_BE_IMAGE, exception.getMessage());
     }
 
     @Test
-    public void test_confirm_otp_request_fail_when_avatar_file_extension_is_txt() {
+    public void test_confirm_register_customer_fail_when_avatar_file_extension_is_txt() {
         // given
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -1325,17 +1168,15 @@ class AccountServiceImplTest {
         String password = "123abc";
         String communeId = "00006";
         String streetAddress = "Đường 30m Hòa Lạc";
-        String roleType = "ROLE_PENDING_REPAIRER";
         int otp = 123456;
         String phone = "0865390031";
 
-        CFRegisterRequest request = new CFRegisterRequest();
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
         request.setAvatar(avatar);
         request.setFullName(fullName);
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setRoleType(roleType);
         request.setOtp(otp);
         request.setPhone(phone);
 
@@ -1346,7 +1187,7 @@ class AccountServiceImplTest {
 
         // when
         awaitSaveOTP(otpInfo);
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegister(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
 
         // then
         Assertions.assertEquals(FILE_MUST_BE_IMAGE, exception.getMessage());

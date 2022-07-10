@@ -9,6 +9,16 @@ public class InputValidation {
     private static final String PASSWORD_REGEX = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,10}$";
     private static final String EMAIL_REGEX = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
     private static final String NAME_REGEX = "^[a-zA-Z\\s]{3,}$";
+    private static final String IDENTITY_CARD_NUMBER_REGEX = "^\\d{9,12}$";
+
+    public static boolean isValidDate(String date, String pattern) {
+        try {
+            DateFormatUtil.getLocalDate(date, pattern);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     public static boolean isPhoneValid(String phoneNumber) {
         if (phoneNumber == null) {
@@ -34,6 +44,15 @@ public class InputValidation {
         }
         Pattern pattern = Pattern.compile(EMAIL_REGEX, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
+    }
+
+    public static boolean isIdentityCardNumberValid(String identityCardNumber) {
+        if (identityCardNumber == null) {
+            return false;
+        }
+        Pattern pattern = Pattern.compile(IDENTITY_CARD_NUMBER_REGEX, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(identityCardNumber);
         return matcher.matches();
     }
 

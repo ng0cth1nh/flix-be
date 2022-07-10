@@ -51,9 +51,9 @@ spring:
     password: S$s.(QQl6mXrG,eJ
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
-    host: localhost
+    host: 34.134.183.253
     port: 6379
-    password:
+    password: ''
   jackson:
     serialization:
       FAIL_ON_EMPTY_BEANS: false

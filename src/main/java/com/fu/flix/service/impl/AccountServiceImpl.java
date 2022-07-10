@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.ea.async.Async;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
@@ -41,11 +40,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.OTPType.REGISTER;
 import static com.fu.flix.constant.enums.RoleType.ROLE_CUSTOMER;
 import static com.fu.flix.constant.enums.RoleType.ROLE_PENDING_REPAIRER;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -220,12 +217,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
 
     @Override
     public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) throws IOException {
-        OTPInfo otpInfo = new OTPInfo();
-        otpInfo.setUsername("0865390031");
-        otpInfo.setOtpType(REGISTER);
-        otpInfo.setOtp(123456);
-        awaitSaveOTP(otpInfo);
-
         validateRegisterRepairerInput(request);
 
         User user = buildRepairerUser(request, request.getAvatar());
@@ -243,7 +234,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
 
-//        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
+        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
         redisDAO.deleteOTP(otpInfo);
 
         CFRegisterRepairerResponse response = new CFRegisterRepairerResponse();
@@ -252,17 +243,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         response.setMessage(CONFIRM_REGISTER_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private void awaitSaveOTP(OTPInfo otpInfo) {
-        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-            try {
-                redisDAO.saveOTP(otpInfo);
-            } catch (JsonProcessingException e) {
-                throw new GeneralException(HttpStatus.INTERNAL_SERVER_ERROR, SAVE_OTP_FAILED);
-            }
-        });
-        Async.await(future);
     }
 
     private void createRepairer(User user, CFRegisterRepairerRequest request) {

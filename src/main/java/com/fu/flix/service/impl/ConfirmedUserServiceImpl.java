@@ -31,8 +31,7 @@ import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.Constant.RATING_MUST_IN_RANGE_1_TO_5;
-import static com.fu.flix.constant.enums.RequestStatus.DONE;
-import static com.fu.flix.constant.enums.RequestStatus.PAYMENT_WAITING;
+import static com.fu.flix.constant.enums.RequestStatus.*;
 import static com.fu.flix.constant.enums.RoleType.*;
 
 @Service
@@ -129,7 +128,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
 
     private String getCommentType(Collection<Role> roles) {
         for (Role role : roles) {
-            RoleType roleType = valueOf(role.getName());
+            RoleType roleType = RoleType.valueOf(role.getName());
             if (ROLE_CUSTOMER.equals(roleType)) {
                 return CommentType.CUSTOMER_COMMENT.name();
             } else if (ROLE_REPAIRER.equals(roleType)) {
@@ -203,7 +202,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         Long userId = request.getUserId();
 
         if (canNotGetFixedServices(repairRequest.getStatusId())) {
-            throw new GeneralException(HttpStatus.GONE, JUST_CAN_GET_FIXED_SERVICES_WHEN_REQUEST_STATUS_IS_PAYMENT_WAITING_OR_DONE);
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_GET_FIXED_SERVICES_WHEN_REQUEST_STATUS_IS_PAYMENT_WAITING_OR_DONE_OR_FIXING);
         }
 
         if (isCustomer(request.getRoles())) {
@@ -230,7 +229,9 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
     }
 
     private boolean canNotGetFixedServices(String statusId) {
-        return !PAYMENT_WAITING.getId().equals(statusId) && !DONE.getId().equals(statusId);
+        return !PAYMENT_WAITING.getId().equals(statusId)
+                && !DONE.getId().equals(statusId)
+                && !FIXING.getId().equals(statusId);
     }
 
     private boolean isCustomer(String[] roles) {

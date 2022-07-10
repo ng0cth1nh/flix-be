@@ -244,9 +244,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     private void validateRegisterCustomerInput(CFRegisterCustomerRequest request) {
-        if (isNotValidOTP(request, OTPType.REGISTER)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
-        } else if (!InputValidation.isPhoneValid(request.getPhone())) {
+        if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
             throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
@@ -258,6 +256,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         } else if (isInvalidStreetAddress(request.getStreetAddress())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_STREET_ADDRESS);
+        } else if (isNotValidOTP(request, OTPType.REGISTER)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
         }
     }
 
@@ -273,9 +273,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     private void validateRegisterRepairerInput(CFRegisterRepairerRequest request) {
-        if (isNotValidOTP(request, OTPType.REGISTER)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
-        } else if (!InputValidation.isPhoneValid(request.getPhone())) {
+        if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
             throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
@@ -309,6 +307,8 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_DATE_OF_BIRTH);
         } else if (isIdentityCardExisted(request.getIdentityCardNumber())) {
             throw new GeneralException(HttpStatus.GONE, IDENTITY_CARD_NUMBER_EXISTED);
+        } else if (isNotValidOTP(request, OTPType.REGISTER)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
         }
     }
 

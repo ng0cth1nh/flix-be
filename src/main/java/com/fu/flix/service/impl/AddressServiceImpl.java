@@ -65,10 +65,15 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public ResponseEntity<DistrictResponse> getDistrictByCity(DistrictRequest request) {
         String cityId = request.getCityId();
-        if (cityId == null) {
+        if (cityId == null || cityId.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_CITY);
         }
+
         List<District> districts = districtDAO.findByCityId(cityId);
+        if (districts.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_CITY);
+        }
+
         List<DistrictDTO> districtDTOS = districts.stream()
                 .map(district -> {
                     DistrictDTO districtDTO = new DistrictDTO();
@@ -86,11 +91,15 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public ResponseEntity<CommuneResponse> getCommunesByDistrict(CommuneRequest request) {
         String districtId = request.getDistrictId();
-        if (districtId == null) {
+        if (districtId == null || districtId.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_DISTRICT);
         }
 
         List<Commune> communes = communeDAO.findByDistrictId(districtId);
+        if (communes.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_DISTRICT);
+        }
+
         List<CommuneDTO> communeDTOS = communes.stream()
                 .map(commune -> {
                     CommuneDTO communeDTO = new CommuneDTO();

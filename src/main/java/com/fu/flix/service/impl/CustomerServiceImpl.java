@@ -9,15 +9,11 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
-import com.fu.flix.service.AddressService;
-import com.fu.flix.service.CustomerService;
-import com.fu.flix.service.ValidatorService;
-import com.fu.flix.service.VoucherService;
+import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -35,7 +31,6 @@ import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.*;
 import static com.fu.flix.constant.enums.TransactionType.PAY_COMMISSIONS;
 import static com.fu.flix.constant.enums.TransactionType.REFUNDS;
-import static com.fu.flix.constant.enums.VoucherType.INSPECTION;
 
 @Service
 @Slf4j
@@ -44,7 +39,6 @@ public class CustomerServiceImpl implements CustomerService {
     private final RepairRequestDAO repairRequestDAO;
     private final VoucherDAO voucherDAO;
     private final ServiceDAO serviceDAO;
-    private final PaymentMethodDAO paymentMethodDAO;
     private final InvoiceDAO invoiceDAO;
     private final UserAddressDAO userAddressDAO;
     private final CommuneDAO communeDAO;
@@ -59,13 +53,14 @@ public class CustomerServiceImpl implements CustomerService {
     private final ValidatorService validatorService;
     private final AddressService addressService;
     private final VoucherService voucherService;
+    private final RequestService requestService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
+    private final Long NAME_MAX_LENGTH;
 
     public CustomerServiceImpl(RepairRequestDAO repairRequestDAO,
                                VoucherDAO voucherDAO,
                                ServiceDAO serviceDAO,
-                               PaymentMethodDAO paymentMethodDAO,
                                InvoiceDAO invoiceDAO,
                                UserAddressDAO userAddressDAO,
                                CommuneDAO communeDAO,
@@ -79,11 +74,11 @@ public class CustomerServiceImpl implements CustomerService {
                                StatusDAO statusDAO,
                                ValidatorService validatorService,
                                AddressService addressService,
-                               VoucherService voucherService) {
+                               VoucherService voucherService,
+                               RequestService requestService) {
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
         this.serviceDAO = serviceDAO;
-        this.paymentMethodDAO = paymentMethodDAO;
         this.invoiceDAO = invoiceDAO;
         this.userAddressDAO = userAddressDAO;
         this.communeDAO = communeDAO;
@@ -98,25 +93,30 @@ public class CustomerServiceImpl implements CustomerService {
         this.validatorService = validatorService;
         this.addressService = addressService;
         this.voucherService = voucherService;
+        this.requestService = requestService;
+        this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
     }
 
     @Override
     public ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) {
         Long userId = request.getUserId();
-        LocalDateTime now = LocalDateTime.now();
-        Long voucherId = request.getVoucherId();
-        User user = validatorService.getUserValidated(userId);
-
         if (isHaveAnyPaymentWaitingRequest(userId)) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CREATE_NEW_REQUEST_WHEN_HAVE_OTHER_PAYMENT_WAITING_REQUEST);
         }
 
-        String paymentMethodID = request.getPaymentMethodId();
-        Collection<UserVoucher> userVouchers = user.getUserVouchers();
+        String description = request.getDescription();
+        if (description != null && description.length() > this.appConf.getDescriptionMaxLength()) {
+            throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
+        }
 
+        User user = validatorService.getUserValidated(userId);
+        Collection<UserVoucher> userVouchers = user.getUserVouchers();
+        LocalDateTime now = LocalDateTime.now();
+        Long voucherId = request.getVoucherId();
+        String paymentMethodID = getPaymentMethodIdValidated(request.getPaymentMethodId());
         if (voucherId != null) {
             UsingVoucherDTO usingVoucherDTO = new UsingVoucherDTO(userVouchers, voucherId, request.getServiceId(), paymentMethodID);
-            useInspectionVoucher(usingVoucherDTO, now);
+            useVoucher(usingVoucherDTO, now);
         }
 
         LocalDateTime expectFixingDay = getExpectFixingDay(request, now);
@@ -125,10 +125,10 @@ public class CustomerServiceImpl implements CustomerService {
         repairRequest.setRequestCode(RandomUtil.generateCode());
         repairRequest.setUserId(userId);
         repairRequest.setServiceId(request.getServiceId());
-        repairRequest.setPaymentMethodId(getPaymentMethodIdValidated(paymentMethodID));
+        repairRequest.setPaymentMethodId(paymentMethodID);
         repairRequest.setStatusId(PENDING.getId());
         repairRequest.setExpectStartFixingAt(expectFixingDay);
-        repairRequest.setDescription(request.getDescription());
+        repairRequest.setDescription(description);
         repairRequest.setVoucherId(voucherId);
         repairRequest.setAddressId(getAddressIdValidated(request.getAddressId(), userId));
         repairRequest.setVat(this.appConf.getVat());
@@ -150,6 +150,15 @@ public class CustomerServiceImpl implements CustomerService {
         return repairRequests.size() > 0;
     }
 
+    private String getPaymentMethodIdValidated(String id) {
+        for (com.fu.flix.constant.enums.PaymentMethod pm : com.fu.flix.constant.enums.PaymentMethod.values()) {
+            if (pm.getId().equals(id)) {
+                return id;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_PAYMENT_METHOD);
+    }
+
     private Long getAddressIdValidated(Long addressId, Long userId) {
         if (addressId == null || userAddressDAO.findUserAddressToEdit(userId, addressId).isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
@@ -158,54 +167,57 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private Invoice buildInvoice(RepairRequest repairRequest) {
+        Long voucherId = repairRequest.getVoucherId();
         com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
         Long inspectionPrice = service.getInspectionPrice();
-        Long discount = voucherService.getVoucherDiscount(inspectionPrice, repairRequest.getVoucherId());
+        Long discount = voucherService.getVoucherDiscount(inspectionPrice, voucherId);
         Long beforeVat = inspectionPrice - discount;
         Long vatPrice = (long) (beforeVat * repairRequest.getVat());
 
         Invoice invoice = new Invoice();
         invoice.setRequestCode(repairRequest.getRequestCode());
-        invoice.setInspectionPrice(beforeVat);
+        invoice.setInspectionPrice(inspectionPrice);
         invoice.setTotalPrice(inspectionPrice);
         invoice.setActualProceeds(beforeVat + vatPrice);
         invoice.setVatPrice(vatPrice);
+        invoice.setVoucherId(voucherId);
+        invoice.setTotalDiscount(discount);
+        invoice.setTotalAccessoryPrice(0L);
+        invoice.setTotalExtraServicePrice(0L);
+        invoice.setTotalSubServicePrice(0L);
+
         return invoice;
     }
 
-    private void useInspectionVoucher(UsingVoucherDTO usingVoucherDTO, LocalDateTime now) {
+    private void useVoucher(UsingVoucherDTO usingVoucherDTO, LocalDateTime now) {
         Long voucherId = usingVoucherDTO.getVoucherId();
-        UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
+        Optional<Voucher> optionalVoucher = voucherDAO.findById(voucherId);
+        if (optionalVoucher.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_VOUCHER);
+        }
+
+        Voucher voucher = optionalVoucher.get();
+        if (!isMatchPaymentMethod(usingVoucherDTO, voucher)) {
+            throw new GeneralException(HttpStatus.GONE, PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER);
+        }
+
         Long serviceId = usingVoucherDTO.getServiceId();
         if (serviceId == null) {
             throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
         }
 
         Optional<com.fu.flix.entity.Service> optionalService = serviceDAO.findById(serviceId);
-        Voucher voucher = voucherDAO.findById(voucherId).get();
-
-        if (!isMatchPaymentMethod(usingVoucherDTO, voucher)) {
-            throw new GeneralException(HttpStatus.GONE, PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER);
-        }
-
         if (optionalService.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
         }
 
-        if (optionalService.get().getInspectionPrice() < voucher.getMinOrderPrice()) {
-            throw new GeneralException(HttpStatus.GONE, INSPECTION_PRICE_MUST_GREATER_OR_EQUAL_VOUCHER_MIN_PRICE);
-        }
-
+        UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
         if (userVoucher == null) {
             throw new GeneralException(HttpStatus.GONE, USER_NOT_HOLD_VOUCHER);
         }
 
         if (userVoucher.getQuantity() <= 0) {
             throw new GeneralException(HttpStatus.GONE, USER_NOT_HOLD_VOUCHER);
-        }
-
-        if (voucher.getRemainQuantity() <= 0) {
-            throw new GeneralException(HttpStatus.CONFLICT, OUT_OF_VOUCHER);
         }
 
         if (voucher.getExpireDate().isBefore(now)) {
@@ -216,11 +228,6 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.CONFLICT, VOUCHER_BEFORE_EFFECTIVE_DATE);
         }
 
-        if (!voucher.getType().equals(INSPECTION.name())) {
-            throw new GeneralException(HttpStatus.CONFLICT, VOUCHER_MUST_BE_TYPE_INSPECTION);
-        }
-
-        voucher.setRemainQuantity(voucher.getRemainQuantity() - 1);
         userVoucher.setQuantity(userVoucher.getQuantity() - 1);
     }
 
@@ -230,9 +237,14 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private LocalDateTime getExpectFixingDay(RequestingRepairRequest request, LocalDateTime now) {
+        String strDateTime = request.getExpectFixingDay();
+        if (strDateTime == null) {
+            throw new GeneralException(HttpStatus.GONE, EXPECT_FIXING_DAY_IS_REQUIRED);
+        }
+
         LocalDateTime expectFixingDay;
         try {
-            expectFixingDay = DateFormatUtil.getLocalDateTime(request.getExpectFixingDay(), DATE_TIME_PATTERN);
+            expectFixingDay = DateFormatUtil.getLocalDateTime(strDateTime, DATE_TIME_PATTERN);
         } catch (DateTimeParseException e) {
             throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_TIME_FORMAT);
         }
@@ -251,23 +263,11 @@ public class CustomerServiceImpl implements CustomerService {
                 || expectFixingDay.isAfter(now.plusDays(maxCreateRequestDays));
     }
 
-    private String getPaymentMethodIdValidated(String paymentMethodId) {
-        String cashID = com.fu.flix.constant.enums.PaymentMethod.CASH.getId();
-        if (paymentMethodId == null) {
-            return cashID;
-        }
-
-        Optional<PaymentMethod> optionalPaymentMethod = paymentMethodDAO.findById(paymentMethodId);
-        return optionalPaymentMethod.isPresent()
-                ? paymentMethodId
-                : cashID;
-    }
-
     @Override
     public ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request) {
-        String requestCode = getRequestCode(request.getRequestCode());
+        String requestCode = request.getRequestCode();
+        RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
-        RepairRequest repairRequest = getRepairRequest(requestCode);
         if (!repairRequest.getUserId().equals(request.getUserId())) {
             throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CANCEL_THIS_REQUEST);
         }
@@ -280,7 +280,7 @@ public class CustomerServiceImpl implements CustomerService {
             updateRepairerAfterCancelRequest(requestCode);
         }
 
-        updateUsedVoucherQuantityAfterCancelRequest(repairRequest);
+        refundVoucher(repairRequest);
         updateRepairRequest(request, repairRequest);
 
         CancelRequestForCustomerResponse response = new CancelRequestForCustomerResponse();
@@ -331,12 +331,9 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public void updateUsedVoucherQuantityAfterCancelRequest(RepairRequest repairRequest) {
+    public void refundVoucher(RepairRequest repairRequest) {
         Long voucherId = repairRequest.getVoucherId();
         if (voucherId != null) {
-            Voucher voucher = voucherDAO.findById(voucherId).get();
-            voucher.setRemainQuantity(voucher.getRemainQuantity() + 1);
-
             User user = validatorService.getUserValidated(repairRequest.getUserId());
             Collection<UserVoucher> userVouchers = user.getUserVouchers();
             UserVoucher userVoucher = getUserVoucher(userVouchers, voucherId);
@@ -398,7 +395,11 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request) {
-        String requestCode = getRequestCode(request.getRequestCode());
+        String requestCode = request.getRequestCode();
+        if (requestService.isEmptyRequestCode(requestCode)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
         Long customerId = request.getUserId();
         IDetailFixingRequestForCustomerDTO dto = repairRequestDAO.findDetailFixingRequestForCustomer(customerId, requestCode);
 
@@ -418,7 +419,7 @@ public class CustomerServiceImpl implements CustomerService {
             response.setVoucherDiscount(voucherDTO.getVoucherDiscount());
             response.setPaymentMethod(dto.getPaymentMethod());
             response.setDate(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
-            response.setPrice(dto.getPrice());
+            response.setTotalPrice(dto.getTotalPrice());
             response.setActualPrice(dto.getActualPrice());
             response.setVatPrice(dto.getVatPrice());
             response.setRequestCode(requestCode);
@@ -427,21 +428,15 @@ public class CustomerServiceImpl implements CustomerService {
             response.setRepairerName(dto.getRepairerName());
             response.setRepairerId(dto.getRepairerId());
             response.setRepairerAvatar(dto.getRepairerAvatar());
+            response.setInspectionPrice(dto.getInspectionPrice());
+            response.setTotalDiscount(dto.getTotalDiscount());
+            response.setApprovedTime(
+                    dto.getApprovedTime() == null
+                            ? null
+                            : DateFormatUtil.toString(dto.getApprovedTime(), DATE_TIME_PATTERN)
+            );
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private String getRequestCode(String requestCode) {
-        return requestCode == null ? Strings.EMPTY : requestCode;
-    }
-
-    @Override
-    public RepairRequest getRepairRequest(String requestCode) {
-        Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
-        if (optionalRepairRequest.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
-        }
-        return optionalRepairRequest.get();
     }
 
     private Long getRequestPrice(String requestCode, boolean isActualPrice) {
@@ -461,7 +456,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         MainAddressResponse response = new MainAddressResponse();
         response.setAddressId(addressId);
-        response.setCustomerName(user.getFullName());
+        response.setCustomerName(userAddress.getName());
         response.setPhone(userAddress.getPhone());
         response.setAddressName(addressService.getAddressFormatted(addressId));
 
@@ -478,7 +473,7 @@ public class CustomerServiceImpl implements CustomerService {
                     Long addressId = userAddress.getId();
                     UserAddressDTO dto = new UserAddressDTO();
                     dto.setAddressId(addressId);
-                    dto.setCustomerName(user.getFullName());
+                    dto.setCustomerName(userAddress.getName());
                     dto.setPhone(userAddress.getPhone());
                     dto.setAddressName(addressService.getAddressFormatted(addressId));
                     dto.setMainAddress(userAddress.isMainAddress());
@@ -500,8 +495,11 @@ public class CustomerServiceImpl implements CustomerService {
 
         Optional<UserAddress> optionalUserAddress = userAddressDAO
                 .findUserAddressToDelete(request.getUserId(), addressId);
+        if (optionalUserAddress.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+        }
 
-        optionalUserAddress.ifPresent(userAddress -> userAddress.setDeletedAt(LocalDateTime.now()));
+        optionalUserAddress.get().setDeletedAt(LocalDateTime.now());
 
         DeleteAddressResponse response = new DeleteAddressResponse();
         response.setMessage(DELETE_ADDRESS_SUCCESS);
@@ -511,9 +509,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<EditAddressResponse> editCustomerAddress(EditAddressRequest request) {
-        Long addressId = request.getAddressId();
-        if (addressId == null) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
+        String name = request.getName();
+        if (!InputValidation.isNameValid(name, NAME_MAX_LENGTH)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_NAME);
         }
 
         String phone = request.getPhone();
@@ -521,9 +519,9 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
 
-        String communeId = request.getCommuneId();
-        if (communeId == null) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        Long addressId = request.getAddressId();
+        if (addressId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
         }
 
         String streetAddress = request.getStreetAddress();
@@ -531,19 +529,29 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, STREET_ADDRESS_IS_REQUIRED);
         }
 
+        String communeId = request.getCommuneId();
+        if (communeId == null || communeId.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        }
+
         Optional<UserAddress> optionalUserAddress = userAddressDAO
                 .findUserAddressToEdit(request.getUserId(), addressId);
-        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
-
-        if (optionalUserAddress.isPresent() && optionalUserAddress.isPresent()) {
-            UserAddress userAddress = optionalUserAddress.get();
-            Commune commune = optionalCommune.get();
-
-            userAddress.setName(request.getName());
-            userAddress.setPhone(phone);
-            userAddress.setCommuneId(commune.getId());
-            userAddress.setStreetAddress(streetAddress);
+        if (optionalUserAddress.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ADDRESS);
         }
+
+        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
+        if (optionalCommune.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        }
+
+        UserAddress userAddress = optionalUserAddress.get();
+        Commune commune = optionalCommune.get();
+
+        userAddress.setName(name);
+        userAddress.setPhone(phone);
+        userAddress.setCommuneId(commune.getId());
+        userAddress.setStreetAddress(streetAddress);
 
         EditAddressResponse response = new EditAddressResponse();
         response.setAddressId(addressId);
@@ -554,6 +562,11 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ResponseEntity<CreateAddressResponse> createCustomerAddress(CreateAddressRequest request) {
+        String fullName = request.getFullName();
+        if (!InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
+        }
+
         String communeId = request.getCommuneId();
         if (communeId == null) {
             throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
@@ -580,7 +593,7 @@ public class CustomerServiceImpl implements CustomerService {
         userAddress.setUserId(request.getUserId());
         userAddress.setMainAddress(false);
         userAddress.setStreetAddress(streetAddress);
-        userAddress.setName(request.getFullName());
+        userAddress.setName(fullName);
         userAddress.setPhone(phone);
         userAddress.setCommuneId(commune.getId());
         UserAddress savedUserAddress = userAddressDAO.save(userAddress);
@@ -614,12 +627,12 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request) {
         String fullName = request.getFullName();
-        if (!InputValidation.isFullNameValid(fullName)) {
+        if (!InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         }
 
         String email = request.getEmail();
-        if (!InputValidation.isEmailValid(email)) {
+        if (email != null && !InputValidation.isEmailValid(email)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_EMAIL);
         }
 
@@ -628,7 +641,7 @@ public class CustomerServiceImpl implements CustomerService {
         User user = validatorService.getUserValidated(request.getUsername());
         user.setFullName(fullName);
         user.setDateOfBirth(dob);
-        user.setGender(request.isGender());
+        user.setGender(request.getGender());
         user.setEmail(email);
 
         UpdateCustomerProfileResponse response = new UpdateCustomerProfileResponse();
@@ -642,11 +655,17 @@ public class CustomerServiceImpl implements CustomerService {
             return null;
         }
 
+        LocalDate dob;
         try {
-            return DateFormatUtil.getLocalDate(strDob, DATE_PATTERN);
+            dob = DateFormatUtil.getLocalDate(strDob, DATE_PATTERN);
         } catch (DateTimeParseException e) {
             throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_FORMAT);
         }
+
+        if (dob.isAfter(LocalDate.now())) {
+            throw new GeneralException(HttpStatus.GONE, DOB_MUST_BE_LESS_THAN_OR_EQUAL_TODAY);
+        }
+        return dob;
     }
 
     @Override
@@ -660,7 +679,8 @@ public class CustomerServiceImpl implements CustomerService {
             response.setSuccessfulRepair(successfulRepair.getSuccessfulRepair());
             response.setRepairerName(repairerProfile.getRepairerName());
             response.setRating(repairerProfile.getRating());
-            response.setExperience(repairerProfile.getExperience());
+            response.setExperienceDescription(repairerProfile.getExperienceDescription());
+            response.setExperienceYear(repairerProfile.getExperienceYear());
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -670,27 +690,37 @@ public class CustomerServiceImpl implements CustomerService {
         Long repairerId = request.getRepairerId();
         RepairerCommentResponse response = new RepairerCommentResponse();
 
-        if (repairerId != null) {
-            Integer offset = request.getOffset() == null
-                    ? this.appConf.getOffsetDefault()
-                    : request.getOffset();
-
-            Integer limit = request.getLimit() == null
-                    ? this.appConf.getLimitQueryDefault()
-                    : request.getLimit();
-
-            List<IRepairerCommentDTO> repairComments = commentDAO.findRepairComments(repairerId, limit, offset);
-            List<RepairerCommentDTO> repairerCommentDTOs = repairComments.stream()
-                    .map(rc -> {
-                        RepairerCommentDTO dto = new RepairerCommentDTO();
-                        dto.setComment(rc.getComment());
-                        dto.setCustomerId(rc.getCustomerId());
-                        dto.setRating(rc.getRating());
-                        dto.setCustomerName(rc.getCustomerName());
-                        return dto;
-                    }).collect(Collectors.toList());
-            response.setRepairerComments(repairerCommentDTOs);
+        if (repairerId == null) {
+            throw new GeneralException(HttpStatus.GONE, REPAIRER_ID_IS_REQUIRED);
         }
+
+        Integer offset = request.getOffset() == null
+                ? this.appConf.getOffsetDefault()
+                : request.getOffset();
+
+        Integer limit = request.getLimit() == null
+                ? this.appConf.getLimitQueryDefault()
+                : request.getLimit();
+
+        if (offset < 0) {
+            throw new GeneralException(HttpStatus.GONE, OFFSET_MUST_BE_GREATER_OR_EQUAL_0);
+        }
+
+        if (limit < 0) {
+            throw new GeneralException(HttpStatus.GONE, LIMIT_MUST_BE_GREATER_OR_EQUAL_0);
+        }
+
+        List<IRepairerCommentDTO> repairComments = commentDAO.findRepairComments(repairerId, limit, offset);
+        List<RepairerCommentDTO> repairerCommentDTOs = repairComments.stream()
+                .map(rc -> {
+                    RepairerCommentDTO dto = new RepairerCommentDTO();
+                    dto.setComment(rc.getComment());
+                    dto.setCustomerId(rc.getCustomerId());
+                    dto.setRating(rc.getRating());
+                    dto.setCustomerName(rc.getCustomerName());
+                    return dto;
+                }).collect(Collectors.toList());
+        response.setRepairerComments(repairerCommentDTOs);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

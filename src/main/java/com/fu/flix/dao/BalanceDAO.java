@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface BalanceDAO extends JpaRepository<Balance, Long> {
     Optional<Balance> findByUserId(Long userId);
+    void deleteByUserId(Long userId);
 }

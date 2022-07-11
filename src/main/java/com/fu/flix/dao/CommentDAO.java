@@ -14,12 +14,15 @@ import java.util.Optional;
 @Repository
 public interface CommentDAO extends JpaRepository<Comment, Long> {
 
+    void deleteByRequestCodeAndType(String requestCode, String type);
+
     @Query(value = "SELECT * FROM comments " +
             "WHERE request_code = :requestCode " +
             "AND type = :type", nativeQuery = true)
     Optional<Comment> findComment(String requestCode, String type);
 
-    @Query(value = "SELECT u.full_name as repairerName, avg(c.rating) as rating, r.experience, DATE_FORMAT(r.accepted_account_at,'%d/%m/%Y') as joinAt " +
+    @Query(value = "SELECT u.full_name as repairerName, avg(c.rating) as rating, r.experience_description as experienceDescription," +
+            " DATE_FORMAT(r.accepted_account_at,'%d/%m/%Y') as joinAt, r.experience_year as experienceYear " +
             "FROM comments c " +
             "JOIN repair_requests_matching rrm " +
             "ON c.request_code = rrm.request_code " +
@@ -32,11 +35,11 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
     IRepairerProfileDTO findRepairerProfile(Long repairerId);
 
     @Query(value = "SELECT count(*) as successfulRepair " +
-            "FROM invoices i " +
+            "FROM repair_requests rr " +
             "JOIN repair_requests_matching rrm " +
-            "ON i.request_code = rrm.request_code " +
+            "ON rr.request_code = rrm.request_code " +
             "WHERE rrm.repairer_id = :repairerId " +
-            "AND i.status_id = 'DO'", nativeQuery = true)
+            "AND rr.status_id = 'DO'", nativeQuery = true)
     ISuccessfulRepairDTO findSuccessfulRepair(Long repairerId);
 
     @Query(value = "SELECT rr.user_id as customerId, u.full_name as customerName, c.rating, c.comment " +

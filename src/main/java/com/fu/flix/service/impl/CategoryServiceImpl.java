@@ -3,6 +3,7 @@ package com.fu.flix.service.impl;
 import com.fu.flix.constant.Constant;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.ServiceDAO;
+import com.fu.flix.dto.IServiceDTO;
 import com.fu.flix.dto.SearchServiceDTO;
 import com.fu.flix.dto.ServiceDTO;
 import com.fu.flix.dto.error.GeneralException;
@@ -21,6 +22,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.fu.flix.constant.Constant.INVALID_KEY_WORD;
 
 @Service
 @Slf4j
@@ -42,6 +45,10 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         List<com.fu.flix.entity.Service> services = serviceDAO.findByCategoryId(categoryId);
+        if (services.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, Constant.INVALID_CATEGORY_ID);
+        }
+
         List<ServiceDTO> serviceDTOS = services.stream()
                 .map(service -> {
                     Optional<Image> optionalImage = imageDAO.findById(service.getImageId());
@@ -61,16 +68,20 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public ResponseEntity<SearchServicesResponse> searchServices(SearchServicesRequest request) {
-        String keyword = request.getKeyword() == null
-                ? Strings.EMPTY
-                : request.getKeyword();
-        List<com.fu.flix.entity.Service> services = serviceDAO.searchServices(keyword);
+        String keyword = request.getKeyword();
+        if (keyword == null || keyword.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        List<IServiceDTO> services = serviceDAO.searchServices(keyword);
 
         List<SearchServiceDTO> searchServiceDTOS = services.stream()
                 .map(service -> {
                     SearchServiceDTO dto = new SearchServiceDTO();
-                    dto.setServiceId(service.getId());
-                    dto.setServiceName(service.getName());
+                    dto.setServiceId(service.getServiceId());
+                    dto.setServiceName(service.getServiceName());
+                    dto.setIcon(service.getIcon());
+                    dto.setImage(service.getImage());
                     return dto;
                 }).collect(Collectors.toList());
 

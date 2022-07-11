@@ -17,12 +17,14 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@Transactional
 class UserServiceImplTest {
     @Autowired
     UserAddressDAO userAddressDAO;
@@ -36,7 +38,7 @@ class UserServiceImplTest {
         Long id = 36L;
         String phone = "0865390037";
         NotificationRequest request = new NotificationRequest();
-        setContextUsername(id, phone);
+        setUserContext(id, phone);
 
         // when
         ResponseEntity<NotificationResponse> responseEntity = userService.getNotifications(request);
@@ -48,14 +50,14 @@ class UserServiceImplTest {
         Assertions.assertEquals(3, notificationDTOS.size());
     }
 
-    void setContextUsername(Long id, String phone) {
+    void setUserContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));
         }
         UsernamePasswordAuthenticationToken authenticationToken
-                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone), null, authorities);
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 }

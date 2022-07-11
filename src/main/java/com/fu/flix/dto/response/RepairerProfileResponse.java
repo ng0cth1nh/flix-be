@@ -6,7 +6,8 @@ import lombok.Data;
 public class RepairerProfileResponse {
     private String repairerName;
     private Double rating;
-    private String experience;
+    private String experienceDescription;
+    private Long experienceYear;
     private String jointAt;
     private Long successfulRepair;
 }

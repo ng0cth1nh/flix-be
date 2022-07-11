@@ -15,11 +15,13 @@ public interface AccountService {
 
     ResponseEntity<SendRegisterOTPResponse> sendRegisterOTP(SendRegisterOTPRequest request) throws JsonProcessingException;
 
-    ResponseEntity<CFRegisterResponse> confirmRegister(CFRegisterRequest request) throws IOException;
+    ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) throws IOException;
 
     ResponseEntity<SendForgotPassOTPResponse> sendForgotPassOTP(SendForgotPassOTPRequest request) throws JsonProcessingException;
 
     ResponseEntity<CFForgotPassResponse> confirmForgotPassword(CFForgotPassRequest request);
 
     ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest request);
+
+    ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) throws IOException;
 }

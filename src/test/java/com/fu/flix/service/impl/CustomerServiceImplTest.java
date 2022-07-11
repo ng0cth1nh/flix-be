@@ -1642,6 +1642,191 @@ class CustomerServiceImplTest {
         Assertions.assertEquals(WRONG_LOCAL_DATE_FORMAT, exception.getMessage());
     }
 
+    @Test
+    public void test_update_customer_profile_fail_when_DBO_is_empty() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth("");
+        request.setGender(true);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateCustomerProfile(request));
+
+        // then
+        Assertions.assertEquals(WRONG_LOCAL_DATE_FORMAT, exception.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_success_when_DBO_is_null() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth(null);
+        request.setGender(true);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        UpdateCustomerProfileResponse response = underTest.updateCustomerProfile(request).getBody();
+        User user = validatorService.getUserValidated(request.getUsername());
+
+        // then
+        Assertions.assertEquals(user.getFullName(), "Nguyễn Thị Hồng Nhung");
+        Assertions.assertNull(user.getDateOfBirth());
+        Assertions.assertEquals(true, user.getGender());
+        Assertions.assertEquals(user.getEmail(), "nhungnthhe141425@fpt.edu.vn");
+        Assertions.assertEquals(UPDATED_PROFILE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_success_when_full_name_does_not_trim() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName(" Nhung Nguyễn    ");
+        request.setDateOfBirth("08-03-2000");
+        request.setGender(true);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        UpdateCustomerProfileResponse response = underTest.updateCustomerProfile(request).getBody();
+        User user = validatorService.getUserValidated(request.getUsername());
+
+        // then
+        Assertions.assertEquals(user.getFullName(), " Nhung Nguyễn    ");
+        Assertions.assertEquals(DateFormatUtil.toString(user.getDateOfBirth(), DATE_PATTERN), "08-03-2000");
+        Assertions.assertEquals(true, user.getGender());
+        Assertions.assertEquals(user.getEmail(), "nhungnthhe141425@fpt.edu.vn");
+        Assertions.assertEquals(UPDATED_PROFILE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_fail_when_full_name_is_empty() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("");
+        request.setDateOfBirth("20-05-2000");
+        request.setGender(true);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateCustomerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_FULL_NAME, exception.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_fail_when_full_name_is_null() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName(null);
+        request.setDateOfBirth("20-05-2000");
+        request.setGender(true);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateCustomerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_FULL_NAME, exception.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_fail_when_full_name_contain_special_character() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nhung @123");
+        request.setDateOfBirth("20-05-2000");
+        request.setGender(true);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateCustomerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_FULL_NAME, exception.getMessage());
+    }
+
+    @Test
+    public void test_get_repairer_profile_success() {
+        // given
+        RepairerProfileRequest request = new RepairerProfileRequest();
+        request.setRepairerId(52L);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+
+        // then
+        Assertions.assertEquals("20 năm trong nghề", response.getExperienceDescription());
+        Assertions.assertEquals("Thợ", response.getRepairerName());
+        Assertions.assertEquals("21/06/2022", response.getJointAt());
+        Assertions.assertEquals(3, response.getExperienceYear());
+    }
+
+    @Test
+    public void test_get_repairer_profile_return_null_field_when_repairer_id_is_null() {
+        // given
+        RepairerProfileRequest request = new RepairerProfileRequest();
+        request.setRepairerId(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+
+        // then
+        Assertions.assertNull(response.getExperienceDescription());
+        Assertions.assertNull(response.getRepairerName());
+        Assertions.assertNull(response.getJointAt());
+        Assertions.assertNull(response.getExperienceYear());
+        Assertions.assertNull(response.getSuccessfulRepair());
+        Assertions.assertNull(response.getRating());
+    }
+
+    @Test
+    public void test_get_repairer_profile_return_null_field_when_repairer_id_is_0() {
+        // given
+        RepairerProfileRequest request = new RepairerProfileRequest();
+        request.setRepairerId(0L);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+
+        // then
+        Assertions.assertNull(response.getExperienceDescription());
+        Assertions.assertNull(response.getRepairerName());
+        Assertions.assertNull(response.getJointAt());
+        Assertions.assertNull(response.getExperienceYear());
+        Assertions.assertEquals(0L, response.getSuccessfulRepair());
+        Assertions.assertNull(response.getRating());
+    }
+
+    @Test
+    public void test_get_repairer_profile_return_null_field_when_repairer_id_is_negative_number() {
+        // given
+        RepairerProfileRequest request = new RepairerProfileRequest();
+        request.setRepairerId(-1L);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+
+        // then
+        Assertions.assertNull(response.getExperienceDescription());
+        Assertions.assertNull(response.getRepairerName());
+        Assertions.assertNull(response.getJointAt());
+        Assertions.assertNull(response.getExperienceYear());
+        Assertions.assertEquals(0L, response.getSuccessfulRepair());
+        Assertions.assertNull(response.getRating());
+    }
 
     void setUserContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};

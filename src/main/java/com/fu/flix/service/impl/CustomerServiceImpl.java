@@ -622,7 +622,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request) {
         String fullName = request.getFullName();
-        if (fullName != null && !InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
+        if (!InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         }
 
@@ -668,7 +668,8 @@ public class CustomerServiceImpl implements CustomerService {
             response.setSuccessfulRepair(successfulRepair.getSuccessfulRepair());
             response.setRepairerName(repairerProfile.getRepairerName());
             response.setRating(repairerProfile.getRating());
-            response.setExperience(repairerProfile.getExperience());
+            response.setExperienceDescription(repairerProfile.getExperienceDescription());
+            response.setExperienceYear(repairerProfile.getExperienceYear());
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

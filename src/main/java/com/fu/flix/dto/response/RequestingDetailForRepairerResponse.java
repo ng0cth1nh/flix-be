@@ -25,4 +25,5 @@ public class RequestingDetailForRepairerResponse {
     private String requestCode;
     private Long inspectionPrice;
     private Long totalDiscount;
+    private String approvedTime;
 }

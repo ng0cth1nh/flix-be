@@ -17,7 +17,7 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "iv.total_extra_service_price as totalExtraServicePrice, iv.total_accessory_price as totalAccessoryPrice, iv.total_sub_service_price as totalSubServicePrice, " +
             "iv.inspection_price as inspectionPrice, iv.total_discount as totalDiscount, rr.expect_start_fixing_at as expectFixingTime, rr.voucher_id as voucherId, " +
             "pm.name as paymentMethod, rr.request_code as requestCode, rr.created_at as createdAt, iv.actual_proceeds as actualPrice, iv.total_price as totalPrice, " +
-            "iv.vat_price as vatPrice " +
+            "iv.vat_price as vatPrice, rrm.created_at as approvedTime " +
             "FROM repair_requests rr " +
             "JOIN users customer " +
             "ON rr.user_id = customer.id " +
@@ -51,7 +51,7 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "iv.total_extra_service_price as totalExtraServicePrice, iv.total_accessory_price as totalAccessoryPrice, iv.total_sub_service_price as totalSubServicePrice, " +
             "iv.inspection_price as inspectionPrice, iv.total_discount as totalDiscount, rr.expect_start_fixing_at as expectFixingTime, rr.voucher_id as voucherId, " +
             "pm.name as paymentMethod, rr.request_code as requestCode, rr.created_at as createdAt, iv.actual_proceeds as actualPrice, iv.total_price as totalPrice, " +
-            "iv.vat_price as vatPrice " +
+            "iv.vat_price as vatPrice, rrm.created_at as approvedTime " +
             "FROM repair_requests rr " +
             "JOIN users customer " +
             "ON rr.user_id = customer.id " +

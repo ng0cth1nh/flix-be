@@ -190,6 +190,11 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
             response.setActualPrice(dto.getActualPrice());
             response.setTotalPrice(dto.getTotalPrice());
             response.setVatPrice(dto.getVatPrice());
+            response.setApprovedTime(
+                    dto.getApprovedTime() == null
+                            ? null
+                            : DateFormatUtil.toString(dto.getApprovedTime(), DATE_TIME_PATTERN)
+            );
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);

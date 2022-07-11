@@ -28,4 +28,5 @@ public class RequestingDetailForCustomerResponse {
     private String repairerAvatar;
     private Long inspectionPrice;
     private Long totalDiscount;
+    private String approvedTime;
 }

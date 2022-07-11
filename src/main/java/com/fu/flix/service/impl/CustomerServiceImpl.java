@@ -430,6 +430,11 @@ public class CustomerServiceImpl implements CustomerService {
             response.setRepairerAvatar(dto.getRepairerAvatar());
             response.setInspectionPrice(dto.getInspectionPrice());
             response.setTotalDiscount(dto.getTotalDiscount());
+            response.setApprovedTime(
+                    dto.getApprovedTime() == null
+                            ? null
+                            : DateFormatUtil.toString(dto.getApprovedTime(), DATE_TIME_PATTERN)
+            );
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

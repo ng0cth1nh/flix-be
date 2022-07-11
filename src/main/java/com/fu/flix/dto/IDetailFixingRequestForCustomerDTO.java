@@ -48,4 +48,5 @@ public interface IDetailFixingRequestForCustomerDTO {
     Long getInspectionPrice();
 
     Long getTotalDiscount();
+    LocalDateTime getApprovedTime();
 }

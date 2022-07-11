@@ -53,6 +53,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final ValidatorService validatorService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final Long DESCRIPTION_MAX_LENGTH;
+
     public RepairerServiceImpl(RepairerDAO repairerDAO,
                                RepairRequestDAO repairRequestDAO,
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
@@ -369,7 +370,6 @@ public class RepairerServiceImpl implements RepairerService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
 
     @Override
     public ResponseEntity<AddSubServicesToInvoiceResponse> putSubServicesToInvoice(AddSubServicesToInvoiceRequest request) {

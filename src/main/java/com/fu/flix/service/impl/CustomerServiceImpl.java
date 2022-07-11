@@ -679,27 +679,37 @@ public class CustomerServiceImpl implements CustomerService {
         Long repairerId = request.getRepairerId();
         RepairerCommentResponse response = new RepairerCommentResponse();
 
-        if (repairerId != null) {
-            Integer offset = request.getOffset() == null
-                    ? this.appConf.getOffsetDefault()
-                    : request.getOffset();
-
-            Integer limit = request.getLimit() == null
-                    ? this.appConf.getLimitQueryDefault()
-                    : request.getLimit();
-
-            List<IRepairerCommentDTO> repairComments = commentDAO.findRepairComments(repairerId, limit, offset);
-            List<RepairerCommentDTO> repairerCommentDTOs = repairComments.stream()
-                    .map(rc -> {
-                        RepairerCommentDTO dto = new RepairerCommentDTO();
-                        dto.setComment(rc.getComment());
-                        dto.setCustomerId(rc.getCustomerId());
-                        dto.setRating(rc.getRating());
-                        dto.setCustomerName(rc.getCustomerName());
-                        return dto;
-                    }).collect(Collectors.toList());
-            response.setRepairerComments(repairerCommentDTOs);
+        if (repairerId == null) {
+            throw new GeneralException(HttpStatus.GONE, REPAIRER_ID_IS_REQUIRED);
         }
+
+        Integer offset = request.getOffset() == null
+                ? this.appConf.getOffsetDefault()
+                : request.getOffset();
+
+        Integer limit = request.getLimit() == null
+                ? this.appConf.getLimitQueryDefault()
+                : request.getLimit();
+
+        if (offset < 0) {
+            throw new GeneralException(HttpStatus.GONE, OFFSET_MUST_BE_GREATER_OR_EQUAL_0);
+        }
+
+        if (limit < 0) {
+            throw new GeneralException(HttpStatus.GONE, LIMIT_MUST_BE_GREATER_OR_EQUAL_0);
+        }
+
+        List<IRepairerCommentDTO> repairComments = commentDAO.findRepairComments(repairerId, limit, offset);
+        List<RepairerCommentDTO> repairerCommentDTOs = repairComments.stream()
+                .map(rc -> {
+                    RepairerCommentDTO dto = new RepairerCommentDTO();
+                    dto.setComment(rc.getComment());
+                    dto.setCustomerId(rc.getCustomerId());
+                    dto.setRating(rc.getRating());
+                    dto.setCustomerName(rc.getCustomerName());
+                    return dto;
+                }).collect(Collectors.toList());
+        response.setRepairerComments(repairerCommentDTOs);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

@@ -1828,6 +1828,150 @@ class CustomerServiceImplTest {
         Assertions.assertNull(response.getRating());
     }
 
+    @Test
+    public void test_get_repairer_comments_success_when_offset_and_limit_are_null() {
+        // given
+        RepairerCommentRequest request = new RepairerCommentRequest();
+        request.setRepairerId(52L);
+        request.setLimit(null);
+        request.setOffset(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RepairerCommentResponse response = underTest.getRepairerComments(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRepairerComments());
+    }
+
+    @Test
+    public void test_get_repairer_comments_fail_when_repairer_id_is_null() {
+        // given
+        RepairerCommentRequest request = new RepairerCommentRequest();
+        request.setRepairerId(null);
+        request.setLimit(null);
+        request.setOffset(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getRepairerComments(request));
+
+        // then
+        Assertions.assertEquals(REPAIRER_ID_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    public void test_get_repairer_comments_success_when_repairer_id_is_0() {
+        // given
+        RepairerCommentRequest request = new RepairerCommentRequest();
+        request.setRepairerId(0L);
+        request.setLimit(null);
+        request.setOffset(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RepairerCommentResponse response = underTest.getRepairerComments(request).getBody();
+
+        // then
+        Assertions.assertEquals(0, response.getRepairerComments().size());
+    }
+
+    @Test
+    public void test_get_repairer_comments_success_when_repairer_id_is_negative() {
+        // given
+        RepairerCommentRequest request = new RepairerCommentRequest();
+        request.setRepairerId(-1L);
+        request.setLimit(null);
+        request.setOffset(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RepairerCommentResponse response = underTest.getRepairerComments(request).getBody();
+
+        // then
+        Assertions.assertEquals(0, response.getRepairerComments().size());
+    }
+
+    @Test
+    public void test_get_repairer_comments_success_when_limit_is_10_offset_is_0() {
+        // given
+        RepairerCommentRequest request = new RepairerCommentRequest();
+        request.setRepairerId(52L);
+        request.setLimit(10);
+        request.setOffset(0);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RepairerCommentResponse response = underTest.getRepairerComments(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRepairerComments());
+    }
+
+    @Test
+    public void test_get_repairer_comments_fail_when_limit_is_negative() {
+        // given
+        RepairerCommentRequest request = new RepairerCommentRequest();
+        request.setRepairerId(52L);
+        request.setLimit(-1);
+        request.setOffset(0);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getRepairerComments(request));
+
+        // then
+        Assertions.assertEquals(LIMIT_MUST_BE_GREATER_OR_EQUAL_0, exception.getMessage());
+    }
+
+    @Test
+    public void test_get_repairer_comments_success_when_limit_is_10_offset_is_2_repairer_id_is_52() {
+        // given
+        RepairerCommentRequest request = new RepairerCommentRequest();
+        request.setRepairerId(52L);
+        request.setLimit(10);
+        request.setOffset(2);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RepairerCommentResponse response = underTest.getRepairerComments(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRepairerComments());
+    }
+
+    @Test
+    public void test_get_repairer_comments_fail_when_offst_is_negative() {
+        // given
+        RepairerCommentRequest request = new RepairerCommentRequest();
+        request.setRepairerId(52L);
+        request.setLimit(10);
+        request.setOffset(-1);
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getRepairerComments(request));
+
+        // then
+        Assertions.assertEquals(OFFSET_MUST_BE_GREATER_OR_EQUAL_0, exception.getMessage());
+    }
+
+    @Test
+    public void test_get_repairer_comments_success_when_limit_is_0_offset_is_0_repairer_id_is_52() {
+        // given
+        RepairerCommentRequest request = new RepairerCommentRequest();
+        request.setRepairerId(52L);
+        request.setLimit(0);
+        request.setOffset(0);
+
+        // when
+        setUserContext(36L, "0865390037");
+        RepairerCommentResponse response = underTest.getRepairerComments(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRepairerComments());
+    }
+
     void setUserContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();

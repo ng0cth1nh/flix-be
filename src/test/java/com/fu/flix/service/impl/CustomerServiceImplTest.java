@@ -8,6 +8,7 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
+import com.fu.flix.entity.User;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.RepairerService;
 import com.fu.flix.service.ValidatorService;
@@ -48,6 +49,8 @@ class CustomerServiceImplTest {
     @Autowired
     ValidatorService validatorService;
     String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+
+    String DATE_PATTERN = "dd-MM-yyyy";
 
     @Autowired
     CommentDAO commentDAO;
@@ -1482,6 +1485,163 @@ class CustomerServiceImplTest {
         Assertions.assertEquals(false, response.getGender());
         Assertions.assertEquals("Faker", response.getFullName());
     }
+
+    @Test
+    public void test_update_customer_profile_success_when_gender_is_false() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth("08-03-2000");
+        request.setGender(false);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        UpdateCustomerProfileResponse response = underTest.updateCustomerProfile(request).getBody();
+        User user = validatorService.getUserValidated(request.getUsername());
+
+        // then
+        Assertions.assertEquals(user.getFullName(), "Nguyễn Thị Hồng Nhung");
+        Assertions.assertEquals(DateFormatUtil.toString(user.getDateOfBirth(), DATE_PATTERN), "08-03-2000");
+        Assertions.assertEquals(user.getGender(), false);
+        Assertions.assertEquals(user.getEmail(), "nhungnthhe141425@fpt.edu.vn");
+        Assertions.assertEquals(UPDATED_PROFILE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_fail_when_email_is_empty() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth("08-03-2000");
+        request.setGender(false);
+        request.setEmail("");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateCustomerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_EMAIL, exception.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_success_when_email_is_null() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth("08-03-2000");
+        request.setGender(false);
+        request.setEmail(null);
+
+        // when
+        setUserContext(36L, "0865390037");
+        UpdateCustomerProfileResponse response = underTest.updateCustomerProfile(request).getBody();
+        User user = validatorService.getUserValidated(request.getUsername());
+
+        // then
+        Assertions.assertEquals(user.getFullName(), "Nguyễn Thị Hồng Nhung");
+        Assertions.assertEquals(DateFormatUtil.toString(user.getDateOfBirth(), DATE_PATTERN), "08-03-2000");
+        Assertions.assertEquals(user.getGender(), false);
+        Assertions.assertNull(user.getEmail());
+        Assertions.assertEquals(UPDATED_PROFILE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_fail_when_email_no_extension() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth("08-03-2000");
+        request.setGender(false);
+        request.setEmail("nhungnthgmail.com");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateCustomerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_EMAIL, exception.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_fail_when_email_is_123() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth("08-03-2000");
+        request.setGender(false);
+        request.setEmail("123");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateCustomerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_EMAIL, exception.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_success_when_gender_is_true() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth("08-03-2000");
+        request.setGender(true);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        UpdateCustomerProfileResponse response = underTest.updateCustomerProfile(request).getBody();
+        User user = validatorService.getUserValidated(request.getUsername());
+
+        // then
+        Assertions.assertEquals(user.getFullName(), "Nguyễn Thị Hồng Nhung");
+        Assertions.assertEquals(DateFormatUtil.toString(user.getDateOfBirth(), DATE_PATTERN), "08-03-2000");
+        Assertions.assertEquals(user.getGender(), true);
+        Assertions.assertEquals(user.getEmail(), "nhungnthhe141425@fpt.edu.vn");
+        Assertions.assertEquals(UPDATED_PROFILE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_success_when_gender_is_null() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth("08-03-2000");
+        request.setGender(null);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        UpdateCustomerProfileResponse response = underTest.updateCustomerProfile(request).getBody();
+        User user = validatorService.getUserValidated(request.getUsername());
+
+        // then
+        Assertions.assertEquals(user.getFullName(), "Nguyễn Thị Hồng Nhung");
+        Assertions.assertEquals(DateFormatUtil.toString(user.getDateOfBirth(), DATE_PATTERN), "08-03-2000");
+        Assertions.assertNull(user.getGender());
+        Assertions.assertEquals(user.getEmail(), "nhungnthhe141425@fpt.edu.vn");
+        Assertions.assertEquals(UPDATED_PROFILE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_fail_when_DBO_is_wrong_format() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth("20/05/2000");
+        request.setGender(true);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateCustomerProfile(request));
+
+        // then
+        Assertions.assertEquals(WRONG_LOCAL_DATE_FORMAT, exception.getMessage());
+    }
+
 
     void setUserContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};

@@ -622,12 +622,12 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request) {
         String fullName = request.getFullName();
-        if (!InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
+        if (fullName != null && !InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         }
 
         String email = request.getEmail();
-        if (!InputValidation.isEmailValid(email)) {
+        if (email != null && !InputValidation.isEmailValid(email)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_EMAIL);
         }
 
@@ -636,7 +636,7 @@ public class CustomerServiceImpl implements CustomerService {
         User user = validatorService.getUserValidated(request.getUsername());
         user.setFullName(fullName);
         user.setDateOfBirth(dob);
-        user.setGender(request.isGender());
+        user.setGender(request.getGender());
         user.setEmail(email);
 
         UpdateCustomerProfileResponse response = new UpdateCustomerProfileResponse();

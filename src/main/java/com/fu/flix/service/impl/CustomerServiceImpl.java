@@ -655,11 +655,17 @@ public class CustomerServiceImpl implements CustomerService {
             return null;
         }
 
+        LocalDate dob;
         try {
-            return DateFormatUtil.getLocalDate(strDob, DATE_PATTERN);
+            dob = DateFormatUtil.getLocalDate(strDob, DATE_PATTERN);
         } catch (DateTimeParseException e) {
             throw new GeneralException(HttpStatus.GONE, WRONG_LOCAL_DATE_FORMAT);
         }
+
+        if (dob.isAfter(LocalDate.now())) {
+            throw new GeneralException(HttpStatus.GONE, DOB_MUST_BE_LESS_THAN_OR_EQUAL_TODAY);
+        }
+        return dob;
     }
 
     @Override

@@ -25,6 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1523,6 +1524,24 @@ class CustomerServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_EMAIL, exception.getMessage());
+    }
+
+    @Test
+    public void test_update_customer_profile_fail_when_dob_is_after_today() {
+        // given
+        UpdateCustomerProfileRequest request = new UpdateCustomerProfileRequest();
+        String dob = DateFormatUtil.toString(LocalDate.now().plusDays(1), DATE_PATTERN);
+        request.setFullName("Nguyễn Thị Hồng Nhung");
+        request.setDateOfBirth(dob);
+        request.setGender(false);
+        request.setEmail("nhungnthhe141425@fpt.edu.vn");
+
+        // when
+        setUserContext(36L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateCustomerProfile(request));
+
+        // then
+        Assertions.assertEquals(DOB_MUST_BE_LESS_THAN_OR_EQUAL_TODAY, exception.getMessage());
     }
 
     @Test

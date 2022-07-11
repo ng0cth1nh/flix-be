@@ -140,7 +140,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                 JWTVerifier verifier = JWT.require(algorithm).build();
                 DecodedJWT decodedJWT = verifier.verify(refreshToken);
                 String username = decodedJWT.getSubject();
-                User user = userDAO.findByUsername(username).orElse(null);
+                User user = validatorService.getUserValidated(username);
 
                 String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
 

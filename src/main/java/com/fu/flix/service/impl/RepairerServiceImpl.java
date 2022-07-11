@@ -50,10 +50,9 @@ public class RepairerServiceImpl implements RepairerService {
     private final RequestService requestService;
     private final AccessoryDAO accessoryDAO;
     private final ExtraServiceDAO extraServiceDAO;
+    private final ValidatorService validatorService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final Long DESCRIPTION_MAX_LENGTH;
-    private final Long NAME_MAX_LENGTH;
-
     public RepairerServiceImpl(RepairerDAO repairerDAO,
                                RepairRequestDAO repairRequestDAO,
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
@@ -67,7 +66,8 @@ public class RepairerServiceImpl implements RepairerService {
                                SubServiceDAO subServiceDAO,
                                RequestService requestService,
                                AccessoryDAO accessoryDAO,
-                               ExtraServiceDAO extraServiceDAO) {
+                               ExtraServiceDAO extraServiceDAO,
+                               ValidatorService validatorService) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -84,7 +84,7 @@ public class RepairerServiceImpl implements RepairerService {
         this.accessoryDAO = accessoryDAO;
         this.extraServiceDAO = extraServiceDAO;
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
-        this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
+        this.validatorService = validatorService;
     }
 
     @Override
@@ -96,23 +96,24 @@ public class RepairerServiceImpl implements RepairerService {
             throw new GeneralException(HttpStatus.CONFLICT, JUST_CAN_ACCEPT_PENDING_REQUEST);
         }
 
-        Repairer repairer = repairerDAO.findByUserId(request.getUserId()).get();
+        Long repairerId = request.getUserId();
+        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
+
         if (repairer.isRepairing()) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_ACCEPT_REQUEST_WHEN_ON_ANOTHER_FIXING);
         }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
-        Balance balance = balanceDAO.findByUserId(repairer.getUserId()).get();
+        Balance balance = balanceDAO.findByUserId(repairerId).get();
         Long neededBalance = (long) (invoice.getActualProceeds() * this.appConf.getProfitRate());
         if (balance.getBalance() < neededBalance) {
             throw new GeneralException(HttpStatus.CONFLICT, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + neededBalance);
         }
 
         minusCommissions(balance, neededBalance, invoice.getRequestCode());
-        repairer.setRepairing(true);
         repairRequest.setStatusId(APPROVED.getId());
 
-        RepairRequestMatching repairRequestMatching = buildRepairRequestMatching(requestCode, repairer.getUserId());
+        RepairRequestMatching repairRequestMatching = buildRepairRequestMatching(requestCode, repairerId);
         repairRequestMatchingDAO.save(repairRequestMatching);
 
         RepairerApproveResponse response = new RepairerApproveResponse();
@@ -352,7 +353,14 @@ public class RepairerServiceImpl implements RepairerService {
             throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_FIXING_THIS_REQUEST);
         }
 
+        Long repairerId = request.getUserId();
+        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
+        if (repairer.isRepairing()) {
+            throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CONFIRM_FIXING_WHEN_ON_ANOTHER_FIXING);
+        }
+
         repairRequest.setStatusId(FIXING.getId());
+        repairer.setRepairing(true);
 
         ConfirmFixingResponse response = new ConfirmFixingResponse();
         response.setMessage(CONFIRM_FIXING_SUCCESS);

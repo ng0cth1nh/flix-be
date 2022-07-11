@@ -28,4 +28,5 @@ public class GetInvoiceResponse {
     private Long actualPrice;
     private Long totalPrice;
     private Long vatPrice;
+    private String approvedTime;
 }

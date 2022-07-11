@@ -44,4 +44,5 @@ public interface IInvoiceDTO {
     Long getTotalPrice();
 
     Long getVatPrice();
+    LocalDateTime getApprovedTime();
 }

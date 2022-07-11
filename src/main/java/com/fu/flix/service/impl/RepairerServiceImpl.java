@@ -173,6 +173,11 @@ public class RepairerServiceImpl implements RepairerService {
             response.setRequestCode(requestCode);
             response.setInspectionPrice(dto.getInspectionPrice());
             response.setTotalDiscount(dto.getTotalDiscount());
+            response.setApprovedTime(
+                    dto.getApprovedTime() == null
+                            ? null
+                            : DateFormatUtil.toString(dto.getApprovedTime(), DATE_TIME_PATTERN)
+            );
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -373,11 +378,6 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<AddSubServicesToInvoiceResponse> putSubServicesToInvoice(AddSubServicesToInvoiceRequest request) {
-        List<Long> subServiceIds = request.getSubServiceIds();
-        if (CollectionUtils.isEmpty(subServiceIds)) {
-            throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_ID_IS_REQUIRED);
-        }
-
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
         if (!FIXING.getId().equals(repairRequest.getStatusId())) {
@@ -389,10 +389,8 @@ public class RepairerServiceImpl implements RepairerService {
             throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_SUB_SERVICES_FOR_THIS_INVOICE);
         }
 
+        List<Long> subServiceIds = request.getSubServiceIds();
         Collection<SubService> subServices = subServiceDAO.findSubServices(subServiceIds, repairRequest.getServiceId());
-        if (subServices.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_NOT_FOUND);
-        }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
         Double vat = repairRequest.getVat();
@@ -417,11 +415,6 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<AddAccessoriesToInvoiceResponse> putAccessoriesToInvoice(AddAccessoriesToInvoiceRequest request) {
-        List<Long> accessoryIds = request.getAccessoryIds();
-        if (CollectionUtils.isEmpty(accessoryIds)) {
-            throw new GeneralException(HttpStatus.GONE, ACCESSORY_ID_IS_REQUIRED);
-        }
-
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
         if (!FIXING.getId().equals(repairRequest.getStatusId())) {
@@ -433,10 +426,8 @@ public class RepairerServiceImpl implements RepairerService {
             throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_ACCESSORIES_FOR_THIS_INVOICE);
         }
 
+        List<Long> accessoryIds = request.getAccessoryIds();
         Collection<Accessory> accessories = accessoryDAO.findAccessories(accessoryIds, repairRequest.getServiceId());
-        if (accessories.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, ACCESSORY_NOT_FOUND);
-        }
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
         Double vat = repairRequest.getVat();
@@ -461,10 +452,9 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request) {
-        Collection<ExtraServiceInputDTO> extraServiceInputDTOS = request.getExtraServices();
-        if (CollectionUtils.isEmpty(extraServiceInputDTOS)) {
-            throw new GeneralException(HttpStatus.GONE, EXTRA_SERVICE_IS_REQUIRED);
-        }
+        Collection<ExtraServiceInputDTO> extraServiceInputDTOS = request.getExtraServices() == null
+                ? new ArrayList<>()
+                : request.getExtraServices();
 
         if (isInvalidExtraServices(extraServiceInputDTOS)) {
             throw new GeneralException(HttpStatus.GONE, LIST_EXTRA_SERVICES_CONTAIN_INVALID_ELEMENT);
@@ -500,6 +490,9 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     private boolean isInvalidExtraServices(Collection<ExtraServiceInputDTO> extraServicesInput) {
+        if (CollectionUtils.isEmpty(extraServicesInput)) {
+            return false;
+        }
         return extraServicesInput.stream().anyMatch(this::isInvalidExtraService);
     }
 

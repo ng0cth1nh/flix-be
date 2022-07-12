@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.Constant.SERVICE_NOT_FOUND;
 
 @Service
 public class ValidatorServiceImpl implements ValidatorService {
@@ -91,12 +90,12 @@ public class ValidatorServiceImpl implements ValidatorService {
     @Override
     public com.fu.flix.entity.Service getServiceValidated(Long serviceId) {
         if (serviceId == null) {
-            throw new GeneralException(HttpStatus.GONE, SERVICE_ID_IS_REQUIRED);
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
         }
 
         Optional<com.fu.flix.entity.Service> optionalService = serviceDAO.findById(serviceId);
         if (optionalService.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, SERVICE_NOT_FOUND);
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
         }
         return optionalService.get();
     }
@@ -104,12 +103,12 @@ public class ValidatorServiceImpl implements ValidatorService {
     @Override
     public Category getCategoryValidated(Long categoryId) {
         if (categoryId == null) {
-            throw new GeneralException(HttpStatus.GONE, CATEGORY_ID_IS_REQUIRED);
+            throw new GeneralException(HttpStatus.GONE, INVALID_CATEGORY);
         }
 
         Optional<Category> optionalCategory = categoryDAO.findById(categoryId);
         if (optionalCategory.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, CATEGORY_NOT_FOUND);
+            throw new GeneralException(HttpStatus.GONE, INVALID_CATEGORY);
         }
         return optionalCategory.get();
     }

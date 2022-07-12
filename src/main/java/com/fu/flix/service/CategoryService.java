@@ -1,5 +1,6 @@
 package com.fu.flix.service;
 
+import com.fu.flix.dto.ServiceDTO;
 import com.fu.flix.dto.request.SearchServicesRequest;
 import com.fu.flix.dto.request.ServiceRequest;
 import com.fu.flix.dto.request.ServiceResponse;
@@ -10,4 +11,6 @@ public interface CategoryService {
     ResponseEntity<ServiceResponse> getServicesByCategory(ServiceRequest request);
 
     ResponseEntity<SearchServicesResponse> searchServices(SearchServicesRequest request);
+
+    ServiceDTO mapToServiceDTO(com.fu.flix.entity.Service service);
 }

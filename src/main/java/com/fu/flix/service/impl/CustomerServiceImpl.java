@@ -632,7 +632,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         String email = request.getEmail();
-        if (email != null && !InputValidation.isEmailValid(email)) {
+        if (!InputValidation.isEmailValid(email, true)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_EMAIL);
         }
 
@@ -695,11 +695,11 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         Integer offset = request.getOffset() == null
-                ? this.appConf.getOffsetDefault()
+                ? this.appConf.getDefaultOffset()
                 : request.getOffset();
 
         Integer limit = request.getLimit() == null
-                ? this.appConf.getLimitQueryDefault()
+                ? this.appConf.getDefaultLimitQuery()
                 : request.getLimit();
 
         if (offset < 0) {

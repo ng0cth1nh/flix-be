@@ -38,8 +38,10 @@ public class InputValidation {
         return matcher.matches();
     }
 
-    public static boolean isEmailValid(String email) {
-        if (email == null) {
+    public static boolean isEmailValid(String email, boolean isNullable) {
+        if (email == null && isNullable) {
+            return true;
+        } else if (email == null && !isNullable) {
             return false;
         }
         Pattern pattern = Pattern.compile(EMAIL_REGEX, Pattern.CASE_INSENSITIVE);

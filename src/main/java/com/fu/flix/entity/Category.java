@@ -21,6 +21,8 @@ public class Category {
 
     private Long imageId;
 
+    private Long iconId;
+
     private String name;
 
     private String description;

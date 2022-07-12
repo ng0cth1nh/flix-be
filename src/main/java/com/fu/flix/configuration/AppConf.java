@@ -18,8 +18,8 @@ public class AppConf {
     private TwilioInfo twilioInfo;
     private Long defaultAvatar;
     private String[] permitAllApis;
-    private Integer limitQueryDefault;
-    private Integer offsetDefault;
+    private Integer defaultLimitQuery;
+    private Integer defaultOffset;
     private Double vat;
     private Double profitRate;
     private Long minTimeFined;
@@ -27,6 +27,8 @@ public class AppConf {
     private VnPayInfo vnPayInfo;
     private Long descriptionMaxLength;
     private Long nameMaxLength;
+    private Integer defaultPageSize;
+    private Integer defaultPageNumber;
 
     @Data
     public static class TwilioInfo {

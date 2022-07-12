@@ -203,15 +203,7 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER);
         }
 
-        Long serviceId = usingVoucherDTO.getServiceId();
-        if (serviceId == null) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
-        }
-
-        Optional<com.fu.flix.entity.Service> optionalService = serviceDAO.findById(serviceId);
-        if (optionalService.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
-        }
+        validatorService.getServiceValidated(usingVoucherDTO.getServiceId());
 
         UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
         if (userVoucher == null) {

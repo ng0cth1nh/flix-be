@@ -127,23 +127,15 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<CreateCategoryResponse> createCategory(CreateCategoryRequest request) throws IOException {
-        String description = request.getDescription();
-        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
-            throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
-        }
-
-        String categoryName = request.getCategoryName();
-        if (Strings.isEmpty(categoryName)) {
-            throw new GeneralException(HttpStatus.GONE, CATEGORY_NAME_IS_REQUIRED);
-        }
+        validateModifyCategory(request);
 
         boolean isActive = request.getIsActive() != null
                 ? request.getIsActive()
                 : true;
 
         Category category = new Category();
-        category.setName(categoryName);
-        category.setDescription(description);
+        category.setName(request.getCategoryName());
+        category.setDescription(request.getDescription());
         category.setActive(isActive);
         postCategoryIcon(category, request.getIcon());
         postCategoryImage(category, request.getImage());
@@ -157,36 +149,18 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<UpdateCategoryResponse> updateCategory(UpdateCategoryRequest request) throws IOException {
-        Long categoryId = request.getId();
-        if (categoryId == null) {
-            throw new GeneralException(HttpStatus.GONE, CATEGORY_ID_IS_REQUIRED);
-        }
-
-        String description = request.getDescription();
-        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
-            throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
-        }
-
-        String categoryName = request.getCategoryName();
-        if (Strings.isEmpty(categoryName)) {
-            throw new GeneralException(HttpStatus.GONE, CATEGORY_NAME_IS_REQUIRED);
-        }
+        validateModifyCategory(request);
 
         boolean isActive = request.getIsActive() != null
                 ? request.getIsActive()
                 : true;
 
-        Optional<Category> optionalCategory = categoryDAO.findById(categoryId);
-        if (optionalCategory.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, CATEGORY_NOT_FOUND);
-        }
-
         MultipartFile icon = request.getIcon();
         MultipartFile image = request.getImage();
 
-        Category category = optionalCategory.get();
-        category.setName(categoryName);
-        category.setDescription(description);
+        Category category = validatorService.getCategoryValidated(request.getId());
+        category.setName(request.getCategoryName());
+        category.setDescription(request.getDescription());
         category.setActive(isActive);
         if (icon != null) {
             postCategoryIcon(category, icon);
@@ -200,6 +174,18 @@ public class AdminServiceImpl implements AdminService {
         response.setMessage(UPDATE_CATEGORY_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void validateModifyCategory(ModifyCategoryRequest request) {
+        String description = request.getDescription();
+        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
+        }
+
+        String categoryName = request.getCategoryName();
+        if (Strings.isEmpty(categoryName)) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_NAME_IS_REQUIRED);
+        }
     }
 
     private void postCategoryIcon(Category category, MultipartFile icon) throws IOException {
@@ -240,6 +226,60 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<CreateServiceResponse> createService(CreateServiceRequest request) throws IOException {
+        validateModifyService(request);
+
+        boolean isActive = request.getIsActive() != null
+                ? request.getIsActive()
+                : true;
+
+        com.fu.flix.entity.Service service = new com.fu.flix.entity.Service();
+        service.setName(request.getServiceName());
+        service.setInspectionPrice(request.getInspectionPrice());
+        service.setDescription(request.getDescription());
+        service.setCategoryId(request.getCategoryId());
+        service.setActive(isActive);
+        postServiceIcon(service, request.getIcon());
+        postServiceImage(service, request.getImage());
+        serviceDAO.save(service);
+
+        CreateServiceResponse response = new CreateServiceResponse();
+        response.setMessage(CREATE_SERVICE_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<UpdateServiceResponse> updateService(UpdateServiceRequest request) throws IOException {
+        validateModifyService(request);
+
+        boolean isActive = request.getIsActive() != null
+                ? request.getIsActive()
+                : true;
+
+        MultipartFile icon = request.getIcon();
+        MultipartFile image = request.getImage();
+
+        com.fu.flix.entity.Service service = validatorService.getServiceValidated(request.getServiceId());
+        service.setName(request.getServiceName());
+        service.setInspectionPrice(request.getInspectionPrice());
+        service.setDescription(request.getDescription());
+        service.setCategoryId(request.getCategoryId());
+        service.setActive(isActive);
+        if (icon != null) {
+            postServiceIcon(service, icon);
+        }
+        if (image != null) {
+            postServiceImage(service, image);
+        }
+        serviceDAO.save(service);
+
+        UpdateServiceResponse response = new UpdateServiceResponse();
+        response.setMessage(UPDATE_SERVICE_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void validateModifyService(ModifyServiceRequest request) {
         String description = request.getDescription();
         if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
             throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
@@ -249,10 +289,6 @@ public class AdminServiceImpl implements AdminService {
         if (Strings.isEmpty(serviceName)) {
             throw new GeneralException(HttpStatus.GONE, SERVICE_NAME_IS_REQUIRED);
         }
-
-        boolean isActive = request.getIsActive() != null
-                ? request.getIsActive()
-                : true;
 
         Long inspectionPrice = request.getInspectionPrice();
         if (inspectionPrice == null || inspectionPrice < 0) {
@@ -267,21 +303,6 @@ public class AdminServiceImpl implements AdminService {
         if (categoryDAO.findById(categoryId).isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, CATEGORY_NOT_FOUND);
         }
-
-        com.fu.flix.entity.Service service = new com.fu.flix.entity.Service();
-        service.setName(serviceName);
-        service.setInspectionPrice(inspectionPrice);
-        service.setDescription(description);
-        service.setCategoryId(categoryId);
-        service.setActive(isActive);
-        postServiceIcon(service, request.getIcon());
-        postServiceImage(service, request.getImage());
-        serviceDAO.save(service);
-
-        CreateServiceResponse response = new CreateServiceResponse();
-        response.setMessage(CREATE_SERVICE_SUCCESS);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private void postServiceIcon(com.fu.flix.entity.Service service, MultipartFile icon) throws IOException {

@@ -2,8 +2,11 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.Constant;
+import com.fu.flix.dao.CategoryDAO;
+import com.fu.flix.dao.ServiceDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.error.GeneralException;
+import com.fu.flix.entity.Category;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.ValidatorService;
 import org.springframework.http.HttpStatus;
@@ -11,18 +14,24 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static com.fu.flix.constant.Constant.PAGE_NUMBER_MUST_BE_GREATER_OR_EQUAL_0;
-import static com.fu.flix.constant.Constant.PAGE_SIZE_MUST_BE_GREATER_OR_EQUAL_0;
+import static com.fu.flix.constant.Constant.*;
+import static com.fu.flix.constant.Constant.SERVICE_NOT_FOUND;
 
 @Service
 public class ValidatorServiceImpl implements ValidatorService {
     private final UserDAO userDAO;
     private final AppConf appConf;
+    private final ServiceDAO serviceDAO;
+    private final CategoryDAO categoryDAO;
 
     public ValidatorServiceImpl(UserDAO userDAO,
-                                AppConf appConf) {
+                                AppConf appConf,
+                                ServiceDAO serviceDAO,
+                                CategoryDAO categoryDAO) {
         this.userDAO = userDAO;
         this.appConf = appConf;
+        this.serviceDAO = serviceDAO;
+        this.categoryDAO = categoryDAO;
     }
 
     @Override
@@ -78,4 +87,31 @@ public class ValidatorServiceImpl implements ValidatorService {
         }
         return pageNumber;
     }
+
+    @Override
+    public com.fu.flix.entity.Service getServiceValidated(Long serviceId) {
+        if (serviceId == null) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_ID_IS_REQUIRED);
+        }
+
+        Optional<com.fu.flix.entity.Service> optionalService = serviceDAO.findById(serviceId);
+        if (optionalService.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_NOT_FOUND);
+        }
+        return optionalService.get();
+    }
+
+    @Override
+    public Category getCategoryValidated(Long categoryId) {
+        if (categoryId == null) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_ID_IS_REQUIRED);
+        }
+
+        Optional<Category> optionalCategory = categoryDAO.findById(categoryId);
+        if (optionalCategory.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_NOT_FOUND);
+        }
+        return optionalCategory.get();
+    }
+
 }

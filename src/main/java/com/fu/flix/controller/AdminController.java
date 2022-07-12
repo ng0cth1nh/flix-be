@@ -53,4 +53,9 @@ public class AdminController {
     public ResponseEntity<CreateServiceResponse> createService(CreateServiceRequest request) throws IOException {
         return adminService.createService(request);
     }
+
+    @PutMapping("service")
+    public ResponseEntity<UpdateServiceResponse> updateService(UpdateServiceRequest request) throws IOException {
+        return adminService.updateService(request);
+    }
 }

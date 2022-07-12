@@ -18,5 +18,8 @@ public interface AdminService {
     ResponseEntity<UpdateCategoryResponse> updateCategory(UpdateCategoryRequest request) throws IOException;
 
     ResponseEntity<GetServicesResponse> getServices(GetServicesRequest request);
+
     ResponseEntity<CreateServiceResponse> createService(CreateServiceRequest request) throws IOException;
+
+    ResponseEntity<UpdateServiceResponse> updateService(UpdateServiceRequest request) throws IOException;
 }

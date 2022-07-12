@@ -1,15 +1,13 @@
 package com.fu.flix.controller;
 
-import com.fu.flix.dto.request.GetAdminProfileRequest;
-import com.fu.flix.dto.request.GetCategoriesRequest;
-import com.fu.flix.dto.request.UpdateAdminProfileRequest;
-import com.fu.flix.dto.response.GetAdminProfileResponse;
-import com.fu.flix.dto.response.GetCategoriesResponse;
-import com.fu.flix.dto.response.UpdateAdminProfileResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.service.AdminService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @Slf4j
@@ -34,5 +32,10 @@ public class AdminController {
     @GetMapping("categories")
     public ResponseEntity<GetCategoriesResponse> getCategories(GetCategoriesRequest request) {
         return adminService.getCategories(request);
+    }
+
+    @PostMapping("category")
+    public ResponseEntity<CreateCategoryResponse> createCategory(CreateCategoryRequest request) throws IOException {
+        return adminService.createCategory(request);
     }
 }

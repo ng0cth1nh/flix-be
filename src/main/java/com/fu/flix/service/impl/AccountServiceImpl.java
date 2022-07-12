@@ -470,7 +470,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
 
-    public User postUserAvatar(User user, MultipartFile avatar) throws IOException {
+    private User postUserAvatar(User user, MultipartFile avatar) throws IOException {
         if (avatar != null) {
             String url = cloudStorageService.uploadImage(avatar);
             user = userService.addNewAvatarToUser(user, url);

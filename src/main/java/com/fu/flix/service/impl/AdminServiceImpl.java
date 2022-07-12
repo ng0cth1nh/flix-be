@@ -3,7 +3,9 @@ package com.fu.flix.service.impl;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.CategoryDAO;
 import com.fu.flix.dao.ImageDAO;
+import com.fu.flix.dao.ServiceDAO;
 import com.fu.flix.dto.CategoryDTO;
+import com.fu.flix.dto.ServiceDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
@@ -11,6 +13,7 @@ import com.fu.flix.entity.Category;
 import com.fu.flix.entity.Image;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.AdminService;
+import com.fu.flix.service.CategoryService;
 import com.fu.flix.service.CloudStorageService;
 import com.fu.flix.service.ValidatorService;
 import com.fu.flix.util.InputValidation;
@@ -41,6 +44,8 @@ public class AdminServiceImpl implements AdminService {
     private final ImageDAO imageDAO;
     private final CloudStorageService cloudStorageService;
     private final AppConf appConf;
+    private final ServiceDAO serviceDAO;
+    private final CategoryService categoryService;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
 
@@ -48,7 +53,9 @@ public class AdminServiceImpl implements AdminService {
                             CategoryDAO categoryDAO,
                             ImageDAO imageDAO,
                             CloudStorageService cloudStorageService,
-                            AppConf appConf) {
+                            AppConf appConf,
+                            ServiceDAO serviceDAO,
+                            CategoryService categoryService) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -56,6 +63,8 @@ public class AdminServiceImpl implements AdminService {
         this.appConf = appConf;
         this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
+        this.serviceDAO = serviceDAO;
+        this.categoryService = categoryService;
     }
 
     @Override
@@ -199,5 +208,21 @@ public class AdminServiceImpl implements AdminService {
         } else {
             category.setIconId(appConf.getDefaultAvatar());
         }
+    }
+
+    @Override
+    public ResponseEntity<GetServicesResponse> getServices(GetServicesRequest request) {
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+
+        Page<com.fu.flix.entity.Service> servicePage = serviceDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        List<ServiceDTO> serviceDTOS = servicePage.stream()
+                .map(categoryService::mapToServiceDTO)
+                .collect(Collectors.toList());
+
+        GetServicesResponse response = new GetServicesResponse();
+        response.setServices(serviceDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

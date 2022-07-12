@@ -43,4 +43,9 @@ public class AdminController {
     public ResponseEntity<UpdateCategoryResponse> updateCategory(UpdateCategoryRequest request) throws IOException {
         return adminService.updateCategory(request);
     }
+
+    @GetMapping("services")
+    public ResponseEntity<GetServicesResponse> getServices(GetServicesRequest request) {
+        return adminService.getServices(request);
+    }
 }

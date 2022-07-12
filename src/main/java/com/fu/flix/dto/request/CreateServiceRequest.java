@@ -6,11 +6,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
-public class UpdateCategoryRequest extends DataRequest{
-    private Long id;
+public class CreateServiceRequest extends DataRequest {
     private MultipartFile icon;
-    private MultipartFile image;
-    private String categoryName;
+    private String serviceName;
+    private Long categoryId;
+    private Long inspectionPrice;
     private String description;
     private Boolean isActive;
+    private MultipartFile image;
 }

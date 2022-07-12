@@ -108,12 +108,14 @@ public class AdminServiceImpl implements AdminService {
         List<CategoryDTO> categories = categoryPage.stream()
                 .map(category -> {
                     Optional<Image> optionalIcon = imageDAO.findById(category.getIconId());
+                    Optional<Image> optionalImage = imageDAO.findById(category.getImageId());
 
                     CategoryDTO dto = new CategoryDTO();
                     dto.setCategoryName(category.getName());
                     dto.setStatus(category.isActive() ? ACTIVE.name() : INACTIVE.name());
                     dto.setId(category.getId());
                     dto.setIcon(optionalIcon.map(Image::getUrl).orElse(null));
+                    dto.setImage(optionalImage.map(Image::getUrl).orElse(null));
                     return dto;
                 }).collect(Collectors.toList());
 
@@ -144,6 +146,7 @@ public class AdminServiceImpl implements AdminService {
         category.setDescription(description);
         category.setActive(isActive);
         postCategoryIcon(category, request.getIcon());
+        postCategoryImage(category, request.getImage());
         categoryDAO.save(category);
 
         CreateCategoryResponse response = new CreateCategoryResponse();
@@ -179,6 +182,7 @@ public class AdminServiceImpl implements AdminService {
         }
 
         MultipartFile icon = request.getIcon();
+        MultipartFile image = request.getImage();
 
         Category category = optionalCategory.get();
         category.setName(categoryName);
@@ -186,6 +190,9 @@ public class AdminServiceImpl implements AdminService {
         category.setActive(isActive);
         if (icon != null) {
             postCategoryIcon(category, icon);
+        }
+        if (image != null) {
+            postCategoryImage(category, image);
         }
         categoryDAO.save(category);
 
@@ -198,15 +205,20 @@ public class AdminServiceImpl implements AdminService {
     private void postCategoryIcon(Category category, MultipartFile icon) throws IOException {
         if (icon != null) {
             String url = cloudStorageService.uploadImage(icon);
-
-            Image image = new Image();
-            image.setName(category.getName());
-            image.setUrl(url);
-            Image savedImage = imageDAO.save(image);
-
+            Image savedImage = saveImage(category.getName(), url);
             category.setIconId(savedImage.getId());
         } else {
             category.setIconId(appConf.getDefaultAvatar());
+        }
+    }
+
+    private void postCategoryImage(Category category, MultipartFile image) throws IOException {
+        if (image != null) {
+            String url = cloudStorageService.uploadImage(image);
+            Image savedImage = saveImage(category.getName(), url);
+            category.setImageId(savedImage.getId());
+        } else {
+            category.setImageId(appConf.getDefaultAvatar());
         }
     }
 
@@ -224,5 +236,78 @@ public class AdminServiceImpl implements AdminService {
         response.setServices(serviceDTOS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<CreateServiceResponse> createService(CreateServiceRequest request) throws IOException {
+        String description = request.getDescription();
+        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
+        }
+
+        String serviceName = request.getServiceName();
+        if (Strings.isEmpty(serviceName)) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_NAME_IS_REQUIRED);
+        }
+
+        boolean isActive = request.getIsActive() != null
+                ? request.getIsActive()
+                : true;
+
+        Long inspectionPrice = request.getInspectionPrice();
+        if (inspectionPrice == null || inspectionPrice < 0) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_INSPECTION_PRICE);
+        }
+
+        Long categoryId = request.getCategoryId();
+        if (categoryId == null) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_ID_IS_REQUIRED);
+        }
+
+        if (categoryDAO.findById(categoryId).isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_NOT_FOUND);
+        }
+
+        com.fu.flix.entity.Service service = new com.fu.flix.entity.Service();
+        service.setName(serviceName);
+        service.setInspectionPrice(inspectionPrice);
+        service.setDescription(description);
+        service.setCategoryId(categoryId);
+        service.setActive(isActive);
+        postServiceIcon(service, request.getIcon());
+        postServiceImage(service, request.getImage());
+        serviceDAO.save(service);
+
+        CreateServiceResponse response = new CreateServiceResponse();
+        response.setMessage(CREATE_SERVICE_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void postServiceIcon(com.fu.flix.entity.Service service, MultipartFile icon) throws IOException {
+        if (icon != null) {
+            String url = cloudStorageService.uploadImage(icon);
+            Image savedImage = saveImage(service.getName(), url);
+            service.setIconId(savedImage.getId());
+        } else {
+            service.setIconId(appConf.getDefaultAvatar());
+        }
+    }
+
+    private void postServiceImage(com.fu.flix.entity.Service service, MultipartFile image) throws IOException {
+        if (image != null) {
+            String url = cloudStorageService.uploadImage(image);
+            Image savedImage = saveImage(service.getName(), url);
+            service.setImageId(savedImage.getId());
+        } else {
+            service.setImageId(appConf.getDefaultAvatar());
+        }
+    }
+
+    private Image saveImage(String name, String url) {
+        Image image = new Image();
+        image.setName(name);
+        image.setUrl(url);
+        return imageDAO.save(image);
     }
 }

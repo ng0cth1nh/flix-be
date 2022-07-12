@@ -48,4 +48,9 @@ public class AdminController {
     public ResponseEntity<GetServicesResponse> getServices(GetServicesRequest request) {
         return adminService.getServices(request);
     }
+
+    @PostMapping("service")
+    public ResponseEntity<CreateServiceResponse> createService(CreateServiceRequest request) throws IOException {
+        return adminService.createService(request);
+    }
 }

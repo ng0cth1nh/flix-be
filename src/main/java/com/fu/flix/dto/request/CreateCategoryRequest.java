@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Setter
 public class CreateCategoryRequest extends DataRequest {
     private MultipartFile icon;
+    private MultipartFile image;
     private String categoryName;
     private String description;
     private Boolean isActive;

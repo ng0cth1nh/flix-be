@@ -5,14 +5,8 @@ import com.fu.flix.dao.CategoryDAO;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dto.CategoryDTO;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.CreateCategoryRequest;
-import com.fu.flix.dto.request.GetAdminProfileRequest;
-import com.fu.flix.dto.request.GetCategoriesRequest;
-import com.fu.flix.dto.request.UpdateAdminProfileRequest;
-import com.fu.flix.dto.response.CreateCategoryResponse;
-import com.fu.flix.dto.response.GetAdminProfileResponse;
-import com.fu.flix.dto.response.GetCategoriesResponse;
-import com.fu.flix.dto.response.UpdateAdminProfileResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.Category;
 import com.fu.flix.entity.Image;
 import com.fu.flix.entity.User;
@@ -145,6 +139,49 @@ public class AdminServiceImpl implements AdminService {
 
         CreateCategoryResponse response = new CreateCategoryResponse();
         response.setMessage(CREATE_CATEGORY_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<UpdateCategoryResponse> updateCategory(UpdateCategoryRequest request) throws IOException {
+        Long categoryId = request.getId();
+        if (categoryId == null) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_ID_IS_REQUIRED);
+        }
+
+        String description = request.getDescription();
+        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
+        }
+
+        String categoryName = request.getCategoryName();
+        if (Strings.isEmpty(categoryName)) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_NAME_IS_REQUIRED);
+        }
+
+        boolean isActive = request.getIsActive() != null
+                ? request.getIsActive()
+                : true;
+
+        Optional<Category> optionalCategory = categoryDAO.findById(categoryId);
+        if (optionalCategory.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_NOT_FOUND);
+        }
+
+        MultipartFile icon = request.getIcon();
+
+        Category category = optionalCategory.get();
+        category.setName(categoryName);
+        category.setDescription(description);
+        category.setActive(isActive);
+        if (icon != null) {
+            postCategoryIcon(category, icon);
+        }
+        categoryDAO.save(category);
+
+        UpdateCategoryResponse response = new UpdateCategoryResponse();
+        response.setMessage(UPDATE_CATEGORY_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

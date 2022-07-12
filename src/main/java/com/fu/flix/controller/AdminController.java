@@ -38,4 +38,9 @@ public class AdminController {
     public ResponseEntity<CreateCategoryResponse> createCategory(CreateCategoryRequest request) throws IOException {
         return adminService.createCategory(request);
     }
+
+    @PutMapping("category")
+    public ResponseEntity<UpdateCategoryResponse> updateCategory(UpdateCategoryRequest request) throws IOException {
+        return adminService.updateCategory(request);
+    }
 }

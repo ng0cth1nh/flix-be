@@ -57,6 +57,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
     private final Long NAME_MAX_LENGTH;
+    private final Long DESCRIPTION_MAX_LENGTH;
 
     public CustomerServiceImpl(RepairRequestDAO repairRequestDAO,
                                VoucherDAO voucherDAO,
@@ -95,6 +96,7 @@ public class CustomerServiceImpl implements CustomerService {
         this.voucherService = voucherService;
         this.requestService = requestService;
         this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
+        this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
     }
 
     @Override
@@ -105,7 +107,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         String description = request.getDescription();
-        if (description != null && description.length() > this.appConf.getDescriptionMaxLength()) {
+        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
             throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
         }
 

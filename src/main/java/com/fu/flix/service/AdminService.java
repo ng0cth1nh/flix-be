@@ -28,4 +28,6 @@ public interface AdminService {
     ResponseEntity<GetSubServicesResponse> getSubServices(GetSubServicesRequest request);
 
     ResponseEntity<CreateSubServiceResponse> createSubService(CreateSubServiceRequest request);
+
+    ResponseEntity<UpdateSubServiceResponse> updateSubService(UpdateSubServiceRequest request);
 }

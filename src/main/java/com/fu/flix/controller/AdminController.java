@@ -73,4 +73,9 @@ public class AdminController {
     public ResponseEntity<CreateSubServiceResponse> createSubService(@RequestBody CreateSubServiceRequest request) {
         return adminService.createSubService(request);
     }
+
+    @PutMapping("subService")
+    public ResponseEntity<UpdateSubServiceResponse> updateSubService(@RequestBody UpdateSubServiceRequest request) {
+        return adminService.updateSubService(request);
+    }
 }

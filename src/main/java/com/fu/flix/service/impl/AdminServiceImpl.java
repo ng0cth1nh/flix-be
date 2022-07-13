@@ -405,6 +405,28 @@ public class AdminServiceImpl implements AdminService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Override
+    public ResponseEntity<UpdateSubServiceResponse> updateSubService(UpdateSubServiceRequest request) {
+        validateModifySubService(request);
+
+        boolean isActive = request.getIsActive() != null
+                ? request.getIsActive()
+                : true;
+
+        SubService subService = validatorService.getSubServiceValidated(request.getSubServiceId());
+        subService.setName(request.getSubServiceName());
+        subService.setDescription(request.getDescription());
+        subService.setPrice(request.getPrice());
+        subService.setServiceId(request.getServiceId());
+        subService.setIsActive(isActive);
+        subServiceDAO.save(subService);
+
+        UpdateSubServiceResponse response = new UpdateSubServiceResponse();
+        response.setMessage(UPDATE_SUB_SERVICE_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     private void validateModifySubService(ModifySubServiceRequest request) {
         if (Strings.isEmpty(request.getSubServiceName())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_SUB_SERVICE_NAME);

@@ -26,4 +26,8 @@ public interface AdminService {
     ResponseEntity<AdminSearchServicesResponse> searchServices(AdminSearchServicesRequest request);
 
     ResponseEntity<GetSubServicesResponse> getSubServices(GetSubServicesRequest request);
+
+    ResponseEntity<CreateSubServiceResponse> createSubService(CreateSubServiceRequest request);
+
+    ResponseEntity<UpdateSubServiceResponse> updateSubService(UpdateSubServiceRequest request);
 }

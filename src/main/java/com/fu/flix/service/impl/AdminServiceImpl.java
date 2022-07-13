@@ -382,4 +382,67 @@ public class AdminServiceImpl implements AdminService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<CreateSubServiceResponse> createSubService(CreateSubServiceRequest request) {
+        validateModifySubService(request);
+
+        boolean isActive = request.getIsActive() != null
+                ? request.getIsActive()
+                : true;
+
+        SubService subService = new SubService();
+        subService.setName(request.getSubServiceName());
+        subService.setDescription(request.getDescription());
+        subService.setPrice(request.getPrice());
+        subService.setServiceId(request.getServiceId());
+        subService.setIsActive(isActive);
+        subServiceDAO.save(subService);
+
+        CreateSubServiceResponse response = new CreateSubServiceResponse();
+        response.setMessage(CREATE_SUB_SERVICE_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<UpdateSubServiceResponse> updateSubService(UpdateSubServiceRequest request) {
+        validateModifySubService(request);
+
+        boolean isActive = request.getIsActive() != null
+                ? request.getIsActive()
+                : true;
+
+        SubService subService = validatorService.getSubServiceValidated(request.getSubServiceId());
+        subService.setName(request.getSubServiceName());
+        subService.setDescription(request.getDescription());
+        subService.setPrice(request.getPrice());
+        subService.setServiceId(request.getServiceId());
+        subService.setIsActive(isActive);
+        subServiceDAO.save(subService);
+
+        UpdateSubServiceResponse response = new UpdateSubServiceResponse();
+        response.setMessage(UPDATE_SUB_SERVICE_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void validateModifySubService(ModifySubServiceRequest request) {
+        if (Strings.isEmpty(request.getSubServiceName())) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SUB_SERVICE_NAME);
+        }
+
+        Long price = request.getPrice();
+        if (price == null || price < 0) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PRICE);
+        }
+
+        String description = request.getDescription();
+        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
+        }
+
+        validatorService.getServiceValidated(request.getServiceId());
+    }
+
 }

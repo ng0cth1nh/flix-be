@@ -4,9 +4,11 @@ import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.Constant;
 import com.fu.flix.dao.CategoryDAO;
 import com.fu.flix.dao.ServiceDAO;
+import com.fu.flix.dao.SubServiceDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.entity.Category;
+import com.fu.flix.entity.SubService;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.ValidatorService;
 import org.springframework.http.HttpStatus;
@@ -22,15 +24,18 @@ public class ValidatorServiceImpl implements ValidatorService {
     private final AppConf appConf;
     private final ServiceDAO serviceDAO;
     private final CategoryDAO categoryDAO;
+    private final SubServiceDAO subServiceDAO;
 
     public ValidatorServiceImpl(UserDAO userDAO,
                                 AppConf appConf,
                                 ServiceDAO serviceDAO,
-                                CategoryDAO categoryDAO) {
+                                CategoryDAO categoryDAO,
+                                SubServiceDAO subServiceDAO) {
         this.userDAO = userDAO;
         this.appConf = appConf;
         this.serviceDAO = serviceDAO;
         this.categoryDAO = categoryDAO;
+        this.subServiceDAO = subServiceDAO;
     }
 
     @Override
@@ -113,4 +118,16 @@ public class ValidatorServiceImpl implements ValidatorService {
         return optionalCategory.get();
     }
 
+    @Override
+    public SubService getSubServiceValidated(Long subServiceId) {
+        if (subServiceId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SUB_SERVICE);
+        }
+
+        Optional<SubService> optionalSubService = subServiceDAO.findById(subServiceId);
+        if (optionalSubService.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SUB_SERVICE);
+        }
+        return optionalSubService.get();
+    }
 }

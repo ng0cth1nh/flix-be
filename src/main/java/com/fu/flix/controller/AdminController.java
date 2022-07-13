@@ -58,4 +58,14 @@ public class AdminController {
     public ResponseEntity<UpdateServiceResponse> updateService(UpdateServiceRequest request) throws IOException {
         return adminService.updateService(request);
     }
+
+    @GetMapping("search/services")
+    public ResponseEntity<AdminSearchServicesResponse> searchServices(AdminSearchServicesRequest request) {
+        return adminService.searchServices(request);
+    }
+
+    @GetMapping("subServices")
+    public ResponseEntity<GetSubServicesResponse> getSubServices(GetSubServicesRequest request) {
+        return adminService.getSubServices(request);
+    }
 }

@@ -6,6 +6,6 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class SearchServicesResponse {
+public class SearchActiveServicesResponse {
     private List<SearchServiceDTO> services;
 }

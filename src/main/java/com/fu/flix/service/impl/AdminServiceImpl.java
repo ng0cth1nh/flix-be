@@ -4,13 +4,14 @@ import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.CategoryDAO;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.ServiceDAO;
-import com.fu.flix.dto.CategoryDTO;
-import com.fu.flix.dto.ServiceDTO;
+import com.fu.flix.dao.SubServiceDAO;
+import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.Category;
 import com.fu.flix.entity.Image;
+import com.fu.flix.entity.SubService;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.AdminService;
 import com.fu.flix.service.CategoryService;
@@ -46,6 +47,7 @@ public class AdminServiceImpl implements AdminService {
     private final AppConf appConf;
     private final ServiceDAO serviceDAO;
     private final CategoryService categoryService;
+    private final SubServiceDAO subServiceDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
 
@@ -55,7 +57,8 @@ public class AdminServiceImpl implements AdminService {
                             CloudStorageService cloudStorageService,
                             AppConf appConf,
                             ServiceDAO serviceDAO,
-                            CategoryService categoryService) {
+                            CategoryService categoryService,
+                            SubServiceDAO subServiceDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -65,6 +68,7 @@ public class AdminServiceImpl implements AdminService {
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
         this.serviceDAO = serviceDAO;
         this.categoryService = categoryService;
+        this.subServiceDAO = subServiceDAO;
     }
 
     @Override
@@ -330,5 +334,52 @@ public class AdminServiceImpl implements AdminService {
         image.setName(name);
         image.setUrl(url);
         return imageDAO.save(image);
+    }
+
+    @Override
+    public ResponseEntity<AdminSearchServicesResponse> searchServices(AdminSearchServicesRequest request) {
+        String keyword = request.getKeyword();
+        if (keyword == null || keyword.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        List<IAdminSearchServiceDTO> services = serviceDAO.searchServicesForAdmin(keyword);
+        List<AdminSearchServiceDTO> searchServiceDTOS = services.stream()
+                .map(service -> {
+                    AdminSearchServiceDTO dto = new AdminSearchServiceDTO();
+                    dto.setServiceId(service.getServiceId());
+                    dto.setServiceName(service.getServiceName());
+                    dto.setIcon(service.getIcon());
+                    dto.setImage(service.getImage());
+                    dto.setStatus(service.getStatus());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        AdminSearchServicesResponse response = new AdminSearchServicesResponse();
+        response.setServices(searchServiceDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<GetSubServicesResponse> getSubServices(GetSubServicesRequest request) {
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+
+        Page<SubService> subServicePage = subServiceDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        List<AdminSubServiceDTO> subServices = subServicePage.stream()
+                .map(subService -> {
+                    AdminSubServiceDTO dto = new AdminSubServiceDTO();
+                    dto.setId(subService.getId());
+                    dto.setSubServiceName(subService.getName());
+                    dto.setPrice(subService.getPrice());
+                    dto.setStatus(subService.getIsActive() ? ACTIVE.name() : INACTIVE.name());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        GetSubServicesResponse response = new GetSubServicesResponse();
+        response.setSubServices(subServices);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

@@ -1,6 +1,6 @@
 package com.fu.flix.dto;
 
-public interface IServiceDTO {
+public interface IAdminSearchServiceDTO {
     Long getServiceId();
 
     String getServiceName();
@@ -8,4 +8,6 @@ public interface IServiceDTO {
     String getIcon();
 
     String getImage();
+
+    String getStatus();
 }

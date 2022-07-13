@@ -2,10 +2,10 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.dto.ServiceDTO;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.SearchServicesRequest;
+import com.fu.flix.dto.request.SearchActiveServicesRequest;
 import com.fu.flix.dto.request.ServiceRequest;
 import com.fu.flix.dto.request.ServiceResponse;
-import com.fu.flix.dto.response.SearchServicesResponse;
+import com.fu.flix.dto.response.SearchActiveServicesResponse;
 import com.fu.flix.service.CategoryService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -74,7 +74,7 @@ class CategoryServiceImplTest {
     @Test
     void test_search_service_fail_when_key_word_is_empty() {
         // given
-        SearchServicesRequest request = new SearchServicesRequest();
+        SearchActiveServicesRequest request = new SearchActiveServicesRequest();
         request.setKeyword("");
 
         // when
@@ -87,7 +87,7 @@ class CategoryServiceImplTest {
     @Test
     void test_search_service_fail_when_key_word_is_null() {
         // given
-        SearchServicesRequest request = new SearchServicesRequest();
+        SearchActiveServicesRequest request = new SearchActiveServicesRequest();
         request.setKeyword(null);
 
         // when
@@ -100,11 +100,11 @@ class CategoryServiceImplTest {
     @Test
     void test_search_service_success_when_key_word_is_nh() {
         // given
-        SearchServicesRequest request = new SearchServicesRequest();
+        SearchActiveServicesRequest request = new SearchActiveServicesRequest();
         request.setKeyword("nh");
 
         // when
-        SearchServicesResponse response = underTest.searchServices(request).getBody();
+        SearchActiveServicesResponse response = underTest.searchServices(request).getBody();
 
         // then
         Assertions.assertTrue(response.getServices().size() > 0);
@@ -113,11 +113,11 @@ class CategoryServiceImplTest {
     @Test
     void test_search_service_success_when_key_word_contain_utf_8_character_and_white_space() {
         // given
-        SearchServicesRequest request = new SearchServicesRequest();
+        SearchActiveServicesRequest request = new SearchActiveServicesRequest();
         request.setKeyword("máy giặt");
 
         // when
-        SearchServicesResponse response = underTest.searchServices(request).getBody();
+        SearchActiveServicesResponse response = underTest.searchServices(request).getBody();
 
         // then
         Assertions.assertTrue(response.getServices().size() > 0);
@@ -126,11 +126,11 @@ class CategoryServiceImplTest {
     @Test
     void test_search_service_success_when_key_word_is_123a() {
         // given
-        SearchServicesRequest request = new SearchServicesRequest();
+        SearchActiveServicesRequest request = new SearchActiveServicesRequest();
         request.setKeyword("123a");
 
         // when
-        SearchServicesResponse response = underTest.searchServices(request).getBody();
+        SearchActiveServicesResponse response = underTest.searchServices(request).getBody();
 
         // then
         Assertions.assertTrue(response.getServices().isEmpty());

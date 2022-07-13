@@ -3,14 +3,14 @@ package com.fu.flix.service.impl;
 import com.fu.flix.constant.Constant;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.ServiceDAO;
-import com.fu.flix.dto.IServiceDTO;
+import com.fu.flix.dto.ISearchActiveServiceDTO;
 import com.fu.flix.dto.SearchServiceDTO;
 import com.fu.flix.dto.ServiceDTO;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.SearchServicesRequest;
+import com.fu.flix.dto.request.SearchActiveServicesRequest;
 import com.fu.flix.dto.request.ServiceRequest;
 import com.fu.flix.dto.request.ServiceResponse;
-import com.fu.flix.dto.response.SearchServicesResponse;
+import com.fu.flix.dto.response.SearchActiveServicesResponse;
 import com.fu.flix.entity.Image;
 import com.fu.flix.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
@@ -76,13 +76,13 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public ResponseEntity<SearchServicesResponse> searchServices(SearchServicesRequest request) {
+    public ResponseEntity<SearchActiveServicesResponse> searchServices(SearchActiveServicesRequest request) {
         String keyword = request.getKeyword();
         if (keyword == null || keyword.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
         }
 
-        List<IServiceDTO> services = serviceDAO.searchServices(keyword);
+        List<ISearchActiveServiceDTO> services = serviceDAO.searchActiveServices(keyword);
 
         List<SearchServiceDTO> searchServiceDTOS = services.stream()
                 .map(service -> {
@@ -94,7 +94,7 @@ public class CategoryServiceImpl implements CategoryService {
                     return dto;
                 }).collect(Collectors.toList());
 
-        SearchServicesResponse response = new SearchServicesResponse();
+        SearchActiveServicesResponse response = new SearchActiveServicesResponse();
         response.setServices(searchServiceDTOS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);

@@ -22,4 +22,8 @@ public interface AdminService {
     ResponseEntity<CreateServiceResponse> createService(CreateServiceRequest request) throws IOException;
 
     ResponseEntity<UpdateServiceResponse> updateService(UpdateServiceRequest request) throws IOException;
+
+    ResponseEntity<AdminSearchServicesResponse> searchServices(AdminSearchServicesRequest request);
+
+    ResponseEntity<GetSubServicesResponse> getSubServices(GetSubServicesRequest request);
 }

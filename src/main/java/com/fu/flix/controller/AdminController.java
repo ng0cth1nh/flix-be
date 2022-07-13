@@ -68,4 +68,9 @@ public class AdminController {
     public ResponseEntity<GetSubServicesResponse> getSubServices(GetSubServicesRequest request) {
         return adminService.getSubServices(request);
     }
+
+    @PostMapping("subService")
+    public ResponseEntity<CreateSubServiceResponse> createSubService(@RequestBody CreateSubServiceRequest request) {
+        return adminService.createSubService(request);
+    }
 }

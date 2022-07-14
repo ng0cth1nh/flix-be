@@ -1,10 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
-import com.fu.flix.dao.CategoryDAO;
-import com.fu.flix.dao.ImageDAO;
-import com.fu.flix.dao.ServiceDAO;
-import com.fu.flix.dao.SubServiceDAO;
+import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
@@ -17,6 +14,7 @@ import com.fu.flix.service.AdminService;
 import com.fu.flix.service.CategoryService;
 import com.fu.flix.service.CloudStorageService;
 import com.fu.flix.service.ValidatorService;
+import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
@@ -48,8 +46,10 @@ public class AdminServiceImpl implements AdminService {
     private final ServiceDAO serviceDAO;
     private final CategoryService categoryService;
     private final SubServiceDAO subServiceDAO;
+    private final RepairRequestDAO repairRequestDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
+    private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public AdminServiceImpl(ValidatorService validatorService,
                             CategoryDAO categoryDAO,
@@ -58,7 +58,8 @@ public class AdminServiceImpl implements AdminService {
                             AppConf appConf,
                             ServiceDAO serviceDAO,
                             CategoryService categoryService,
-                            SubServiceDAO subServiceDAO) {
+                            SubServiceDAO subServiceDAO,
+                            RepairRequestDAO repairRequestDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -69,6 +70,7 @@ public class AdminServiceImpl implements AdminService {
         this.serviceDAO = serviceDAO;
         this.categoryService = categoryService;
         this.subServiceDAO = subServiceDAO;
+        this.repairRequestDAO = repairRequestDAO;
     }
 
     @Override
@@ -445,4 +447,33 @@ public class AdminServiceImpl implements AdminService {
         validatorService.getServiceValidated(request.getServiceId());
     }
 
+    @Override
+    public ResponseEntity<AdminRequestingResponse> getRequests(AdminRequestingRequest request) {
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+
+        int end = (pageNumber + 1) * pageSize;
+        int start = end - (pageSize - 1);
+
+        List<IRequestInfoDTO> requestDTOs = repairRequestDAO.findAllRequestForAdmin(start, end);
+        List<AdminRequestingDTO> requestList = requestDTOs.stream()
+                .map(rq -> {
+                    AdminRequestingDTO dto = new AdminRequestingDTO();
+                    dto.setRequestCode(rq.getRequestCode());
+                    dto.setCustomerId(rq.getCustomerId());
+                    dto.setCustomerName(rq.getCustomerName());
+                    dto.setCustomerPhone(rq.getCustomerPhone());
+                    dto.setRepairerId(rq.getRepairerId());
+                    dto.setRepairerName(rq.getRepairerName());
+                    dto.setRepairerPhone(rq.getRepairerPhone());
+                    dto.setStatus(rq.getStatus());
+                    dto.setCreatedAt(DateFormatUtil.toString(rq.getCreatedAt(), DATE_TIME_PATTERN));
+                    return dto;
+                }).collect(Collectors.toList());
+
+        AdminRequestingResponse response = new AdminRequestingResponse();
+        response.setRequestList(requestList);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

@@ -2,6 +2,7 @@ package com.fu.flix.dao;
 
 import com.fu.flix.dto.IDetailFixingRequestForCustomerDTO;
 import com.fu.flix.dto.IDetailFixingRequestForRepairerDTO;
+import com.fu.flix.dto.IRequestInfoDTO;
 import com.fu.flix.dto.IRequestingDTO;
 import com.fu.flix.entity.RepairRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -227,4 +228,21 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "AND district_id = :districtId " +
             "AND rr.expect_start_fixing_at >= :start AND rr.expect_start_fixing_at <= :end", nativeQuery = true)
     List<IRequestingDTO> filterPendingRequestByDistrict(List<Long> serviceIds, String districtId, LocalDateTime start, LocalDateTime end);
+
+    @Query(value = "SELECT * " +
+            "FROM (SELECT ROW_NUMBER() OVER (ORDER BY createdAt DESC) row_num, tb1.* " +
+            "FROM (SELECT rr.request_code as requestCode, customer.id as customerId,customer.full_name as customerName, customer.phone as customerPhone, " +
+            "repairer.id as repairerId, repairer.full_name as repairerName, repairer.phone as repairerPhone, stt.name as status, rr.created_at as createdAt " +
+            "FROM repair_requests rr " +
+            "JOIN users customer " +
+            "ON rr.user_id = customer.id " +
+            "LEFT JOIN repair_requests_matching rrm " +
+            "ON rr.request_code = rrm.request_code " +
+            "LEFT JOIN users repairer " +
+            "ON repairer.id = rrm.repairer_id " +
+            "JOIN status stt " +
+            "ON stt.id = rr.status_id) AS tb1 ) " +
+            "AS tb2 " +
+            "WHERE row_num BETWEEN :start and :end", nativeQuery = true)
+    List<IRequestInfoDTO> findAllRequestForAdmin(Integer start, Integer end);
 }

@@ -10,10 +10,7 @@ import com.fu.flix.entity.Category;
 import com.fu.flix.entity.Image;
 import com.fu.flix.entity.SubService;
 import com.fu.flix.entity.User;
-import com.fu.flix.service.AdminService;
-import com.fu.flix.service.CategoryService;
-import com.fu.flix.service.CloudStorageService;
-import com.fu.flix.service.ValidatorService;
+import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import org.apache.logging.log4j.util.Strings;
@@ -48,9 +45,11 @@ public class AdminServiceImpl implements AdminService {
     private final SubServiceDAO subServiceDAO;
     private final RepairRequestDAO repairRequestDAO;
     private final UserDAO userDAO;
+    private final AddressService addressService;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private final String DATE_PATTERN = "dd-MM-yyyy";
 
     public AdminServiceImpl(ValidatorService validatorService,
                             CategoryDAO categoryDAO,
@@ -61,7 +60,8 @@ public class AdminServiceImpl implements AdminService {
                             CategoryService categoryService,
                             SubServiceDAO subServiceDAO,
                             RepairRequestDAO repairRequestDAO,
-                            UserDAO userDAO) {
+                            UserDAO userDAO,
+                            AddressService addressService) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -74,6 +74,7 @@ public class AdminServiceImpl implements AdminService {
         this.subServiceDAO = subServiceDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.userDAO = userDAO;
+        this.addressService = addressService;
     }
 
     @Override
@@ -502,6 +503,32 @@ public class AdminServiceImpl implements AdminService {
         List<IRepairerDTO> repairerDTOS = userDAO.findRepairersForAdmin(pageSize, offset);
         GetRepairersResponse response = new GetRepairersResponse();
         response.setRepairerList(repairerDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<GetCustomerDetailResponse> getCustomerDetail(GetCustomerDetailRequest request) {
+        Optional<IGetCustomerDetailDTO> optionalCustomer = userDAO.findCustomerDetail(request.getCustomerId());
+        if (optionalCustomer.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, CUSTOMER_NOT_FOUND);
+        }
+
+        IGetCustomerDetailDTO dto = optionalCustomer.get();
+        String dob = dto.getDateOfBirth() != null
+                ? DateFormatUtil.toString(dto.getDateOfBirth(), DATE_PATTERN)
+                : null;
+
+        GetCustomerDetailResponse response = new GetCustomerDetailResponse();
+        response.setAvatar(dto.getAvatar());
+        response.setCustomerName(dto.getCustomerName());
+        response.setCustomerPhone(dto.getCustomerPhone());
+        response.setStatus(dto.getStatus());
+        response.setDateOfBirth(dob);
+        response.setGender(dto.getGender());
+        response.setEmail(dto.getEmail());
+        response.setAddress(addressService.getAddressFormatted(dto.getAddressId()));
+        response.setCreatedAt(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

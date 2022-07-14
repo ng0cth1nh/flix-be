@@ -93,4 +93,9 @@ public class AdminController {
     public ResponseEntity<GetRepairersResponse> getRepairers(GetRepairersRequest request) {
         return adminService.getRepairers(request);
     }
+
+    @GetMapping("customer")
+    public ResponseEntity<GetCustomerDetailResponse> getCustomerDetail(GetCustomerDetailRequest request) {
+        return adminService.getCustomerDetail(request);
+    }
 }

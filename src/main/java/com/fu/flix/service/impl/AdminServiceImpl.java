@@ -47,6 +47,7 @@ public class AdminServiceImpl implements AdminService {
     private final CategoryService categoryService;
     private final SubServiceDAO subServiceDAO;
     private final RepairRequestDAO repairRequestDAO;
+    private final UserDAO userDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -59,7 +60,8 @@ public class AdminServiceImpl implements AdminService {
                             ServiceDAO serviceDAO,
                             CategoryService categoryService,
                             SubServiceDAO subServiceDAO,
-                            RepairRequestDAO repairRequestDAO) {
+                            RepairRequestDAO repairRequestDAO,
+                            UserDAO userDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -71,6 +73,7 @@ public class AdminServiceImpl implements AdminService {
         this.categoryService = categoryService;
         this.subServiceDAO = subServiceDAO;
         this.repairRequestDAO = repairRequestDAO;
+        this.userDAO = userDAO;
     }
 
     @Override
@@ -473,6 +476,19 @@ public class AdminServiceImpl implements AdminService {
 
         AdminRequestingResponse response = new AdminRequestingResponse();
         response.setRequestList(requestList);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<GetCustomersResponse> getCustomers(GetCustomersRequest request) {
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+
+        int offset = pageNumber * pageSize;
+        List<ICustomerDTO> customerDTOs = userDAO.findCustomersForAdmin(pageSize, offset);
+        GetCustomersResponse response = new GetCustomersResponse();
+        response.setCustomerList(customerDTOs);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

@@ -32,4 +32,6 @@ public interface AdminService {
     ResponseEntity<UpdateSubServiceResponse> updateSubService(UpdateSubServiceRequest request);
 
     ResponseEntity<AdminRequestingResponse> getRequests(AdminRequestingRequest request);
+
+    ResponseEntity<GetCustomersResponse> getCustomers(GetCustomersRequest request);
 }

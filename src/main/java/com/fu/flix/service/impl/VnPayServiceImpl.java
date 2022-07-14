@@ -12,6 +12,7 @@ import com.fu.flix.entity.*;
 import com.fu.flix.service.VNPayService;
 import com.fu.flix.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -89,7 +90,7 @@ public class VnPayServiceImpl implements VNPayService {
     public ResponseEntity<CustomerPaymentUrlResponse> createCustomerPaymentUrl(CustomerPaymentUrlRequest customerPaymentUrlRequest,
                                                                                HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
         String requestCode = customerPaymentUrlRequest.getRequestCode();
-        validatePaymentInput(customerPaymentUrlRequest.getUserId(), requestCode);
+        validatePaymentInput(customerPaymentUrlRequest);
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
 
         LocalDateTime now = LocalDateTime.now();
@@ -157,13 +158,22 @@ public class VnPayServiceImpl implements VNPayService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void validatePaymentInput(Long customerId, String requestCode) {
+    private void validatePaymentInput(CustomerPaymentUrlRequest customerPaymentUrlRequest) {
+        if (Strings.isEmpty(customerPaymentUrlRequest.getOrderInfo())) {
+            throw new GeneralException(HttpStatus.GONE, ORDER_INFO_IS_REQUIRED);
+        }
+
+        if (Strings.isEmpty(customerPaymentUrlRequest.getBankCode())) {
+            throw new GeneralException(HttpStatus.GONE, BANK_CODE_IS_REQUIRED);
+        }
+
+        String requestCode = customerPaymentUrlRequest.getRequestCode();
         if (isRequestCodeNotFound(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, REQUEST_CODE_IS_REQUIRED);
         }
 
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO
-                .findByUserIdAndRequestCode(customerId, requestCode);
+                .findByUserIdAndRequestCode(customerPaymentUrlRequest.getUserId(), requestCode);
         if (optionalRepairRequest.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }

@@ -78,4 +78,9 @@ public class AdminController {
     public ResponseEntity<UpdateSubServiceResponse> updateSubService(@RequestBody UpdateSubServiceRequest request) {
         return adminService.updateSubService(request);
     }
+
+    @GetMapping("requests")
+    public ResponseEntity<AdminRequestingResponse> getRequests(AdminRequestingRequest request) {
+        return adminService.getRequests(request);
+    }
 }

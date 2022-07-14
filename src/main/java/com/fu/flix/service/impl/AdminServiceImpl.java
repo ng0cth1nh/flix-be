@@ -509,12 +509,12 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<GetCustomerDetailResponse> getCustomerDetail(GetCustomerDetailRequest request) {
-        Optional<IGetCustomerDetailDTO> optionalCustomer = userDAO.findCustomerDetail(request.getCustomerId());
+        Optional<ICustomerDetailDTO> optionalCustomer = userDAO.findCustomerDetail(request.getCustomerId());
         if (optionalCustomer.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, CUSTOMER_NOT_FOUND);
         }
 
-        IGetCustomerDetailDTO dto = optionalCustomer.get();
+        ICustomerDetailDTO dto = optionalCustomer.get();
         String dob = dto.getDateOfBirth() != null
                 ? DateFormatUtil.toString(dto.getDateOfBirth(), DATE_PATTERN)
                 : null;
@@ -529,6 +529,33 @@ public class AdminServiceImpl implements AdminService {
         response.setEmail(dto.getEmail());
         response.setAddress(addressService.getAddressFormatted(dto.getAddressId()));
         response.setCreatedAt(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<GetBanUsersResponse> getBanUsers(GetBanUsersRequest request) {
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+
+        int offset = pageNumber * pageSize;
+
+        List<IBanUserDTO> banUserDTOs = userDAO.findBanUsers(pageSize, offset);
+        List<BanUserDTO> userList = banUserDTOs.stream()
+                .map(banUser -> {
+                    BanUserDTO dto = new BanUserDTO();
+                    dto.setId(banUser.getId());
+                    dto.setAvatar(banUser.getAvatar());
+                    dto.setName(banUser.getName());
+                    dto.setPhone(banUser.getPhone());
+                    dto.setRole(banUser.getRole());
+                    dto.setBanReason(banUser.getBanReason());
+                    dto.setBanAt(DateFormatUtil.toString(banUser.getBanAt(), DATE_TIME_PATTERN));
+                    return dto;
+                }).collect(Collectors.toList());
+
+        GetBanUsersResponse response = new GetBanUsersResponse();
+        response.setUserList(userList);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

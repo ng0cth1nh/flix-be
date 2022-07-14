@@ -98,4 +98,9 @@ public class AdminController {
     public ResponseEntity<GetCustomerDetailResponse> getCustomerDetail(GetCustomerDetailRequest request) {
         return adminService.getCustomerDetail(request);
     }
+
+    @GetMapping("blackList")
+    public ResponseEntity<GetBanUsersResponse> getBanUsers(GetBanUsersRequest request) {
+        return adminService.getBanUsers(request);
+    }
 }

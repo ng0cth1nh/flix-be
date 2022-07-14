@@ -3,7 +3,7 @@ package com.fu.flix.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public interface IGetCustomerDetailDTO {
+public interface ICustomerDetailDTO {
 
     String getAvatar();
 

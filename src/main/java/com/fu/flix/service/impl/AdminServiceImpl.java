@@ -492,4 +492,17 @@ public class AdminServiceImpl implements AdminService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<GetRepairersResponse> getRepairers(GetRepairersRequest request) {
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+
+        int offset = pageNumber * pageSize;
+        List<IRepairerDTO> repairerDTOS = userDAO.findRepairersForAdmin(pageSize, offset);
+        GetRepairersResponse response = new GetRepairersResponse();
+        response.setRepairerList(repairerDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

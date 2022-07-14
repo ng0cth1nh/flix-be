@@ -88,4 +88,9 @@ public class AdminController {
     public ResponseEntity<GetCustomersResponse> getCustomers(GetCustomersRequest request) {
         return adminService.getCustomers(request);
     }
+
+    @GetMapping("repairers")
+    public ResponseEntity<GetRepairersResponse> getRepairers(GetRepairersRequest request) {
+        return adminService.getRepairers(request);
+    }
 }

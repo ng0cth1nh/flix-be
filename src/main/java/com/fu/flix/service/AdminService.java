@@ -34,4 +34,6 @@ public interface AdminService {
     ResponseEntity<AdminRequestingResponse> getRequests(AdminRequestingRequest request);
 
     ResponseEntity<GetCustomersResponse> getCustomers(GetCustomersRequest request);
+
+    ResponseEntity<GetRepairersResponse> getRepairers(GetRepairersRequest request);
 }

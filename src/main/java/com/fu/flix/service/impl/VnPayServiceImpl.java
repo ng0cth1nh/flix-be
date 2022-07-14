@@ -11,6 +11,7 @@ import com.fu.flix.dto.response.CustomerPaymentUrlResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.VNPayService;
 import com.fu.flix.util.DateFormatUtil;
+import com.fu.flix.util.InputValidation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
@@ -159,7 +160,10 @@ public class VnPayServiceImpl implements VNPayService {
     }
 
     private void validatePaymentInput(CustomerPaymentUrlRequest customerPaymentUrlRequest) {
-        if (Strings.isEmpty(customerPaymentUrlRequest.getOrderInfo())) {
+        String orderInfo = InputValidation.removeAccent(customerPaymentUrlRequest.getOrderInfo());
+        customerPaymentUrlRequest.setOrderInfo(orderInfo);
+
+        if (Strings.isEmpty(orderInfo)) {
             throw new GeneralException(HttpStatus.GONE, ORDER_INFO_IS_REQUIRED);
         }
 

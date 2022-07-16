@@ -113,4 +113,9 @@ public class AdminController {
     public ResponseEntity<AdminCreateFeedBackResponse> createFeedback(AdminCreateFeedBackRequest request) throws IOException {
         return adminService.createFeedback(request);
     }
+
+    @GetMapping("feedback")
+    public ResponseEntity<FeedbackDetailResponse> getFeedbackDetail(FeedbackDetailRequest request) {
+        return adminService.getFeedbackDetail(request);
+    }
 }

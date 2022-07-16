@@ -34,15 +34,14 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "   WHEN repairer.is_active THEN 'ACTIVE' " +
             "   ELSE 'BAN' " +
             "END as status, " +
-            "CASE " +
-            "   WHEN ur.role_id = 'R' THEN 'ROLE_REPAIRER' " +
-            "   ELSE 'ROLE_PENDING_REPAIRER' " +
-            "END as role " +
+            "roles.name as role " +
             "FROM users repairer " +
             "JOIN images avatar " +
             "ON repairer.avatar = avatar.id " +
             "JOIN user_roles ur " +
             "ON ur.user_id = repairer.id " +
+            "JOIN roles " +
+            "ON roles.id = ur.role_id " +
             "WHERE (ur.role_id = 'R' or ur.role_id = 'PR') limit :limit offset :offset", nativeQuery = true)
     List<IRepairerDTO> findRepairersForAdmin(Integer limit, Integer offset);
 
@@ -63,17 +62,15 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "AND customer.id = :customerId", nativeQuery = true)
     Optional<ICustomerDetailDTO> findCustomerDetail(Long customerId);
 
-    @Query(value = "SELECT u.id as id, avatar.url as avatar, u.full_name as name, u.phone, " +
-            "CASE " +
-            "   WHEN ur.role_id = 'C' THEN 'ROLE_CUSTOMER' " +
-            "   WHEN ur.role_id = 'R' THEN 'ROLE_REPAIRER' " +
-            "   ELSE 'ROLE_PENDING_REPAIRER' END as role, " +
+    @Query(value = "SELECT u.id as id, avatar.url as avatar, u.full_name as name, u.phone, roles.name as role, " +
             "u.ban_reason as banReason, u.ban_at as banAt " +
             "FROM users u " +
             "JOIN images avatar " +
             "ON u.avatar = avatar.id " +
             "JOIN user_roles ur " +
             "ON ur.user_id = u.id " +
+            "JOIN roles " +
+            "ON roles.id = ur.role_id " +
             "WHERE (ur.role_id = 'C' or ur.role_id = 'PR' or ur.role_id = 'R') " +
             "AND NOT u.is_active limit :limit offset :offset", nativeQuery = true)
     List<IBanUserDTO> findBanUsers(Integer limit, Integer offset);

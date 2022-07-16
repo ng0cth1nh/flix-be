@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class FeedbackRequest extends DataRequest {
+public class CreateFeedbackRequest extends DataRequest {
     private String feedbackType;
     private String requestCode;
     private String title;

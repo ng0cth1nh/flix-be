@@ -108,4 +108,9 @@ public class AdminController {
     public ResponseEntity<BanUserResponse> banUser(@RequestBody BanUserRequest request) {
         return adminService.banUser(request);
     }
+
+    @PostMapping("feedback")
+    public ResponseEntity<AdminCreateFeedBackResponse> createFeedback(AdminCreateFeedBackRequest request) throws IOException {
+        return adminService.createFeedback(request);
+    }
 }

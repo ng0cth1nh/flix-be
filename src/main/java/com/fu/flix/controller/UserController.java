@@ -37,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping("feedback")
-    public ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException {
+    public ResponseEntity<UserCreateFeedbackResponse> createFeedback(UserCreateFeedbackRequest request) throws IOException {
         return userService.createFeedback(request);
     }
 }

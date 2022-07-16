@@ -1,6 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.FeedbackStatus;
 import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
@@ -45,7 +46,9 @@ public class AdminServiceImpl implements AdminService {
     private final SubServiceDAO subServiceDAO;
     private final RepairRequestDAO repairRequestDAO;
     private final UserDAO userDAO;
+    private final FeedbackDAO feedbackDAO;
     private final AddressService addressService;
+    private final FeedbackService feedbackService;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -61,7 +64,9 @@ public class AdminServiceImpl implements AdminService {
                             SubServiceDAO subServiceDAO,
                             RepairRequestDAO repairRequestDAO,
                             UserDAO userDAO,
-                            AddressService addressService) {
+                            FeedbackDAO feedbackDAO,
+                            AddressService addressService,
+                            FeedbackService feedbackService) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -74,7 +79,9 @@ public class AdminServiceImpl implements AdminService {
         this.subServiceDAO = subServiceDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.userDAO = userDAO;
+        this.feedbackDAO = feedbackDAO;
         this.addressService = addressService;
+        this.feedbackService = feedbackService;
     }
 
     @Override
@@ -610,5 +617,37 @@ public class AdminServiceImpl implements AdminService {
         return RoleType.ROLE_CUSTOMER.name().equals(roleName)
                 || RoleType.ROLE_REPAIRER.name().equals(roleName)
                 || RoleType.ROLE_PENDING_REPAIRER.name().equals(roleName);
+    }
+
+    @Override
+    public ResponseEntity<AdminCreateFeedBackResponse> createFeedback(AdminCreateFeedBackRequest request) throws IOException {
+        feedbackService.validateCreateFeedbackInput(request);
+
+        String phone = request.getPhone();
+        if (!InputValidation.isPhoneValid(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
+        }
+
+        Optional<User> optionalUser = userDAO.findByUsername(phone);
+        if (optionalUser.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, USER_NOT_FOUND);
+        }
+
+        User user = optionalUser.get();
+        Feedback feedback = new Feedback();
+        feedback.setCreatedById(request.getUserId());
+        feedback.setUserId(user.getId());
+        feedback.setTitle(request.getTitle());
+        feedback.setDescription(request.getDescription());
+        feedback.setStatusId(FeedbackStatus.PENDING.getId());
+        feedback.setType(request.getFeedbackType());
+        feedback.setRequestCode(request.getRequestCode());
+        feedbackService.postFeedbackImages(feedback, request.getImages());
+        feedbackDAO.save(feedback);
+
+        AdminCreateFeedBackResponse response = new AdminCreateFeedBackResponse();
+        response.setMessage(CREATE_FEEDBACK_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

@@ -2,15 +2,15 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.Constant;
-import com.fu.flix.dao.CategoryDAO;
-import com.fu.flix.dao.ServiceDAO;
-import com.fu.flix.dao.SubServiceDAO;
-import com.fu.flix.dao.UserDAO;
+import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
+import com.fu.flix.dto.request.CreateFeedbackRequest;
 import com.fu.flix.entity.Category;
 import com.fu.flix.entity.SubService;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.ValidatorService;
+import com.fu.flix.util.InputValidation;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -25,17 +25,24 @@ public class ValidatorServiceImpl implements ValidatorService {
     private final ServiceDAO serviceDAO;
     private final CategoryDAO categoryDAO;
     private final SubServiceDAO subServiceDAO;
+    private final RepairRequestDAO repairRequestDAO;
+    private final Long NAME_MAX_LENGTH;
+    private final Long DESCRIPTION_MAX_LENGTH;
 
     public ValidatorServiceImpl(UserDAO userDAO,
                                 AppConf appConf,
                                 ServiceDAO serviceDAO,
                                 CategoryDAO categoryDAO,
-                                SubServiceDAO subServiceDAO) {
+                                SubServiceDAO subServiceDAO,
+                                RepairRequestDAO repairRequestDAO) {
         this.userDAO = userDAO;
         this.appConf = appConf;
         this.serviceDAO = serviceDAO;
         this.categoryDAO = categoryDAO;
         this.subServiceDAO = subServiceDAO;
+        this.repairRequestDAO = repairRequestDAO;
+        this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
+        this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
     }
 
     @Override
@@ -129,5 +136,25 @@ public class ValidatorServiceImpl implements ValidatorService {
             throw new GeneralException(HttpStatus.GONE, INVALID_SUB_SERVICE);
         }
         return optionalSubService.get();
+    }
+
+    @Override
+    public void validateCreateFeedbackInput(CreateFeedbackRequest request) {
+        InputValidation.getFeedbackTypeValidated(request.getFeedbackType());
+
+        String requestCode = request.getRequestCode();
+        if (requestCode != null && repairRequestDAO.findByRequestCode(requestCode).isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
+        String title = request.getTitle();
+        if (Strings.isEmpty(title) || title.length() > NAME_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_TITLE);
+        }
+
+        String description = request.getDescription();
+        if (Strings.isEmpty(description) || description.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_DESCRIPTION);
+        }
     }
 }

@@ -156,7 +156,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<UserCreateFeedbackResponse> createFeedback(UserCreateFeedbackRequest request) throws IOException {
-        feedbackService.validateCreateFeedbackInput(request);
+        validatorService.validateCreateFeedbackInput(request);
 
         Long userId = request.getUserId();
         Feedback feedback = new Feedback();

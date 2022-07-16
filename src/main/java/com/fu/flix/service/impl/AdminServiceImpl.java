@@ -621,7 +621,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<AdminCreateFeedBackResponse> createFeedback(AdminCreateFeedBackRequest request) throws IOException {
-        feedbackService.validateCreateFeedbackInput(request);
+        validatorService.validateCreateFeedbackInput(request);
 
         String phone = request.getPhone();
         if (!InputValidation.isPhoneValid(phone)) {

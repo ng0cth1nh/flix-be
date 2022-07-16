@@ -40,4 +40,6 @@ public interface AdminService {
     ResponseEntity<GetCustomerDetailResponse> getCustomerDetail(GetCustomerDetailRequest request);
 
     ResponseEntity<GetBanUsersResponse> getBanUsers(GetBanUsersRequest request);
+
+    ResponseEntity<BanUserResponse> banUser(BanUserRequest request);
 }

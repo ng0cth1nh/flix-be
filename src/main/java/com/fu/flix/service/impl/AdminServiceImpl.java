@@ -1,15 +1,13 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
-import com.fu.flix.entity.Category;
-import com.fu.flix.entity.Image;
-import com.fu.flix.entity.SubService;
-import com.fu.flix.entity.User;
+import com.fu.flix.entity.*;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
@@ -24,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.transaction.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -558,5 +558,57 @@ public class AdminServiceImpl implements AdminService {
         response.setUserList(userList);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<BanUserResponse> banUser(BanUserRequest request) {
+        String phone = request.getPhone();
+        if (!InputValidation.isPhoneValid(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
+        }
+
+        String banReason = request.getBanReason();
+        if (Strings.isEmpty(banReason) || banReason.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_BAN_REASON);
+        }
+
+        Optional<User> optionalUser = userDAO.findByUsername(phone);
+        if (optionalUser.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, USER_NOT_FOUND);
+        }
+
+        User user = optionalUser.get();
+        if (!user.getIsActive()) {
+            throw new GeneralException(HttpStatus.GONE, THIS_ACCOUNT_HAS_BEEN_BANNED);
+        }
+
+        if (!isUser(user.getRoles())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_BAN_USER_ROLE_ARE_CUSTOMER_OR_REPAIRER_OR_PENDING_REPAIRER);
+        }
+
+        user.setIsActive(false);
+        user.setBanReason(banReason);
+        user.setBanAt(LocalDateTime.now());
+
+        BanUserResponse response = new BanUserResponse();
+        response.setMessage(BAN_USER_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private boolean isUser(Collection<Role> roles) {
+        for (Role r : roles) {
+            if (isUser(r)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isUser(Role r) {
+        String roleName = r.getName();
+        return RoleType.ROLE_CUSTOMER.name().equals(roleName)
+                || RoleType.ROLE_REPAIRER.name().equals(roleName)
+                || RoleType.ROLE_PENDING_REPAIRER.name().equals(roleName);
     }
 }

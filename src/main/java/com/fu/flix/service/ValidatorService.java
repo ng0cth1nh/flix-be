@@ -1,5 +1,6 @@
 package com.fu.flix.service;
 
+import com.fu.flix.dto.request.CreateFeedbackRequest;
 import com.fu.flix.entity.Category;
 import com.fu.flix.entity.Service;
 import com.fu.flix.entity.SubService;
@@ -19,4 +20,7 @@ public interface ValidatorService {
     Category getCategoryValidated(Long categoryId);
 
     SubService getSubServiceValidated(Long subServiceId);
+
+    void validateCreateFeedbackInput(CreateFeedbackRequest request);
+
 }

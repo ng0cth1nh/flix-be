@@ -47,4 +47,5 @@ public interface AdminService {
     ResponseEntity<BanUserResponse> banUser(BanUserRequest request);
 
     ResponseEntity<AdminCreateFeedBackResponse> createFeedback(AdminCreateFeedBackRequest request) throws IOException;
+    ResponseEntity<FeedbackDetailResponse> getFeedbackDetail(FeedbackDetailRequest request);
 }

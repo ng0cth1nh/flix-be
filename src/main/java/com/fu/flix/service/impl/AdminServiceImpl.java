@@ -49,6 +49,7 @@ public class AdminServiceImpl implements AdminService {
     private final FeedbackDAO feedbackDAO;
     private final AddressService addressService;
     private final FeedbackService feedbackService;
+    private final StatusDAO statusDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -66,7 +67,8 @@ public class AdminServiceImpl implements AdminService {
                             UserDAO userDAO,
                             FeedbackDAO feedbackDAO,
                             AddressService addressService,
-                            FeedbackService feedbackService) {
+                            FeedbackService feedbackService,
+                            StatusDAO statusDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -82,6 +84,7 @@ public class AdminServiceImpl implements AdminService {
         this.feedbackDAO = feedbackDAO;
         this.addressService = addressService;
         this.feedbackService = feedbackService;
+        this.statusDAO = statusDAO;
     }
 
     @Override
@@ -647,6 +650,40 @@ public class AdminServiceImpl implements AdminService {
 
         AdminCreateFeedBackResponse response = new AdminCreateFeedBackResponse();
         response.setMessage(CREATE_FEEDBACK_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<FeedbackDetailResponse> getFeedbackDetail(FeedbackDetailRequest request) {
+        Long feedbackId = request.getFeedbackId();
+        if (feedbackId == null) {
+            throw new GeneralException(HttpStatus.GONE, FEEDBACK_ID_IS_REQUIRED);
+        }
+
+        Optional<Feedback> optionalFeedback = feedbackDAO.findById(feedbackId);
+        if (optionalFeedback.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_ID);
+        }
+
+        Feedback feedback = optionalFeedback.get();
+        List<String> images = feedback.getImages()
+                .stream().map(Image::getUrl)
+                .collect(Collectors.toList());
+        Optional<User> optionalUser = userDAO.findById(feedback.getUserId());
+        Optional<Status> optionalStatus = statusDAO.findById(feedback.getStatusId());
+
+        FeedbackDetailResponse response = new FeedbackDetailResponse();
+        response.setPhone(optionalUser.map(User::getPhone).orElse(null));
+        response.setFeedbackType(feedback.getType());
+        response.setRequestCode(feedback.getRequestCode());
+        response.setTitle(feedback.getTitle());
+        response.setDescription(feedback.getDescription());
+        response.setImages(images);
+        response.setStatus(optionalStatus.map(Status::getName).orElse(null));
+        response.setResponse(feedback.getResponse());
+        response.setCreatedAt(DateFormatUtil.toString(feedback.getCreatedAt(), DATE_TIME_PATTERN));
+        response.setUpdatedAt(DateFormatUtil.toString(feedback.getUpdatedAt(), DATE_TIME_PATTERN));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

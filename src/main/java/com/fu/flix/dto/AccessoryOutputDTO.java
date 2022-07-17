@@ -10,4 +10,6 @@ public class AccessoryOutputDTO {
     private String name;
     private Long price;
     private Integer insuranceTime;
+    private String manufacture;
+    private String country;
 }

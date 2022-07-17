@@ -50,6 +50,8 @@ public class AdminServiceImpl implements AdminService {
     private final AddressService addressService;
     private final FeedbackService feedbackService;
     private final StatusDAO statusDAO;
+    private final AccessoryDAO accessoryDAO;
+    private final ManufactureDAO manufactureDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -68,7 +70,9 @@ public class AdminServiceImpl implements AdminService {
                             FeedbackDAO feedbackDAO,
                             AddressService addressService,
                             FeedbackService feedbackService,
-                            StatusDAO statusDAO) {
+                            StatusDAO statusDAO,
+                            AccessoryDAO accessoryDAO,
+                            ManufactureDAO manufactureDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -85,6 +89,8 @@ public class AdminServiceImpl implements AdminService {
         this.addressService = addressService;
         this.feedbackService = feedbackService;
         this.statusDAO = statusDAO;
+        this.accessoryDAO = accessoryDAO;
+        this.manufactureDAO = manufactureDAO;
     }
 
     @Override
@@ -684,6 +690,31 @@ public class AdminServiceImpl implements AdminService {
         response.setResponse(feedback.getResponse());
         response.setCreatedAt(DateFormatUtil.toString(feedback.getCreatedAt(), DATE_TIME_PATTERN));
         response.setUpdatedAt(DateFormatUtil.toString(feedback.getUpdatedAt(), DATE_TIME_PATTERN));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<AdminGetAccessoriesResponse> getAccessories(AdminGetAccessoriesRequest request) {
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+
+        Page<Accessory> accessoryPage = accessoryDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        List<AccessoryOutputDTO> accessoryList = accessoryPage.stream()
+                .map(accessory -> {
+                    Optional<Manufacture> optionalManufacture = manufactureDAO.findById(accessory.getManufactureId());
+                    AccessoryOutputDTO dto = new AccessoryOutputDTO();
+                    dto.setId(accessory.getId());
+                    dto.setName(accessory.getName());
+                    dto.setPrice(accessory.getPrice());
+                    dto.setInsuranceTime(accessory.getInsuranceTime());
+                    dto.setManufacture(optionalManufacture.map(Manufacture::getName).orElse(null));
+                    dto.setCountry(accessory.getCountry());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        AdminGetAccessoriesResponse response = new AdminGetAccessoriesResponse();
+        response.setAccessoryList(accessoryList);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

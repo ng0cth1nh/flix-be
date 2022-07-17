@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
@@ -172,6 +173,30 @@ public class UserServiceImpl implements UserService {
 
         UserCreateFeedbackResponse response = new UserCreateFeedbackResponse();
         response.setMessage(CREATE_FEEDBACK_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<UserInfoResponse> getUserInfo(UserInfoRequest request) {
+        Long id = request.getId();
+        if (id == null) {
+            throw new GeneralException(HttpStatus.GONE, USER_ID_IS_REQUIRED);
+        }
+
+        Optional<User> optionalUser = userDAO.findById(id);
+        if (optionalUser.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, USER_NOT_FOUND);
+        }
+
+        User user = optionalUser.get();
+        Optional<Image> optionalAvatar = imageDAO.findById(user.getAvatar());
+
+        UserInfoResponse response = new UserInfoResponse();
+        response.setId(id);
+        response.setFullName(user.getFullName());
+        response.setPhone(user.getPhone());
+        response.setAvatar(optionalAvatar.map(Image::getUrl).orElse(null));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

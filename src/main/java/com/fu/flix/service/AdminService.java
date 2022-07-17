@@ -48,4 +48,5 @@ public interface AdminService {
 
     ResponseEntity<AdminCreateFeedBackResponse> createFeedback(AdminCreateFeedBackRequest request) throws IOException;
     ResponseEntity<FeedbackDetailResponse> getFeedbackDetail(FeedbackDetailRequest request);
+    ResponseEntity<AdminGetAccessoriesResponse> getAccessories(AdminGetAccessoriesRequest request);
 }

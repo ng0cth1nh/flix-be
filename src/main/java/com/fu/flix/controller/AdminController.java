@@ -118,4 +118,9 @@ public class AdminController {
     public ResponseEntity<FeedbackDetailResponse> getFeedbackDetail(FeedbackDetailRequest request) {
         return adminService.getFeedbackDetail(request);
     }
+
+    @GetMapping("accessories")
+    public ResponseEntity<AdminGetAccessoriesResponse> getAccessories(AdminGetAccessoriesRequest request) {
+        return adminService.getAccessories(request);
+    }
 }

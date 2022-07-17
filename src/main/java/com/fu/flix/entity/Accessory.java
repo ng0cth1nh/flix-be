@@ -26,5 +26,7 @@ public class Accessory {
 
     private Integer insuranceTime;
 
+    private Long manufactureId;
+
     private String country;
 }

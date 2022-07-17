@@ -40,4 +40,9 @@ public class UserController {
     public ResponseEntity<UserCreateFeedbackResponse> createFeedback(UserCreateFeedbackRequest request) throws IOException {
         return userService.createFeedback(request);
     }
+
+    @GetMapping("information")
+    public ResponseEntity<UserInfoResponse> getUserInfo(UserInfoRequest request) {
+        return userService.getUserInfo(request);
+    }
 }

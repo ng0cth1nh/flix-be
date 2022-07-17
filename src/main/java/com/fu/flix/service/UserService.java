@@ -17,4 +17,5 @@ public interface UserService {
     ResponseEntity<ChangePasswordResponse> changePassword(ChangePasswordRequest request);
 
     ResponseEntity<UserCreateFeedbackResponse> createFeedback(UserCreateFeedbackRequest request) throws IOException;
+    ResponseEntity<UserInfoResponse> getUserInfo(UserInfoRequest request);
 }

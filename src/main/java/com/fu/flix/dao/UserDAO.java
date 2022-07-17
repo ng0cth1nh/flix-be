@@ -1,9 +1,6 @@
 package com.fu.flix.dao;
 
-import com.fu.flix.dto.IBanUserDTO;
-import com.fu.flix.dto.ICustomerDTO;
-import com.fu.flix.dto.ICustomerDetailDTO;
-import com.fu.flix.dto.IRepairerDTO;
+import com.fu.flix.dto.*;
 import com.fu.flix.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -74,4 +71,12 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "WHERE (ur.role_id = 'C' or ur.role_id = 'PR' or ur.role_id = 'R') " +
             "AND NOT u.is_active limit :limit offset :offset", nativeQuery = true)
     List<IBanUserDTO> findBanUsers(Integer limit, Integer offset);
+
+    @Query(value = "SELECT repairer.id, repairer.full_name as repairerName, repairer.phone as repairerPhone, repairer.created_at as createdAt " +
+            "FROM users repairer " +
+            "JOIN user_roles ur " +
+            "ON repairer.id = ur.user_id " +
+            "WHERE ur.role_id = 'PR' " +
+            "limit :limit offset :offset", nativeQuery = true)
+    List<IPendingRepairerDTO> findPendingRepairers(Integer limit, Integer offset);
 }

@@ -20,6 +20,8 @@ public class Accessory {
 
     private String name;
 
+    private String description;
+
     private Long price;
 
     private Long serviceId;

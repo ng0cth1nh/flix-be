@@ -258,10 +258,11 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         return invoice.getAccessories().stream()
                 .map(accessory -> {
                     AccessoryOutputDTO dto = new AccessoryOutputDTO();
-                    dto.setId(accessory.getId());
                     dto.setName(accessory.getName());
                     dto.setPrice(accessory.getPrice());
                     dto.setInsuranceTime(accessory.getInsuranceTime());
+                    dto.setDescription(accessory.getDescription());
+                    dto.setId(accessory.getId());
                     return dto;
                 }).collect(Collectors.toList());
     }

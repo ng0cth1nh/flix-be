@@ -710,6 +710,7 @@ public class AdminServiceImpl implements AdminService {
                     dto.setInsuranceTime(accessory.getInsuranceTime());
                     dto.setManufacture(optionalManufacture.map(Manufacture::getName).orElse(null));
                     dto.setCountry(accessory.getCountry());
+                    dto.setDescription(accessory.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
 

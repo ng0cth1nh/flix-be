@@ -12,6 +12,7 @@ app:
     accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'
     authToken: 'b2bdec58830ce248a8e2d60bdfa6205c'
     fromNumber: '+17579977028'
+  firebaseConfig: 'flix-cb844-firebase-adminsdk-297yq-b523f2743e.json'
   defaultAvatar: 1
   permitAllApis: [ '/api/v1/login',
                    '/api/v1/token/refresh',

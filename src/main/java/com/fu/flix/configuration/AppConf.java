@@ -14,6 +14,7 @@ public class AppConf {
     private Long lifeTimeToke;
     private Long lifeTimeRefreshToken;
     private TwilioInfo twilioInfo;
+    private String firebaseConfig;
     private Long defaultAvatar;
     private String[] permitAllApis;
     private Integer limitQueryDefault;

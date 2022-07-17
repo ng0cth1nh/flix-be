@@ -39,6 +39,9 @@ public class User {
 
     private String email;
 
+    private String fcmToken;
+
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

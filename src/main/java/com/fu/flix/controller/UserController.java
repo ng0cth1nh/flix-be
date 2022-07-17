@@ -3,6 +3,7 @@ package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
+import com.fu.flix.service.FCMService;
 import com.fu.flix.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +17,11 @@ import java.io.IOException;
 @RequestMapping("api/v1/user")
 public class UserController {
     private final UserService userService;
+    private final FCMService fcmService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, FCMService fcmService) {
         this.userService = userService;
+        this.fcmService= fcmService;
     }
 
     @PutMapping("avatar")
@@ -40,4 +43,15 @@ public class UserController {
     public ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException {
         return userService.createFeedback(request);
     }
+
+    @PutMapping("/saveFCMToken")
+    public ResponseEntity<SaveFCMTokenResponse> saveFCMToken(@RequestBody SaveFCMTokenRequest request){
+        return fcmService.saveFCMToken(request);
+    }
+
+    @PostMapping("/pushNotification")
+    public ResponseEntity<PushNotificationResponse> pushNotification(@RequestBody PushNotificationRequest request){
+        return fcmService.sendPnsToDevice(request);
+    }
+
 }

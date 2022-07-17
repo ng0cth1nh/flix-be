@@ -8,6 +8,7 @@ import lombok.Setter;
 public class AccessoryOutputDTO {
     private Long id;
     private String name;
+    private String description;
     private Long price;
     private Integer insuranceTime;
     private String manufacture;

@@ -710,11 +710,35 @@ public class AdminServiceImpl implements AdminService {
                     dto.setInsuranceTime(accessory.getInsuranceTime());
                     dto.setManufacture(optionalManufacture.map(Manufacture::getName).orElse(null));
                     dto.setCountry(accessory.getCountry());
+                    dto.setDescription(accessory.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
 
         AdminGetAccessoriesResponse response = new AdminGetAccessoriesResponse();
         response.setAccessoryList(accessoryList);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<PendingRepairersResponse> getPendingRepairers(PendingRepairersRequest request) {
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+
+        int offset = pageNumber * pageSize;
+        List<IPendingRepairerDTO> pendingRepairerDTOs = userDAO.findPendingRepairers(pageSize, offset);
+        List<PendingRepairerDTO> repairerList = pendingRepairerDTOs.stream()
+                .map(pr -> {
+                    PendingRepairerDTO dto = new PendingRepairerDTO();
+                    dto.setId(pr.getId());
+                    dto.setRepairerName(pr.getRepairerName());
+                    dto.setRepairerPhone(pr.getRepairerPhone());
+                    dto.setCreatedAt(DateFormatUtil.toString(pr.getCreatedAt(), DATE_TIME_PATTERN));
+                    return dto;
+                }).collect(Collectors.toList());
+
+        PendingRepairersResponse response = new PendingRepairersResponse();
+        response.setRepairerList(repairerList);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

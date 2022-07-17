@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public interface Constant {
+    String USER_ID = "userId";
     String ROLES = "roles";
     String BEARER = "Bearer ";
     String INVALID_REFRESH_TOKEN = "INVALID_REFRESH_TOKEN";

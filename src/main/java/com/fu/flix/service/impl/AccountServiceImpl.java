@@ -451,7 +451,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         switch (tokenType) {
             case ACCESS_TOKEN:
                 token = JWT.create()
-                        .withJWTId(String.valueOf(user.getId()))
+                        .withClaim(USER_ID, user.getId())
                         .withSubject(user.getUsername())
                         .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeToke()))
                         .withClaim(ROLES, user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
@@ -459,7 +459,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                 break;
             case REFRESH_TOKEN:
                 token = JWT.create()
-                        .withJWTId(String.valueOf(user.getId()))
+                        .withClaim(USER_ID, user.getId())
                         .withSubject(user.getUsername())
                         .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeRefreshToken()))
                         .sign(algorithm);

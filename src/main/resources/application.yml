@@ -41,7 +41,7 @@ app:
     currCode: 'VND'
     secureHash: 'MPBTQAIUBXZUPPPWJEGMCTPCDZRNRLZV'
     payUrl: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
-    returnUrl: 'https://www.facebook.com/'
+    returnUrl: 'flix://request/done'
 
 server:
   port: 8080

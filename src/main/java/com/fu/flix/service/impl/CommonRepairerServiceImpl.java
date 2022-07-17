@@ -222,7 +222,6 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
                     dto.setName(accessory.getName());
                     dto.setPrice(accessory.getPrice());
                     dto.setInsuranceTime(accessory.getInsuranceTime());
-                    dto.setDescription(accessory.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
 

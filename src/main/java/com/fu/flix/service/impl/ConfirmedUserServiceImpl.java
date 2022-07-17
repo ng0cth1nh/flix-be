@@ -261,7 +261,6 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
                     dto.setName(accessory.getName());
                     dto.setPrice(accessory.getPrice());
                     dto.setInsuranceTime(accessory.getInsuranceTime());
-                    dto.setDescription(accessory.getDescription());
                     dto.setId(accessory.getId());
                     return dto;
                 }).collect(Collectors.toList());

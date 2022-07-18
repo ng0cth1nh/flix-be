@@ -9,6 +9,9 @@ import java.util.List;
 @Setter
 public class FeedbackDetailResponse {
     private String phone;
+    private Long handleByAdminId;
+    private Long createdById;
+    private Long userId;
     private String feedbackType;
     private String requestCode;
     private String title;

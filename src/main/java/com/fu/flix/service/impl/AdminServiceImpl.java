@@ -677,6 +677,9 @@ public class AdminServiceImpl implements AdminService {
         response.setImages(images);
         response.setStatus(optionalStatus.map(Status::getName).orElse(null));
         response.setResponse(feedback.getResponse());
+        response.setHandleByAdminId(feedback.getHandleByAdminId());
+        response.setCreatedById(feedback.getCreatedById());
+        response.setUserId(feedback.getUserId());
         response.setCreatedAt(DateFormatUtil.toString(feedback.getCreatedAt(), DATE_TIME_PATTERN));
         response.setUpdatedAt(DateFormatUtil.toString(feedback.getUpdatedAt(), DATE_TIME_PATTERN));
 
@@ -811,6 +814,7 @@ public class AdminServiceImpl implements AdminService {
         Feedback feedback = validatorService.getFeedbackValidated(request.getId());
         feedback.setStatusId(FeedbackStatus.valueOf(status).getId());
         feedback.setResponse(adminResponse);
+        feedback.setHandleByAdminId(request.getUserId());
 
         ResponseFeedbackResponse response = new ResponseFeedbackResponse();
         response.setMessage(RESPONSE_FEEDBACK_SUCCESS);

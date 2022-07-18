@@ -86,8 +86,8 @@ public class ValidatorServiceImpl implements ValidatorService {
         pageSize = pageSize != null
                 ? pageSize
                 : this.appConf.getDefaultPageSize();
-        if (pageSize < 0) {
-            throw new GeneralException(HttpStatus.GONE, PAGE_SIZE_MUST_BE_GREATER_OR_EQUAL_0);
+        if (pageSize < 1) {
+            throw new GeneralException(HttpStatus.GONE, PAGE_SIZE_MUST_BE_GREATER_OR_EQUAL_1);
         }
         return pageSize;
     }

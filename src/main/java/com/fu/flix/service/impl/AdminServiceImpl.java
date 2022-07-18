@@ -677,6 +677,9 @@ public class AdminServiceImpl implements AdminService {
         response.setImages(images);
         response.setStatus(optionalStatus.map(Status::getName).orElse(null));
         response.setResponse(feedback.getResponse());
+        response.setHandleByAdminId(feedback.getHandleByAdminId());
+        response.setCreatedById(feedback.getCreatedById());
+        response.setUserId(feedback.getUserId());
         response.setCreatedAt(DateFormatUtil.toString(feedback.getCreatedAt(), DATE_TIME_PATTERN));
         response.setUpdatedAt(DateFormatUtil.toString(feedback.getUpdatedAt(), DATE_TIME_PATTERN));
 
@@ -811,6 +814,7 @@ public class AdminServiceImpl implements AdminService {
         Feedback feedback = validatorService.getFeedbackValidated(request.getId());
         feedback.setStatusId(FeedbackStatus.valueOf(status).getId());
         feedback.setResponse(adminResponse);
+        feedback.setHandleByAdminId(request.getUserId());
 
         ResponseFeedbackResponse response = new ResponseFeedbackResponse();
         response.setMessage(RESPONSE_FEEDBACK_SUCCESS);
@@ -825,5 +829,32 @@ public class AdminServiceImpl implements AdminService {
             }
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_STATUS);
+    }
+
+    @Override
+    public ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request) {
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+
+        List<Feedback> feedbackQueries = feedbackDAO.findAllByOrderByCreatedAtDesc(PageRequest.of(pageNumber, pageSize));
+        List<FeedbackDTO> feedbackList = feedbackQueries.stream()
+                .map(feedback -> {
+                    Optional<User> optionalUser = userDAO.findById(feedback.getUserId());
+                    Optional<Status> optionalStatus = statusDAO.findById(feedback.getStatusId());
+
+                    FeedbackDTO dto = new FeedbackDTO();
+                    dto.setId(feedback.getId());
+                    dto.setPhone(optionalUser.map(User::getPhone).orElse(null));
+                    dto.setFeedbackType(feedback.getType());
+                    dto.setTitle(feedback.getTitle());
+                    dto.setCreatedAt(DateFormatUtil.toString(feedback.getCreatedAt(), DATE_TIME_PATTERN));
+                    dto.setStatus(optionalStatus.map(Status::getName).orElse(null));
+                    return dto;
+                }).collect(Collectors.toList());
+
+        FeedbacksResponse response = new FeedbacksResponse();
+        response.setFeedbackList(feedbackList);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

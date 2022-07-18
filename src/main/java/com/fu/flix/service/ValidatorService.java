@@ -21,4 +21,6 @@ public interface ValidatorService {
     void validateCreateFeedbackInput(CreateFeedbackRequest request);
 
     Accessory getAccessoryValidated(Long accessoryId);
+
+    Feedback getFeedbackValidated(Long feedbackId);
 }

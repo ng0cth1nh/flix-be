@@ -661,17 +661,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<FeedbackDetailResponse> getFeedbackDetail(FeedbackDetailRequest request) {
-        Long feedbackId = request.getFeedbackId();
-        if (feedbackId == null) {
-            throw new GeneralException(HttpStatus.GONE, FEEDBACK_ID_IS_REQUIRED);
-        }
-
-        Optional<Feedback> optionalFeedback = feedbackDAO.findById(feedbackId);
-        if (optionalFeedback.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_ID);
-        }
-
-        Feedback feedback = optionalFeedback.get();
+        Feedback feedback = validatorService.getFeedbackValidated(request.getFeedbackId());
         List<String> images = feedback.getImages()
                 .stream().map(Image::getUrl)
                 .collect(Collectors.toList());
@@ -810,4 +800,30 @@ public class AdminServiceImpl implements AdminService {
         accessory.setManufacture(request.getManufacturer());
     }
 
+    @Override
+    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request) {
+        String status = getFeedbackStatusValidated(request.getStatus());
+        String adminResponse = request.getResponse();
+        if (Strings.isEmpty(adminResponse) || adminResponse.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_RESPONSE);
+        }
+
+        Feedback feedback = validatorService.getFeedbackValidated(request.getId());
+        feedback.setStatusId(FeedbackStatus.valueOf(status).getId());
+        feedback.setResponse(adminResponse);
+
+        ResponseFeedbackResponse response = new ResponseFeedbackResponse();
+        response.setMessage(RESPONSE_FEEDBACK_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getFeedbackStatusValidated(String status) {
+        for (FeedbackStatus stt : FeedbackStatus.values()) {
+            if (stt.name().equals(status)) {
+                return status;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_STATUS);
+    }
 }

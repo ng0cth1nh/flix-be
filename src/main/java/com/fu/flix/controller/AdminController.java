@@ -138,4 +138,9 @@ public class AdminController {
     public ResponseEntity<UpdateAccessoryResponse> updateAccessory(@RequestBody UpdateAccessoryRequest request) {
         return adminService.updateAccessory(request);
     }
+
+    @PutMapping("feedback")
+    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(@RequestBody ResponseFeedbackRequest request) {
+        return adminService.responseFeedback(request);
+    }
 }

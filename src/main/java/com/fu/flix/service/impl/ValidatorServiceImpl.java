@@ -5,10 +5,7 @@ import com.fu.flix.constant.Constant;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CreateFeedbackRequest;
-import com.fu.flix.entity.Accessory;
-import com.fu.flix.entity.Category;
-import com.fu.flix.entity.SubService;
-import com.fu.flix.entity.User;
+import com.fu.flix.entity.*;
 import com.fu.flix.service.ValidatorService;
 import com.fu.flix.util.InputValidation;
 import org.apache.logging.log4j.util.Strings;
@@ -28,6 +25,7 @@ public class ValidatorServiceImpl implements ValidatorService {
     private final SubServiceDAO subServiceDAO;
     private final RepairRequestDAO repairRequestDAO;
     private final AccessoryDAO accessoryDAO;
+    private final FeedbackDAO feedbackDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
 
@@ -37,7 +35,8 @@ public class ValidatorServiceImpl implements ValidatorService {
                                 CategoryDAO categoryDAO,
                                 SubServiceDAO subServiceDAO,
                                 RepairRequestDAO repairRequestDAO,
-                                AccessoryDAO accessoryDAO) {
+                                AccessoryDAO accessoryDAO,
+                                FeedbackDAO feedbackDAO) {
         this.userDAO = userDAO;
         this.appConf = appConf;
         this.serviceDAO = serviceDAO;
@@ -47,6 +46,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
         this.accessoryDAO = accessoryDAO;
+        this.feedbackDAO = feedbackDAO;
     }
 
     @Override
@@ -174,5 +174,19 @@ public class ValidatorServiceImpl implements ValidatorService {
         }
 
         return optionalAccessory.get();
+    }
+
+    @Override
+    public Feedback getFeedbackValidated(Long feedbackId) {
+        if (feedbackId == null) {
+            throw new GeneralException(HttpStatus.GONE, FEEDBACK_ID_IS_REQUIRED);
+        }
+
+        Optional<Feedback> optionalFeedback = feedbackDAO.findById(feedbackId);
+        if (optionalFeedback.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_ID);
+        }
+
+        return optionalFeedback.get();
     }
 }

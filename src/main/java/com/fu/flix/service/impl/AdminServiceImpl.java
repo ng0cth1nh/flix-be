@@ -47,10 +47,12 @@ public class AdminServiceImpl implements AdminService {
     private final RepairRequestDAO repairRequestDAO;
     private final UserDAO userDAO;
     private final FeedbackDAO feedbackDAO;
+    private final RoleDAO roleDAO;
     private final AddressService addressService;
     private final FeedbackService feedbackService;
     private final StatusDAO statusDAO;
     private final AccessoryDAO accessoryDAO;
+    private final RepairerDAO repairerDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -67,11 +69,11 @@ public class AdminServiceImpl implements AdminService {
                             RepairRequestDAO repairRequestDAO,
                             UserDAO userDAO,
                             FeedbackDAO feedbackDAO,
-                            AddressService addressService,
+                            RoleDAO roleDAO, AddressService addressService,
                             FeedbackService feedbackService,
                             StatusDAO statusDAO,
-                            AccessoryDAO accessoryDAO
-    ) {
+                            AccessoryDAO accessoryDAO,
+                            RepairerDAO repairerDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -85,10 +87,12 @@ public class AdminServiceImpl implements AdminService {
         this.repairRequestDAO = repairRequestDAO;
         this.userDAO = userDAO;
         this.feedbackDAO = feedbackDAO;
+        this.roleDAO = roleDAO;
         this.addressService = addressService;
         this.feedbackService = feedbackService;
         this.statusDAO = statusDAO;
         this.accessoryDAO = accessoryDAO;
+        this.repairerDAO = repairerDAO;
     }
 
     @Override
@@ -856,5 +860,42 @@ public class AdminServiceImpl implements AdminService {
         response.setFeedbackList(feedbackList);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) {
+        User user = validatorService.getUserValidated(request.getRepairerId());
+        Collection<Role> roles = user.getRoles();
+        if (!isPendingRepairer(roles)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REPAIRER);
+        }
+
+        Repairer repairer = repairerDAO.findByUserId(user.getId()).get();
+        repairer.setAcceptedAccountAt(LocalDateTime.now());
+        updateToRepairerRole(roles);
+
+        AcceptCVResponse response = new AcceptCVResponse();
+        response.setMessage(ACCEPT_CV_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private boolean isPendingRepairer(Collection<Role> roles) {
+        for (Role role : roles) {
+            if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateToRepairerRole(Collection<Role> roles) {
+        for (Role role : roles) {
+            if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
+                roles.remove(role);
+                Role repairerRole = roleDAO.findByName(RoleType.ROLE_REPAIRER.name()).get();
+                roles.add(repairerRole);
+            }
+        }
     }
 }

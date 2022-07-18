@@ -58,4 +58,6 @@ public interface AdminService {
     ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request);
 
     ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request);
+
+    ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request);
 }

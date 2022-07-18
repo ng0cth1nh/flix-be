@@ -124,7 +124,7 @@ public class AdminController {
         return adminService.getAccessories(request);
     }
 
-    @GetMapping("checkCV")
+    @GetMapping("CVList")
     public ResponseEntity<PendingRepairersResponse> getPendingRepairers(PendingRepairersRequest request) {
         return adminService.getPendingRepairers(request);
     }
@@ -147,5 +147,10 @@ public class AdminController {
     @GetMapping("feedbacks")
     public ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request) {
         return adminService.getFeedbacks(request);
+    }
+
+    @PutMapping("cv")
+    public ResponseEntity<AcceptCVResponse> acceptCV(@RequestBody AcceptCVRequest request) {
+        return adminService.acceptCV(request);
     }
 }

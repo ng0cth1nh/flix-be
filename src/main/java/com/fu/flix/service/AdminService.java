@@ -2,12 +2,9 @@ package com.fu.flix.service;
 
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
-import com.fu.flix.entity.Feedback;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 
 public interface AdminService {
     ResponseEntity<GetAdminProfileResponse> getAdminProfile(GetAdminProfileRequest request);
@@ -55,4 +52,8 @@ public interface AdminService {
     ResponseEntity<PendingRepairersResponse> getPendingRepairers(PendingRepairersRequest request);
 
     ResponseEntity<CreateAccessoryResponse> createAccessory(CreateAccessoryRequest request);
+
+    ResponseEntity<UpdateAccessoryResponse> updateAccessory(UpdateAccessoryRequest request);
+
+    ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request);
 }

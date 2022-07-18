@@ -195,6 +195,10 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
                             ? null
                             : DateFormatUtil.toString(dto.getApprovedTime(), DATE_TIME_PATTERN)
             );
+            response.setServiceName(dto.getServiceName());
+            response.setServiceImage(dto.getServiceImage());
+            response.setServiceId(dto.getServiceId());
+            response.setStatus(dto.getStatus());
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);

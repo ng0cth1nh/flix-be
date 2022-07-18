@@ -746,18 +746,25 @@ public class AdminServiceImpl implements AdminService {
         validateModifyAccessory(request);
 
         Accessory accessory = new Accessory();
-        accessory.setName(request.getAccessoryName());
-        accessory.setDescription(request.getDescription());
-        accessory.setPrice(request.getPrice());
-        accessory.setServiceId(request.getServiceId());
-        accessory.setInsuranceTime(request.getInsurance());
-        accessory.setCountry(request.getCountry());
-        accessory.setManufacture(request.getManufacturer());
+        buildAccessory(request, accessory);
 
         accessoryDAO.save(accessory);
 
         CreateAccessoryResponse response = new CreateAccessoryResponse();
         response.setMessage(CREATE_ACCESSORY_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<UpdateAccessoryResponse> updateAccessory(UpdateAccessoryRequest request) {
+        validateModifyAccessory(request);
+
+        Accessory accessory = validatorService.getAccessoryValidated(request.getId());
+        buildAccessory(request, accessory);
+
+        UpdateAccessoryResponse response = new UpdateAccessoryResponse();
+        response.setMessage(UPDATE_ACCESSORY_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -792,4 +799,15 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
         }
     }
+
+    private void buildAccessory(ModifyAccessoryRequest request, Accessory accessory) {
+        accessory.setName(request.getAccessoryName());
+        accessory.setDescription(request.getDescription());
+        accessory.setPrice(request.getPrice());
+        accessory.setServiceId(request.getServiceId());
+        accessory.setInsuranceTime(request.getInsurance());
+        accessory.setCountry(request.getCountry());
+        accessory.setManufacture(request.getManufacturer());
+    }
+
 }

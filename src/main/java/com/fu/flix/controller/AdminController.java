@@ -133,4 +133,9 @@ public class AdminController {
     public ResponseEntity<CreateAccessoryResponse> createAccessory(@RequestBody CreateAccessoryRequest request) {
         return adminService.createAccessory(request);
     }
+
+    @PutMapping("accessory")
+    public ResponseEntity<UpdateAccessoryResponse> updateAccessory(@RequestBody UpdateAccessoryRequest request) {
+        return adminService.updateAccessory(request);
+    }
 }

@@ -5,6 +5,7 @@ import com.fu.flix.constant.Constant;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CreateFeedbackRequest;
+import com.fu.flix.entity.Accessory;
 import com.fu.flix.entity.Category;
 import com.fu.flix.entity.SubService;
 import com.fu.flix.entity.User;
@@ -26,6 +27,7 @@ public class ValidatorServiceImpl implements ValidatorService {
     private final CategoryDAO categoryDAO;
     private final SubServiceDAO subServiceDAO;
     private final RepairRequestDAO repairRequestDAO;
+    private final AccessoryDAO accessoryDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
 
@@ -34,7 +36,8 @@ public class ValidatorServiceImpl implements ValidatorService {
                                 ServiceDAO serviceDAO,
                                 CategoryDAO categoryDAO,
                                 SubServiceDAO subServiceDAO,
-                                RepairRequestDAO repairRequestDAO) {
+                                RepairRequestDAO repairRequestDAO,
+                                AccessoryDAO accessoryDAO) {
         this.userDAO = userDAO;
         this.appConf = appConf;
         this.serviceDAO = serviceDAO;
@@ -43,6 +46,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         this.repairRequestDAO = repairRequestDAO;
         this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
+        this.accessoryDAO = accessoryDAO;
     }
 
     @Override
@@ -156,5 +160,19 @@ public class ValidatorServiceImpl implements ValidatorService {
         if (Strings.isEmpty(description) || description.length() > DESCRIPTION_MAX_LENGTH) {
             throw new GeneralException(HttpStatus.GONE, INVALID_DESCRIPTION);
         }
+    }
+
+    @Override
+    public Accessory getAccessoryValidated(Long accessoryId) {
+        if (accessoryId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ACCESSORY);
+        }
+
+        Optional<Accessory> optionalAccessory = accessoryDAO.findById(accessoryId);
+        if (optionalAccessory.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ACCESSORY);
+        }
+
+        return optionalAccessory.get();
     }
 }

@@ -1,10 +1,7 @@
 package com.fu.flix.service;
 
 import com.fu.flix.dto.request.CreateFeedbackRequest;
-import com.fu.flix.entity.Category;
-import com.fu.flix.entity.Service;
-import com.fu.flix.entity.SubService;
-import com.fu.flix.entity.User;
+import com.fu.flix.entity.*;
 
 public interface ValidatorService {
     User getUserValidated(String username);
@@ -23,4 +20,5 @@ public interface ValidatorService {
 
     void validateCreateFeedbackInput(CreateFeedbackRequest request);
 
+    Accessory getAccessoryValidated(Long accessoryId);
 }

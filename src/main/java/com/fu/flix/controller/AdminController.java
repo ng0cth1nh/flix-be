@@ -128,4 +128,9 @@ public class AdminController {
     public ResponseEntity<PendingRepairersResponse> getPendingRepairers(PendingRepairersRequest request) {
         return adminService.getPendingRepairers(request);
     }
+
+    @PostMapping("accessory")
+    public ResponseEntity<CreateAccessoryResponse> createAccessory(@RequestBody CreateAccessoryRequest request) {
+        return adminService.createAccessory(request);
+    }
 }

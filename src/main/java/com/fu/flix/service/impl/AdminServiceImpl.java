@@ -51,7 +51,6 @@ public class AdminServiceImpl implements AdminService {
     private final FeedbackService feedbackService;
     private final StatusDAO statusDAO;
     private final AccessoryDAO accessoryDAO;
-    private final ManufactureDAO manufactureDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -71,8 +70,8 @@ public class AdminServiceImpl implements AdminService {
                             AddressService addressService,
                             FeedbackService feedbackService,
                             StatusDAO statusDAO,
-                            AccessoryDAO accessoryDAO,
-                            ManufactureDAO manufactureDAO) {
+                            AccessoryDAO accessoryDAO
+    ) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -90,7 +89,6 @@ public class AdminServiceImpl implements AdminService {
         this.feedbackService = feedbackService;
         this.statusDAO = statusDAO;
         this.accessoryDAO = accessoryDAO;
-        this.manufactureDAO = manufactureDAO;
     }
 
     @Override
@@ -209,8 +207,8 @@ public class AdminServiceImpl implements AdminService {
         }
 
         String categoryName = request.getCategoryName();
-        if (Strings.isEmpty(categoryName)) {
-            throw new GeneralException(HttpStatus.GONE, CATEGORY_NAME_IS_REQUIRED);
+        if (Strings.isEmpty(categoryName) || categoryName.length() > NAME_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_CATEGORY_NAME);
         }
     }
 
@@ -312,8 +310,8 @@ public class AdminServiceImpl implements AdminService {
         }
 
         String serviceName = request.getServiceName();
-        if (Strings.isEmpty(serviceName)) {
-            throw new GeneralException(HttpStatus.GONE, SERVICE_NAME_IS_REQUIRED);
+        if (Strings.isEmpty(serviceName) || serviceName.length() > NAME_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE_NAME);
         }
 
         Long inspectionPrice = request.getInspectionPrice();
@@ -450,7 +448,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private void validateModifySubService(ModifySubServiceRequest request) {
-        if (Strings.isEmpty(request.getSubServiceName())) {
+        String subServiceName = request.getSubServiceName();
+        if (Strings.isEmpty(subServiceName) || subServiceName.length() > NAME_MAX_LENGTH) {
             throw new GeneralException(HttpStatus.GONE, INVALID_SUB_SERVICE_NAME);
         }
 
@@ -702,13 +701,12 @@ public class AdminServiceImpl implements AdminService {
         Page<Accessory> accessoryPage = accessoryDAO.findAll(PageRequest.of(pageNumber, pageSize));
         List<AccessoryOutputDTO> accessoryList = accessoryPage.stream()
                 .map(accessory -> {
-                    Optional<Manufacture> optionalManufacture = manufactureDAO.findById(accessory.getManufactureId());
                     AccessoryOutputDTO dto = new AccessoryOutputDTO();
                     dto.setId(accessory.getId());
                     dto.setName(accessory.getName());
                     dto.setPrice(accessory.getPrice());
                     dto.setInsuranceTime(accessory.getInsuranceTime());
-                    dto.setManufacture(optionalManufacture.map(Manufacture::getName).orElse(null));
+                    dto.setManufacture(accessory.getManufacture());
                     dto.setCountry(accessory.getCountry());
                     dto.setDescription(accessory.getDescription());
                     return dto;
@@ -741,5 +739,57 @@ public class AdminServiceImpl implements AdminService {
         response.setRepairerList(repairerList);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<CreateAccessoryResponse> createAccessory(CreateAccessoryRequest request) {
+        validateModifyAccessory(request);
+
+        Accessory accessory = new Accessory();
+        accessory.setName(request.getAccessoryName());
+        accessory.setDescription(request.getDescription());
+        accessory.setPrice(request.getPrice());
+        accessory.setServiceId(request.getServiceId());
+        accessory.setInsuranceTime(request.getInsurance());
+        accessory.setCountry(request.getCountry());
+        accessory.setManufacture(request.getManufacturer());
+
+        accessoryDAO.save(accessory);
+
+        CreateAccessoryResponse response = new CreateAccessoryResponse();
+        response.setMessage(CREATE_ACCESSORY_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void validateModifyAccessory(ModifyAccessoryRequest request) {
+        Long price = request.getPrice();
+        if (price == null || price < 0) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PRICE);
+        }
+
+        Integer insurance = request.getInsurance();
+        if (insurance != null && insurance < 0) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_INSURANCE);
+        }
+
+        String description = request.getDescription();
+        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
+        }
+
+        String accessoryName = request.getAccessoryName();
+        if (Strings.isEmpty(accessoryName) || accessoryName.length() > NAME_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ACCESSORY_NAME);
+        }
+
+        Long serviceId = request.getServiceId();
+        if (serviceId == null) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_ID_IS_REQUIRED);
+        }
+
+        if (serviceDAO.findById(serviceId).isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
+        }
     }
 }

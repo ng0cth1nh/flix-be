@@ -53,4 +53,6 @@ public interface AdminService {
     ResponseEntity<AdminGetAccessoriesResponse> getAccessories(AdminGetAccessoriesRequest request);
 
     ResponseEntity<PendingRepairersResponse> getPendingRepairers(PendingRepairersRequest request);
+
+    ResponseEntity<CreateAccessoryResponse> createAccessory(CreateAccessoryRequest request);
 }

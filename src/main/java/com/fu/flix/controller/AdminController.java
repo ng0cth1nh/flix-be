@@ -124,7 +124,7 @@ public class AdminController {
         return adminService.getAccessories(request);
     }
 
-    @GetMapping("cv")
+    @GetMapping("CVList")
     public ResponseEntity<PendingRepairersResponse> getPendingRepairers(PendingRepairersRequest request) {
         return adminService.getPendingRepairers(request);
     }

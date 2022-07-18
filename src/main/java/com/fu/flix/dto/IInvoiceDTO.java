@@ -44,5 +44,14 @@ public interface IInvoiceDTO {
     Long getTotalPrice();
 
     Long getVatPrice();
+
     LocalDateTime getApprovedTime();
+
+    String getServiceName();
+
+    String getServiceImage();
+
+    Long getServiceId();
+
+    String getStatus();
 }

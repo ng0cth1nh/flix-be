@@ -17,7 +17,7 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "iv.total_extra_service_price as totalExtraServicePrice, iv.total_accessory_price as totalAccessoryPrice, iv.total_sub_service_price as totalSubServicePrice, " +
             "iv.inspection_price as inspectionPrice, iv.total_discount as totalDiscount, rr.expect_start_fixing_at as expectFixingTime, rr.voucher_id as voucherId, " +
             "pm.name as paymentMethod, rr.request_code as requestCode, rr.created_at as createdAt, iv.actual_proceeds as actualPrice, iv.total_price as totalPrice, " +
-            "iv.vat_price as vatPrice, rrm.created_at as approvedTime " +
+            "iv.vat_price as vatPrice, rrm.created_at as approvedTime, sv.name as serviceName, sv_img.url as serviceImage, sv.id as serviceId, stt.name as status " +
             "FROM repair_requests rr " +
             "JOIN users customer " +
             "ON rr.user_id = customer.id " +
@@ -39,6 +39,12 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "ON voucher.id = rr.voucher_id " +
             "JOIN payment_methods pm " +
             "ON pm.id = rr.payment_method_id " +
+            "JOIN services sv " +
+            "ON sv.id = rr.service_id " +
+            "JOIN images sv_img " +
+            "ON sv_img.id = sv.image_id " +
+            "JOIN status stt " +
+            "ON stt.id = rr.status_id " +
             "WHERE r_ua.is_main_address " +
             "AND (rr.status_id = 'DO' OR rr.status_id = 'PW') " +
             "AND rr.request_code = :requestCode " +
@@ -51,7 +57,7 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "iv.total_extra_service_price as totalExtraServicePrice, iv.total_accessory_price as totalAccessoryPrice, iv.total_sub_service_price as totalSubServicePrice, " +
             "iv.inspection_price as inspectionPrice, iv.total_discount as totalDiscount, rr.expect_start_fixing_at as expectFixingTime, rr.voucher_id as voucherId, " +
             "pm.name as paymentMethod, rr.request_code as requestCode, rr.created_at as createdAt, iv.actual_proceeds as actualPrice, iv.total_price as totalPrice, " +
-            "iv.vat_price as vatPrice, rrm.created_at as approvedTime " +
+            "iv.vat_price as vatPrice, rrm.created_at as approvedTime, sv.name as serviceName, sv_img.url as serviceImage, sv.id as serviceId, stt.name as status " +
             "FROM repair_requests rr " +
             "JOIN users customer " +
             "ON rr.user_id = customer.id " +
@@ -73,6 +79,12 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "ON voucher.id = rr.voucher_id " +
             "JOIN payment_methods pm " +
             "ON pm.id = rr.payment_method_id " +
+            "JOIN services sv " +
+            "ON sv.id = rr.service_id " +
+            "JOIN images sv_img " +
+            "ON sv_img.id = sv.image_id " +
+            "JOIN status stt " +
+            "ON stt.id = rr.status_id " +
             "WHERE r_ua.is_main_address " +
             "AND (rr.status_id = 'DO' OR rr.status_id = 'PW') " +
             "AND rr.request_code = :requestCode " +

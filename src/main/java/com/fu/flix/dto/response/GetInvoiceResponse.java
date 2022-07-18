@@ -33,4 +33,5 @@ public class GetInvoiceResponse {
     private String serviceImage;
     private Long serviceId;
     private String status;
+    private Boolean isCustomerCommented;
 }

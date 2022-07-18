@@ -56,4 +56,6 @@ public interface AdminService {
     ResponseEntity<UpdateAccessoryResponse> updateAccessory(UpdateAccessoryRequest request);
 
     ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request);
+
+    ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request);
 }

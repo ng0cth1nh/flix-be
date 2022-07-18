@@ -143,4 +143,9 @@ public class AdminController {
     public ResponseEntity<ResponseFeedbackResponse> responseFeedback(@RequestBody ResponseFeedbackRequest request) {
         return adminService.responseFeedback(request);
     }
+
+    @GetMapping("feedbacks")
+    public ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request) {
+        return adminService.getFeedbacks(request);
+    }
 }

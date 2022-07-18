@@ -199,6 +199,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
             response.setServiceImage(dto.getServiceImage());
             response.setServiceId(dto.getServiceId());
             response.setStatus(dto.getStatus());
+            response.setIsCustomerCommented(dto.getIsCustomerCommented());
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);

@@ -54,4 +54,6 @@ public interface IInvoiceDTO {
     Long getServiceId();
 
     String getStatus();
+
+    Boolean getIsCustomerCommented();
 }

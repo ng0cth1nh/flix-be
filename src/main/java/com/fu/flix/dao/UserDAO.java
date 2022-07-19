@@ -59,6 +59,36 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "AND customer.id = :customerId", nativeQuery = true)
     Optional<ICustomerDetailDTO> findCustomerDetail(Long customerId);
 
+    @Query(value = "SELECT r.user_id as id, avatar.url as avatar, u.full_name as repairerName, u.phone as repairerPhone, " +
+            "CASE " +
+            "   WHEN u.is_active THEN 'ACTIVE' " +
+            "   ELSE 'BAN' " +
+            "END as status, " +
+            "u.date_of_birth as dateOfBirth, u.gender, u.email, ua.id as addressId, u.created_at as createdAt, r.experience_year as experienceYear, " +
+            "r.experience_description as experienceDescription, ic.identity_card_number as identityCardNumber, ic.type as identityCardType, " +
+            "front_img.url as frontImage, back_img.url as backSideImage, r.accepted_account_at as acceptedAccountAt, roles.name as role " +
+            "FROM users u " +
+            "JOIN images avatar " +
+            "ON avatar.id = u.avatar " +
+            "JOIN user_roles ur " +
+            "ON ur.user_id = u.id " +
+            "JOIN user_addresses ua " +
+            "ON ua.user_id = u.id " +
+            "JOIN repairers r " +
+            "ON r.user_id = u.id " +
+            "JOIN identity_cards ic " +
+            "ON ic.repairer_id = r.user_id " +
+            "JOIN images front_img " +
+            "ON front_img.id = ic.front_image_id " +
+            "JOIN images back_img " +
+            "ON back_img.id = ic.back_side_image_id " +
+            "JOIN roles " +
+            "ON roles.id = ur.role_id " +
+            "WHERE (ur.role_id = 'R' OR ur.role_id = 'PR' ) " +
+            "AND ua.is_main_address " +
+            "AND r.user_id = :repairerId", nativeQuery = true)
+    Optional<IRepairerDetailDTO> findRepairerDetail(Long repairerId);
+
     @Query(value = "SELECT u.id as id, avatar.url as avatar, u.full_name as name, u.phone, roles.name as role, " +
             "u.ban_reason as banReason, u.ban_at as banAt " +
             "FROM users u " +

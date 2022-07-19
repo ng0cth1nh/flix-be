@@ -153,4 +153,9 @@ public class AdminController {
     public ResponseEntity<AcceptCVResponse> acceptCV(@RequestBody AcceptCVRequest request) {
         return adminService.acceptCV(request);
     }
+
+    @GetMapping("repairer")
+    public ResponseEntity<GetRepairerDetailResponse> getRepairerDetail(GetRepairerDetailRequest request) {
+        return adminService.getRepairerDetail(request);
+    }
 }

@@ -60,4 +60,6 @@ public interface AdminService {
     ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request);
 
     ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request);
+
+    ResponseEntity<GetRepairerDetailResponse> getRepairerDetail(GetRepairerDetailRequest request);
 }

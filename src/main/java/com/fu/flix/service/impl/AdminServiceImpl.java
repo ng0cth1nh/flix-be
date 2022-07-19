@@ -51,6 +51,7 @@ public class AdminServiceImpl implements AdminService {
     private final AddressService addressService;
     private final FeedbackService feedbackService;
     private final StatusDAO statusDAO;
+    private final CertificateDAO certificateDAO;
     private final AccessoryDAO accessoryDAO;
     private final RepairerDAO repairerDAO;
     private final Long NAME_MAX_LENGTH;
@@ -72,6 +73,7 @@ public class AdminServiceImpl implements AdminService {
                             RoleDAO roleDAO, AddressService addressService,
                             FeedbackService feedbackService,
                             StatusDAO statusDAO,
+                            CertificateDAO certificateDAO,
                             AccessoryDAO accessoryDAO,
                             RepairerDAO repairerDAO) {
         this.validatorService = validatorService;
@@ -91,6 +93,7 @@ public class AdminServiceImpl implements AdminService {
         this.addressService = addressService;
         this.feedbackService = feedbackService;
         this.statusDAO = statusDAO;
+        this.certificateDAO = certificateDAO;
         this.accessoryDAO = accessoryDAO;
         this.repairerDAO = repairerDAO;
     }
@@ -107,14 +110,14 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<UpdateAdminProfileResponse> updateAdminProfile(UpdateAdminProfileRequest request) {
-        String fullName = request.getFullName();
-        if (!InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
-        }
-
         String email = request.getEmail();
         if (!InputValidation.isEmailValid(email, true)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_EMAIL);
+        }
+
+        String fullName = request.getFullName();
+        if (!InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         }
 
         User admin = validatorService.getUserValidated(request.getUserId());
@@ -542,8 +545,8 @@ public class AdminServiceImpl implements AdminService {
         response.setAvatar(dto.getAvatar());
         response.setCustomerName(dto.getCustomerName());
         response.setCustomerPhone(dto.getCustomerPhone());
-        response.setStatus(dto.getStatus());
         response.setDateOfBirth(dob);
+        response.setStatus(dto.getStatus());
         response.setGender(dto.getGender());
         response.setEmail(dto.getEmail());
         response.setAddress(addressService.getAddressFormatted(dto.getAddressId()));
@@ -897,5 +900,48 @@ public class AdminServiceImpl implements AdminService {
                 roles.add(repairerRole);
             }
         }
+    }
+
+    @Override
+    public ResponseEntity<GetRepairerDetailResponse> getRepairerDetail(GetRepairerDetailRequest request) {
+        Long repairerId = request.getRepairerId();
+        Optional<IRepairerDetailDTO> optionalRepairer = userDAO.findRepairerDetail(repairerId);
+        if (optionalRepairer.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, REPAIRER_NOT_FOUND);
+        }
+
+        List<Certificate> certificates = certificateDAO.findByRepairerId(repairerId);
+
+        IRepairerDetailDTO dto = optionalRepairer.get();
+        String dob = dto.getDateOfBirth() != null
+                ? DateFormatUtil.toString(dto.getDateOfBirth(), DATE_PATTERN)
+                : null;
+
+        String acceptedAccountAt = dto.getAcceptedAccountAt() != null
+                ? DateFormatUtil.toString(dto.getAcceptedAccountAt(), DATE_TIME_PATTERN)
+                : null;
+
+        GetRepairerDetailResponse response = new GetRepairerDetailResponse();
+        response.setId(dto.getId());
+        response.setAvatar(dto.getAvatar());
+        response.setRepairerName(dto.getRepairerName());
+        response.setRepairerPhone(dto.getRepairerPhone());
+        response.setStatus(dto.getStatus());
+        response.setDateOfBirth(dob);
+        response.setGender(dto.getGender());
+        response.setEmail(dto.getEmail());
+        response.setAddress(addressService.getAddressFormatted(dto.getAddressId()));
+        response.setCreatedAt(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
+        response.setExperienceYear(dto.getExperienceYear());
+        response.setExperienceDescription(dto.getExperienceDescription());
+        response.setIdentityCardNumber(dto.getIdentityCardNumber());
+        response.setIdentityCardType(dto.getIdentityCardType());
+        response.setFrontImage(dto.getFrontImage());
+        response.setBackSideImage(dto.getBackSideImage());
+        response.setAcceptedAccountAt(acceptedAccountAt);
+        response.setCertificates(certificates.stream().map(Certificate::getUrl).collect(Collectors.toList()));
+        response.setRole(dto.getRole());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

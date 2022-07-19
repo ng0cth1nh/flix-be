@@ -143,7 +143,7 @@ public class RepairerServiceImpl implements RepairerService {
     @Override
     public ResponseEntity<RequestingDetailForRepairerResponse> getRepairRequestDetail(RequestingDetailForRepairerRequest request) {
         String requestCode = request.getRequestCode();
-        if (requestService.isEmptyRequestCode(requestCode)) {
+        if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
@@ -185,7 +185,7 @@ public class RepairerServiceImpl implements RepairerService {
     @Override
     public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) {
         String requestCode = request.getRequestCode();
-        if (requestService.isEmptyRequestCode(requestCode)) {
+        if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 

@@ -9,6 +9,7 @@ import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.entity.User;
+import com.fu.flix.entity.UserAddress;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.RepairerService;
 import com.fu.flix.service.ValidatorService;
@@ -1989,6 +1990,40 @@ class CustomerServiceImplTest {
 
         // then
         Assertions.assertNotNull(response.getRepairerComments());
+    }
+
+    @Test
+    public void test_choose_main_address_success() {
+        // given
+        long userId = 36L;
+        long addressId = 21L;
+        ChooseMainAddressRequest request = new ChooseMainAddressRequest();
+        request.setAddressId(addressId);
+
+
+        // when
+        setUserContext(userId, "0865390037");
+        ChooseMainAddressResponse response = underTest.chooseMainAddress(request).getBody();
+        UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(userId, true).get();
+
+        // then
+        Assertions.assertEquals(CHOOSING_MAIN_ADDRESS_SUCCESS, response.getMessage());
+        Assertions.assertEquals(addressId, userAddress.getId());
+    }
+
+    @Test
+    public void test_choose_main_address_fail_when_address_id_is_null() {
+        // given
+        long userId = 36L;
+        ChooseMainAddressRequest request = new ChooseMainAddressRequest();
+        request.setAddressId(null);
+
+        // when
+        setUserContext(userId, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.chooseMainAddress(request).getBody());
+
+        // then
+        Assertions.assertEquals(ADDRESS_ID_IS_REQUIRED, exception.getMessage());
     }
 
     void setUserContext(Long id, String phone) {

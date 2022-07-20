@@ -332,7 +332,6 @@ public class RepairerServiceImpl implements RepairerService {
         Long repairerId = request.getUserId();
         if (!repairRequestMatching.getRepairerId().equals(repairerId)) {
             throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_PAID_THIS_INVOICE);
-
         }
 
         Repairer repairer = repairerDAO.findByUserId(repairerId).get();

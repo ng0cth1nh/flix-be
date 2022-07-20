@@ -49,12 +49,12 @@ class RepairerServiceImplTest {
     @Test
     public void test_approval_request_success() {
         // given
-        String requestCode = createFixingRequestByCustomerId36();
+        String requestCode = createFixingRequestByCustomerId36ForService1();
         RepairerApproveRequest request = new RepairerApproveRequest();
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         RepairerApproveResponse response = underTest.approveRequest(request).getBody();
 
         // then
@@ -69,7 +69,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
@@ -84,7 +84,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
@@ -98,7 +98,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(null);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
@@ -113,7 +113,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
@@ -123,12 +123,12 @@ class RepairerServiceImplTest {
     @Test
     public void test_approval_request_fail_when_repairer_on_another_fixing() {
         // given
-        String requestCode = createFixingRequestByCustomerId36();
+        String requestCode = createFixingRequestByCustomerId36ForService1();
         RepairerApproveRequest request = new RepairerApproveRequest();
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Repairer repairer = repairerDAO.findByUserId(56L).get();
         repairer.setRepairing(true);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
@@ -140,12 +140,12 @@ class RepairerServiceImplTest {
     @Test
     public void test_approval_request_fail_when_repairer_balance_not_enough() {
         // given
-        String requestCode = createFixingRequestByCustomerId36();
+        String requestCode = createFixingRequestByCustomerId36ForService1();
         RepairerApproveRequest request = new RepairerApproveRequest();
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(373L, "0865390056");
+        setRepairerContext(373L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
@@ -159,7 +159,7 @@ class RepairerServiceImplTest {
         request.setRequestCode("1107226GDG5F");
 
         // when
-        setUserContext(52L, "0865390056");
+        setRepairerContext(52L, "0865390056");
         RequestingDetailForRepairerResponse response = underTest.getRepairRequestDetail(request).getBody();
 
         // then
@@ -173,7 +173,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(null);
 
         // when
-        setUserContext(52L, "0865390056");
+        setRepairerContext(52L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getRepairRequestDetail(request).getBody());
 
         // then
@@ -187,7 +187,7 @@ class RepairerServiceImplTest {
         request.setRequestCode("");
 
         // when
-        setUserContext(52L, "0865390056");
+        setRepairerContext(52L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getRepairRequestDetail(request).getBody());
 
         // then
@@ -197,7 +197,7 @@ class RepairerServiceImplTest {
     @Test
     public void cancel_fixing_request_success() {
         // given
-        String requestCode = createFixingRequestByCustomerId36();
+        String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
 
         CancelRequestForRepairerRequest request = new CancelRequestForRepairerRequest();
@@ -205,7 +205,7 @@ class RepairerServiceImplTest {
         request.setReason("Bận quá");
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         CancelRequestForRepairerResponse response = underTest.cancelFixingRequest(request).getBody();
 
         // then
@@ -215,7 +215,7 @@ class RepairerServiceImplTest {
     @Test
     public void cancel_fixing_request_success_when_reason_is_null() {
         // given
-        String requestCode = createFixingRequestByCustomerId36();
+        String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
 
         CancelRequestForRepairerRequest request = new CancelRequestForRepairerRequest();
@@ -223,7 +223,7 @@ class RepairerServiceImplTest {
         request.setReason(null);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         CancelRequestForRepairerResponse response = underTest.cancelFixingRequest(request).getBody();
 
         // then
@@ -233,7 +233,7 @@ class RepairerServiceImplTest {
     @Test
     public void cancel_fixing_request_success_when_reason_is_empty() {
         // given
-        String requestCode = createFixingRequestByCustomerId36();
+        String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
 
         CancelRequestForRepairerRequest request = new CancelRequestForRepairerRequest();
@@ -241,7 +241,7 @@ class RepairerServiceImplTest {
         request.setReason("");
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         CancelRequestForRepairerResponse response = underTest.cancelFixingRequest(request).getBody();
 
         // then
@@ -256,7 +256,7 @@ class RepairerServiceImplTest {
         request.setReason("");
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
 
         // then
@@ -271,7 +271,7 @@ class RepairerServiceImplTest {
         request.setReason("");
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
 
         // then
@@ -286,7 +286,7 @@ class RepairerServiceImplTest {
         request.setReason("");
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
 
         // then
@@ -296,7 +296,7 @@ class RepairerServiceImplTest {
     @Test
     public void cancel_fixing_request_fail_when_repairer_does_not_have_permission_to_cancel_request() {
         // given
-        String requestCode = createFixingRequestByCustomerId36();
+        String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
 
         CancelRequestForRepairerRequest request = new CancelRequestForRepairerRequest();
@@ -304,7 +304,7 @@ class RepairerServiceImplTest {
         request.setReason(null);
 
         // when
-        setUserContext(52L, "0865390056");
+        setRepairerContext(52L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
 
         // then
@@ -314,7 +314,7 @@ class RepairerServiceImplTest {
     @Test
     public void cancel_fixing_request_fail_when_request_does_not_fixing_or_approval() {
         // given
-        String requestCode = createFixingRequestByCustomerId36();
+        String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
         RepairRequest repairRequest = repairRequestDAO.findByRequestCode(requestCode).get();
         repairRequest.setStatusId("PW");
@@ -324,14 +324,412 @@ class RepairerServiceImplTest {
         request.setReason(null);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
 
         // then
         Assertions.assertEquals(ONLY_CAN_CANCEL_REQUEST_FIXING_OR_APPROVED, exception.getMessage());
     }
 
-    private String createFixingRequestByCustomerId36() {
+    private void approvalRequestByRepairerId56(String requestCode) {
+        setRepairerContext(56L, "0865390056");
+        RepairerApproveRequest request = new RepairerApproveRequest();
+        request.setRequestCode(requestCode);
+        underTest.approveRequest(request);
+    }
+
+    @Test
+    public void test_get_fixing_request_history_success_when_status_is_CANCELLED() {
+        // given
+        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
+        request.setStatus("CANCELLED");
+
+        // when
+        setRepairerContext(52L, "0865390037");
+        HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
+
+        // then
+        Assertions.assertTrue(response.getRequestHistories().size() > 0);
+
+    }
+
+    @Test
+    public void test_get_fixing_request_history_success_when_status_is_DONE() {
+        // given
+        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
+        request.setStatus("DONE");
+
+        // when
+        setRepairerContext(52L, "0865390037");
+        HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
+
+        // then
+        Assertions.assertTrue(response.getRequestHistories().size() > 0);
+    }
+
+    @Test
+    public void test_get_fixing_request_history_success_when_status_is_PENDING() {
+        // given
+        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
+        request.setStatus("PENDING");
+
+        // when
+        setRepairerContext(52L, "0865390037");
+        HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
+
+        // then
+        Assertions.assertEquals(0, response.getRequestHistories().size());
+    }
+
+    @Test
+    public void test_get_fixing_request_history_success_when_status_is_PAYMENT_WAITING() {
+        // given
+        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
+        request.setStatus("PAYMENT_WAITING");
+
+        // when
+        setRepairerContext(52L, "0865390037");
+        HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRequestHistories());
+    }
+
+    @Test
+    public void test_get_fixing_request_history_fail_when_status_is_empty() {
+        // given
+        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
+        request.setStatus("");
+
+        // when
+        setRepairerContext(52L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixingRequestHistories(request));
+
+        // then
+        Assertions.assertEquals(INVALID_STATUS, exception.getMessage());
+    }
+
+    @Test
+    public void test_get_fixing_request_history_fail_when_status_is_null() {
+        // given
+        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
+        request.setStatus(null);
+
+        // when
+        setRepairerContext(52L, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixingRequestHistories(request));
+
+        // then
+        Assertions.assertEquals(INVALID_STATUS, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_fixing_success() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+        ConfirmFixingRequest request = new ConfirmFixingRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+
+        // when
+        ConfirmFixingResponse response = underTest.confirmFixing(request).getBody();
+
+        // then
+        Assertions.assertEquals(CONFIRM_FIXING_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_confirm_fixing_fail_when_request_code_is_invalid() {
+        // given
+        ConfirmFixingRequest request = new ConfirmFixingRequest();
+        request.setRequestCode("1INVALIDCODE");
+        setRepairerContext(56L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_fixing_fail_when_request_code_is_empty() {
+        // given
+        ConfirmFixingRequest request = new ConfirmFixingRequest();
+        request.setRequestCode("");
+        setRepairerContext(56L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_fixing_fail_when_request_code_is_null() {
+        // given
+        ConfirmFixingRequest request = new ConfirmFixingRequest();
+        request.setRequestCode(null);
+        setRepairerContext(56L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_fixing_fail_when_request_status_is_not_APPROVAL() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        ConfirmFixingRequest request = new ConfirmFixingRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
+
+        // then
+        Assertions.assertEquals(JUST_CAN_CONFIRM_FIXING_WHEN_REQUEST_STATUS_APPROVED, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_fixing_fail_when_repairer_does_not_have_permission() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+        ConfirmFixingRequest request = new ConfirmFixingRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(52L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
+
+        // then
+        Assertions.assertEquals(USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_FIXING_THIS_REQUEST, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_fixing_fail_when_repairer_on_another_fixing() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+        ConfirmFixingRequest request = new ConfirmFixingRequest();
+        request.setRequestCode(requestCode);
+
+        long userId = 56L;
+        Repairer repairer = repairerDAO.findByUserId(56L).get();
+        repairer.setRepairing(true);
+        setRepairerContext(userId, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request));
+
+        // then
+        Assertions.assertEquals(CAN_NOT_CONFIRM_FIXING_WHEN_ON_ANOTHER_FIXING, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_invoice_success() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService3();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        CreateInvoiceRequest request = new CreateInvoiceRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+
+        // when
+        CreateInvoiceResponse response = underTest.createInvoice(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_INVOICE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_create_invoice_fail_when_repairer_does_not_have_permission() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService3();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        CreateInvoiceRequest request = new CreateInvoiceRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(52L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
+
+        // then
+        Assertions.assertEquals(REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_INVOICE_FOR_THIS_REQUEST, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_invoice_fail_when_request_code_is_invalid() {
+        // given
+        CreateInvoiceRequest request = new CreateInvoiceRequest();
+        request.setRequestCode("INVALID123");
+        setRepairerContext(52L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_invoice_fail_when_request_code_is_null() {
+        // given
+        CreateInvoiceRequest request = new CreateInvoiceRequest();
+        request.setRequestCode(null);
+        setRepairerContext(52L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_invoice_fail_when_request_code_is_empty() {
+        // given
+        CreateInvoiceRequest request = new CreateInvoiceRequest();
+        request.setRequestCode("");
+        setRepairerContext(52L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_invoice_paid_success() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService3();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        createInvoiceByRepairerId56(requestCode);
+        ConfirmInvoicePaidRequest request = new ConfirmInvoicePaidRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+
+        // when
+        ConfirmInvoicePaidResponse response = underTest.confirmInvoicePaid(request).getBody();
+
+        // then
+        Assertions.assertEquals(CONFIRM_INVOICE_PAID_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_confirm_invoice_paid_fail_when_invalid_request_code() {
+        // given
+        ConfirmInvoicePaidRequest request = new ConfirmInvoicePaidRequest();
+        request.setRequestCode("INVALID");
+        setRepairerContext(56L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmInvoicePaid(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_invoice_paid_fail_when_payment_is_not_cash() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForVNPAY();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        createInvoiceByRepairerId56(requestCode);
+        ConfirmInvoicePaidRequest request = new ConfirmInvoicePaidRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmInvoicePaid(request));
+
+        // then
+        Assertions.assertEquals(CONFIRM_INVOICE_PAID_ONLY_USE_FOR_PAYMENT_IN_CASH, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_invoice_paid_fail_when_status_is_not_PW() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        ConfirmInvoicePaidRequest request = new ConfirmInvoicePaidRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmInvoicePaid(request));
+
+        // then
+        Assertions.assertEquals(CONFIRM_INVOICE_PAID_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_invoice_paid_fail_when_repairer_does_not_permission() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService3();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        createInvoiceByRepairerId56(requestCode);
+        ConfirmInvoicePaidRequest request = new ConfirmInvoicePaidRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(52L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmInvoicePaid(request));
+
+        // then
+        Assertions.assertEquals(USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_PAID_THIS_INVOICE, exception.getMessage());
+    }
+
+    private void createInvoiceByRepairerId56(String requestCode) {
+        CreateInvoiceRequest request = new CreateInvoiceRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+        underTest.createInvoice(request);
+    }
+
+    private void confirmFixingByRepairerId56(String requestCode) {
+        ConfirmFixingRequest request = new ConfirmFixingRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+        underTest.confirmFixing(request);
+    }
+
+    void setRepairerContext(Long id, String phone) {
+        String[] roles = {"ROLE_REPAIRER"};
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (String role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        UsernamePasswordAuthenticationToken authenticationToken
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
+
+    void setCustomerContext(Long id, String phone) {
+        String[] roles = {"ROLE_CUSTOMER"};
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (String role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        UsernamePasswordAuthenticationToken authenticationToken
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
+
+    private String createFixingRequestByCustomerId36ForService1() {
         Long serviceId = 1L;
         Long addressId = 7L;
         String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
@@ -347,228 +745,51 @@ class RepairerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setUserContext(36L, "0865390037");
+        setCustomerContext(36L, "0865390037");
 
         RequestingRepairResponse response = customerService.createFixingRequest(request).getBody();
         return response.getRequestCode();
     }
 
-    private void approvalRequestByRepairerId56(String requestCode) {
-        setUserContext(56L, "0865390056");
-        RepairerApproveRequest request = new RepairerApproveRequest();
-        request.setRequestCode(requestCode);
-        underTest.approveRequest(request);
+    private String createFixingRequestByCustomerId36ForVNPAY() {
+        Long serviceId = 1L;
+        Long addressId = 7L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        String paymentMethodId = "V";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setCustomerContext(36L, "0865390037");
+
+        RequestingRepairResponse response = customerService.createFixingRequest(request).getBody();
+        return response.getRequestCode();
     }
 
-    @Test
-    public void test_get_fixing_request_history_success_when_status_is_CANCELLED() {
-        // given
-        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
-        request.setStatus("CANCELLED");
+    private String createFixingRequestByCustomerId36ForService3() {
+        Long serviceId = 3L;
+        Long addressId = 7L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
 
-        // when
-        setUserContext(52L, "0865390037");
-        HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
 
-        // then
-        Assertions.assertTrue(response.getRequestHistories().size() > 0);
+        setCustomerContext(36L, "0865390037");
 
-    }
-
-    @Test
-    public void test_get_fixing_request_history_success_when_status_is_DONE() {
-        // given
-        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
-        request.setStatus("DONE");
-
-        // when
-        setUserContext(52L, "0865390037");
-        HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
-
-        // then
-        Assertions.assertTrue(response.getRequestHistories().size() > 0);
-    }
-
-    @Test
-    public void test_get_fixing_request_history_success_when_status_is_PENDING() {
-        // given
-        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
-        request.setStatus("PENDING");
-
-        // when
-        setUserContext(52L, "0865390037");
-        HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
-
-        // then
-        Assertions.assertEquals(0, response.getRequestHistories().size());
-    }
-
-    @Test
-    public void test_get_fixing_request_history_success_when_status_is_PAYMENT_WAITING() {
-        // given
-        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
-        request.setStatus("PAYMENT_WAITING");
-
-        // when
-        setUserContext(52L, "0865390037");
-        HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
-
-        // then
-        Assertions.assertNotNull(response.getRequestHistories());
-    }
-
-    @Test
-    public void test_get_fixing_request_history_fail_when_status_is_empty() {
-        // given
-        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
-        request.setStatus("");
-
-        // when
-        setUserContext(52L, "0865390037");
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixingRequestHistories(request));
-
-        // then
-        Assertions.assertEquals(INVALID_STATUS, exception.getMessage());
-    }
-
-    @Test
-    public void test_get_fixing_request_history_fail_when_status_is_null() {
-        // given
-        HistoryRequestForRepairerRequest request = new HistoryRequestForRepairerRequest();
-        request.setStatus(null);
-
-        // when
-        setUserContext(52L, "0865390037");
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixingRequestHistories(request));
-
-        // then
-        Assertions.assertEquals(INVALID_STATUS, exception.getMessage());
-    }
-
-    @Test
-    public void test_confirm_fixing_success() {
-        // given
-        String requestCode = createFixingRequestByCustomerId36();
-        approvalRequestByRepairerId56(requestCode);
-        ConfirmFixingRequest request = new ConfirmFixingRequest();
-        request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
-
-        // when
-        ConfirmFixingResponse response = underTest.confirmFixing(request).getBody();
-
-        // then
-        Assertions.assertEquals(CONFIRM_FIXING_SUCCESS, response.getMessage());
-    }
-
-    @Test
-    public void test_confirm_fixing_fail_when_request_code_is_invalid() {
-        // given
-        ConfirmFixingRequest request = new ConfirmFixingRequest();
-        request.setRequestCode("1INVALIDCODE");
-        setUserContext(56L, "0865390037");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
-
-        // then
-        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
-    }
-
-    @Test
-    public void test_confirm_fixing_fail_when_request_code_is_empty() {
-        // given
-        ConfirmFixingRequest request = new ConfirmFixingRequest();
-        request.setRequestCode("");
-        setUserContext(56L, "0865390037");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
-
-        // then
-        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
-    }
-
-    @Test
-    public void test_confirm_fixing_fail_when_request_code_is_null() {
-        // given
-        ConfirmFixingRequest request = new ConfirmFixingRequest();
-        request.setRequestCode(null);
-        setUserContext(56L, "0865390037");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
-
-        // then
-        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
-    }
-
-    @Test
-    public void test_confirm_fixing_fail_when_request_status_is_not_APPROVAL() {
-        // given
-        String requestCode = createFixingRequestByCustomerId36();
-        ConfirmFixingRequest request = new ConfirmFixingRequest();
-        request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
-
-        // then
-        Assertions.assertEquals(JUST_CAN_CONFIRM_FIXING_WHEN_REQUEST_STATUS_APPROVED, exception.getMessage());
-    }
-
-    @Test
-    public void test_confirm_fixing_fail_when_repairer_does_not_have_permission() {
-        // given
-        String requestCode = createFixingRequestByCustomerId36();
-        approvalRequestByRepairerId56(requestCode);
-        ConfirmFixingRequest request = new ConfirmFixingRequest();
-        request.setRequestCode(requestCode);
-        setUserContext(52L, "0865390037");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
-
-        // then
-        Assertions.assertEquals(USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_FIXING_THIS_REQUEST, exception.getMessage());
-    }
-
-    @Test
-    public void test_confirm_fixing_fail_when_repairer_on_another_fixing() {
-        // given
-        String requestCode = createFixingRequestByCustomerId36();
-        approvalRequestByRepairerId56(requestCode);
-        ConfirmFixingRequest request = new ConfirmFixingRequest();
-        request.setRequestCode(requestCode);
-
-        long userId = 56L;
-        Repairer repairer = repairerDAO.findByUserId(56L).get();
-        repairer.setRepairing(true);
-        setUserContext(userId, "0865390037");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
-
-        // then
-        Assertions.assertEquals(CAN_NOT_CONFIRM_FIXING_WHEN_ON_ANOTHER_FIXING, exception.getMessage());
-    }
-
-    private void confirmFixingByRepairerId56(String requestCode) {
-        ConfirmFixingRequest request = new ConfirmFixingRequest();
-        request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
-        underTest.confirmFixing(request);
-    }
-
-    void setUserContext(Long id, String phone) {
-        String[] roles = {"ROLE_CUSTOMER"};
-        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        for (String role : roles) {
-            authorities.add(new SimpleGrantedAuthority(role));
-        }
-        UsernamePasswordAuthenticationToken authenticationToken
-                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        RequestingRepairResponse response = customerService.createFixingRequest(request).getBody();
+        return response.getRequestCode();
     }
 }

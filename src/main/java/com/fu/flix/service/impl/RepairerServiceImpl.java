@@ -355,11 +355,11 @@ public class RepairerServiceImpl implements RepairerService {
         }
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-        if (repairRequest.getUserId().equals(repairRequestMatching.getRepairerId())) {
+        Long repairerId = request.getUserId();
+        if (!repairerId.equals(repairRequestMatching.getRepairerId())) {
             throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_FIXING_THIS_REQUEST);
         }
 
-        Long repairerId = request.getUserId();
         Repairer repairer = repairerDAO.findByUserId(repairerId).get();
         if (repairer.isRepairing()) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CONFIRM_FIXING_WHEN_ON_ANOTHER_FIXING);

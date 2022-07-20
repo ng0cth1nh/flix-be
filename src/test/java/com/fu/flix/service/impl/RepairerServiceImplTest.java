@@ -54,7 +54,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         RepairerApproveResponse response = underTest.approveRequest(request).getBody();
 
         // then
@@ -69,7 +69,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
@@ -84,7 +84,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
@@ -98,7 +98,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(null);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
@@ -113,7 +113,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
@@ -128,7 +128,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Repairer repairer = repairerDAO.findByUserId(56L).get();
         repairer.setRepairing(true);
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
@@ -145,7 +145,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(requestCode);
 
         // when
-        setUserContext(373L, "0865390056");
+        setRepairerContext(373L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
@@ -159,7 +159,7 @@ class RepairerServiceImplTest {
         request.setRequestCode("1107226GDG5F");
 
         // when
-        setUserContext(52L, "0865390056");
+        setRepairerContext(52L, "0865390056");
         RequestingDetailForRepairerResponse response = underTest.getRepairRequestDetail(request).getBody();
 
         // then
@@ -173,7 +173,7 @@ class RepairerServiceImplTest {
         request.setRequestCode(null);
 
         // when
-        setUserContext(52L, "0865390056");
+        setRepairerContext(52L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getRepairRequestDetail(request).getBody());
 
         // then
@@ -187,7 +187,7 @@ class RepairerServiceImplTest {
         request.setRequestCode("");
 
         // when
-        setUserContext(52L, "0865390056");
+        setRepairerContext(52L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getRepairRequestDetail(request).getBody());
 
         // then
@@ -205,7 +205,7 @@ class RepairerServiceImplTest {
         request.setReason("Bận quá");
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         CancelRequestForRepairerResponse response = underTest.cancelFixingRequest(request).getBody();
 
         // then
@@ -223,7 +223,7 @@ class RepairerServiceImplTest {
         request.setReason(null);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         CancelRequestForRepairerResponse response = underTest.cancelFixingRequest(request).getBody();
 
         // then
@@ -241,7 +241,7 @@ class RepairerServiceImplTest {
         request.setReason("");
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         CancelRequestForRepairerResponse response = underTest.cancelFixingRequest(request).getBody();
 
         // then
@@ -256,7 +256,7 @@ class RepairerServiceImplTest {
         request.setReason("");
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
 
         // then
@@ -271,7 +271,7 @@ class RepairerServiceImplTest {
         request.setReason("");
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
 
         // then
@@ -286,7 +286,7 @@ class RepairerServiceImplTest {
         request.setReason("");
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
 
         // then
@@ -304,7 +304,7 @@ class RepairerServiceImplTest {
         request.setReason(null);
 
         // when
-        setUserContext(52L, "0865390056");
+        setRepairerContext(52L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
 
         // then
@@ -324,7 +324,7 @@ class RepairerServiceImplTest {
         request.setReason(null);
 
         // when
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.cancelFixingRequest(request));
 
         // then
@@ -332,7 +332,7 @@ class RepairerServiceImplTest {
     }
 
     private void approvalRequestByRepairerId56(String requestCode) {
-        setUserContext(56L, "0865390056");
+        setRepairerContext(56L, "0865390056");
         RepairerApproveRequest request = new RepairerApproveRequest();
         request.setRequestCode(requestCode);
         underTest.approveRequest(request);
@@ -345,7 +345,7 @@ class RepairerServiceImplTest {
         request.setStatus("CANCELLED");
 
         // when
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
         HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
 
         // then
@@ -360,7 +360,7 @@ class RepairerServiceImplTest {
         request.setStatus("DONE");
 
         // when
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
         HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
 
         // then
@@ -374,7 +374,7 @@ class RepairerServiceImplTest {
         request.setStatus("PENDING");
 
         // when
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
         HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
 
         // then
@@ -388,7 +388,7 @@ class RepairerServiceImplTest {
         request.setStatus("PAYMENT_WAITING");
 
         // when
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
         HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
 
         // then
@@ -402,7 +402,7 @@ class RepairerServiceImplTest {
         request.setStatus("");
 
         // when
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixingRequestHistories(request));
 
         // then
@@ -416,7 +416,7 @@ class RepairerServiceImplTest {
         request.setStatus(null);
 
         // when
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixingRequestHistories(request));
 
         // then
@@ -430,7 +430,7 @@ class RepairerServiceImplTest {
         approvalRequestByRepairerId56(requestCode);
         ConfirmFixingRequest request = new ConfirmFixingRequest();
         request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
 
         // when
         ConfirmFixingResponse response = underTest.confirmFixing(request).getBody();
@@ -444,7 +444,7 @@ class RepairerServiceImplTest {
         // given
         ConfirmFixingRequest request = new ConfirmFixingRequest();
         request.setRequestCode("1INVALIDCODE");
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
@@ -458,7 +458,7 @@ class RepairerServiceImplTest {
         // given
         ConfirmFixingRequest request = new ConfirmFixingRequest();
         request.setRequestCode("");
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
@@ -472,7 +472,7 @@ class RepairerServiceImplTest {
         // given
         ConfirmFixingRequest request = new ConfirmFixingRequest();
         request.setRequestCode(null);
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
@@ -487,7 +487,7 @@ class RepairerServiceImplTest {
         String requestCode = createFixingRequestByCustomerId36ForService1();
         ConfirmFixingRequest request = new ConfirmFixingRequest();
         request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
@@ -503,7 +503,7 @@ class RepairerServiceImplTest {
         approvalRequestByRepairerId56(requestCode);
         ConfirmFixingRequest request = new ConfirmFixingRequest();
         request.setRequestCode(requestCode);
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request).getBody());
@@ -523,7 +523,7 @@ class RepairerServiceImplTest {
         long userId = 56L;
         Repairer repairer = repairerDAO.findByUserId(56L).get();
         repairer.setRepairing(true);
-        setUserContext(userId, "0865390037");
+        setRepairerContext(userId, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmFixing(request));
@@ -540,7 +540,7 @@ class RepairerServiceImplTest {
         confirmFixingByRepairerId56(requestCode);
         CreateInvoiceRequest request = new CreateInvoiceRequest();
         request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
 
         // when
         CreateInvoiceResponse response = underTest.createInvoice(request).getBody();
@@ -557,7 +557,7 @@ class RepairerServiceImplTest {
         confirmFixingByRepairerId56(requestCode);
         CreateInvoiceRequest request = new CreateInvoiceRequest();
         request.setRequestCode(requestCode);
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
@@ -571,7 +571,7 @@ class RepairerServiceImplTest {
         // given
         CreateInvoiceRequest request = new CreateInvoiceRequest();
         request.setRequestCode("INVALID123");
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
@@ -585,7 +585,7 @@ class RepairerServiceImplTest {
         // given
         CreateInvoiceRequest request = new CreateInvoiceRequest();
         request.setRequestCode(null);
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
@@ -599,7 +599,7 @@ class RepairerServiceImplTest {
         // given
         CreateInvoiceRequest request = new CreateInvoiceRequest();
         request.setRequestCode("");
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
@@ -617,7 +617,7 @@ class RepairerServiceImplTest {
         createInvoiceByRepairerId56(requestCode);
         ConfirmInvoicePaidRequest request = new ConfirmInvoicePaidRequest();
         request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
 
         // when
         ConfirmInvoicePaidResponse response = underTest.confirmInvoicePaid(request).getBody();
@@ -631,7 +631,7 @@ class RepairerServiceImplTest {
         // given
         ConfirmInvoicePaidRequest request = new ConfirmInvoicePaidRequest();
         request.setRequestCode("INVALID");
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmInvoicePaid(request));
@@ -649,7 +649,7 @@ class RepairerServiceImplTest {
         createInvoiceByRepairerId56(requestCode);
         ConfirmInvoicePaidRequest request = new ConfirmInvoicePaidRequest();
         request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmInvoicePaid(request));
@@ -666,7 +666,7 @@ class RepairerServiceImplTest {
         confirmFixingByRepairerId56(requestCode);
         ConfirmInvoicePaidRequest request = new ConfirmInvoicePaidRequest();
         request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmInvoicePaid(request));
@@ -684,7 +684,7 @@ class RepairerServiceImplTest {
         createInvoiceByRepairerId56(requestCode);
         ConfirmInvoicePaidRequest request = new ConfirmInvoicePaidRequest();
         request.setRequestCode(requestCode);
-        setUserContext(52L, "0865390037");
+        setRepairerContext(52L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmInvoicePaid(request));
@@ -696,18 +696,29 @@ class RepairerServiceImplTest {
     private void createInvoiceByRepairerId56(String requestCode) {
         CreateInvoiceRequest request = new CreateInvoiceRequest();
         request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
         underTest.createInvoice(request);
     }
 
     private void confirmFixingByRepairerId56(String requestCode) {
         ConfirmFixingRequest request = new ConfirmFixingRequest();
         request.setRequestCode(requestCode);
-        setUserContext(56L, "0865390037");
+        setRepairerContext(56L, "0865390037");
         underTest.confirmFixing(request);
     }
 
-    void setUserContext(Long id, String phone) {
+    void setRepairerContext(Long id, String phone) {
+        String[] roles = {"ROLE_REPAIRER"};
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (String role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        UsernamePasswordAuthenticationToken authenticationToken
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
+
+    void setCustomerContext(Long id, String phone) {
         String[] roles = {"ROLE_CUSTOMER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
@@ -734,7 +745,7 @@ class RepairerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setUserContext(36L, "0865390037");
+        setCustomerContext(36L, "0865390037");
 
         RequestingRepairResponse response = customerService.createFixingRequest(request).getBody();
         return response.getRequestCode();
@@ -754,7 +765,7 @@ class RepairerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setUserContext(36L, "0865390037");
+        setCustomerContext(36L, "0865390037");
 
         RequestingRepairResponse response = customerService.createFixingRequest(request).getBody();
         return response.getRequestCode();
@@ -776,7 +787,7 @@ class RepairerServiceImplTest {
         request.setAddressId(addressId);
         request.setPaymentMethodId(paymentMethodId);
 
-        setUserContext(36L, "0865390037");
+        setCustomerContext(36L, "0865390037");
 
         RequestingRepairResponse response = customerService.createFixingRequest(request).getBody();
         return response.getRequestCode();

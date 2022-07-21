@@ -664,11 +664,11 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
-        RepairerProfileResponse response = new RepairerProfileResponse();
+    public ResponseEntity<RepairerResponse> getRepairerProfile(RepairerRequest request) {
+        RepairerResponse response = new RepairerResponse();
         Long repairerId = request.getRepairerId();
         if (repairerId != null) {
-            IRepairerProfileDTO repairerProfile = commentDAO.findRepairerProfile(repairerId);
+            ICustomerGetRepairerDTO repairerProfile = commentDAO.findRepairerProfile(repairerId);
             ISuccessfulRepairDTO successfulRepair = commentDAO.findSuccessfulRepair(repairerId);
             response.setJointAt(repairerProfile.getJoinAt());
             response.setSuccessfulRepair(successfulRepair.getSuccessfulRepair());

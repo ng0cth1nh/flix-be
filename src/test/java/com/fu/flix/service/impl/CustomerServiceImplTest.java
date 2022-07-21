@@ -1777,12 +1777,12 @@ class CustomerServiceImplTest {
     @Test
     public void test_get_repairer_profile_success() {
         // given
-        RepairerProfileRequest request = new RepairerProfileRequest();
+        RepairerRequest request = new RepairerRequest();
         request.setRepairerId(52L);
 
         // when
         setUserContext(36L, "0865390037");
-        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+        RepairerResponse response = underTest.getRepairerProfile(request).getBody();
 
         // then
         Assertions.assertEquals("20 năm trong nghề", response.getExperienceDescription());
@@ -1794,12 +1794,12 @@ class CustomerServiceImplTest {
     @Test
     public void test_get_repairer_profile_return_null_field_when_repairer_id_is_null() {
         // given
-        RepairerProfileRequest request = new RepairerProfileRequest();
+        RepairerRequest request = new RepairerRequest();
         request.setRepairerId(null);
 
         // when
         setUserContext(36L, "0865390037");
-        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+        RepairerResponse response = underTest.getRepairerProfile(request).getBody();
 
         // then
         Assertions.assertNull(response.getExperienceDescription());
@@ -1813,12 +1813,12 @@ class CustomerServiceImplTest {
     @Test
     public void test_get_repairer_profile_return_null_field_when_repairer_id_is_0() {
         // given
-        RepairerProfileRequest request = new RepairerProfileRequest();
+        RepairerRequest request = new RepairerRequest();
         request.setRepairerId(0L);
 
         // when
         setUserContext(36L, "0865390037");
-        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+        RepairerResponse response = underTest.getRepairerProfile(request).getBody();
 
         // then
         Assertions.assertNull(response.getExperienceDescription());
@@ -1832,12 +1832,12 @@ class CustomerServiceImplTest {
     @Test
     public void test_get_repairer_profile_return_null_field_when_repairer_id_is_negative_number() {
         // given
-        RepairerProfileRequest request = new RepairerProfileRequest();
+        RepairerRequest request = new RepairerRequest();
         request.setRepairerId(-1L);
 
         // when
         setUserContext(36L, "0865390037");
-        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+        RepairerResponse response = underTest.getRepairerProfile(request).getBody();
 
         // then
         Assertions.assertNull(response.getExperienceDescription());

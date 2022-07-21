@@ -3,19 +3,10 @@ package com.fu.flix.service.impl;
 import com.fu.flix.constant.enums.LocationType;
 import com.fu.flix.constant.enums.RepairerSuggestionType;
 import com.fu.flix.dao.*;
-import com.fu.flix.dto.AccessoryOutputDTO;
-import com.fu.flix.dto.IRequestingDTO;
-import com.fu.flix.dto.RequestingDTO;
-import com.fu.flix.dto.SubServiceOutputDTO;
+import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.RequestingFilterRequest;
-import com.fu.flix.dto.request.RequestingSuggestionRequest;
-import com.fu.flix.dto.request.SearchAccessoriesRequest;
-import com.fu.flix.dto.request.SearchSubServicesRequest;
-import com.fu.flix.dto.response.RequestingFilterResponse;
-import com.fu.flix.dto.response.RequestingSuggestionResponse;
-import com.fu.flix.dto.response.SearchAccessoriesResponse;
-import com.fu.flix.dto.response.SearchSubServicesResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.AddressService;
 import com.fu.flix.service.CommonRepairerService;
@@ -31,6 +22,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
@@ -47,6 +39,7 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
     private final AddressService addressService;
     private final SubServiceDAO subServiceDAO;
     private final AccessoryDAO accessoryDAO;
+    private final UserDAO userDAO;
     private final String DATE_PATTERN = "dd-MM-yyyy";
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
@@ -55,13 +48,15 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
                                      RepairRequestDAO repairRequestDAO,
                                      AddressService addressService,
                                      SubServiceDAO subServiceDAO,
-                                     AccessoryDAO accessoryDAO) {
+                                     AccessoryDAO accessoryDAO,
+                                     UserDAO userDAO) {
         this.userAddressDAO = userAddressDAO;
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.addressService = addressService;
         this.subServiceDAO = subServiceDAO;
         this.accessoryDAO = accessoryDAO;
+        this.userDAO = userDAO;
     }
 
     @Override
@@ -227,6 +222,34 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
 
         SearchAccessoriesResponse response = new SearchAccessoriesResponse();
         response.setAccessories(accessoryOutputDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
+        Optional<IRepairerProfileDTO> optionalProfile = userDAO.findRepairerProfile(request.getUserId());
+        RepairerProfileResponse response = new RepairerProfileResponse();
+
+        if (optionalProfile.isPresent()) {
+            IRepairerProfileDTO profile = optionalProfile.get();
+
+            String dob = profile.getDateOfBirth() != null
+                    ? DateFormatUtil.toString(profile.getDateOfBirth(), DATE_PATTERN)
+                    : null;
+
+            response.setFullName(profile.getFullName());
+            response.setAvatar(profile.getAvatar());
+            response.setPhone(profile.getPhone());
+            response.setDateOfBirth(dob);
+            response.setGender(profile.getGender());
+            response.setEmail(profile.getEmail());
+            response.setRole(profile.getRole());
+            response.setExperienceDescription(profile.getExperienceDescription());
+            response.setIdentityCardNumber(profile.getIdentityCardNumber());
+            response.setAddress(addressService.getAddressFormatted(profile.getAddressId()));
+            response.setBalance(profile.getBalance());
+        }
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

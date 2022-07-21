@@ -109,4 +109,26 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "WHERE ur.role_id = 'PR' " +
             "limit :limit offset :offset", nativeQuery = true)
     List<IPendingRepairerDTO> findPendingRepairers(Integer limit, Integer offset);
+
+    @Query(value = "SELECT u.full_name as fullName, avatar.url as avatar, u.phone, u.date_of_birth as dateOfBirth, u.gender, u.email, " +
+            "r.experience_description as experienceDescription, ic.identity_card_number as identityCardNumber, ua.id addressId, b.balance, role.name as role " +
+            "FROM users u " +
+            "JOIN images avatar " +
+            "ON avatar.id = u.avatar " +
+            "JOIN repairers r " +
+            "ON r.user_id = u.id " +
+            "JOIN user_roles ur " +
+            "ON ur.user_id = r.user_id " +
+            "JOIN identity_cards ic " +
+            "ON ic.repairer_id = r.user_id J" +
+            "OIN user_addresses ua " +
+            "ON ua.user_id = r.user_id " +
+            "JOIN balances b " +
+            "ON b.user_id = r.user_id " +
+            "JOIN roles role " +
+            "ON role.id = ur.role_id " +
+            "WHERE (ur.role_id = 'R' OR ur.role_id = 'PR') " +
+            "AND u.is_active " +
+            "AND u.id = :repairerId", nativeQuery = true)
+    Optional<IRepairerProfileDTO> findRepairerProfile(Long repairerId);
 }

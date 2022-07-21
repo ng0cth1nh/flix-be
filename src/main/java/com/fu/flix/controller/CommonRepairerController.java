@@ -1,13 +1,7 @@
 package com.fu.flix.controller;
 
-import com.fu.flix.dto.request.RequestingFilterRequest;
-import com.fu.flix.dto.request.RequestingSuggestionRequest;
-import com.fu.flix.dto.request.SearchAccessoriesRequest;
-import com.fu.flix.dto.request.SearchSubServicesRequest;
-import com.fu.flix.dto.response.RequestingFilterResponse;
-import com.fu.flix.dto.response.RequestingSuggestionResponse;
-import com.fu.flix.dto.response.SearchAccessoriesResponse;
-import com.fu.flix.dto.response.SearchSubServicesResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.service.CommonRepairerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -43,5 +37,10 @@ public class CommonRepairerController {
     @GetMapping("accessories")
     public ResponseEntity<SearchAccessoriesResponse> searchAccessoriesByService(SearchAccessoriesRequest request) {
         return commonRepairerService.searchAccessoriesByService(request);
+    }
+
+    @GetMapping("profile")
+    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
+        return commonRepairerService.getRepairerProfile(request);
     }
 }

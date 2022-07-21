@@ -34,7 +34,7 @@ public class AccountController {
     }
 
     @RequestMapping(value = "register/customer/confirm", method = RequestMethod.POST, consumes = {"multipart/form-data"})
-    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) throws IOException {
+    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerUserRequest request) throws IOException {
         return accountService.confirmRegisterCustomer(request);
     }
 
@@ -54,7 +54,7 @@ public class AccountController {
     }
 
     @RequestMapping(value = "register/repairer/confirm", method = RequestMethod.POST, consumes = {"multipart/form-data"})
-    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) throws IOException {
+    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerUserRequest request) throws IOException {
         return accountService.confirmRegisterRepairer(request);
     }
 }

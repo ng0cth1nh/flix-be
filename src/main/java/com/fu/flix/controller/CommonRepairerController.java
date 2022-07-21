@@ -5,9 +5,7 @@ import com.fu.flix.dto.response.*;
 import com.fu.flix.service.CommonRepairerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -42,5 +40,10 @@ public class CommonRepairerController {
     @GetMapping("profile")
     public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
         return commonRepairerService.getRepairerProfile(request);
+    }
+
+    @PutMapping("profile")
+    public ResponseEntity<UpdateRepairerResponse> updateRepairerProfile(@RequestBody UpdateRepairerRequest request) {
+        return commonRepairerService.updateRepairerProfile(request);
     }
 }

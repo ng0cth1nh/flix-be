@@ -15,7 +15,7 @@ public interface AccountService {
 
     ResponseEntity<SendRegisterOTPResponse> sendRegisterOTP(SendRegisterOTPRequest request) throws JsonProcessingException;
 
-    ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) throws IOException;
+    ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerUserRequest request) throws IOException;
 
     ResponseEntity<SendForgotPassOTPResponse> sendForgotPassOTP(SendForgotPassOTPRequest request) throws JsonProcessingException;
 
@@ -23,5 +23,5 @@ public interface AccountService {
 
     ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest request);
 
-    ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) throws IOException;
+    ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerUserRequest request) throws IOException;
 }

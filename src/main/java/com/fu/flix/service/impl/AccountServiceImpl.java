@@ -11,6 +11,7 @@ import com.fu.flix.constant.enums.IdentityCardType;
 import com.fu.flix.constant.enums.OTPType;
 import com.fu.flix.constant.enums.TokenType;
 import com.fu.flix.dao.*;
+import com.fu.flix.dto.MainAddressDTO;
 import com.fu.flix.dto.PhoneDTO;
 import com.fu.flix.dto.security.UserSecurity;
 import com.fu.flix.entity.*;
@@ -57,7 +58,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final RedisDAO redisDAO;
     private final SmsService smsService;
     private final CommuneDAO communeDAO;
-    private final UserAddressDAO userAddressDAO;
     private final PasswordEncoder passwordEncoder;
     private final CloudStorageService cloudStorageService;
     private final UserService userService;
@@ -69,6 +69,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final IdentityCardDAO identityCardDAO;
     private final ImageDAO imageDAO;
     private final CertificateDAO certificateDAO;
+    private final AddressService addressService;
     private final String DATE_PATTERN = "dd-MM-yyyy";
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -77,7 +78,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               RedisDAO redisDAO,
                               SmsService smsService,
                               CommuneDAO communeDAO,
-                              UserAddressDAO userAddressDAO,
                               PasswordEncoder passwordEncoder,
                               CloudStorageService cloudStorageService,
                               UserService userService,
@@ -86,14 +86,14 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               ValidatorService validatorService,
                               IdentityCardDAO identityCardDAO,
                               ImageDAO imageDAO,
-                              CertificateDAO certificateDAO) {
+                              CertificateDAO certificateDAO,
+                              AddressService addressService) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
         this.redisDAO = redisDAO;
         this.smsService = smsService;
         this.communeDAO = communeDAO;
-        this.userAddressDAO = userAddressDAO;
         this.passwordEncoder = passwordEncoder;
         this.cloudStorageService = cloudStorageService;
         this.userService = userService;
@@ -105,6 +105,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.identityCardDAO = identityCardDAO;
         this.imageDAO = imageDAO;
         this.certificateDAO = certificateDAO;
+        this.addressService = addressService;
     }
 
     @Override
@@ -191,14 +192,14 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     @Override
-    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) throws IOException {
+    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerUserRequest request) throws IOException {
         validateRegisterCustomerInput(request);
 
         User user = buildCustomerUser(request, request.getAvatar());
         userDAO.save(user);
 
         addRoleToUser(user.getUsername(), ROLE_CUSTOMER.name());
-        saveCustomerUserAddress(user.getUsername(), request);
+        saveUserAddress(user.getUsername(), request);
 
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
@@ -215,14 +216,14 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     @Override
-    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) throws IOException {
+    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerUserRequest request) throws IOException {
         validateRegisterRepairerInput(request);
 
         User user = buildRepairerUser(request, request.getAvatar());
         userDAO.save(user);
 
         addRoleToUser(user.getUsername(), ROLE_PENDING_REPAIRER.name());
-        saveRepairerUserAddress(user.getUsername(), request);
+        saveUserAddress(user.getUsername(), request);
 
         createRepairer(user, request);
         createBalance(user);
@@ -243,7 +244,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void validateRegisterCustomerInput(CFRegisterCustomerRequest request) {
+    private void validateRegisterCustomerInput(CFRegisterCustomerUserRequest request) {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
@@ -261,7 +262,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         }
     }
 
-    private User buildCustomerUser(CFRegisterCustomerRequest registerAccount, MultipartFile avatar) throws IOException {
+    private User buildCustomerUser(CFRegisterCustomerUserRequest registerAccount, MultipartFile avatar) throws IOException {
         User user = new User();
         user.setFullName(registerAccount.getFullName());
         user.setPhone(registerAccount.getPhone());
@@ -272,7 +273,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return user;
     }
 
-    private void validateRegisterRepairerInput(CFRegisterRepairerRequest request) {
+    private void validateRegisterRepairerInput(CFRegisterRepairerUserRequest request) {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
@@ -362,7 +363,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return identityCardDAO.findByIdentityCardNumber(card).isPresent();
     }
 
-    private User buildRepairerUser(CFRegisterRepairerRequest registerAccount, MultipartFile avatar) throws IOException {
+    private User buildRepairerUser(CFRegisterRepairerUserRequest registerAccount, MultipartFile avatar) throws IOException {
         User user = new User();
         user.setFullName(registerAccount.getFullName());
         user.setPhone(registerAccount.getPhone());
@@ -387,25 +388,17 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         }
     }
 
-    public void saveCustomerUserAddress(String username, CFRegisterCustomerRequest registerAccount) {
-        saveUserAddress(username,
-                registerAccount.getCommuneId(),
-                registerAccount.getStreetAddress(),
-                registerAccount.getFullName(),
-                registerAccount.getPhone()
-        );
+    private void saveUserAddress(String username, CFRegisterUserRequest registerAccount) {
+        MainAddressDTO mainAddressDTO = new MainAddressDTO();
+        mainAddressDTO.setUsername(username);
+        mainAddressDTO.setCommuneId(registerAccount.getCommuneId());
+        mainAddressDTO.setStreetAddress(registerAccount.getStreetAddress());
+        mainAddressDTO.setFullName(registerAccount.getFullName());
+        mainAddressDTO.setPhone(registerAccount.getPhone());
+        addressService.saveNewMainAddress(mainAddressDTO);
     }
 
-    public void saveRepairerUserAddress(String username, CFRegisterRepairerRequest registerAccount) {
-        saveUserAddress(username,
-                registerAccount.getCommuneId(),
-                registerAccount.getStreetAddress(),
-                registerAccount.getFullName(),
-                registerAccount.getPhone()
-        );
-    }
-
-    private void createRepairer(User user, CFRegisterRepairerRequest request) {
+    private void createRepairer(User user, CFRegisterRepairerUserRequest request) {
         Repairer repairer = new Repairer();
         repairer.setUserId(user.getId());
         repairer.setExperienceDescription(request.getExperienceDescription());
@@ -420,7 +413,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         balanceDAO.save(balance);
     }
 
-    private void createIdentityCard(User user, CFRegisterRepairerRequest request) throws IOException {
+    private void createIdentityCard(User user, CFRegisterRepairerUserRequest request) throws IOException {
         IdentityCard identityCard = new IdentityCard();
         identityCard.setIdentityCardNumber(request.getIdentityCardNumber());
         identityCard.setType(request.getIdentityCardType());
@@ -502,25 +495,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return identityCard;
     }
 
-
-    private void saveUserAddress(String username, String communeId, String streetAddress, String fullName, String phone) {
-        Optional<User> optionalUser = userDAO.findByUsername(username);
-        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
-
-        if (optionalUser.isPresent() && optionalCommune.isPresent()) {
-            User user = optionalUser.get();
-            Commune commune = optionalCommune.get();
-
-            UserAddress userAddress = new UserAddress();
-            userAddress.setUserId(user.getId());
-            userAddress.setMainAddress(true);
-            userAddress.setStreetAddress(streetAddress);
-            userAddress.setName(fullName);
-            userAddress.setPhone(phone);
-            userAddress.setCommuneId(commune.getId());
-            userAddressDAO.save(userAddress);
-        }
-    }
 
     @Override
     public ResponseEntity<SendForgotPassOTPResponse> sendForgotPassOTP(SendForgotPassOTPRequest request) throws JsonProcessingException {

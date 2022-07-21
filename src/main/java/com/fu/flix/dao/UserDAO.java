@@ -129,6 +129,7 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "ON role.id = ur.role_id " +
             "WHERE (ur.role_id = 'R' OR ur.role_id = 'PR') " +
             "AND u.is_active " +
+            "AND ua.deleted_at IS NULL " +
             "AND u.id = :repairerId", nativeQuery = true)
     Optional<IRepairerProfileDTO> findRepairerProfile(Long repairerId);
 }

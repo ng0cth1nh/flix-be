@@ -14,4 +14,5 @@ public interface CommonRepairerService {
     ResponseEntity<SearchAccessoriesResponse> searchAccessoriesByService(SearchAccessoriesRequest request);
 
     ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request);
+    ResponseEntity<UpdateRepairerResponse> updateRepairerProfile(UpdateRepairerRequest request);
 }

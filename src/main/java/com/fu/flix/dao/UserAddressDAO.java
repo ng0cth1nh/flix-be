@@ -33,7 +33,8 @@ public interface UserAddressDAO extends JpaRepository<UserAddress, Long> {
             "ON c.district_id = d.id " +
             "JOIN user_addresses ua " +
             "ON ua.commune_id = c.id " +
-            "WHERE ua.id = :userAddressId", nativeQuery = true)
+            "WHERE ua.id = :userAddressId " +
+            "AND ua.deleted_at IS NULL", nativeQuery = true)
     String findDistrictIdByUserAddressId(Long userAddressId);
 
     @Query(value = "SELECT ct.id as cityId " +
@@ -43,6 +44,7 @@ public interface UserAddressDAO extends JpaRepository<UserAddress, Long> {
             "JOIN user_addresses ua " +
             "ON ua.commune_id = c.id " +
             "JOIN cities ct ON ct.id = d.city_id " +
-            "WHERE ua.id = :userAddressId", nativeQuery = true)
+            "WHERE ua.id = :userAddressId " +
+            "AND ua.deleted_at IS NULL", nativeQuery = true)
     String findCityIdByUserAddressId(Long userAddressId);
 }

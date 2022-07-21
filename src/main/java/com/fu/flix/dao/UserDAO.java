@@ -55,6 +55,7 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "JOIN user_addresses ua " +
             "ON ua.user_id = customer.id " +
             "WHERE ur.role_id = 'C' " +
+            "AND ua.deleted_at IS NULL " +
             "AND ua.is_main_address " +
             "AND customer.id = :customerId", nativeQuery = true)
     Optional<ICustomerDetailDTO> findCustomerDetail(Long customerId);
@@ -86,6 +87,7 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "ON roles.id = ur.role_id " +
             "WHERE (ur.role_id = 'R' OR ur.role_id = 'PR' ) " +
             "AND ua.is_main_address " +
+            "AND ua.deleted_at IS NULL " +
             "AND r.user_id = :repairerId", nativeQuery = true)
     Optional<IRepairerDetailDTO> findRepairerDetail(Long repairerId);
 
@@ -120,8 +122,8 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "JOIN user_roles ur " +
             "ON ur.user_id = r.user_id " +
             "JOIN identity_cards ic " +
-            "ON ic.repairer_id = r.user_id J" +
-            "OIN user_addresses ua " +
+            "ON ic.repairer_id = r.user_id " +
+            "JOIN user_addresses ua " +
             "ON ua.user_id = r.user_id " +
             "JOIN balances b " +
             "ON b.user_id = r.user_id " +

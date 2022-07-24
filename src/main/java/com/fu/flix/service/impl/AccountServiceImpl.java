@@ -7,10 +7,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
-import com.fu.flix.constant.enums.IdentityCardType;
-import com.fu.flix.constant.enums.OTPType;
-import com.fu.flix.constant.enums.RoleType;
-import com.fu.flix.constant.enums.TokenType;
+import com.fu.flix.constant.enums.*;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.MainAddressDTO;
 import com.fu.flix.dto.PhoneDTO;
@@ -40,6 +37,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
+import static com.fu.flix.constant.enums.LoginType.ADMIN;
+import static com.fu.flix.constant.enums.LoginType.REPAIRER;
 import static com.fu.flix.constant.enums.RoleType.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
@@ -120,7 +119,7 @@ public class AccountServiceImpl implements AccountService {
     private User getUserLogin(LoginRequest request) {
         String password = request.getPassword();
         String username = request.getUsername();
-        String roleType = getRoleTypeValidated(request.getRoleType());
+        String loginType = getLoginTypeValidated(request.getRoleType());
 
         if (!InputValidation.isPasswordValid(password) || !InputValidation.isPhoneValid(username)) {
             throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
@@ -134,7 +133,7 @@ public class AccountServiceImpl implements AccountService {
         User user = optionalUser.get();
         Collection<Role> roles = user.getRoles();
 
-        if (!isRoleTypeMatched(roles, roleType)) {
+        if (!isLoginTypeMatched(roles, loginType)) {
             throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
         }
 
@@ -149,26 +148,34 @@ public class AccountServiceImpl implements AccountService {
         return user;
     }
 
-    private String getRoleTypeValidated(String roleType) {
-        for (RoleType type : RoleType.values()) {
-            if (type.name().equals(roleType)) {
-                return roleType;
+    private String getLoginTypeValidated(String loginType) {
+        for (LoginType type : LoginType.values()) {
+            if (type.name().equals(loginType)) {
+                return loginType;
             }
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_TYPE);
     }
 
-    private boolean isRoleTypeMatched(Collection<Role> roles, String roleType) {
-        if (ROLE_ADMIN.name().equals(roleType)) {
+    private boolean isLoginTypeMatched(Collection<Role> roles, String loginType) {
+        if (ADMIN.name().equals(loginType)) {
             return isAdmin(roles);
+        } else if (REPAIRER.name().equals(loginType)) {
+            return isRepairer(roles);
         }
-        return roles.stream().anyMatch(role -> role.getName().equals(roleType));
+        return roles.stream().anyMatch(role -> ROLE_CUSTOMER.name().equals(role.getName()));
     }
 
     private boolean isAdmin(Collection<Role> roles) {
         return roles.stream().anyMatch(
                 role -> ROLE_STAFF.name().equals(role.getName())
                         || ROLE_MANAGER.name().equals(role.getName()));
+    }
+
+    private boolean isRepairer(Collection<Role> roles) {
+        return roles.stream().anyMatch(
+                role -> ROLE_REPAIRER.name().equals(role.getName())
+                        || ROLE_PENDING_REPAIRER.name().equals(role.getName()));
     }
 
     @Override

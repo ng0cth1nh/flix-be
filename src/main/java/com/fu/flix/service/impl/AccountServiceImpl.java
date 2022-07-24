@@ -9,11 +9,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.IdentityCardType;
 import com.fu.flix.constant.enums.OTPType;
+import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.constant.enums.TokenType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.MainAddressDTO;
 import com.fu.flix.dto.PhoneDTO;
-import com.fu.flix.dto.security.UserSecurity;
 import com.fu.flix.entity.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.*;
@@ -27,10 +27,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -44,14 +40,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.RoleType.ROLE_CUSTOMER;
-import static com.fu.flix.constant.enums.RoleType.ROLE_PENDING_REPAIRER;
+import static com.fu.flix.constant.enums.RoleType.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Service
 @Transactional
 @Slf4j
-public class AccountServiceImpl implements UserDetailsService, AccountService {
+public class AccountServiceImpl implements AccountService {
     private final UserDAO userDAO;
     private final RoleDAO roleDAO;
     private final AppConf appConf;
@@ -109,25 +104,71 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> optionalUser = userDAO.findByUsername(username);
-        if (optionalUser.isEmpty()) {
-            log.error("User {} not found", username);
+    public ResponseEntity<LoginResponse> login(LoginRequest request) {
+        User user = getUserLogin(request);
+
+        String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
+        String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
+
+        LoginResponse response = new LoginResponse();
+        response.setAccessToken(accessToken);
+        response.setRefreshToken(refreshToken);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private User getUserLogin(LoginRequest request) {
+        String password = request.getPassword();
+        String username = request.getUsername();
+        String roleType = getRoleTypeValidated(request.getRoleType());
+
+        if (!InputValidation.isPasswordValid(password) || !InputValidation.isPhoneValid(username)) {
             throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
         }
 
-        log.info("User {} found in database", username);
+        Optional<User> optionalUser = userDAO.findByUsername(username);
+        if (optionalUser.isEmpty()) {
+            throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
+        }
+
         User user = optionalUser.get();
+        Collection<Role> roles = user.getRoles();
+
+        if (!isRoleTypeMatched(roles, roleType)) {
+            throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
+        }
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
+        }
+
         if (!user.getIsActive()) {
             throw new GeneralException(HttpStatus.FORBIDDEN, USER_IS_INACTIVE);
         }
 
-        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        for (Role role : user.getRoles()) {
-            authorities.add(new SimpleGrantedAuthority(role.getName()));
-        }
+        return user;
+    }
 
-        return new UserSecurity(user.getId(), user.getUsername(), user.getPassword(), authorities);
+    private String getRoleTypeValidated(String roleType) {
+        for (RoleType type : RoleType.values()) {
+            if (type.name().equals(roleType)) {
+                return roleType;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_TYPE);
+    }
+
+    private boolean isRoleTypeMatched(Collection<Role> roles, String roleType) {
+        if (ROLE_ADMIN.name().equals(roleType)) {
+            return isAdmin(roles);
+        }
+        return roles.stream().anyMatch(role -> role.getName().equals(roleType));
+    }
+
+    private boolean isAdmin(Collection<Role> roles) {
+        return roles.stream().anyMatch(
+                role -> ROLE_STAFF.name().equals(role.getName())
+                        || ROLE_MANAGER.name().equals(role.getName()));
     }
 
     @Override

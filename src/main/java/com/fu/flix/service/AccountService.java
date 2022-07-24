@@ -24,4 +24,6 @@ public interface AccountService {
     ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest request);
 
     ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerUserRequest request) throws IOException;
+
+    ResponseEntity<LoginResponse> login(LoginRequest request);
 }

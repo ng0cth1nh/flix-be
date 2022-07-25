@@ -45,7 +45,7 @@ public class CategoryServiceImpl implements CategoryService {
             throw new GeneralException(HttpStatus.GONE, Constant.INVALID_CATEGORY_ID);
         }
 
-        List<com.fu.flix.entity.Service> services = serviceDAO.findByCategoryId(categoryId);
+        List<com.fu.flix.entity.Service> services = serviceDAO.findByCategoryIdAndIsActive(categoryId, true);
         if (services.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, Constant.INVALID_CATEGORY_ID);
         }
@@ -91,6 +91,8 @@ public class CategoryServiceImpl implements CategoryService {
                     dto.setServiceName(service.getServiceName());
                     dto.setIcon(service.getIcon());
                     dto.setImage(service.getImage());
+                    dto.setStatus(service.getStatus());
+                    dto.setPrice(service.getPrice());
                     return dto;
                 }).collect(Collectors.toList());
 

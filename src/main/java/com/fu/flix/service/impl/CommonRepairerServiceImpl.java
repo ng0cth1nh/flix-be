@@ -189,7 +189,7 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
     @Override
     public ResponseEntity<SearchSubServicesResponse> searchSubServicesByService(SearchSubServicesRequest request) {
         String keyword = request.getKeyword();
-        if (keyword == null || keyword.isEmpty()) {
+        if (Strings.isEmpty(keyword)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
         }
 

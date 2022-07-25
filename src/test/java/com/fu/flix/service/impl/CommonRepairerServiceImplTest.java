@@ -1,12 +1,8 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.RequestingFilterRequest;
-import com.fu.flix.dto.request.RequestingRepairRequest;
-import com.fu.flix.dto.request.RequestingSuggestionRequest;
-import com.fu.flix.dto.response.RequestingFilterResponse;
-import com.fu.flix.dto.response.RequestingRepairResponse;
-import com.fu.flix.dto.response.RequestingSuggestionResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.service.CommonRepairerService;
 import com.fu.flix.service.CustomerService;
@@ -338,6 +334,101 @@ class CommonRepairerServiceImplTest {
         Assertions.assertEquals(WRONG_LOCAL_DATE_FORMAT, exception.getMessage());
     }
 
+    @Test
+    public void test_search_sub_services_by_service_success() {
+        // given
+        SearchSubServicesRequest request = new SearchSubServicesRequest();
+        request.setKeyword("bo");
+        request.setServiceId(1L);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        SearchSubServicesResponse response = underTest.searchSubServicesByService(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getSubServices());
+    }
+
+    @Test
+    public void test_search_sub_services_by_service_fail_when_keyword_is_null() {
+        // given
+        SearchSubServicesRequest request = new SearchSubServicesRequest();
+        request.setKeyword(null);
+        request.setServiceId(1L);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchSubServicesByService(request));
+
+        // then
+        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
+    }
+
+    @Test
+    public void test_search_sub_services_by_service_fail_when_service_id_is_null() {
+        // given
+        SearchSubServicesRequest request = new SearchSubServicesRequest();
+        request.setKeyword("bo");
+        request.setServiceId(null);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchSubServicesByService(request));
+
+        // then
+        Assertions.assertEquals(SERVICE_ID_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    public void test_search_accessory_by_service_success() {
+        // given
+        SearchAccessoriesRequest request = new SearchAccessoriesRequest();
+        request.setKeyword("fake");
+        request.setServiceId(1L);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        SearchAccessoriesResponse response = underTest.searchAccessoriesByService(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getAccessories());
+    }
+
+    @Test
+    public void test_search_accessory_by_service_fail_when_keyword_is_null() {
+        // given
+        SearchAccessoriesRequest request = new SearchAccessoriesRequest();
+        request.setKeyword(null);
+        request.setServiceId(1L);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchAccessoriesByService(request));
+
+        // then
+        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
+    }
+
+    @Test
+    public void test_search_accessory_by_service_fail_when_service_id_is_null() {
+        // given
+        SearchAccessoriesRequest request = new SearchAccessoriesRequest();
+        request.setKeyword("fake");
+        request.setServiceId(null);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchAccessoriesByService(request));
+
+        // then
+        Assertions.assertEquals(SERVICE_ID_IS_REQUIRED, exception.getMessage());
+    }
 
     void setRepairerContext(Long id, String phone) {
         String[] roles = {"ROLE_REPAIRER"};

@@ -27,6 +27,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static com.fu.flix.constant.Constant.*;
 
@@ -691,6 +692,117 @@ class RepairerServiceImplTest {
 
         // then
         Assertions.assertEquals(USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_PAID_THIS_INVOICE, exception.getMessage());
+    }
+
+    @Test
+    public void test_put_subService_to_invoice_success() {
+        // given
+        List<Long> serviceIds = new ArrayList<>();
+        serviceIds.add(1L);
+        serviceIds.add(2L);
+
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+
+        AddSubServicesToInvoiceRequest request = new AddSubServicesToInvoiceRequest();
+        request.setRequestCode(requestCode);
+        request.setSubServiceIds(serviceIds);
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        AddSubServicesToInvoiceResponse response = underTest.putSubServicesToInvoice(request).getBody();
+
+        // then
+        Assertions.assertEquals(PUT_SUB_SERVICE_TO_INVOICE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    public void test_put_subService_to_invoice_fail_when_status_is_not_fixing() {
+        // given
+        List<Long> serviceIds = new ArrayList<>();
+        serviceIds.add(1L);
+        serviceIds.add(2L);
+
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+
+        AddSubServicesToInvoiceRequest request = new AddSubServicesToInvoiceRequest();
+        request.setRequestCode(requestCode);
+        request.setSubServiceIds(serviceIds);
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putSubServicesToInvoice(request));
+
+        // then
+        Assertions.assertEquals(JUST_CAN_ADD_SUB_SERVICES_WHEN_REQUEST_STATUS_IS_FIXING, exception.getMessage());
+    }
+
+    @Test
+    public void test_put_subService_to_invoice_fail_when_repairer_does_not_have_permission() {
+        // given
+        List<Long> serviceIds = new ArrayList<>();
+        serviceIds.add(1L);
+        serviceIds.add(2L);
+
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+
+        AddSubServicesToInvoiceRequest request = new AddSubServicesToInvoiceRequest();
+        request.setRequestCode(requestCode);
+        request.setSubServiceIds(serviceIds);
+
+        setRepairerContext(52L, "0865390056");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putSubServicesToInvoice(request));
+
+        // then
+        Assertions.assertEquals(REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_SUB_SERVICES_FOR_THIS_INVOICE, exception.getMessage());
+    }
+
+    @Test
+    public void test_put_subService_to_invoice_fail_when_request_code_is_null() {
+        // given
+        List<Long> serviceIds = new ArrayList<>();
+        serviceIds.add(1L);
+        serviceIds.add(2L);
+
+        AddSubServicesToInvoiceRequest request = new AddSubServicesToInvoiceRequest();
+        request.setRequestCode(null);
+        request.setSubServiceIds(serviceIds);
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putSubServicesToInvoice(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_put_subService_to_invoice_success_when_list_sub_service_is_null() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+
+        AddSubServicesToInvoiceRequest request = new AddSubServicesToInvoiceRequest();
+        request.setRequestCode(requestCode);
+        request.setSubServiceIds(null);
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        AddSubServicesToInvoiceResponse response = underTest.putSubServicesToInvoice(request).getBody();
+
+        // then
+        Assertions.assertEquals(PUT_SUB_SERVICE_TO_INVOICE_SUCCESS, response.getMessage());
     }
 
     private void createInvoiceByRepairerId56(String requestCode) {

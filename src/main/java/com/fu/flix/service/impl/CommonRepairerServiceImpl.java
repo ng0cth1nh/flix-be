@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 
 import javax.transaction.Transactional;
 import java.time.LocalDate;
@@ -118,7 +119,7 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
     @Override
     public ResponseEntity<RequestingFilterResponse> getFilterRequestList(RequestingFilterRequest request) {
         List<Long> serviceIds = request.getServiceIds();
-        if (serviceIds == null || serviceIds.isEmpty()) {
+        if (CollectionUtils.isEmpty(serviceIds)) {
             throw new GeneralException(HttpStatus.GONE, SERVICE_IDS_ARE_REQUIRED);
         }
 
@@ -329,9 +330,6 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
     private boolean isChangeAddress(Long userId, String communeId, String streetAddress) {
         UserAddress userAddress = userAddressDAO
                 .findByUserIdAndIsMainAddressAndDeletedAtIsNull(userId, true).get();
-        if (userAddress.getCommuneId().equals(communeId) && userAddress.getStreetAddress().equals(streetAddress)) {
-            return false;
-        }
-        return true;
+        return !userAddress.getCommuneId().equals(communeId) || !userAddress.getStreetAddress().equals(streetAddress);
     }
 }

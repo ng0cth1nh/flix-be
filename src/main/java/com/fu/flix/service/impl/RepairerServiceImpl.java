@@ -50,7 +50,6 @@ public class RepairerServiceImpl implements RepairerService {
     private final RequestService requestService;
     private final AccessoryDAO accessoryDAO;
     private final ExtraServiceDAO extraServiceDAO;
-    private final ValidatorService validatorService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final Long DESCRIPTION_MAX_LENGTH;
 
@@ -67,8 +66,7 @@ public class RepairerServiceImpl implements RepairerService {
                                SubServiceDAO subServiceDAO,
                                RequestService requestService,
                                AccessoryDAO accessoryDAO,
-                               ExtraServiceDAO extraServiceDAO,
-                               ValidatorService validatorService) {
+                               ExtraServiceDAO extraServiceDAO) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -85,7 +83,6 @@ public class RepairerServiceImpl implements RepairerService {
         this.accessoryDAO = accessoryDAO;
         this.extraServiceDAO = extraServiceDAO;
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
-        this.validatorService = validatorService;
     }
 
     @Override
@@ -162,8 +159,8 @@ public class RepairerServiceImpl implements RepairerService {
             response.setCustomerPhone(dto.getCustomerPhone());
             response.setCustomerName(dto.getCustomerName());
             response.setExpectFixingTime(DateFormatUtil.toString(dto.getExpectFixingTime(), DATE_TIME_PATTERN));
-            response.setRequestDescription(dto.getRequestDescription());
             response.setVoucherDescription(voucherDTO.getVoucherDescription());
+            response.setRequestDescription(dto.getRequestDescription());
             response.setVoucherDiscount(voucherDTO.getVoucherDiscount());
             response.setPaymentMethod(dto.getPaymentMethod());
             response.setDate(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));

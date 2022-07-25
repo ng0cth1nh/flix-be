@@ -8,6 +8,6 @@ import lombok.Setter;
 public class UpdateCustomerProfileRequest extends DataRequest{
     private String fullName;
     private String dateOfBirth;
-    private boolean gender;
+    private Boolean gender;
     private String email;
 }

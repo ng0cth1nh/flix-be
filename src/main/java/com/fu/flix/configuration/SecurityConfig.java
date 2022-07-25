@@ -61,6 +61,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().antMatchers("/api/v1/repairer/**")
                 .hasAnyAuthority(ROLE_REPAIRER.name());
 
+        http.authorizeRequests().antMatchers("/api/v1/commonRepairer/**")
+                .hasAnyAuthority(ROLE_REPAIRER.name(),
+                        ROLE_PENDING_REPAIRER.name());
+
         http.authorizeRequests().antMatchers("/api/v1/confirmedUser/**")
                 .hasAnyAuthority(ROLE_CUSTOMER.name(),
                         ROLE_REPAIRER.name());
@@ -69,13 +73,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         "/api/v1/forgot/password/reset")
                 .hasAnyAuthority(ROLE_CUSTOMER.name(),
                         ROLE_PENDING_REPAIRER.name(),
-                        ROLE_REPAIRER.name());
+                        ROLE_REPAIRER.name(),
+                        ROLE_STAFF.name(),
+                        ROLE_MANAGER.name());
+
+        http.authorizeRequests().antMatchers("/api/v1/admin/**")
+                .hasAnyAuthority(ROLE_STAFF.name(),
+                        ROLE_MANAGER.name());
 
         http.authorizeRequests().antMatchers("/api/v1/category/**")
                 .hasAnyAuthority(ROLE_CUSTOMER.name(),
                         ROLE_PENDING_REPAIRER.name(),
-                        ROLE_REPAIRER.name(),
-                        ROLE_ADMIN.name());
+                        ROLE_REPAIRER.name());
 
         http.authorizeRequests().antMatchers("/api/v1/customer/**")
                 .hasAnyAuthority(ROLE_CUSTOMER.name());

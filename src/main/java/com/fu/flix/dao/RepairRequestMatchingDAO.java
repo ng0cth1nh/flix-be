@@ -26,6 +26,7 @@ public interface RepairRequestMatchingDAO extends JpaRepository<RepairRequestMat
             "JOIN invoices iv " +
             "ON rr.request_code = iv.request_code " +
             "WHERE rrm.repairer_id = :repairerId " +
-            "AND rr.status_id = :statusId", nativeQuery = true)
+            "AND rr.status_id = :statusId " +
+            "ORDER BY rr.created_at DESC", nativeQuery = true)
     List<IHistoryRequestForRepairerDTO> findRequestHistoriesForRepairerByStatus(Long repairerId, String statusId);
 }

@@ -40,18 +40,23 @@ public class UserController {
     }
 
     @PostMapping("feedback")
-    public ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException {
+    public ResponseEntity<UserCreateFeedbackResponse> createFeedback(UserCreateFeedbackRequest request) throws IOException {
         return userService.createFeedback(request);
     }
 
-    @PutMapping("/saveFCMToken")
+    @PostMapping("/saveFCMToken")
     public ResponseEntity<SaveFCMTokenResponse> saveFCMToken(@RequestBody SaveFCMTokenRequest request){
         return fcmService.saveFCMToken(request);
     }
 
     @PostMapping("/pushNotification")
-    public ResponseEntity<PushNotificationResponse> pushNotification(@RequestBody PushNotificationRequest request){
+    public ResponseEntity<PushNotificationResponse> pushNotification(@RequestBody PushNotificationRequest request) throws IOException {
         return fcmService.sendPnsToDevice(request);
     }
 
+
+    @GetMapping("information")
+    public ResponseEntity<UserInfoResponse> getUserInfo(UserInfoRequest request) {
+        return userService.getUserInfo(request);
+    }
 }

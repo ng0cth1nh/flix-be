@@ -23,9 +23,11 @@ public class Feedback {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long adminId;
+    private Long handleByAdminId;
 
     private Long createdById;
+
+    private Long userId;
 
     private String title;
 

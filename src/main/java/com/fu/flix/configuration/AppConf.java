@@ -3,12 +3,16 @@ package com.fu.flix.configuration;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+import java.util.Map;
 
 @Configuration
 @EnableSwagger2
 @ConfigurationProperties(prefix = "app")
 @Data
+@Component
 public class AppConf {
     private String secretKey;
     private Long lifeTimeToke;
@@ -17,13 +21,24 @@ public class AppConf {
     private String firebaseConfig;
     private Long defaultAvatar;
     private String[] permitAllApis;
-    private Integer limitQueryDefault;
-    private Integer offsetDefault;
+    private Integer defaultLimitQuery;
+    private Integer defaultOffset;
     private Double vat;
     private Double profitRate;
     private Long minTimeFined;
     private Long fine;
     private VnPayInfo vnPayInfo;
+    private Notification notification;
+    private Long descriptionMaxLength;
+    private Long nameMaxLength;
+    private Integer defaultPageSize;
+    private Integer defaultPageNumber;
+
+    @Data
+    public static class Notification {
+        private Map<String, String> title;
+        private Map<String, String> content;
+    }
 
     @Data
     public static class TwilioInfo {

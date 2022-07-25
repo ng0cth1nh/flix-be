@@ -64,6 +64,10 @@ public class VoucherServiceImpl implements VoucherService {
         }
 
         Voucher voucher = optionalVoucher.get();
+        if (money < voucher.getMinOrderPrice()) {
+            return discount;
+        }
+
         if (voucher.isDiscountMoney()) {
             DiscountMoney discountMoney = discountMoneyDAO.findByVoucherId(voucherId).get();
             return discountMoney.getDiscountMoney();
@@ -74,5 +78,20 @@ public class VoucherServiceImpl implements VoucherService {
         return discount > discountPercent.getMaxDiscountPrice()
                 ? discountPercent.getMaxDiscountPrice()
                 : discount;
+    }
+
+    @Override
+    public Long getVoucherMinOrderPrice(Long voucherId) {
+        long min = 0;
+        if (voucherId == null) {
+            return min;
+        }
+
+        Optional<Voucher> optionalVoucher = voucherDAO.findById(voucherId);
+        if (optionalVoucher.isEmpty()) {
+            return min;
+        }
+
+        return optionalVoucher.get().getMinOrderPrice();
     }
 }

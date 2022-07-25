@@ -1,15 +1,22 @@
 package com.fu.flix.service.impl;
 
+import com.ea.async.Async;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.RedisDAO;
+import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.entity.OTPInfo;
 import com.fu.flix.dto.request.SmsRequest;
 import com.fu.flix.service.SmsService;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.CompletableFuture;
+
+import static com.fu.flix.constant.Constant.SEND_SMS_OTP_FAILED;
 
 @Service
 public class SmsServiceImpl implements SmsService {
@@ -31,10 +38,11 @@ public class SmsServiceImpl implements SmsService {
         int max = 999999;
         int otp = (int) (Math.random() * (max - min + 1) + min);
 
-        String msg = "Your OTP is " + otp + ". Please verify this OTP";
-        Message
-                .creator(new PhoneNumber(request.getPhoneNumberFormatted()), new PhoneNumber(appConf.getTwilioInfo().getFromNumber()), msg)
-                .create();
+        try {
+            Async.await(CompletableFuture.runAsync(() -> sendOTP(request.getPhoneNumberFormatted(), otp)));
+        } catch (Exception e) {
+            throw new GeneralException(HttpStatus.INTERNAL_SERVER_ERROR, SEND_SMS_OTP_FAILED);
+        }
 
         OTPInfo otpInfo = new OTPInfo();
         otpInfo.setOtp(otp);
@@ -43,5 +51,13 @@ public class SmsServiceImpl implements SmsService {
         redisDAO.saveOTP(otpInfo);
 
         return otp;
+    }
+
+    private void sendOTP(String targetPhone, int otp) {
+        String msg = "Your OTP is " + otp + ". Please verify this OTP";
+        Message.creator(
+                        new PhoneNumber(targetPhone),
+                        new PhoneNumber(appConf.getTwilioInfo().getFromNumber()), msg)
+                .create();
     }
 }

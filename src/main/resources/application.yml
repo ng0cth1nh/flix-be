@@ -2,12 +2,33 @@ app:
   secretKey: 'secret'
   lifeTimeToke: 86400000 #milliseconds
   lifeTimeRefreshToken: 172800000 #milliseconds
-  limitQueryDefault: 20
-  offsetDefault: 0
+  defaultLimitQuery: 20
+  defaultOffset: 0
   vat: 0.05
   profitRate: 0.2
   fine: 20000
   minTimeFined: 3600 #milliseconds
+  descriptionMaxLength: 2500
+  nameMaxLength: 150
+  defaultPageSize: 20
+  defaultPageNumber: 0
+  notification:
+    title:
+      request: 'Thông tin đơn hàng'
+      feedback: 'Thông tin phản hồi'
+    content:
+      REQUEST_CREATE_SUCCESS: 'Yêu cầu #%s đã được tạo thành công'
+      REQUEST_APPROVED: 'Yêu cầu #%s đã được chấp nhận'
+      REQUEST_CONFIRM_FIXING: 'Yêu cầu #%s đang được sửa'
+      CREATE_INVOICE: 'Tạo hóa đơn thành công.Mã hóa đơn #%s'
+      REQUEST_CANCELED: 'Mã yêu cầu #%s đã được hủy thành công'
+      REQUEST_DONE: 'Yêu cầu #%s đã được hoàn thành'
+      FEEDBACK_PROCESSING: 'Phản hồi : "%s" đang được xử lí'
+      FEEDBACK_REJECTED: 'Phản hồi : "%s" đã bị hủy bỏ'
+      FEEDBACK_DONE: 'Phản hồi : "%s" đã được chấp nhận'
+      FEEDBACK_PENDING: 'Phản hồi : "%s" đã được gửi lên hệ thống'
+      DEPOSIT_SUCCESS: 'Bạn đã nạp %s thành công vào tài khoản.Số dư hiện tại là %s'
+      DEPOSIT_FAILED: 'Nạp tiền thất bại do %s'
   twilioInfo:
     accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'
     authToken: 'b2bdec58830ce248a8e2d60bdfa6205c'
@@ -17,7 +38,8 @@ app:
   permitAllApis: [ '/api/v1/login',
                    '/api/v1/token/refresh',
                    '/api/v1/register/sendOTP',
-                   '/api/v1/register/confirm',
+                   '/api/v1/register/customer/confirm',
+                   '/api/v1/register/repairer/confirm',
                    '/swagger-ui/index.html',
                    '/v2/api-docs',
                    '/swagger-resources',
@@ -37,7 +59,7 @@ app:
     currCode: 'VND'
     secureHash: 'MPBTQAIUBXZUPPPWJEGMCTPCDZRNRLZV'
     payUrl: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
-    returnUrl: 'https://www.facebook.com/'
+    returnUrl: 'flix://request/done'
 
 server:
   port: 8080

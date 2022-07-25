@@ -27,7 +27,7 @@ public interface IDetailFixingRequestForCustomerDTO {
 
     LocalDateTime getCreatedAt();
 
-    Long getPrice();
+    Long getTotalPrice();
 
     Long getActualPrice();
 
@@ -44,4 +44,9 @@ public interface IDetailFixingRequestForCustomerDTO {
     Long getRepairerId();
 
     String getRepairerAvatar();
+
+    Long getInspectionPrice();
+
+    Long getTotalDiscount();
+    LocalDateTime getApprovedTime();
 }

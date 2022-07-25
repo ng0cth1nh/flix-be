@@ -10,4 +10,5 @@ import lombok.Setter;
 public class UserPrincipal {
     private Long id;
     private String username;
+    private String[] roles;
 }

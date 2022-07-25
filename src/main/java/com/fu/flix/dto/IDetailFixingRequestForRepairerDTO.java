@@ -31,11 +31,17 @@ public interface IDetailFixingRequestForRepairerDTO {
 
     LocalDateTime getCreatedAt();
 
-    Long getPrice();
+    Long getTotalPrice();
 
     Long getActualPrice();
 
     Long getVatPrice();
 
     String getRequestCode();
+
+    Long getInspectionPrice();
+
+    Long getTotalDiscount();
+
+    LocalDateTime getApprovedTime();
 }

@@ -7,8 +7,10 @@ import com.fu.flix.dto.response.SaveFCMTokenResponse;
 import com.fu.flix.entity.Notification;
 import org.springframework.http.ResponseEntity;
 
+import java.io.IOException;
+
 public interface FCMService {
-    ResponseEntity<PushNotificationResponse> sendPnsToDevice(PushNotificationRequest notificationRequest);
+    ResponseEntity<PushNotificationResponse> sendPnsToDevice(PushNotificationRequest notificationRequest) throws IOException;
     String getFCMToken (Long userId);
     void saveNotification(Notification notification);
     ResponseEntity<SaveFCMTokenResponse> saveFCMToken(SaveFCMTokenRequest request);

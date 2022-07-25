@@ -6,10 +6,10 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 
 @Entity
 @Data
@@ -23,9 +23,9 @@ public class Invoice {
 
     private Long inspectionPrice;
 
-    private Long totalServiceDetailPrice;
+    private Long totalSubServicePrice;
 
-    private Long totalOtherPrice;
+    private Long totalExtraServicePrice;
 
     private Long totalAccessoryPrice;
 
@@ -40,6 +40,20 @@ public class Invoice {
     private LocalDateTime confirmedByRepairerAt;
 
     private Long vatPrice;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "invoice_sub_services",
+            joinColumns = @JoinColumn(name = "request_code"),
+            inverseJoinColumns = @JoinColumn(name = "sub_service_id"))
+    private Collection<SubService> subServices = new ArrayList<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "invoice_accessories",
+            joinColumns = @JoinColumn(name = "request_code"),
+            inverseJoinColumns = @JoinColumn(name = "accessory_id"))
+    private Collection<Accessory> accessories = new ArrayList<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;

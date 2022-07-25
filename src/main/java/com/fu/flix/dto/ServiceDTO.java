@@ -4,8 +4,10 @@ import lombok.Data;
 
 @Data
 public class ServiceDTO {
-    private Long serviceId;
+    private Long id;
     private String serviceName;
-    private String imageUrl;
+    private String icon;
+    private String image;
     private Long price;
+    private String status;
 }

@@ -109,7 +109,43 @@ class InputValidationTest {
         String email = "dung6app@gmail.com";
 
         // when
-        boolean check = InputValidation.isEmailValid(email);
+        boolean check = InputValidation.isEmailValid(email, false);
+
+        // then
+        Assertions.assertTrue(check);
+    }
+
+    @Test
+    void should_valid_email_when_email_is_nullable() {
+        // then
+        Assertions.assertTrue(InputValidation.isEmailValid(null, true));
+    }
+
+    @Test
+    void should_not_valid_email_when_email_is_not_nullable() {
+        // then
+        Assertions.assertFalse(InputValidation.isEmailValid(null, false));
+    }
+
+    @Test
+    void should_valid_email_when_email_is_not_null_but_nullable() {
+        // given
+        String email = "dung6app@gmail.com";
+
+        // when
+        boolean check = InputValidation.isEmailValid(email, true);
+
+        // then
+        Assertions.assertTrue(check);
+    }
+
+    @Test
+    void should_valid_full_name() {
+        // given
+        String fullName = "Doan U";
+
+        // when
+        boolean check = InputValidation.isNameValid(fullName, 250L);
 
         // then
         Assertions.assertTrue(check);

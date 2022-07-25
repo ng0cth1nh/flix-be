@@ -110,6 +110,19 @@
 			<artifactId>firebase-admin</artifactId>
 			<version>7.1.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>3.7.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.ea.async</groupId>
+			<artifactId>ea-async</artifactId>
+			<version>1.2.2</version>
+		</dependency>
+
+
 	</dependencies>
 
 	<build>
@@ -126,6 +139,19 @@
 						</exclude>
 					</excludes>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.ea.async</groupId>
+				<artifactId>ea-async-maven-plugin</artifactId>
+				<version>1.2.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>instrument</goal>
+							<goal>instrument-test</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

@@ -33,9 +33,9 @@ public class AccountController {
         return accountService.sendRegisterOTP(request);
     }
 
-    @RequestMapping(value = "register/confirm", method = RequestMethod.POST, consumes = {"multipart/form-data"})
-    public ResponseEntity<CFRegisterResponse> confirmRegisterCustomer(CFRegisterRequest request) throws IOException {
-        return accountService.confirmRegister(request);
+    @RequestMapping(value = "register/customer/confirm", method = RequestMethod.POST, consumes = {"multipart/form-data"})
+    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) throws IOException {
+        return accountService.confirmRegisterCustomer(request);
     }
 
     @PostMapping("forgot/password/sendOTP")
@@ -51,5 +51,10 @@ public class AccountController {
     @PutMapping("forgot/password/reset")
     public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
         return accountService.resetPassword(request);
+    }
+
+    @RequestMapping(value = "register/repairer/confirm", method = RequestMethod.POST, consumes = {"multipart/form-data"})
+    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) throws IOException {
+        return accountService.confirmRegisterRepairer(request);
     }
 }

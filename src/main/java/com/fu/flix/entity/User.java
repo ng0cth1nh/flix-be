@@ -42,6 +42,8 @@ public class User {
     private String fcmToken;
 
 
+    private String banReason;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
@@ -57,4 +59,6 @@ public class User {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    private LocalDateTime banAt;
 }

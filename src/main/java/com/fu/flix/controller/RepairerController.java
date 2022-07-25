@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
 @Slf4j
 @RequestMapping("api/v1/repairer")
@@ -18,7 +20,7 @@ public class RepairerController {
     }
 
     @PostMapping("request/approve")
-    public ResponseEntity<RepairerApproveResponse> approvalRequest(@RequestBody RepairerApproveRequest request) {
+    public ResponseEntity<RepairerApproveResponse> approvalRequest(@RequestBody RepairerApproveRequest request) throws IOException {
         return repairerService.approveRequest(request);
     }
 
@@ -28,7 +30,7 @@ public class RepairerController {
     }
 
     @PostMapping("request/cancel")
-    public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(@RequestBody CancelRequestForRepairerRequest request) {
+    public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(@RequestBody CancelRequestForRepairerRequest request) throws IOException {
         return repairerService.cancelFixingRequest(request);
     }
 
@@ -38,22 +40,32 @@ public class RepairerController {
     }
 
     @PostMapping("invoice")
-    public ResponseEntity<CreateInvoiceResponse> createInvoice(@RequestBody CreateInvoiceRequest request) {
+    public ResponseEntity<CreateInvoiceResponse> createInvoice(@RequestBody CreateInvoiceRequest request) throws IOException {
         return repairerService.createInvoice(request);
     }
 
     @PutMapping("invoice/confirm/paid")
-    public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(@RequestBody ConfirmInvoicePaidRequest request) {
+    public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(@RequestBody ConfirmInvoicePaidRequest request) throws IOException {
         return repairerService.confirmInvoicePaid(request);
     }
 
     @PutMapping("request/confirmFixing")
-    public ResponseEntity<ConfirmFixingResponse> confirmFixing(@RequestBody ConfirmFixingRequest request) {
+    public ResponseEntity<ConfirmFixingResponse> confirmFixing(@RequestBody ConfirmFixingRequest request) throws IOException {
         return repairerService.confirmFixing(request);
     }
 
-    @GetMapping("request/list/suggestion")
-    public ResponseEntity<RepairerSuggestionResponse> getSuggestionRequestList(RepairerSuggestionRequest request) {
-        return repairerService.getSuggestionRequestList(request);
+    @PutMapping("request/fixedSubService")
+    public ResponseEntity<AddSubServicesToInvoiceResponse> putSubServicesToInvoice(@RequestBody AddSubServicesToInvoiceRequest request) {
+        return repairerService.putSubServicesToInvoice(request);
+    }
+
+    @PutMapping("request/fixedAccessory")
+    public ResponseEntity<AddAccessoriesToInvoiceResponse> putAccessoriesToInvoice(@RequestBody AddAccessoriesToInvoiceRequest request) {
+        return repairerService.putAccessoriesToInvoice(request);
+    }
+
+    @PutMapping("request/fixedExtraService")
+    public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(@RequestBody AddExtraServiceToInvoiceRequest request) {
+        return repairerService.putExtraServiceToInvoice(request);
     }
 }

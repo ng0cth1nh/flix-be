@@ -5,6 +5,5 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RepairerProfileRequest extends DataRequest{
-    private Long repairerId;
+public class RepairerProfileRequest extends DataRequest {
 }

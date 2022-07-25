@@ -7,12 +7,10 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
-import com.fu.flix.constant.enums.IdentityCardType;
-import com.fu.flix.constant.enums.OTPType;
-import com.fu.flix.constant.enums.TokenType;
+import com.fu.flix.constant.enums.*;
 import com.fu.flix.dao.*;
+import com.fu.flix.dto.MainAddressDTO;
 import com.fu.flix.dto.PhoneDTO;
-import com.fu.flix.dto.security.UserSecurity;
 import com.fu.flix.entity.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.*;
@@ -26,10 +24,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -43,21 +37,21 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.RoleType.ROLE_CUSTOMER;
-import static com.fu.flix.constant.enums.RoleType.ROLE_PENDING_REPAIRER;
+import static com.fu.flix.constant.enums.LoginType.ADMIN;
+import static com.fu.flix.constant.enums.LoginType.REPAIRER;
+import static com.fu.flix.constant.enums.RoleType.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Service
 @Transactional
 @Slf4j
-public class AccountServiceImpl implements UserDetailsService, AccountService {
+public class AccountServiceImpl implements AccountService {
     private final UserDAO userDAO;
     private final RoleDAO roleDAO;
     private final AppConf appConf;
     private final RedisDAO redisDAO;
     private final SmsService smsService;
     private final CommuneDAO communeDAO;
-    private final UserAddressDAO userAddressDAO;
     private final PasswordEncoder passwordEncoder;
     private final CloudStorageService cloudStorageService;
     private final UserService userService;
@@ -69,6 +63,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     private final IdentityCardDAO identityCardDAO;
     private final ImageDAO imageDAO;
     private final CertificateDAO certificateDAO;
+    private final AddressService addressService;
     private final String DATE_PATTERN = "dd-MM-yyyy";
 
     public AccountServiceImpl(UserDAO userDAO,
@@ -77,7 +72,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               RedisDAO redisDAO,
                               SmsService smsService,
                               CommuneDAO communeDAO,
-                              UserAddressDAO userAddressDAO,
                               PasswordEncoder passwordEncoder,
                               CloudStorageService cloudStorageService,
                               UserService userService,
@@ -86,14 +80,14 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
                               ValidatorService validatorService,
                               IdentityCardDAO identityCardDAO,
                               ImageDAO imageDAO,
-                              CertificateDAO certificateDAO) {
+                              CertificateDAO certificateDAO,
+                              AddressService addressService) {
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.appConf = appConf;
         this.redisDAO = redisDAO;
         this.smsService = smsService;
         this.communeDAO = communeDAO;
-        this.userAddressDAO = userAddressDAO;
         this.passwordEncoder = passwordEncoder;
         this.cloudStorageService = cloudStorageService;
         this.userService = userService;
@@ -105,28 +99,83 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         this.identityCardDAO = identityCardDAO;
         this.imageDAO = imageDAO;
         this.certificateDAO = certificateDAO;
+        this.addressService = addressService;
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> optionalUser = userDAO.findByUsername(username);
-        if (optionalUser.isEmpty()) {
-            log.error("User {} not found", username);
+    public ResponseEntity<LoginResponse> login(LoginRequest request) {
+        User user = getUserLogin(request);
+
+        String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
+        String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
+
+        LoginResponse response = new LoginResponse();
+        response.setAccessToken(accessToken);
+        response.setRefreshToken(refreshToken);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private User getUserLogin(LoginRequest request) {
+        String password = request.getPassword();
+        String username = request.getUsername();
+        String loginType = getLoginTypeValidated(request.getRoleType());
+
+        if (!InputValidation.isPasswordValid(password) || !InputValidation.isPhoneValid(username)) {
             throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
         }
 
-        log.info("User {} found in database", username);
+        Optional<User> optionalUser = userDAO.findByUsername(username);
+        if (optionalUser.isEmpty()) {
+            throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
+        }
+
         User user = optionalUser.get();
+        Collection<Role> roles = user.getRoles();
+
+        if (!isLoginTypeMatched(roles, loginType)) {
+            throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
+        }
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
+        }
+
         if (!user.getIsActive()) {
             throw new GeneralException(HttpStatus.FORBIDDEN, USER_IS_INACTIVE);
         }
 
-        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        for (Role role : user.getRoles()) {
-            authorities.add(new SimpleGrantedAuthority(role.getName()));
-        }
+        return user;
+    }
 
-        return new UserSecurity(user.getId(), user.getUsername(), user.getPassword(), authorities);
+    private String getLoginTypeValidated(String loginType) {
+        for (LoginType type : LoginType.values()) {
+            if (type.name().equals(loginType)) {
+                return loginType;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_TYPE);
+    }
+
+    private boolean isLoginTypeMatched(Collection<Role> roles, String loginType) {
+        if (ADMIN.name().equals(loginType)) {
+            return isAdmin(roles);
+        } else if (REPAIRER.name().equals(loginType)) {
+            return isRepairer(roles);
+        }
+        return roles.stream().anyMatch(role -> ROLE_CUSTOMER.name().equals(role.getName()));
+    }
+
+    private boolean isAdmin(Collection<Role> roles) {
+        return roles.stream().anyMatch(
+                role -> ROLE_STAFF.name().equals(role.getName())
+                        || ROLE_MANAGER.name().equals(role.getName()));
+    }
+
+    private boolean isRepairer(Collection<Role> roles) {
+        return roles.stream().anyMatch(
+                role -> ROLE_REPAIRER.name().equals(role.getName())
+                        || ROLE_PENDING_REPAIRER.name().equals(role.getName()));
     }
 
     @Override
@@ -191,14 +240,14 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     @Override
-    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) throws IOException {
+    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerUserRequest request) throws IOException {
         validateRegisterCustomerInput(request);
 
         User user = buildCustomerUser(request, request.getAvatar());
         userDAO.save(user);
 
         addRoleToUser(user.getUsername(), ROLE_CUSTOMER.name());
-        saveCustomerUserAddress(user.getUsername(), request);
+        saveUserAddress(user.getUsername(), request);
 
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
@@ -215,14 +264,14 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
     }
 
     @Override
-    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) throws IOException {
+    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerUserRequest request) throws IOException {
         validateRegisterRepairerInput(request);
 
         User user = buildRepairerUser(request, request.getAvatar());
         userDAO.save(user);
 
         addRoleToUser(user.getUsername(), ROLE_PENDING_REPAIRER.name());
-        saveRepairerUserAddress(user.getUsername(), request);
+        saveUserAddress(user.getUsername(), request);
 
         createRepairer(user, request);
         createBalance(user);
@@ -243,7 +292,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void validateRegisterCustomerInput(CFRegisterCustomerRequest request) {
+    private void validateRegisterCustomerInput(CFRegisterCustomerUserRequest request) {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
@@ -261,7 +310,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         }
     }
 
-    private User buildCustomerUser(CFRegisterCustomerRequest registerAccount, MultipartFile avatar) throws IOException {
+    private User buildCustomerUser(CFRegisterCustomerUserRequest registerAccount, MultipartFile avatar) throws IOException {
         User user = new User();
         user.setFullName(registerAccount.getFullName());
         user.setPhone(registerAccount.getPhone());
@@ -272,7 +321,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return user;
     }
 
-    private void validateRegisterRepairerInput(CFRegisterRepairerRequest request) {
+    private void validateRegisterRepairerInput(CFRegisterRepairerUserRequest request) {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
@@ -362,7 +411,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return identityCardDAO.findByIdentityCardNumber(card).isPresent();
     }
 
-    private User buildRepairerUser(CFRegisterRepairerRequest registerAccount, MultipartFile avatar) throws IOException {
+    private User buildRepairerUser(CFRegisterRepairerUserRequest registerAccount, MultipartFile avatar) throws IOException {
         User user = new User();
         user.setFullName(registerAccount.getFullName());
         user.setPhone(registerAccount.getPhone());
@@ -387,25 +436,17 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         }
     }
 
-    public void saveCustomerUserAddress(String username, CFRegisterCustomerRequest registerAccount) {
-        saveUserAddress(username,
-                registerAccount.getCommuneId(),
-                registerAccount.getStreetAddress(),
-                registerAccount.getFullName(),
-                registerAccount.getPhone()
-        );
+    private void saveUserAddress(String username, CFRegisterUserRequest registerAccount) {
+        MainAddressDTO mainAddressDTO = new MainAddressDTO();
+        mainAddressDTO.setUsername(username);
+        mainAddressDTO.setCommuneId(registerAccount.getCommuneId());
+        mainAddressDTO.setStreetAddress(registerAccount.getStreetAddress());
+        mainAddressDTO.setFullName(registerAccount.getFullName());
+        mainAddressDTO.setPhone(registerAccount.getPhone());
+        addressService.saveNewMainAddress(mainAddressDTO);
     }
 
-    public void saveRepairerUserAddress(String username, CFRegisterRepairerRequest registerAccount) {
-        saveUserAddress(username,
-                registerAccount.getCommuneId(),
-                registerAccount.getStreetAddress(),
-                registerAccount.getFullName(),
-                registerAccount.getPhone()
-        );
-    }
-
-    private void createRepairer(User user, CFRegisterRepairerRequest request) {
+    private void createRepairer(User user, CFRegisterRepairerUserRequest request) {
         Repairer repairer = new Repairer();
         repairer.setUserId(user.getId());
         repairer.setExperienceDescription(request.getExperienceDescription());
@@ -420,7 +461,7 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         balanceDAO.save(balance);
     }
 
-    private void createIdentityCard(User user, CFRegisterRepairerRequest request) throws IOException {
+    private void createIdentityCard(User user, CFRegisterRepairerUserRequest request) throws IOException {
         IdentityCard identityCard = new IdentityCard();
         identityCard.setIdentityCardNumber(request.getIdentityCardNumber());
         identityCard.setType(request.getIdentityCardType());
@@ -502,25 +543,6 @@ public class AccountServiceImpl implements UserDetailsService, AccountService {
         return identityCard;
     }
 
-
-    private void saveUserAddress(String username, String communeId, String streetAddress, String fullName, String phone) {
-        Optional<User> optionalUser = userDAO.findByUsername(username);
-        Optional<Commune> optionalCommune = communeDAO.findById(communeId);
-
-        if (optionalUser.isPresent() && optionalCommune.isPresent()) {
-            User user = optionalUser.get();
-            Commune commune = optionalCommune.get();
-
-            UserAddress userAddress = new UserAddress();
-            userAddress.setUserId(user.getId());
-            userAddress.setMainAddress(true);
-            userAddress.setStreetAddress(streetAddress);
-            userAddress.setName(fullName);
-            userAddress.setPhone(phone);
-            userAddress.setCommuneId(commune.getId());
-            userAddressDAO.save(userAddress);
-        }
-    }
 
     @Override
     public ResponseEntity<SendForgotPassOTPResponse> sendForgotPassOTP(SendForgotPassOTPRequest request) throws JsonProcessingException {

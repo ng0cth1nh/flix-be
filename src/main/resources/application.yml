@@ -59,7 +59,7 @@ app:
     currCode: 'VND'
     secureHash: 'MPBTQAIUBXZUPPPWJEGMCTPCDZRNRLZV'
     payUrl: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
-    returnUrl: 'flix://request/done'
+    returnUrl: 'flix://request/invoice'
 
 server:
   port: 8080

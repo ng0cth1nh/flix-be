@@ -52,7 +52,6 @@ public class RepairerServiceImpl implements RepairerService {
     private final FCMService fcmService;
     private final AccessoryDAO accessoryDAO;
     private final ExtraServiceDAO extraServiceDAO;
-    private final ValidatorService validatorService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final Long DESCRIPTION_MAX_LENGTH;
 
@@ -68,6 +67,8 @@ public class RepairerServiceImpl implements RepairerService {
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
                                RequestService requestService,
+                               AccessoryDAO accessoryDAO,
+                               ExtraServiceDAO extraServiceDAO) throws IOException {
                                FCMService fcmService, AccessoryDAO accessoryDAO,
                                ExtraServiceDAO extraServiceDAO,
                                ValidatorService validatorService) {
@@ -88,7 +89,6 @@ public class RepairerServiceImpl implements RepairerService {
         this.accessoryDAO = accessoryDAO;
         this.extraServiceDAO = extraServiceDAO;
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
-        this.validatorService = validatorService;
     }
 
     @Override
@@ -162,7 +162,7 @@ public class RepairerServiceImpl implements RepairerService {
     @Override
     public ResponseEntity<RequestingDetailForRepairerResponse> getRepairRequestDetail(RequestingDetailForRepairerRequest request) {
         String requestCode = request.getRequestCode();
-        if (requestService.isEmptyRequestCode(requestCode)) {
+        if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
@@ -181,8 +181,8 @@ public class RepairerServiceImpl implements RepairerService {
             response.setCustomerPhone(dto.getCustomerPhone());
             response.setCustomerName(dto.getCustomerName());
             response.setExpectFixingTime(DateFormatUtil.toString(dto.getExpectFixingTime(), DATE_TIME_PATTERN));
-            response.setRequestDescription(dto.getRequestDescription());
             response.setVoucherDescription(voucherDTO.getVoucherDescription());
+            response.setRequestDescription(dto.getRequestDescription());
             response.setVoucherDiscount(voucherDTO.getVoucherDiscount());
             response.setPaymentMethod(dto.getPaymentMethod());
             response.setDate(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
@@ -204,7 +204,7 @@ public class RepairerServiceImpl implements RepairerService {
     @Override
     public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) throws IOException {
         String requestCode = request.getRequestCode();
-        if (requestService.isEmptyRequestCode(requestCode)) {
+        if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
@@ -375,7 +375,6 @@ public class RepairerServiceImpl implements RepairerService {
         Long repairerId = request.getUserId();
         if (!repairRequestMatching.getRepairerId().equals(repairerId)) {
             throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_PAID_THIS_INVOICE);
-
         }
 
         Repairer repairer = repairerDAO.findByUserId(repairerId).get();
@@ -415,11 +414,11 @@ public class RepairerServiceImpl implements RepairerService {
         }
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-        if (repairRequest.getUserId().equals(repairRequestMatching.getRepairerId())) {
+        Long repairerId = request.getUserId();
+        if (!repairerId.equals(repairRequestMatching.getRepairerId())) {
             throw new GeneralException(HttpStatus.GONE, USER_DOES_NOT_HAVE_PERMISSION_TO_CONFIRM_FIXING_THIS_REQUEST);
         }
 
-        Long repairerId = request.getUserId();
         Repairer repairer = repairerDAO.findByUserId(repairerId).get();
         if (repairer.isRepairing()) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CONFIRM_FIXING_WHEN_ON_ANOTHER_FIXING);

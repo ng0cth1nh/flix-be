@@ -15,6 +15,7 @@ import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -402,7 +403,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request) {
         String requestCode = request.getRequestCode();
-        if (requestService.isEmptyRequestCode(requestCode)) {
+        if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
@@ -675,11 +676,11 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
-        RepairerProfileResponse response = new RepairerProfileResponse();
+    public ResponseEntity<RepairerResponse> getRepairerProfile(RepairerRequest request) {
+        RepairerResponse response = new RepairerResponse();
         Long repairerId = request.getRepairerId();
         if (repairerId != null) {
-            IRepairerProfileDTO repairerProfile = commentDAO.findRepairerProfile(repairerId);
+            ICustomerGetRepairerDTO repairerProfile = commentDAO.findRepairerProfile(repairerId);
             ISuccessfulRepairDTO successfulRepair = commentDAO.findSuccessfulRepair(repairerId);
             response.setJointAt(repairerProfile.getJoinAt());
             response.setSuccessfulRepair(successfulRepair.getSuccessfulRepair());

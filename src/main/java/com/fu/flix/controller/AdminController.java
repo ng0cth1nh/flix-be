@@ -124,8 +124,38 @@ public class AdminController {
         return adminService.getAccessories(request);
     }
 
-    @GetMapping("checkCV")
+    @GetMapping("CVList")
     public ResponseEntity<PendingRepairersResponse> getPendingRepairers(PendingRepairersRequest request) {
         return adminService.getPendingRepairers(request);
+    }
+
+    @PostMapping("accessory")
+    public ResponseEntity<CreateAccessoryResponse> createAccessory(@RequestBody CreateAccessoryRequest request) {
+        return adminService.createAccessory(request);
+    }
+
+    @PutMapping("accessory")
+    public ResponseEntity<UpdateAccessoryResponse> updateAccessory(@RequestBody UpdateAccessoryRequest request) {
+        return adminService.updateAccessory(request);
+    }
+
+    @PutMapping("feedback")
+    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(@RequestBody ResponseFeedbackRequest request) {
+        return adminService.responseFeedback(request);
+    }
+
+    @GetMapping("feedbacks")
+    public ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request) {
+        return adminService.getFeedbacks(request);
+    }
+
+    @PutMapping("cv")
+    public ResponseEntity<AcceptCVResponse> acceptCV(@RequestBody AcceptCVRequest request) {
+        return adminService.acceptCV(request);
+    }
+
+    @GetMapping("repairer")
+    public ResponseEntity<GetRepairerDetailResponse> getRepairerDetail(GetRepairerDetailRequest request) {
+        return adminService.getRepairerDetail(request);
     }
 }

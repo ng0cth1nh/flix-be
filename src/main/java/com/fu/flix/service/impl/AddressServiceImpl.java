@@ -1,12 +1,10 @@
 package com.fu.flix.service.impl;
 
-import com.fu.flix.dao.CityDAO;
-import com.fu.flix.dao.CommuneDAO;
-import com.fu.flix.dao.DistrictDAO;
-import com.fu.flix.dao.UserAddressDAO;
+import com.fu.flix.dao.*;
 import com.fu.flix.dto.CityDTO;
 import com.fu.flix.dto.CommuneDTO;
 import com.fu.flix.dto.DistrictDTO;
+import com.fu.flix.dto.MainAddressDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CommuneRequest;
 import com.fu.flix.dto.request.DistrictRequest;
@@ -20,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,16 +32,19 @@ public class AddressServiceImpl implements AddressService {
     private final DistrictDAO districtDAO;
     private final CommuneDAO communeDAO;
     private final UserAddressDAO userAddressDAO;
+    private final UserDAO userDAO;
     private final String COMMA = ", ";
 
     public AddressServiceImpl(CityDAO cityDAO,
                               DistrictDAO districtDAO,
                               CommuneDAO communeDAO,
-                              UserAddressDAO userAddressDAO) {
+                              UserAddressDAO userAddressDAO,
+                              UserDAO userDAO) {
         this.cityDAO = cityDAO;
         this.districtDAO = districtDAO;
         this.communeDAO = communeDAO;
         this.userAddressDAO = userAddressDAO;
+        this.userDAO = userDAO;
     }
 
     @Override
@@ -128,5 +130,33 @@ public class AddressServiceImpl implements AddressService {
         District district = districtDAO.findById(commune.getDistrictId()).get();
         City city = cityDAO.findById(district.getCityId()).get();
         return userAddress.getStreetAddress() + COMMA + commune.getName() + COMMA + district.getName() + COMMA + city.getName();
+    }
+
+    @Override
+    public void saveNewMainAddress(MainAddressDTO mainAddressDTO) {
+        Optional<User> optionalUser = userDAO.findByUsername(mainAddressDTO.getUsername());
+        Optional<Commune> optionalCommune = communeDAO.findById(mainAddressDTO.getCommuneId());
+
+        if (optionalUser.isPresent() && optionalCommune.isPresent()) {
+            User user = optionalUser.get();
+            Commune commune = optionalCommune.get();
+
+            deleteOldMainAddress(user);
+
+            UserAddress userAddress = new UserAddress();
+            userAddress.setUserId(user.getId());
+            userAddress.setMainAddress(true);
+            userAddress.setStreetAddress(mainAddressDTO.getStreetAddress());
+            userAddress.setName(mainAddressDTO.getFullName());
+            userAddress.setPhone(mainAddressDTO.getPhone());
+            userAddress.setCommuneId(commune.getId());
+            userAddressDAO.save(userAddress);
+        }
+    }
+
+    private void deleteOldMainAddress(User user) {
+        Optional<UserAddress> optionalOldAddress = userAddressDAO
+                .findByUserIdAndIsMainAddressAndDeletedAtIsNull(user.getId(), true);
+        optionalOldAddress.ifPresent(userAddress -> userAddress.setDeletedAt(LocalDateTime.now()));
     }
 }

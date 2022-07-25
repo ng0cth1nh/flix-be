@@ -1,7 +1,7 @@
 package com.fu.flix.dao;
 
 import com.fu.flix.dto.IRepairerCommentDTO;
-import com.fu.flix.dto.IRepairerProfileDTO;
+import com.fu.flix.dto.ICustomerGetRepairerDTO;
 import com.fu.flix.dto.ISuccessfulRepairDTO;
 import com.fu.flix.entity.Comment;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,7 +32,7 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
             "ON rrm.repairer_id = r.user_id " +
             "WHERE rrm.repairer_id = :repairerId " +
             "AND c.type = 'CUSTOMER_COMMENT'", nativeQuery = true)
-    IRepairerProfileDTO findRepairerProfile(Long repairerId);
+    ICustomerGetRepairerDTO findRepairerProfile(Long repairerId);
 
     @Query(value = "SELECT count(*) as successfulRepair " +
             "FROM repair_requests rr " +

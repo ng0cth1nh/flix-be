@@ -47,11 +47,13 @@ public class AdminServiceImpl implements AdminService {
     private final RepairRequestDAO repairRequestDAO;
     private final UserDAO userDAO;
     private final FeedbackDAO feedbackDAO;
+    private final RoleDAO roleDAO;
     private final AddressService addressService;
     private final FeedbackService feedbackService;
     private final StatusDAO statusDAO;
+    private final CertificateDAO certificateDAO;
     private final AccessoryDAO accessoryDAO;
-    private final ManufactureDAO manufactureDAO;
+    private final RepairerDAO repairerDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -68,11 +70,12 @@ public class AdminServiceImpl implements AdminService {
                             RepairRequestDAO repairRequestDAO,
                             UserDAO userDAO,
                             FeedbackDAO feedbackDAO,
-                            AddressService addressService,
+                            RoleDAO roleDAO, AddressService addressService,
                             FeedbackService feedbackService,
                             StatusDAO statusDAO,
+                            CertificateDAO certificateDAO,
                             AccessoryDAO accessoryDAO,
-                            ManufactureDAO manufactureDAO) {
+                            RepairerDAO repairerDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -86,11 +89,13 @@ public class AdminServiceImpl implements AdminService {
         this.repairRequestDAO = repairRequestDAO;
         this.userDAO = userDAO;
         this.feedbackDAO = feedbackDAO;
+        this.roleDAO = roleDAO;
         this.addressService = addressService;
         this.feedbackService = feedbackService;
         this.statusDAO = statusDAO;
+        this.certificateDAO = certificateDAO;
         this.accessoryDAO = accessoryDAO;
-        this.manufactureDAO = manufactureDAO;
+        this.repairerDAO = repairerDAO;
     }
 
     @Override
@@ -105,14 +110,14 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<UpdateAdminProfileResponse> updateAdminProfile(UpdateAdminProfileRequest request) {
-        String fullName = request.getFullName();
-        if (!InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
-        }
-
         String email = request.getEmail();
         if (!InputValidation.isEmailValid(email, true)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_EMAIL);
+        }
+
+        String fullName = request.getFullName();
+        if (!InputValidation.isNameValid(fullName, NAME_MAX_LENGTH)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         }
 
         User admin = validatorService.getUserValidated(request.getUserId());
@@ -209,8 +214,8 @@ public class AdminServiceImpl implements AdminService {
         }
 
         String categoryName = request.getCategoryName();
-        if (Strings.isEmpty(categoryName)) {
-            throw new GeneralException(HttpStatus.GONE, CATEGORY_NAME_IS_REQUIRED);
+        if (Strings.isEmpty(categoryName) || categoryName.length() > NAME_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_CATEGORY_NAME);
         }
     }
 
@@ -312,8 +317,8 @@ public class AdminServiceImpl implements AdminService {
         }
 
         String serviceName = request.getServiceName();
-        if (Strings.isEmpty(serviceName)) {
-            throw new GeneralException(HttpStatus.GONE, SERVICE_NAME_IS_REQUIRED);
+        if (Strings.isEmpty(serviceName) || serviceName.length() > NAME_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE_NAME);
         }
 
         Long inspectionPrice = request.getInspectionPrice();
@@ -450,7 +455,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private void validateModifySubService(ModifySubServiceRequest request) {
-        if (Strings.isEmpty(request.getSubServiceName())) {
+        String subServiceName = request.getSubServiceName();
+        if (Strings.isEmpty(subServiceName) || subServiceName.length() > NAME_MAX_LENGTH) {
             throw new GeneralException(HttpStatus.GONE, INVALID_SUB_SERVICE_NAME);
         }
 
@@ -539,8 +545,8 @@ public class AdminServiceImpl implements AdminService {
         response.setAvatar(dto.getAvatar());
         response.setCustomerName(dto.getCustomerName());
         response.setCustomerPhone(dto.getCustomerPhone());
-        response.setStatus(dto.getStatus());
         response.setDateOfBirth(dob);
+        response.setStatus(dto.getStatus());
         response.setGender(dto.getGender());
         response.setEmail(dto.getEmail());
         response.setAddress(addressService.getAddressFormatted(dto.getAddressId()));
@@ -662,17 +668,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<FeedbackDetailResponse> getFeedbackDetail(FeedbackDetailRequest request) {
-        Long feedbackId = request.getFeedbackId();
-        if (feedbackId == null) {
-            throw new GeneralException(HttpStatus.GONE, FEEDBACK_ID_IS_REQUIRED);
-        }
-
-        Optional<Feedback> optionalFeedback = feedbackDAO.findById(feedbackId);
-        if (optionalFeedback.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_ID);
-        }
-
-        Feedback feedback = optionalFeedback.get();
+        Feedback feedback = validatorService.getFeedbackValidated(request.getFeedbackId());
         List<String> images = feedback.getImages()
                 .stream().map(Image::getUrl)
                 .collect(Collectors.toList());
@@ -688,6 +684,9 @@ public class AdminServiceImpl implements AdminService {
         response.setImages(images);
         response.setStatus(optionalStatus.map(Status::getName).orElse(null));
         response.setResponse(feedback.getResponse());
+        response.setHandleByAdminId(feedback.getHandleByAdminId());
+        response.setCreatedById(feedback.getCreatedById());
+        response.setUserId(feedback.getUserId());
         response.setCreatedAt(DateFormatUtil.toString(feedback.getCreatedAt(), DATE_TIME_PATTERN));
         response.setUpdatedAt(DateFormatUtil.toString(feedback.getUpdatedAt(), DATE_TIME_PATTERN));
 
@@ -702,13 +701,12 @@ public class AdminServiceImpl implements AdminService {
         Page<Accessory> accessoryPage = accessoryDAO.findAll(PageRequest.of(pageNumber, pageSize));
         List<AccessoryOutputDTO> accessoryList = accessoryPage.stream()
                 .map(accessory -> {
-                    Optional<Manufacture> optionalManufacture = manufactureDAO.findById(accessory.getManufactureId());
                     AccessoryOutputDTO dto = new AccessoryOutputDTO();
                     dto.setId(accessory.getId());
                     dto.setName(accessory.getName());
                     dto.setPrice(accessory.getPrice());
                     dto.setInsuranceTime(accessory.getInsuranceTime());
-                    dto.setManufacture(optionalManufacture.map(Manufacture::getName).orElse(null));
+                    dto.setManufacture(accessory.getManufacture());
                     dto.setCountry(accessory.getCountry());
                     dto.setDescription(accessory.getDescription());
                     return dto;
@@ -739,6 +737,210 @@ public class AdminServiceImpl implements AdminService {
 
         PendingRepairersResponse response = new PendingRepairersResponse();
         response.setRepairerList(repairerList);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<CreateAccessoryResponse> createAccessory(CreateAccessoryRequest request) {
+        validateModifyAccessory(request);
+
+        Accessory accessory = new Accessory();
+        buildAccessory(request, accessory);
+
+        accessoryDAO.save(accessory);
+
+        CreateAccessoryResponse response = new CreateAccessoryResponse();
+        response.setMessage(CREATE_ACCESSORY_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<UpdateAccessoryResponse> updateAccessory(UpdateAccessoryRequest request) {
+        validateModifyAccessory(request);
+
+        Accessory accessory = validatorService.getAccessoryValidated(request.getId());
+        buildAccessory(request, accessory);
+
+        UpdateAccessoryResponse response = new UpdateAccessoryResponse();
+        response.setMessage(UPDATE_ACCESSORY_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void validateModifyAccessory(ModifyAccessoryRequest request) {
+        Long price = request.getPrice();
+        if (price == null || price < 0) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PRICE);
+        }
+
+        Integer insurance = request.getInsurance();
+        if (insurance != null && insurance < 0) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_INSURANCE);
+        }
+
+        String description = request.getDescription();
+        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
+        }
+
+        String accessoryName = request.getAccessoryName();
+        if (Strings.isEmpty(accessoryName) || accessoryName.length() > NAME_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_ACCESSORY_NAME);
+        }
+
+        Long serviceId = request.getServiceId();
+        if (serviceId == null) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_ID_IS_REQUIRED);
+        }
+
+        if (serviceDAO.findById(serviceId).isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
+        }
+    }
+
+    private void buildAccessory(ModifyAccessoryRequest request, Accessory accessory) {
+        accessory.setName(request.getAccessoryName());
+        accessory.setDescription(request.getDescription());
+        accessory.setPrice(request.getPrice());
+        accessory.setServiceId(request.getServiceId());
+        accessory.setInsuranceTime(request.getInsurance());
+        accessory.setCountry(request.getCountry());
+        accessory.setManufacture(request.getManufacturer());
+    }
+
+    @Override
+    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request) {
+        String status = getFeedbackStatusValidated(request.getStatus());
+        String adminResponse = request.getResponse();
+        if (Strings.isEmpty(adminResponse) || adminResponse.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_RESPONSE);
+        }
+
+        Feedback feedback = validatorService.getFeedbackValidated(request.getId());
+        feedback.setStatusId(FeedbackStatus.valueOf(status).getId());
+        feedback.setResponse(adminResponse);
+        feedback.setHandleByAdminId(request.getUserId());
+
+        ResponseFeedbackResponse response = new ResponseFeedbackResponse();
+        response.setMessage(RESPONSE_FEEDBACK_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getFeedbackStatusValidated(String status) {
+        for (FeedbackStatus stt : FeedbackStatus.values()) {
+            if (stt.name().equals(status)) {
+                return status;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_STATUS);
+    }
+
+    @Override
+    public ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request) {
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+
+        List<Feedback> feedbackQueries = feedbackDAO.findAllByOrderByCreatedAtDesc(PageRequest.of(pageNumber, pageSize));
+        List<FeedbackDTO> feedbackList = feedbackQueries.stream()
+                .map(feedback -> {
+                    Optional<User> optionalUser = userDAO.findById(feedback.getUserId());
+                    Optional<Status> optionalStatus = statusDAO.findById(feedback.getStatusId());
+
+                    FeedbackDTO dto = new FeedbackDTO();
+                    dto.setId(feedback.getId());
+                    dto.setPhone(optionalUser.map(User::getPhone).orElse(null));
+                    dto.setFeedbackType(feedback.getType());
+                    dto.setTitle(feedback.getTitle());
+                    dto.setCreatedAt(DateFormatUtil.toString(feedback.getCreatedAt(), DATE_TIME_PATTERN));
+                    dto.setStatus(optionalStatus.map(Status::getName).orElse(null));
+                    return dto;
+                }).collect(Collectors.toList());
+
+        FeedbacksResponse response = new FeedbacksResponse();
+        response.setFeedbackList(feedbackList);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) {
+        User user = validatorService.getUserValidated(request.getRepairerId());
+        Collection<Role> roles = user.getRoles();
+        if (!isPendingRepairer(roles)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REPAIRER);
+        }
+
+        Repairer repairer = repairerDAO.findByUserId(user.getId()).get();
+        repairer.setAcceptedAccountAt(LocalDateTime.now());
+        updateToRepairerRole(roles);
+
+        AcceptCVResponse response = new AcceptCVResponse();
+        response.setMessage(ACCEPT_CV_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private boolean isPendingRepairer(Collection<Role> roles) {
+        for (Role role : roles) {
+            if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateToRepairerRole(Collection<Role> roles) {
+        for (Role role : roles) {
+            if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
+                roles.remove(role);
+                Role repairerRole = roleDAO.findByName(RoleType.ROLE_REPAIRER.name()).get();
+                roles.add(repairerRole);
+            }
+        }
+    }
+
+    @Override
+    public ResponseEntity<GetRepairerDetailResponse> getRepairerDetail(GetRepairerDetailRequest request) {
+        Long repairerId = request.getRepairerId();
+        Optional<IRepairerDetailDTO> optionalRepairer = userDAO.findRepairerDetail(repairerId);
+        if (optionalRepairer.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, REPAIRER_NOT_FOUND);
+        }
+
+        List<Certificate> certificates = certificateDAO.findByRepairerId(repairerId);
+
+        IRepairerDetailDTO dto = optionalRepairer.get();
+        String dob = dto.getDateOfBirth() != null
+                ? DateFormatUtil.toString(dto.getDateOfBirth(), DATE_PATTERN)
+                : null;
+
+        String acceptedAccountAt = dto.getAcceptedAccountAt() != null
+                ? DateFormatUtil.toString(dto.getAcceptedAccountAt(), DATE_TIME_PATTERN)
+                : null;
+
+        GetRepairerDetailResponse response = new GetRepairerDetailResponse();
+        response.setId(dto.getId());
+        response.setAvatar(dto.getAvatar());
+        response.setRepairerName(dto.getRepairerName());
+        response.setRepairerPhone(dto.getRepairerPhone());
+        response.setStatus(dto.getStatus());
+        response.setDateOfBirth(dob);
+        response.setGender(dto.getGender());
+        response.setEmail(dto.getEmail());
+        response.setAddress(addressService.getAddressFormatted(dto.getAddressId()));
+        response.setCreatedAt(DateFormatUtil.toString(dto.getCreatedAt(), DATE_TIME_PATTERN));
+        response.setExperienceYear(dto.getExperienceYear());
+        response.setExperienceDescription(dto.getExperienceDescription());
+        response.setIdentityCardNumber(dto.getIdentityCardNumber());
+        response.setIdentityCardType(dto.getIdentityCardType());
+        response.setFrontImage(dto.getFrontImage());
+        response.setBackSideImage(dto.getBackSideImage());
+        response.setAcceptedAccountAt(acceptedAccountAt);
+        response.setCertificates(certificates.stream().map(Certificate::getUrl).collect(Collectors.toList()));
+        response.setRole(dto.getRole());
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

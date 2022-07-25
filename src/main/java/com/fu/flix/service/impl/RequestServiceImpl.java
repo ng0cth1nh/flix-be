@@ -4,6 +4,7 @@ import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.entity.RepairRequest;
 import com.fu.flix.service.RequestService;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +22,7 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public RepairRequest getRepairRequest(String requestCode) {
-        if (isEmptyRequestCode(requestCode)) {
+        if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
@@ -30,10 +31,5 @@ public class RequestServiceImpl implements RequestService {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
         return optionalRepairRequest.get();
-    }
-
-    @Override
-    public boolean isEmptyRequestCode(String requestCode) {
-        return requestCode == null || requestCode.isEmpty();
     }
 }

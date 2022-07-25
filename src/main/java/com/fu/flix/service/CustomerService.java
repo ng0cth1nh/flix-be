@@ -30,7 +30,7 @@ public interface CustomerService {
 
     ResponseEntity<UpdateCustomerProfileResponse> updateCustomerProfile(UpdateCustomerProfileRequest request);
 
-    ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request);
+    ResponseEntity<RepairerResponse> getRepairerProfile(RepairerRequest request);
 
     ResponseEntity<RepairerCommentResponse> getRepairerComments(RepairerCommentRequest request);
 

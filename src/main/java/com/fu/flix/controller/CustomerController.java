@@ -73,7 +73,7 @@ public class CustomerController {
     }
 
     @GetMapping("repairer/profile")
-    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
+    public ResponseEntity<RepairerResponse> getRepairerProfile(RepairerRequest request) {
         return customerService.getRepairerProfile(request);
     }
 

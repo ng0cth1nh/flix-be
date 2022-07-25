@@ -8,4 +8,6 @@ public class SearchServiceDTO {
     private String serviceName;
     private String icon;
     private String image;
+    private String status;
+    private Long price;
 }

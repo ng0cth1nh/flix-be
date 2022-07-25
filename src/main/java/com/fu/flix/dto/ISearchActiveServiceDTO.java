@@ -8,4 +8,8 @@ public interface ISearchActiveServiceDTO {
     String getIcon();
 
     String getImage();
+
+    String getStatus();
+
+    Long getPrice();
 }

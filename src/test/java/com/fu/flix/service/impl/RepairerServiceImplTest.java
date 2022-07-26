@@ -935,7 +935,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        AddExtraServiceToInvoiceResponse response = underTest.putExtraServiceToInvoice(request).getBody();
+        AddExtraServiceToInvoiceResponse response = underTest.putExtraServicesToInvoice(request).getBody();
 
         // then
         Assertions.assertEquals(PUT_EXTRA_SERVICE_TO_INVOICE_SUCCESS, response.getMessage());
@@ -955,7 +955,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        AddExtraServiceToInvoiceResponse response = underTest.putExtraServiceToInvoice(request).getBody();
+        AddExtraServiceToInvoiceResponse response = underTest.putExtraServicesToInvoice(request).getBody();
 
         // then
         Assertions.assertEquals(PUT_EXTRA_SERVICE_TO_INVOICE_SUCCESS, response.getMessage());
@@ -979,7 +979,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServiceToInvoice(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServicesToInvoice(request));
 
         // then
         Assertions.assertEquals(LIST_EXTRA_SERVICES_CONTAIN_INVALID_ELEMENT, exception.getMessage());
@@ -1003,7 +1003,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServiceToInvoice(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServicesToInvoice(request));
 
         // then
         Assertions.assertEquals(LIST_EXTRA_SERVICES_CONTAIN_INVALID_ELEMENT, exception.getMessage());
@@ -1027,7 +1027,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServiceToInvoice(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServicesToInvoice(request));
 
         // then
         Assertions.assertEquals(LIST_EXTRA_SERVICES_CONTAIN_INVALID_ELEMENT, exception.getMessage());
@@ -1050,7 +1050,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServiceToInvoice(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServicesToInvoice(request));
 
         // then
         Assertions.assertEquals(JUST_CAN_ADD_EXTRA_SERVICE_WHEN_REQUEST_STATUS_IS_FIXING, exception.getMessage());
@@ -1074,7 +1074,7 @@ class RepairerServiceImplTest {
         setRepairerContext(52L, "0865390056");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServiceToInvoice(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServicesToInvoice(request));
 
         // then
         Assertions.assertEquals(REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_EXTRA_SERVICE_FOR_THIS_INVOICE, exception.getMessage());

@@ -64,6 +64,6 @@ public class RepairerController {
 
     @PutMapping("request/fixedExtraService")
     public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(@RequestBody AddExtraServiceToInvoiceRequest request) {
-        return repairerService.putExtraServiceToInvoice(request);
+        return repairerService.putExtraServicesToInvoice(request);
     }
 }

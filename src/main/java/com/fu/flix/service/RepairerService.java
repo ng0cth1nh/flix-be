@@ -23,5 +23,5 @@ public interface RepairerService {
 
     ResponseEntity<AddAccessoriesToInvoiceResponse> putAccessoriesToInvoice(AddAccessoriesToInvoiceRequest request);
 
-    ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request);
+    ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServicesToInvoice(AddExtraServiceToInvoiceRequest request);
 }

@@ -447,7 +447,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request) {
+    public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServicesToInvoice(AddExtraServiceToInvoiceRequest request) {
         Collection<ExtraServiceInputDTO> extraServiceInputDTOS = request.getExtraServices() == null
                 ? new ArrayList<>()
                 : request.getExtraServices();

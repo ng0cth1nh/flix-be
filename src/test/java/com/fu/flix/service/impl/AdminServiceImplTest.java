@@ -1,9 +1,11 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
+import com.fu.flix.entity.User;
 import com.fu.flix.service.AdminService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -31,6 +34,9 @@ class AdminServiceImplTest {
 
     @Autowired
     AdminService underTest;
+
+    @Autowired
+    UserDAO userDAO;
 
     @Test
     void test_get_admin_profile_success() {
@@ -811,6 +817,198 @@ class AdminServiceImplTest {
 
         // then
         Assertions.assertEquals(5, response.getRepairerList().size());
+    }
+
+    @Test
+    void test_get_customer_detail_success() {
+        // given
+        GetCustomerDetailRequest request = new GetCustomerDetailRequest();
+        request.setCustomerId(36L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        GetCustomerDetailResponse response = underTest.getCustomerDetail(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_get_customer_detail_fail_when_customer_is_not_found() {
+        // given
+        GetCustomerDetailRequest request = new GetCustomerDetailRequest();
+        request.setCustomerId(1000000L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getCustomerDetail(request));
+
+        // then
+        Assertions.assertEquals(CUSTOMER_NOT_FOUND, exception.getMessage());
+    }
+
+    @Test
+    void test_get_customer_detail_success_when_dob_not_null() {
+        // given
+        GetCustomerDetailRequest request = new GetCustomerDetailRequest();
+        request.setCustomerId(36L);
+
+        User user = userDAO.findById(36L).get();
+        user.setDateOfBirth(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        GetCustomerDetailResponse response = underTest.getCustomerDetail(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_get_ban_users_success() {
+        // given
+        GetBanUsersRequest request = new GetBanUsersRequest();
+        request.setPageNumber(0);
+        request.setPageSize(2);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        GetBanUsersResponse response = underTest.getBanUsers(request).getBody();
+
+        // then
+        Assertions.assertEquals(2, response.getUserList().size());
+    }
+
+    @Test
+    void test_ban_customer_success() {
+        // given
+        BanUserRequest request = new BanUserRequest();
+        request.setPhone("0865390040");
+        request.setBanReason("Thích thì cấm tài khoản thôi");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        BanUserResponse response = underTest.banUser(request).getBody();
+
+        // then
+        Assertions.assertEquals(BAN_USER_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_ban_repairer_success() {
+        // given
+        BanUserRequest request = new BanUserRequest();
+        request.setPhone("0865390051");
+        request.setBanReason("Thích thì cấm tài khoản thôi");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        BanUserResponse response = underTest.banUser(request).getBody();
+
+        // then
+        Assertions.assertEquals(BAN_USER_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_ban_pending_repairer_success() {
+        // given
+        BanUserRequest request = new BanUserRequest();
+        request.setPhone("0865390060");
+        request.setBanReason("Thích thì cấm tài khoản thôi");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        BanUserResponse response = underTest.banUser(request).getBody();
+
+        // then
+        Assertions.assertEquals(BAN_USER_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_ban_user_fail_when_role_is_admin() {
+        // given
+        BanUserRequest request = new BanUserRequest();
+        request.setPhone("0865390063");
+        request.setBanReason("Thích thì cấm tài khoản thôi");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.banUser(request));
+
+        // then
+        Assertions.assertEquals(JUST_CAN_BAN_USER_ROLE_ARE_CUSTOMER_OR_REPAIRER_OR_PENDING_REPAIRER, exception.getMessage());
+    }
+
+    @Test
+    void test_ban_user_fail_when_invalid_phone() {
+        // given
+        BanUserRequest request = new BanUserRequest();
+        request.setPhone("123");
+        request.setBanReason("Thích thì cấm tài khoản thôi");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.banUser(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+    }
+
+    @Test
+    void test_ban_user_fail_when_ban_reason_is_null() {
+        // given
+        BanUserRequest request = new BanUserRequest();
+        request.setPhone("0865390060");
+        request.setBanReason(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.banUser(request));
+
+        // then
+        Assertions.assertEquals(INVALID_BAN_REASON, exception.getMessage());
+    }
+
+    @Test
+    void test_ban_user_fail_when_user_not_found() {
+        // given
+        BanUserRequest request = new BanUserRequest();
+        request.setPhone("0865111111");
+        request.setBanReason("meo meo");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.banUser(request));
+
+        // then
+        Assertions.assertEquals(USER_NOT_FOUND, exception.getMessage());
+    }
+
+    @Test
+    void test_ban_user_fail_when_user_has_been_banned() {
+        // given
+        BanUserRequest request = new BanUserRequest();
+        request.setPhone("0865390041");
+        request.setBanReason("meo meo");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.banUser(request));
+
+        // then
+        Assertions.assertEquals(THIS_ACCOUNT_HAS_BEEN_BANNED, exception.getMessage());
     }
 
     void setManagerContext(Long id, String phone) {

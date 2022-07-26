@@ -147,6 +147,7 @@ public class AdminServiceImpl implements AdminService {
                     dto.setId(category.getId());
                     dto.setIcon(optionalIcon.map(Image::getUrl).orElse(null));
                     dto.setImage(optionalImage.map(Image::getUrl).orElse(null));
+                    dto.setDescription(category.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
 
@@ -379,6 +380,7 @@ public class AdminServiceImpl implements AdminService {
                     dto.setIcon(service.getIcon());
                     dto.setImage(service.getImage());
                     dto.setStatus(service.getStatus());
+                    dto.setDescription(service.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
 
@@ -401,6 +403,7 @@ public class AdminServiceImpl implements AdminService {
                     dto.setSubServiceName(subService.getName());
                     dto.setPrice(subService.getPrice());
                     dto.setStatus(subService.getIsActive() ? ACTIVE.name() : INACTIVE.name());
+                    dto.setDescription(subService.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
 

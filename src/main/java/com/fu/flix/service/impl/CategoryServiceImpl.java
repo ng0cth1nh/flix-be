@@ -72,6 +72,7 @@ public class CategoryServiceImpl implements CategoryService {
         dto.setServiceName(service.getName());
         dto.setIcon(optionalIcon.map(Image::getUrl).orElse(null));
         dto.setStatus(service.isActive() ? ACTIVE.name() : INACTIVE.name());
+        dto.setDescription(service.getDescription());
         return dto;
     }
 

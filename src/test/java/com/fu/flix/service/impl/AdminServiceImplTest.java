@@ -1,14 +1,8 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.CreateCategoryRequest;
-import com.fu.flix.dto.request.GetAdminProfileRequest;
-import com.fu.flix.dto.request.GetCategoriesRequest;
-import com.fu.flix.dto.request.UpdateAdminProfileRequest;
-import com.fu.flix.dto.response.CreateCategoryResponse;
-import com.fu.flix.dto.response.GetAdminProfileResponse;
-import com.fu.flix.dto.response.GetCategoriesResponse;
-import com.fu.flix.dto.response.UpdateAdminProfileResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.service.AdminService;
 import org.junit.jupiter.api.Assertions;
@@ -185,7 +179,7 @@ class AdminServiceImplTest {
     }
 
     @Test
-    void test_create_category_fail_when_description_length_is_2501() throws IOException {
+    void test_create_category_fail_when_description_length_is_2501() {
         // given
         CreateCategoryRequest request = new CreateCategoryRequest();
         request.setIcon(null);
@@ -204,7 +198,7 @@ class AdminServiceImplTest {
     }
 
     @Test
-    void test_create_category_fail_when_category_name_is_null() throws IOException {
+    void test_create_category_fail_when_category_name_is_null() {
         // given
         CreateCategoryRequest request = new CreateCategoryRequest();
         request.setIcon(null);
@@ -220,6 +214,334 @@ class AdminServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_CATEGORY_NAME, exception.getMessage());
+    }
+
+    @Test
+    void test_update_category_success() throws IOException {
+        // given
+        MockMultipartFile icon = new MockMultipartFile(
+                "icon",
+                "icon.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "icon".getBytes());
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image",
+                "image.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "image".getBytes());
+
+        UpdateCategoryRequest request = new UpdateCategoryRequest();
+        request.setIcon(icon);
+        request.setImage(image);
+        request.setDescription("fake description 1");
+        request.setCategoryName("Fake category 8");
+        request.setIsActive(true);
+        request.setId(14L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        UpdateCategoryResponse response = underTest.updateCategory(request).getBody();
+
+        // then
+        Assertions.assertEquals(UPDATE_CATEGORY_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_update_category_success_when_active_is_null() throws IOException {
+        // given
+        MockMultipartFile icon = new MockMultipartFile(
+                "icon",
+                "icon.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "icon".getBytes());
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image",
+                "image.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "image".getBytes());
+
+        UpdateCategoryRequest request = new UpdateCategoryRequest();
+        request.setIcon(icon);
+        request.setImage(image);
+        request.setDescription("fake description 1");
+        request.setCategoryName("Fake category 8");
+        request.setIsActive(null);
+        request.setId(14L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        UpdateCategoryResponse response = underTest.updateCategory(request).getBody();
+
+        // then
+        Assertions.assertEquals(UPDATE_CATEGORY_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_get_services_success() {
+        // given
+        GetServicesRequest request = new GetServicesRequest();
+        request.setPageNumber(0);
+        request.setPageSize(5);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        GetServicesResponse response = underTest.getServices(request).getBody();
+
+        // then
+        Assertions.assertEquals(5, response.getServices().size());
+    }
+
+    @Test
+    void test_create_service_success() throws IOException {
+        // given
+        MockMultipartFile icon = new MockMultipartFile(
+                "icon",
+                "icon.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "icon".getBytes());
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image",
+                "image.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "image".getBytes());
+
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setIcon(icon);
+        request.setImage(image);
+        request.setDescription("fake description 1");
+        request.setServiceName("Fake Service 8");
+        request.setIsActive(true);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(5L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        CreateServiceResponse response = underTest.createService(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_SERVICE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_create_service_success_when_image_and_icon_are_null() throws IOException {
+        // given
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setIcon(null);
+        request.setImage(null);
+        request.setDescription("fake description 1");
+        request.setServiceName("Fake Service 8");
+        request.setIsActive(true);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(5L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        CreateServiceResponse response = underTest.createService(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_SERVICE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_create_service_success_when_active_is_null() throws IOException {
+        // given
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setIcon(null);
+        request.setImage(null);
+        request.setDescription("fake description 1");
+        request.setServiceName("Fake Service 8");
+        request.setIsActive(null);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(5L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        CreateServiceResponse response = underTest.createService(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_SERVICE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_create_service_fail_when_description_length_is_2501() {
+        // given
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setIcon(null);
+        request.setImage(null);
+        request.setDescription("a".repeat(2501));
+        request.setServiceName("Fake Service 8");
+        request.setIsActive(null);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(5L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createService(request));
+
+        // then
+        Assertions.assertEquals(EXCEEDED_DESCRIPTION_LENGTH_ALLOWED, exception.getMessage());
+    }
+
+    @Test
+    void test_create_service_fail_when_service_name_is_null() {
+        // given
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setIcon(null);
+        request.setImage(null);
+        request.setDescription("a");
+        request.setServiceName(null);
+        request.setIsActive(null);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(5L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createService(request));
+
+        // then
+        Assertions.assertEquals(INVALID_SERVICE_NAME, exception.getMessage());
+    }
+
+    @Test
+    void test_create_service_fail_when_inspection_price_is_null() {
+        // given
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setIcon(null);
+        request.setImage(null);
+        request.setDescription("a");
+        request.setServiceName("la la");
+        request.setIsActive(null);
+        request.setInspectionPrice(null);
+        request.setCategoryId(5L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createService(request));
+
+        // then
+        Assertions.assertEquals(INVALID_INSPECTION_PRICE, exception.getMessage());
+    }
+
+    @Test
+    void test_create_service_fail_when_category_id_is_null() {
+        // given
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setIcon(null);
+        request.setImage(null);
+        request.setDescription("a");
+        request.setServiceName("la la");
+        request.setIsActive(null);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createService(request));
+
+        // then
+        Assertions.assertEquals(CATEGORY_ID_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_create_service_fail_when_category_not_found() {
+        // given
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setIcon(null);
+        request.setImage(null);
+        request.setDescription("a");
+        request.setServiceName("la la");
+        request.setIsActive(null);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(1000000L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createService(request));
+
+        // then
+        Assertions.assertEquals(CATEGORY_NOT_FOUND, exception.getMessage());
+    }
+
+    @Test
+    void test_update_service_success() throws IOException {
+        // given
+        MockMultipartFile icon = new MockMultipartFile(
+                "icon",
+                "icon.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "icon".getBytes());
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image",
+                "image.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "image".getBytes());
+
+        UpdateServiceRequest request = new UpdateServiceRequest();
+        request.setIcon(icon);
+        request.setImage(image);
+        request.setDescription("fake description 1");
+        request.setServiceName("Fake Service 8");
+        request.setIsActive(true);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(5L);
+        request.setServiceId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        UpdateServiceResponse response = underTest.updateService(request).getBody();
+
+        // then
+        Assertions.assertEquals(UPDATE_SERVICE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_update_service_success_when_active_is_null() throws IOException {
+        // given
+        MockMultipartFile icon = new MockMultipartFile(
+                "icon",
+                "icon.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "icon".getBytes());
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image",
+                "image.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "image".getBytes());
+
+        UpdateServiceRequest request = new UpdateServiceRequest();
+        request.setIcon(icon);
+        request.setImage(image);
+        request.setDescription("fake description 1");
+        request.setServiceName("Fake Service 8");
+        request.setIsActive(null);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(5L);
+        request.setServiceId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        UpdateServiceResponse response = underTest.updateService(request).getBody();
+
+        // then
+        Assertions.assertEquals(UPDATE_SERVICE_SUCCESS, response.getMessage());
     }
 
     void setManagerContext(Long id, String phone) {

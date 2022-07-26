@@ -23,7 +23,7 @@ public interface ServiceDAO extends JpaRepository<Service, Long> {
             "AND sv.is_active", nativeQuery = true)
     List<ISearchActiveServiceDTO> searchActiveServices(String keyword);
 
-    @Query(value = "SELECT sv.id as serviceId, sv.name as serviceName, icon.url as icon, image.url as image, " +
+    @Query(value = "SELECT sv.id as serviceId, sv.name as serviceName, icon.url as icon, image.url as image, sv.description as description, " +
             "CASE WHEN sv.is_active THEN 'ACTIVE' ELSE 'INACTIVE' END as status " +
             "FROM services sv " +
             "JOIN images icon " +

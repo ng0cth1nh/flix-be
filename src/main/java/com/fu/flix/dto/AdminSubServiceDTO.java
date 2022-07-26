@@ -10,4 +10,5 @@ public class AdminSubServiceDTO {
     private String subServiceName;
     private Long price;
     private String status;
+    private String description;
 }

@@ -10,7 +10,7 @@ app:
   minTimeFined: 3600 #milliseconds
   descriptionMaxLength: 2500
   nameMaxLength: 150
-  defaultPageSize: 20
+  defaultPageSize: 10
   defaultPageNumber: 0
   twilioInfo:
     accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'

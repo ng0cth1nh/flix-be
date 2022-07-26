@@ -240,7 +240,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerUserRequest request) throws IOException {
+    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) throws IOException {
         validateRegisterCustomerInput(request);
 
         User user = buildCustomerUser(request, request.getAvatar());
@@ -264,7 +264,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerUserRequest request) throws IOException {
+    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) throws IOException {
         validateRegisterRepairerInput(request);
 
         User user = buildRepairerUser(request, request.getAvatar());
@@ -292,7 +292,7 @@ public class AccountServiceImpl implements AccountService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void validateRegisterCustomerInput(CFRegisterCustomerUserRequest request) {
+    private void validateRegisterCustomerInput(CFRegisterCustomerRequest request) {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
@@ -310,7 +310,7 @@ public class AccountServiceImpl implements AccountService {
         }
     }
 
-    private User buildCustomerUser(CFRegisterCustomerUserRequest registerAccount, MultipartFile avatar) throws IOException {
+    private User buildCustomerUser(CFRegisterCustomerRequest registerAccount, MultipartFile avatar) throws IOException {
         User user = new User();
         user.setFullName(registerAccount.getFullName());
         user.setPhone(registerAccount.getPhone());
@@ -321,7 +321,7 @@ public class AccountServiceImpl implements AccountService {
         return user;
     }
 
-    private void validateRegisterRepairerInput(CFRegisterRepairerUserRequest request) {
+    private void validateRegisterRepairerInput(CFRegisterRepairerRequest request) {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
@@ -336,8 +336,6 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_STREET_ADDRESS);
         } else if (isInvalidExperienceDescription(request.getExperienceDescription())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_EXPERIENCE_DESCRIPTION);
-        } else if (isEmptyCertificates(request.getCertificates())) {
-            throw new GeneralException(HttpStatus.GONE, CERTIFICATE_IS_REQUIRED);
         } else if (isInvalidCertificates(request.getCertificates())) {
             throw new GeneralException(HttpStatus.GONE, CERTIFICATE_FILE_MUST_BE_IMAGE_OR_PDF);
         } else if (isInvalidExperienceYears(request.getExperienceYear())) {
@@ -377,11 +375,10 @@ public class AccountServiceImpl implements AccountService {
         return Strings.isEmpty(experienceDescription) || experienceDescription.length() > DESCRIPTION_MAX_LENGTH;
     }
 
-    private boolean isEmptyCertificates(List<MultipartFile> certificates) {
-        return CollectionUtils.isEmpty(certificates);
-    }
-
     private boolean isInvalidCertificates(List<MultipartFile> certificates) {
+        if (CollectionUtils.isEmpty(certificates)) {
+            return false;
+        }
         for (MultipartFile file : certificates) {
             if (!cloudStorageService.isCertificateFile(file)) {
                 return true;
@@ -411,7 +408,7 @@ public class AccountServiceImpl implements AccountService {
         return identityCardDAO.findByIdentityCardNumber(card).isPresent();
     }
 
-    private User buildRepairerUser(CFRegisterRepairerUserRequest registerAccount, MultipartFile avatar) throws IOException {
+    private User buildRepairerUser(CFRegisterRepairerRequest registerAccount, MultipartFile avatar) throws IOException {
         User user = new User();
         user.setFullName(registerAccount.getFullName());
         user.setPhone(registerAccount.getPhone());
@@ -446,7 +443,7 @@ public class AccountServiceImpl implements AccountService {
         addressService.saveNewMainAddress(mainAddressDTO);
     }
 
-    private void createRepairer(User user, CFRegisterRepairerUserRequest request) {
+    private void createRepairer(User user, CFRegisterRepairerRequest request) {
         Repairer repairer = new Repairer();
         repairer.setUserId(user.getId());
         repairer.setExperienceDescription(request.getExperienceDescription());
@@ -461,7 +458,7 @@ public class AccountServiceImpl implements AccountService {
         balanceDAO.save(balance);
     }
 
-    private void createIdentityCard(User user, CFRegisterRepairerUserRequest request) throws IOException {
+    private void createIdentityCard(User user, CFRegisterRepairerRequest request) throws IOException {
         IdentityCard identityCard = new IdentityCard();
         identityCard.setIdentityCardNumber(request.getIdentityCardNumber());
         identityCard.setType(request.getIdentityCardType());
@@ -472,17 +469,19 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private void createCertificates(User user, List<MultipartFile> certificateFiles) throws IOException {
-        List<Certificate> certificates = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(certificateFiles)) {
+            List<Certificate> certificates = new ArrayList<>();
 
-        for (MultipartFile file : certificateFiles) {
-            String url = cloudStorageService.uploadCertificateFile(file);
-            Certificate certificate = new Certificate();
-            certificate.setRepairerId(user.getId());
-            certificate.setUrl(url);
-            certificates.add(certificate);
+            for (MultipartFile file : certificateFiles) {
+                String url = cloudStorageService.uploadCertificateFile(file);
+                Certificate certificate = new Certificate();
+                certificate.setRepairerId(user.getId());
+                certificate.setUrl(url);
+                certificates.add(certificate);
+            }
+
+            certificateDAO.saveAll(certificates);
         }
-
-        certificateDAO.saveAll(certificates);
     }
 
     private String getToken(User user, TokenType tokenType) {

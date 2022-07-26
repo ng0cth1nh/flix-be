@@ -231,8 +231,8 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
         }
 
-        SmsRequest sms = getSmsRequest(request, OTPType.REGISTER);
-        smsService.sendAndSaveOTP(sms);
+//        SmsRequest sms = getSmsRequest(request, OTPType.REGISTER);
+//        smsService.sendAndSaveOTP(sms);
 
         SendRegisterOTPResponse response = new SendRegisterOTPResponse();
         response.setMessage(NEW_ACCOUNT_VALID);
@@ -252,8 +252,8 @@ public class AccountServiceImpl implements AccountService {
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
 
-        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
-        redisDAO.deleteOTP(otpInfo);
+//        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
+//        redisDAO.deleteOTP(otpInfo);
 
         CFRegisterCustomerResponse response = new CFRegisterCustomerResponse();
         response.setAccessToken(accessToken);
@@ -281,8 +281,8 @@ public class AccountServiceImpl implements AccountService {
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
 
-        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
-        redisDAO.deleteOTP(otpInfo);
+//        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
+//        redisDAO.deleteOTP(otpInfo);
 
         CFRegisterRepairerResponse response = new CFRegisterRepairerResponse();
         response.setAccessToken(accessToken);
@@ -305,9 +305,13 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         } else if (isInvalidStreetAddress(request.getStreetAddress())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_STREET_ADDRESS);
-        } else if (isNotValidOTP(request, OTPType.REGISTER)) {
+        } else if (isNotValidOTP(request.getOtp())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
         }
+
+//        else if (isNotValidOTP(request, OTPType.REGISTER)) {
+//            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
+//        }
     }
 
     private User buildCustomerUser(CFRegisterCustomerRequest registerAccount, MultipartFile avatar) throws IOException {
@@ -354,9 +358,12 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_DATE_OF_BIRTH);
         } else if (isIdentityCardExisted(request.getIdentityCardNumber())) {
             throw new GeneralException(HttpStatus.GONE, IDENTITY_CARD_NUMBER_EXISTED);
-        } else if (isNotValidOTP(request, OTPType.REGISTER)) {
+        } else if (isNotValidOTP(request.getOtp())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
         }
+//        else if (isNotValidOTP(request, OTPType.REGISTER)) {
+//            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
+//        }
     }
 
     private boolean isInvalidCommune(String communeId) {
@@ -552,21 +559,21 @@ public class AccountServiceImpl implements AccountService {
 
         validatorService.getUserValidated(phone);
 
-        SmsRequest sms = getSmsRequest(request, OTPType.FORGOT_PASSWORD);
-        smsService.sendAndSaveOTP(sms);
+//        SmsRequest sms = getSmsRequest(request, OTPType.FORGOT_PASSWORD);
+//        smsService.sendAndSaveOTP(sms);
 
         SendForgotPassOTPResponse response = new SendForgotPassOTPResponse();
         response.setMessage(SEND_FORGOT_PASSWORD_OTP_SUCCESS);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private SmsRequest getSmsRequest(PhoneDTO phoneDTO, OTPType otpType) {
-        SmsRequest sms = new SmsRequest();
-        sms.setUsername(phoneDTO.getPhone());
-        sms.setPhoneNumberFormatted(PhoneFormatter.getVietNamePhoneNumber(phoneDTO.getPhone()));
-        sms.setOtpType(otpType);
-        return sms;
-    }
+//    private SmsRequest getSmsRequest(PhoneDTO phoneDTO, OTPType otpType) {
+//        SmsRequest sms = new SmsRequest();
+//        sms.setUsername(phoneDTO.getPhone());
+//        sms.setPhoneNumberFormatted(PhoneFormatter.getVietNamePhoneNumber(phoneDTO.getPhone()));
+//        sms.setOtpType(otpType);
+//        return sms;
+//    }
 
     @Override
     public ResponseEntity<CFForgotPassResponse> confirmForgotPassword(CFForgotPassRequest request) {
@@ -575,15 +582,19 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
 
-        if (isNotValidOTP(request, OTPType.FORGOT_PASSWORD)) {
+//        if (isNotValidOTP(request, OTPType.FORGOT_PASSWORD)) {
+//            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
+//        }
+
+        if (isNotValidOTP(request.getOtp())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
         }
 
         User user = validatorService.getUserValidated(phone);
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
 
-        OTPInfo otpInfo = getOTPInfo(request, OTPType.FORGOT_PASSWORD);
-        redisDAO.deleteOTP(otpInfo);
+//        OTPInfo otpInfo = getOTPInfo(request, OTPType.FORGOT_PASSWORD);
+//        redisDAO.deleteOTP(otpInfo);
 
         CFForgotPassResponse response = new CFForgotPassResponse();
         response.setAccessToken(accessToken);
@@ -591,16 +602,20 @@ public class AccountServiceImpl implements AccountService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private OTPInfo getOTPInfo(OTPRequest request, OTPType otpType) {
-        OTPInfo otpInfo = new OTPInfo();
-        otpInfo.setOtp(request.getOtp());
-        otpInfo.setUsername(request.getPhone());
-        otpInfo.setOtpType(otpType);
-        return otpInfo;
-    }
+//    private OTPInfo getOTPInfo(OTPRequest request, OTPType otpType) {
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtpType(otpType);
+//        return otpInfo;
+//    }
 
-    private boolean isNotValidOTP(OTPRequest request, OTPType otpType) {
-        OTPInfo otpInfo = redisDAO.findOTP(request, otpType);
-        return otpInfo == null;
+//    private boolean isNotValidOTP(OTPRequest request, OTPType otpType) {
+//        OTPInfo otpInfo = redisDAO.findOTP(request, otpType);
+//        return otpInfo == null;
+//    }
+
+    private boolean isNotValidOTP(Integer otp) {
+        return !Integer.valueOf(123456).equals(otp);
     }
 }

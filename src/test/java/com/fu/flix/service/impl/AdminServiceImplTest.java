@@ -544,6 +544,275 @@ class AdminServiceImplTest {
         Assertions.assertEquals(UPDATE_SERVICE_SUCCESS, response.getMessage());
     }
 
+    @Test
+    void test_search_services_success() {
+        // given
+        AdminSearchServicesRequest request = new AdminSearchServicesRequest();
+        request.setKeyword("điện");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminSearchServicesResponse response = underTest.searchServices(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_search_services_fail_when_keyword_is_null() {
+        // given
+        AdminSearchServicesRequest request = new AdminSearchServicesRequest();
+        request.setKeyword(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchServices(request));
+
+        // then
+        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
+    }
+
+    @Test
+    void test_get_sub_services_success() {
+        // given
+        GetSubServicesRequest request = new GetSubServicesRequest();
+        request.setPageNumber(0);
+        request.setPageSize(5);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        GetSubServicesResponse response = underTest.getSubServices(request).getBody();
+
+        // then
+        Assertions.assertEquals(5, response.getSubServices().size());
+    }
+
+    @Test
+    void test_create_sub_service_success() {
+        // given
+        CreateSubServiceRequest request = new CreateSubServiceRequest();
+        request.setSubServiceName("Fake Sub Service 5");
+        request.setPrice(33000L);
+        request.setServiceId(2L);
+        request.setDescription("Fake description 5");
+        request.setIsActive(true);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        CreateSubServiceResponse response = underTest.createSubService(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_SUB_SERVICE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_create_sub_service_success_when_active_is_null() {
+        // given
+        CreateSubServiceRequest request = new CreateSubServiceRequest();
+        request.setSubServiceName("Fake Sub Service 5");
+        request.setPrice(33000L);
+        request.setServiceId(2L);
+        request.setDescription("Fake description 5");
+        request.setIsActive(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        CreateSubServiceResponse response = underTest.createSubService(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_SUB_SERVICE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_create_sub_service_fail_when_sub_service_name_is_null() {
+        // given
+        CreateSubServiceRequest request = new CreateSubServiceRequest();
+        request.setSubServiceName(null);
+        request.setPrice(33000L);
+        request.setServiceId(2L);
+        request.setDescription("Fake description 5");
+        request.setIsActive(true);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createSubService(request));
+
+        // then
+        Assertions.assertEquals(INVALID_SUB_SERVICE_NAME, exception.getMessage());
+    }
+
+    @Test
+    void test_create_sub_service_fail_when_price_is_null() {
+        // given
+        CreateSubServiceRequest request = new CreateSubServiceRequest();
+        request.setSubServiceName("la la");
+        request.setPrice(null);
+        request.setServiceId(2L);
+        request.setDescription("Fake description 5");
+        request.setIsActive(true);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createSubService(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PRICE, exception.getMessage());
+    }
+
+    @Test
+    void test_create_sub_service_fail_when_description_length_is_2501() {
+        // given
+        CreateSubServiceRequest request = new CreateSubServiceRequest();
+        request.setSubServiceName("la la");
+        request.setPrice(33000L);
+        request.setServiceId(2L);
+        request.setDescription("a".repeat(2501));
+        request.setIsActive(true);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createSubService(request));
+
+        // then
+        Assertions.assertEquals(EXCEEDED_DESCRIPTION_LENGTH_ALLOWED, exception.getMessage());
+    }
+
+    @Test
+    void test_update_sub_service_success() {
+        // given
+        UpdateSubServiceRequest request = new UpdateSubServiceRequest();
+        request.setSubServiceName("la la");
+        request.setPrice(33000L);
+        request.setServiceId(3L);
+        request.setDescription("meo meo");
+        request.setIsActive(true);
+        request.setSubServiceId(295L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        UpdateSubServiceResponse response = underTest.updateSubService(request).getBody();
+
+        // then
+        Assertions.assertEquals(UPDATE_SUB_SERVICE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_update_sub_service_fail_when_sub_service_is_null() {
+        // given
+        UpdateSubServiceRequest request = new UpdateSubServiceRequest();
+        request.setSubServiceName("la la");
+        request.setPrice(33000L);
+        request.setServiceId(3L);
+        request.setDescription("meo meo");
+        request.setIsActive(true);
+        request.setSubServiceId(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateSubService(request));
+
+        // then
+        Assertions.assertEquals(INVALID_SUB_SERVICE, exception.getMessage());
+    }
+
+    @Test
+    void test_update_sub_service_fail_when_sub_service_is_not_found() {
+        // given
+        UpdateSubServiceRequest request = new UpdateSubServiceRequest();
+        request.setSubServiceName("la la");
+        request.setPrice(33000L);
+        request.setServiceId(3L);
+        request.setDescription("meo meo");
+        request.setIsActive(true);
+        request.setSubServiceId(1000000L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateSubService(request));
+
+        // then
+        Assertions.assertEquals(INVALID_SUB_SERVICE, exception.getMessage());
+    }
+
+    @Test
+    void test_update_sub_service_success_when_active_is_null() {
+        // given
+        UpdateSubServiceRequest request = new UpdateSubServiceRequest();
+        request.setSubServiceName("la la");
+        request.setPrice(33000L);
+        request.setServiceId(3L);
+        request.setDescription("meo meo");
+        request.setIsActive(null);
+        request.setSubServiceId(295L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        UpdateSubServiceResponse response = underTest.updateSubService(request).getBody();
+
+        // then
+        Assertions.assertEquals(UPDATE_SUB_SERVICE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_get_requests_success() {
+        // given
+        AdminRequestingRequest request = new AdminRequestingRequest();
+        request.setPageNumber(0);
+        request.setPageSize(5);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminRequestingResponse response = underTest.getRequests(request).getBody();
+
+        // then
+        Assertions.assertEquals(5, response.getRequestList().size());
+    }
+
+    @Test
+    void test_get_customers_success() {
+        // given
+        GetCustomersRequest request = new GetCustomersRequest();
+        request.setPageNumber(0);
+        request.setPageSize(5);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        GetCustomersResponse response = underTest.getCustomers(request).getBody();
+
+        // then
+        Assertions.assertEquals(5, response.getCustomerList().size());
+    }
+
+    @Test
+    void test_get_repairers_success() {
+        // given
+        GetRepairersRequest request = new GetRepairersRequest();
+        request.setPageNumber(0);
+        request.setPageSize(5);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        GetRepairersResponse response = underTest.getRepairers(request).getBody();
+
+        // then
+        Assertions.assertEquals(5, response.getRepairerList().size());
+    }
+
     void setManagerContext(Long id, String phone) {
         String[] roles = {"ROLE_MANAGER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();

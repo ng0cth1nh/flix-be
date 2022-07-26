@@ -615,7 +615,7 @@ public class AccountServiceImpl implements AccountService {
 //        return otpInfo == null;
 //    }
 
-    private boolean isNotValidOTP(int otp) {
-        return otp != 123456;
+    private boolean isNotValidOTP(Integer otp) {
+        return !Integer.valueOf(123456).equals(otp);
     }
 }

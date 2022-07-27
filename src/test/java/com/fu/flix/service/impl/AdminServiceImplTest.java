@@ -18,11 +18,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static com.fu.flix.constant.Constant.*;
 
@@ -1008,6 +1010,191 @@ class AdminServiceImplTest {
 
         // then
         Assertions.assertEquals(THIS_ACCOUNT_HAS_BEEN_BANNED, exception.getMessage());
+    }
+
+    @Test
+    void test_create_feedback_success() throws IOException {
+        // given
+        MockMultipartFile image = new MockMultipartFile(
+                "avatar",
+                "filename.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "avatar".getBytes());
+
+        List<MultipartFile> images = new ArrayList<>();
+        images.add(image);
+
+        AdminCreateFeedBackRequest request = new AdminCreateFeedBackRequest();
+        request.setPhone("0585943270");
+        request.setFeedbackType("COMMENT");
+        request.setRequestCode("F9LF7G9Z27SE");
+        request.setTitle("Chán cái App App thật sự");
+        request.setDescription("app rác này liệu có được được 10");
+        request.setImages(images);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminCreateFeedBackResponse response = underTest.createFeedback(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_FEEDBACK_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_create_feedback_fail_when_phone_is_123() {
+        // given
+        AdminCreateFeedBackRequest request = new AdminCreateFeedBackRequest();
+        request.setPhone("123");
+        request.setFeedbackType("COMMENT");
+        request.setRequestCode("F9LF7G9Z27SE");
+        request.setTitle("Chán cái App App thật sự");
+        request.setDescription("app rác này liệu có được được 10");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFeedback(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+    }
+
+    @Test
+    void test_create_feedback_fail_when_user_not_found() {
+        // given
+        AdminCreateFeedBackRequest request = new AdminCreateFeedBackRequest();
+        request.setPhone("0865111111");
+        request.setFeedbackType("COMMENT");
+        request.setRequestCode("F9LF7G9Z27SE");
+        request.setTitle("Chán cái App App thật sự");
+        request.setDescription("app rác này liệu có được được 10");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFeedback(request));
+
+        // then
+        Assertions.assertEquals(USER_NOT_FOUND, exception.getMessage());
+    }
+
+    @Test
+    void test_create_feedback_fail_when_invalid_request_code() {
+        // given
+        AdminCreateFeedBackRequest request = new AdminCreateFeedBackRequest();
+        request.setPhone("0585943270");
+        request.setFeedbackType("COMMENT");
+        request.setRequestCode("123");
+        request.setTitle("Chán cái App App thật sự");
+        request.setDescription("app rác này liệu có được được 10");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFeedback(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    void test_create_feedback_fail_when_title_is_null() {
+        // given
+        AdminCreateFeedBackRequest request = new AdminCreateFeedBackRequest();
+        request.setPhone("0585943270");
+        request.setFeedbackType("COMMENT");
+        request.setRequestCode("F9LF7G9Z27SE");
+        request.setTitle(null);
+        request.setDescription("app rác này liệu có được được 10");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFeedback(request));
+
+        // then
+        Assertions.assertEquals(INVALID_TITLE, exception.getMessage());
+    }
+
+    @Test
+    void test_create_feedback_fail_when_description_is_null() {
+        // given
+        AdminCreateFeedBackRequest request = new AdminCreateFeedBackRequest();
+        request.setPhone("0585943270");
+        request.setFeedbackType("COMMENT");
+        request.setRequestCode("F9LF7G9Z27SE");
+        request.setTitle("lala la");
+        request.setDescription(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFeedback(request));
+
+        // then
+        Assertions.assertEquals(INVALID_DESCRIPTION, exception.getMessage());
+    }
+
+    @Test
+    void test_get_feedback_detail_success() {
+        // given
+        FeedbackDetailRequest request = new FeedbackDetailRequest();
+        request.setFeedbackId(20L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        FeedbackDetailResponse response = underTest.getFeedbackDetail(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_get_feedback_detail_fail_when_feedback_id_is_null() {
+        // given
+        FeedbackDetailRequest request = new FeedbackDetailRequest();
+        request.setFeedbackId(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFeedbackDetail(request));
+
+        // then
+        Assertions.assertEquals(FEEDBACK_ID_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_get_feedback_detail_fail_when_feedback_is_not_found() {
+        // given
+        FeedbackDetailRequest request = new FeedbackDetailRequest();
+        request.setFeedbackId(1000000L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFeedbackDetail(request));
+
+        // then
+        Assertions.assertEquals(INVALID_FEEDBACK_ID, exception.getMessage());
+    }
+
+    @Test
+    void test_get_accessories_success() {
+        // given
+        AdminGetAccessoriesRequest request = new AdminGetAccessoriesRequest();
+        request.setPageNumber(0);
+        request.setPageSize(5);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminGetAccessoriesResponse response = underTest.getAccessories(request).getBody();
+
+        // then
+        Assertions.assertEquals(5, response.getAccessoryList().size());
     }
 
     void setManagerContext(Long id, String phone) {

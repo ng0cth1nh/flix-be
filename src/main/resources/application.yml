@@ -12,7 +12,7 @@ app:
   nameMaxLength: 150
   defaultPageSize: 10
   defaultPageNumber: 0
-  milestoneMoney: 200000
+  milestoneMoney: 20000
   twilioInfo:
     accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'
     authToken: 'b2bdec58830ce248a8e2d60bdfa6205c'

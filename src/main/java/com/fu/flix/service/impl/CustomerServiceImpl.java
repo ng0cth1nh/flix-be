@@ -295,29 +295,29 @@ public class CustomerServiceImpl implements CustomerService {
         Repairer repairer = repairerDAO.findByUserId(repairRequestMatching.getRepairerId()).get();
 
         updateRepairerStatus(repairer);
-        returnMoneyForRepairer(repairer, requestCode);
+//        returnMoneyForRepairer(repairer, requestCode);
     }
 
     private void updateRepairerStatus(Repairer repairer) {
         repairer.setRepairing(false);
     }
 
-    private void returnMoneyForRepairer(Repairer repairer, String requestCode) {
-        TransactionHistory commissionsTransaction = transactionHistoryDAO
-                .findByRequestCodeAndType(requestCode, PAY_COMMISSIONS.name()).get();
-        Long userId = repairer.getUserId();
-        Balance balance = balanceDAO.findByUserId(userId).get();
-        Long refunds = commissionsTransaction.getAmount();
-
-        balance.setBalance(balance.getBalance() + refunds);
-
-        TransactionHistory refundsTransaction = new TransactionHistory();
-        refundsTransaction.setUserId(userId);
-        refundsTransaction.setAmount(refunds);
-        refundsTransaction.setType(REFUNDS.name());
-        refundsTransaction.setRequestCode(requestCode);
-        transactionHistoryDAO.save(refundsTransaction);
-    }
+//    private void returnMoneyForRepairer(Repairer repairer, String requestCode) {
+//        TransactionHistory commissionsTransaction = transactionHistoryDAO
+//                .findByRequestCodeAndType(requestCode, PAY_COMMISSIONS.name()).get();
+//        Long userId = repairer.getUserId();
+//        Balance balance = balanceDAO.findByUserId(userId).get();
+//        Long refunds = commissionsTransaction.getAmount();
+//
+//        balance.setBalance(balance.getBalance() + refunds);
+//
+//        TransactionHistory refundsTransaction = new TransactionHistory();
+//        refundsTransaction.setUserId(userId);
+//        refundsTransaction.setAmount(refunds);
+//        refundsTransaction.setType(REFUNDS.name());
+//        refundsTransaction.setRequestCode(requestCode);
+//        transactionHistoryDAO.save(refundsTransaction);
+//    }
 
     private void updateRepairRequest(CancelRequestForCustomerRequest request, RepairRequest repairRequest) {
         repairRequest.setStatusId(CANCELLED.getId());

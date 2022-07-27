@@ -1,5 +1,7 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.configuration.AppConf;
+import com.fu.flix.dao.BalanceDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.RepairerDAO;
 import com.fu.flix.dto.ExtraServiceInputDTO;
@@ -7,6 +9,7 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
+import com.fu.flix.entity.Balance;
 import com.fu.flix.entity.RepairRequest;
 import com.fu.flix.entity.Repairer;
 import com.fu.flix.service.CustomerService;
@@ -47,6 +50,10 @@ class RepairerServiceImplTest {
     @Autowired
     RepairRequestDAO repairRequestDAO;
     String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    @Autowired
+    BalanceDAO balanceDAO;
+    @Autowired
+    AppConf appConf;
 
     @Test
     public void test_approval_request_success() {
@@ -151,7 +158,7 @@ class RepairerServiceImplTest {
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
-        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + "3150", exception.getMessage());
+        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + appConf.getMilestoneMoney(), exception.getMessage());
     }
 
     @Test
@@ -608,6 +615,26 @@ class RepairerServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_invoice_fail_when_balance_less_than_comission() {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService3();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        CreateInvoiceRequest request = new CreateInvoiceRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+
+        Balance balance = balanceDAO.findByUserId(56L).get();
+        balance.setBalance(0L);
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
+
+        // then
+        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + "3900", exception.getMessage());
     }
 
     @Test

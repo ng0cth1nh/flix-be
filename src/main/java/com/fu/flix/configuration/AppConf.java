@@ -29,6 +29,7 @@ public class AppConf {
     private Long nameMaxLength;
     private Integer defaultPageSize;
     private Integer defaultPageNumber;
+    private Long milestoneMoney;
 
     @Data
     public static class TwilioInfo {

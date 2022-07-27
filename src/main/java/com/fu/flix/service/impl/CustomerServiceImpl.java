@@ -30,8 +30,6 @@ import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.*;
-import static com.fu.flix.constant.enums.TransactionType.PAY_COMMISSIONS;
-import static com.fu.flix.constant.enums.TransactionType.REFUNDS;
 
 @Service
 @Slf4j
@@ -48,8 +46,6 @@ public class CustomerServiceImpl implements CustomerService {
     private final AppConf appConf;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final RepairerDAO repairerDAO;
-    private final BalanceDAO balanceDAO;
-    private final TransactionHistoryDAO transactionHistoryDAO;
     private final StatusDAO statusDAO;
     private final ValidatorService validatorService;
     private final AddressService addressService;
@@ -71,8 +67,6 @@ public class CustomerServiceImpl implements CustomerService {
                                AppConf appConf,
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
                                RepairerDAO repairerDAO,
-                               BalanceDAO balanceDAO,
-                               TransactionHistoryDAO transactionHistoryDAO,
                                StatusDAO statusDAO,
                                ValidatorService validatorService,
                                AddressService addressService,
@@ -89,8 +83,6 @@ public class CustomerServiceImpl implements CustomerService {
         this.appConf = appConf;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
         this.repairerDAO = repairerDAO;
-        this.balanceDAO = balanceDAO;
-        this.transactionHistoryDAO = transactionHistoryDAO;
         this.statusDAO = statusDAO;
         this.validatorService = validatorService;
         this.addressService = addressService;
@@ -461,17 +453,19 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<UserAddressResponse> getCustomerAddresses(UserAddressRequest request) {
         User user = validatorService.getUserValidated(request.getUsername());
-        List<UserAddress> userAddresses = userAddressDAO.findByUserIdAndDeletedAtIsNull(user.getId());
+        List<IAddressDTO> userAddresses = userAddressDAO.findByUserIdAndDeletedAtIsNull(user.getId());
 
         List<UserAddressDTO> addresses = userAddresses.stream()
-                .map(userAddress -> {
-                    Long addressId = userAddress.getId();
+                .map(ua -> {
                     UserAddressDTO dto = new UserAddressDTO();
-                    dto.setAddressId(addressId);
-                    dto.setCustomerName(userAddress.getName());
-                    dto.setPhone(userAddress.getPhone());
-                    dto.setAddressName(addressService.getAddressFormatted(addressId));
-                    dto.setMainAddress(userAddress.isMainAddress());
+                    dto.setAddressId(ua.getAddressId());
+                    dto.setAddressName(ua.getAddressName());
+                    dto.setCustomerName(ua.getCustomerName());
+                    dto.setPhone(ua.getCustomerPhone());
+                    dto.setMainAddress(ua.getIsMainAddress());
+                    dto.setDistrictId(ua.getDistrictId());
+                    dto.setCityId(ua.getCityId());
+                    dto.setCommuneId(ua.getCommuneId());
                     return dto;
                 }).collect(Collectors.toList());
 

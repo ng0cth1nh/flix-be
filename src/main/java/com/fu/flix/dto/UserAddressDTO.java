@@ -9,4 +9,7 @@ public class UserAddressDTO {
     private String customerName;
     private String phone;
     private boolean isMainAddress;
+    private String districtId;
+    private String cityId;
+    private String communeId;
 }

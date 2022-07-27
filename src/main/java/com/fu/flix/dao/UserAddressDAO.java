@@ -1,5 +1,6 @@
 package com.fu.flix.dao;
 
+import com.fu.flix.dto.IAddressDTO;
 import com.fu.flix.entity.UserAddress;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +13,20 @@ public interface UserAddressDAO extends JpaRepository<UserAddress, Long> {
 
     Optional<UserAddress> findByUserIdAndIsMainAddressAndDeletedAtIsNull(Long userId, boolean isMainAddress);
 
-    List<UserAddress> findByUserIdAndDeletedAtIsNull(Long userId);
+    @Query(value = "SELECT ua.id as addressId, CONCAT(ua.street_address, ', ', commune.name, ', ', district.name, ', ', city.name) as addressName, " +
+            "ua.name as customerName, ua.phone as customerPhone, " +
+            "CASE WHEN ua.is_main_address THEN 'true' ELSE 'false' END as isMainAddress, district.id as districtId, city.id as cityId, " +
+            "commune.id as communeId " +
+            "FROM user_addresses ua " +
+            "JOIN communes commune " +
+            "ON commune.id = ua.commune_id " +
+            "JOIN districts district " +
+            "ON district.id = commune.district_id " +
+            "JOIN cities city " +
+            "ON city.id = district.city_id " +
+            "WHERE ua.deleted_at IS NULL " +
+            "AND ua.user_id = :userId", nativeQuery = true)
+    List<IAddressDTO> findByUserIdAndDeletedAtIsNull(Long userId);
 
     @Query(value = "SELECT * FROM user_addresses " +
             "WHERE user_id = :userId " +

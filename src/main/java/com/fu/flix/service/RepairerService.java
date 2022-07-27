@@ -2,6 +2,7 @@ package com.fu.flix.service;
 
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
+import com.fu.flix.entity.Balance;
 import org.springframework.http.ResponseEntity;
 
 public interface RepairerService {

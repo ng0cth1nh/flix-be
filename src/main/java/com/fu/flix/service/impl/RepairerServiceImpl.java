@@ -101,14 +101,12 @@ public class RepairerServiceImpl implements RepairerService {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_ACCEPT_REQUEST_WHEN_ON_ANOTHER_FIXING);
         }
 
-        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
         Balance balance = balanceDAO.findByUserId(repairerId).get();
-        Long neededBalance = (long) (invoice.getActualProceeds() * this.appConf.getProfitRate());
-        if (balance.getBalance() < neededBalance) {
-            throw new GeneralException(HttpStatus.CONFLICT, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + neededBalance);
+        Long milestoneMoney = this.appConf.getMilestoneMoney();
+        if (balance.getBalance() < milestoneMoney) {
+            throw new GeneralException(HttpStatus.CONFLICT, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + milestoneMoney);
         }
 
-        minusCommissions(balance, neededBalance, invoice.getRequestCode());
         repairRequest.setStatusId(APPROVED.getId());
 
         RepairRequestMatching repairRequestMatching = buildRepairRequestMatching(requestCode, repairerId);
@@ -118,16 +116,6 @@ public class RepairerServiceImpl implements RepairerService {
         response.setMessage(APPROVAL_REQUEST_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private void minusCommissions(Balance balance, Long neededBalance, String requestCode) {
-        balance.setBalance(balance.getBalance() - neededBalance);
-        TransactionHistory transactionHistory = new TransactionHistory();
-        transactionHistory.setUserId(balance.getUserId());
-        transactionHistory.setAmount(neededBalance);
-        transactionHistory.setType(PAY_COMMISSIONS.name());
-        transactionHistory.setRequestCode(requestCode);
-        transactionHistoryDAO.save(transactionHistory);
     }
 
     private RepairRequestMatching buildRepairRequestMatching(String requestCode, Long repairerId) {
@@ -288,7 +276,8 @@ public class RepairerServiceImpl implements RepairerService {
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-        if (!request.getUserId().equals(repairRequestMatching.getRepairerId())) {
+        Long repairerId = request.getUserId();
+        if (!repairerId.equals(repairRequestMatching.getRepairerId())) {
             throw new GeneralException(HttpStatus.GONE, REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_INVOICE_FOR_THIS_REQUEST);
         }
 
@@ -301,10 +290,32 @@ public class RepairerServiceImpl implements RepairerService {
             customerService.refundVoucher(repairRequest);
         }
 
+        Balance balance = balanceDAO.findByUserId(repairerId).get();
+        Long commission = getCommission(invoice);
+        if (balance.getBalance() < commission) {
+            throw new GeneralException(HttpStatus.CONFLICT, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + commission);
+        }
+
+        minusCommissions(balance, commission, invoice.getRequestCode());
+
         CreateInvoiceResponse response = new CreateInvoiceResponse();
         response.setMessage(CREATE_INVOICE_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private Long getCommission(Invoice invoice) {
+        return (long) (invoice.getActualProceeds() * this.appConf.getProfitRate()) + invoice.getVatPrice();
+    }
+
+    private void minusCommissions(Balance balance, Long commission, String requestCode) {
+        balance.setBalance(balance.getBalance() - commission);
+        TransactionHistory transactionHistory = new TransactionHistory();
+        transactionHistory.setUserId(balance.getUserId());
+        transactionHistory.setAmount(commission);
+        transactionHistory.setType(PAY_COMMISSIONS.name());
+        transactionHistory.setRequestCode(requestCode);
+        transactionHistoryDAO.save(transactionHistory);
     }
 
     private boolean isCanNotApplyVoucherToInvoice(Invoice invoice) {

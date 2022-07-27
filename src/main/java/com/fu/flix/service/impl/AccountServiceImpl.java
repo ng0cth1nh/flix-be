@@ -10,14 +10,12 @@ import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.*;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.MainAddressDTO;
-import com.fu.flix.dto.PhoneDTO;
 import com.fu.flix.entity.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
-import com.fu.flix.util.PhoneFormatter;
 import com.fu.flix.dto.request.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -345,9 +343,9 @@ public class AccountServiceImpl implements AccountService {
         } else if (isInvalidExperienceYears(request.getExperienceYear())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_EXPERIENCE_YEARS);
         } else if (isInvalidImage(request.getFrontImage())) {
-            throw new GeneralException(HttpStatus.GONE, FRONT_IMAGE_MUST_BE_IMAGE_OR_PDF);
+            throw new GeneralException(HttpStatus.GONE, FRONT_IMAGE_MUST_BE_IMAGE);
         } else if (isInvalidImage(request.getBackSideImage())) {
-            throw new GeneralException(HttpStatus.GONE, BACK_SIDE_IMAGE_MUST_BE_IMAGE_OR_PDF);
+            throw new GeneralException(HttpStatus.GONE, BACK_SIDE_IMAGE_MUST_BE_IMAGE);
         } else if (!InputValidation.isIdentityCardNumberValid(request.getIdentityCardNumber())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_IDENTITY_CARD_NUMBER);
         } else if (isInvalidIdentityCardType(request.getIdentityCardType())) {

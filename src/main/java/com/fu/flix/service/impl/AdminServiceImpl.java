@@ -873,7 +873,7 @@ public class AdminServiceImpl implements AdminService {
         User user = validatorService.getUserValidated(request.getRepairerId());
         Collection<Role> roles = user.getRoles();
         if (!isPendingRepairer(roles)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_REPAIRER);
+            throw new GeneralException(HttpStatus.GONE, INVALID_PENDING_REPAIRER);
         }
 
         Repairer repairer = repairerDAO.findByUserId(user.getId()).get();

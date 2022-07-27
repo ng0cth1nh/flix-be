@@ -1426,6 +1426,200 @@ class AdminServiceImplTest {
         Assertions.assertEquals(INVALID_ACCESSORY, exception.getMessage());
     }
 
+    @Test
+    void test_response_feedback_success() {
+        // given
+        ResponseFeedbackRequest request = new ResponseFeedbackRequest();
+        request.setId(1L);
+        request.setStatus("PROCESSING");
+        request.setResponse("Đang xử lí, mày chờ tý");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        ResponseFeedbackResponse response = underTest.responseFeedback(request).getBody();
+
+        // then
+        Assertions.assertEquals(RESPONSE_FEEDBACK_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_response_feedback_fail_when_response_is_null() {
+        // given
+        ResponseFeedbackRequest request = new ResponseFeedbackRequest();
+        request.setId(1L);
+        request.setStatus("PROCESSING");
+        request.setResponse(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.responseFeedback(request));
+
+        // then
+        Assertions.assertEquals(INVALID_RESPONSE, exception.getMessage());
+    }
+
+    @Test
+    void test_response_feedback_fail_when_invalid_status() {
+        // given
+        ResponseFeedbackRequest request = new ResponseFeedbackRequest();
+        request.setId(1L);
+        request.setStatus("meo");
+        request.setResponse("la la");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.responseFeedback(request));
+
+        // then
+        Assertions.assertEquals(INVALID_FEEDBACK_STATUS, exception.getMessage());
+    }
+
+    @Test
+    void test_response_feedback_fail_when_feedback_id_is_null() {
+        // given
+        ResponseFeedbackRequest request = new ResponseFeedbackRequest();
+        request.setId(null);
+        request.setStatus("PROCESSING");
+        request.setResponse("la la");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.responseFeedback(request));
+
+        // then
+        Assertions.assertEquals(FEEDBACK_ID_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_response_feedback_fail_when_feedback_is_not_found() {
+        // given
+        ResponseFeedbackRequest request = new ResponseFeedbackRequest();
+        request.setId(1000000L);
+        request.setStatus("PROCESSING");
+        request.setResponse("la la");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.responseFeedback(request));
+
+        // then
+        Assertions.assertEquals(INVALID_FEEDBACK_ID, exception.getMessage());
+    }
+
+    @Test
+    void test_get_feedbacks_success() {
+        // given
+        FeedbacksRequest request = new FeedbacksRequest();
+        request.setPageNumber(0);
+        request.setPageSize(5);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        FeedbacksResponse response = underTest.getFeedbacks(request).getBody();
+
+        // then
+        Assertions.assertEquals(5, response.getFeedbackList().size());
+    }
+
+    @Test
+    void test_accept_cv_success() {
+        // given
+        AcceptCVRequest request = new AcceptCVRequest();
+        request.setRepairerId(555L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AcceptCVResponse response = underTest.acceptCV(request).getBody();
+
+        // then
+        Assertions.assertEquals(ACCEPT_CV_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_accept_cv_fail_when_user_is_not_pending_repairer() {
+        // given
+        AcceptCVRequest request = new AcceptCVRequest();
+        request.setRepairerId(36L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.acceptCV(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PENDING_REPAIRER, exception.getMessage());
+    }
+
+    @Test
+    void test_get_repairer_detail_success() {
+        // given
+        GetRepairerDetailRequest request = new GetRepairerDetailRequest();
+        request.setRepairerId(555L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        GetRepairerDetailResponse response = underTest.getRepairerDetail(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_get_repairer_detail_fail_when_repairer_not_found() {
+        // given
+        GetRepairerDetailRequest request = new GetRepairerDetailRequest();
+        request.setRepairerId(1000000L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getRepairerDetail(request));
+
+        // then
+        Assertions.assertEquals(REPAIRER_NOT_FOUND, exception.getMessage());
+    }
+
+    @Test
+    void test_get_repairer_detail_success_when_repairer_was_accepted() {
+        // given
+        GetRepairerDetailRequest request = new GetRepairerDetailRequest();
+        request.setRepairerId(52L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        GetRepairerDetailResponse response = underTest.getRepairerDetail(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_get_repairer_detail_success_when_dob_is_null() {
+        // given
+        GetRepairerDetailRequest request = new GetRepairerDetailRequest();
+        request.setRepairerId(555L);
+
+        User user = userDAO.findById(555L).get();
+        user.setDateOfBirth(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        GetRepairerDetailResponse response = underTest.getRepairerDetail(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
     void setManagerContext(Long id, String phone) {
         String[] roles = {"ROLE_MANAGER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();

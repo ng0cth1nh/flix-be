@@ -1828,7 +1828,7 @@
 //        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
 //
 //        // then
-//        Assertions.assertEquals(FRONT_IMAGE_MUST_BE_IMAGE_OR_PDF, exception.getMessage());
+//        Assertions.assertEquals(FRONT_IMAGE_MUST_BE_IMAGE, exception.getMessage());
 //    }
 //
 //    @Test
@@ -1848,7 +1848,7 @@
 //        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
 //
 //        // then
-//        Assertions.assertEquals(BACK_SIDE_IMAGE_MUST_BE_IMAGE_OR_PDF, exception.getMessage());
+//        Assertions.assertEquals(BACK_SIDE_IMAGE_MUST_BE_IMAGE, exception.getMessage());
 //    }
 //
 //    @Test
@@ -2061,6 +2061,156 @@
 //        request.setPhone(phone);
 //
 //        return request;
+//    }
+//
+//    @Test
+//    void test_login_success_for_repairer() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390051");
+//        request.setPassword("123abc");
+//        request.setRoleType("REPAIRER");
+//
+//        // when
+//        LoginResponse response = underTest.login(request).getBody();
+//
+//        // then
+//        Assertions.assertNotNull(response);
+//    }
+//
+//    @Test
+//    void test_login_success_for_admin_manager() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390063");
+//        request.setPassword("123abc");
+//        request.setRoleType("ADMIN");
+//
+//        // when
+//        LoginResponse response = underTest.login(request).getBody();
+//
+//        // then
+//        Assertions.assertNotNull(response);
+//    }
+//
+//    @Test
+//    void test_login_success_for_admin_customer() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390037");
+//        request.setPassword("123abc");
+//        request.setRoleType("CUSTOMER");
+//
+//        // when
+//        LoginResponse response = underTest.login(request).getBody();
+//
+//        // then
+//        Assertions.assertNotNull(response);
+//    }
+//
+//    @Test
+//    void test_login_success_for_pending_repairer() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390068");
+//        request.setPassword("123abc");
+//        request.setRoleType("REPAIRER");
+//
+//        // when
+//        LoginResponse response = underTest.login(request).getBody();
+//
+//        // then
+//        Assertions.assertNotNull(response);
+//    }
+//
+//    @Test
+//    void test_login_fail_when_invalid_type() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390051");
+//        request.setPassword("123abc");
+//        request.setRoleType("abc");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_TYPE, exception.getMessage());
+//    }
+//
+//    @Test
+//    void test_login_fail_when_login_type_not_match() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390051");
+//        request.setPassword("123abc");
+//        request.setRoleType("ADMIN");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(LOGIN_FAILED, exception.getMessage());
+//    }
+//
+//    @Test
+//    void test_login_fail_when_invalid_phone() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("123");
+//        request.setPassword("123abc");
+//        request.setRoleType("REPAIRER");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(LOGIN_FAILED, exception.getMessage());
+//    }
+//
+//    @Test
+//    void test_login_fail_when_user_not_found() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865111111");
+//        request.setPassword("123abc");
+//        request.setRoleType("REPAIRER");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(LOGIN_FAILED, exception.getMessage());
+//    }
+//
+//    @Test
+//    void test_login_fail_when_password_not_match() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390051");
+//        request.setPassword("abc123");
+//        request.setRoleType("REPAIRER");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(LOGIN_FAILED, exception.getMessage());
+//    }
+//
+//    @Test
+//    void test_login_fail_when_user_is_inactive() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390041");
+//        request.setPassword("123abc");
+//        request.setRoleType("CUSTOMER");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(USER_IS_INACTIVE, exception.getMessage());
 //    }
 //
 //    void setCustomerContext(Long id, String phone) {

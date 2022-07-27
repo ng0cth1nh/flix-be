@@ -1197,6 +1197,235 @@ class AdminServiceImplTest {
         Assertions.assertEquals(5, response.getAccessoryList().size());
     }
 
+    @Test
+    void test_get_pending_repairer_success() {
+        // given
+        PendingRepairersRequest request = new PendingRepairersRequest();
+        request.setPageNumber(0);
+        request.setPageSize(2);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        PendingRepairersResponse response = underTest.getPendingRepairers(request).getBody();
+
+        // then
+        Assertions.assertEquals(2, response.getRepairerList().size());
+    }
+
+    @Test
+    void test_create_accessory_success() {
+        // given
+        CreateAccessoryRequest request = new CreateAccessoryRequest();
+        request.setAccessoryName("Linh kiện fake của tủ lạnh");
+        request.setPrice(20000L);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("Cực xịn");
+        request.setServiceId(3L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        CreateAccessoryResponse response = underTest.createAccessory(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_ACCESSORY_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_create_accessory_fail_when_price_is_null() {
+        // given
+        CreateAccessoryRequest request = new CreateAccessoryRequest();
+        request.setAccessoryName("Linh kiện fake của tủ lạnh");
+        request.setPrice(null);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("Cực xịn");
+        request.setServiceId(3L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createAccessory(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PRICE, exception.getMessage());
+    }
+
+    @Test
+    void test_create_accessory_fail_when_invalid_insurance() {
+        // given
+        CreateAccessoryRequest request = new CreateAccessoryRequest();
+        request.setAccessoryName("Linh kiện fake của tủ lạnh");
+        request.setPrice(20000L);
+        request.setInsurance(-1);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("Cực xịn");
+        request.setServiceId(3L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createAccessory(request));
+
+        // then
+        Assertions.assertEquals(INVALID_INSURANCE, exception.getMessage());
+    }
+
+    @Test
+    void test_create_accessory_fail_when_description_length_is_2501() {
+        // given
+        CreateAccessoryRequest request = new CreateAccessoryRequest();
+        request.setAccessoryName("Linh kiện fake của tủ lạnh");
+        request.setPrice(20000L);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("a".repeat(2501));
+        request.setServiceId(3L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createAccessory(request));
+
+        // then
+        Assertions.assertEquals(EXCEEDED_DESCRIPTION_LENGTH_ALLOWED, exception.getMessage());
+    }
+
+    @Test
+    void test_create_accessory_fail_when_accessory_name_is_null() {
+        // given
+        CreateAccessoryRequest request = new CreateAccessoryRequest();
+        request.setAccessoryName(null);
+        request.setPrice(20000L);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("la la");
+        request.setServiceId(3L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createAccessory(request));
+
+        // then
+        Assertions.assertEquals(INVALID_ACCESSORY_NAME, exception.getMessage());
+    }
+
+    @Test
+    void test_create_accessory_fail_when_service_id_is_null() {
+        // given
+        CreateAccessoryRequest request = new CreateAccessoryRequest();
+        request.setAccessoryName("la la");
+        request.setPrice(20000L);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("la la");
+        request.setServiceId(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createAccessory(request));
+
+        // then
+        Assertions.assertEquals(SERVICE_ID_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_create_accessory_fail_when_service_id_is_not_found() {
+        // given
+        CreateAccessoryRequest request = new CreateAccessoryRequest();
+        request.setAccessoryName("la la");
+        request.setPrice(20000L);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("la la");
+        request.setServiceId(1000000L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createAccessory(request));
+
+        // then
+        Assertions.assertEquals(INVALID_SERVICE, exception.getMessage());
+    }
+
+    @Test
+    void test_update_accessory_success() {
+        // given
+        UpdateAccessoryRequest request = new UpdateAccessoryRequest();
+        request.setAccessoryName("Linh kiện fake của tủ lạnh");
+        request.setPrice(20000L);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("Cực xịn");
+        request.setServiceId(3L);
+        request.setId(8L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        UpdateAccessoryResponse response = underTest.updateAccessory(request).getBody();
+
+        // then
+        Assertions.assertEquals(UPDATE_ACCESSORY_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_update_accessory_fail_when_accessory_id_is_null() {
+        // given
+        UpdateAccessoryRequest request = new UpdateAccessoryRequest();
+        request.setAccessoryName("Linh kiện fake của tủ lạnh");
+        request.setPrice(20000L);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("Cực xịn");
+        request.setServiceId(3L);
+        request.setId(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateAccessory(request));
+
+        // then
+        Assertions.assertEquals(INVALID_ACCESSORY, exception.getMessage());
+    }
+
+    @Test
+    void test_update_accessory_fail_when_accessory_id_is_invalid() {
+        // given
+        UpdateAccessoryRequest request = new UpdateAccessoryRequest();
+        request.setAccessoryName("Linh kiện fake của tủ lạnh");
+        request.setPrice(20000L);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("Cực xịn");
+        request.setServiceId(3L);
+        request.setId(1000000L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateAccessory(request));
+
+        // then
+        Assertions.assertEquals(INVALID_ACCESSORY, exception.getMessage());
+    }
+
     void setManagerContext(Long id, String phone) {
         String[] roles = {"ROLE_MANAGER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();

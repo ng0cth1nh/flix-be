@@ -14,6 +14,7 @@ import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,8 +30,6 @@ import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.*;
-import static com.fu.flix.constant.enums.TransactionType.PAY_COMMISSIONS;
-import static com.fu.flix.constant.enums.TransactionType.REFUNDS;
 
 @Service
 @Slf4j
@@ -47,8 +46,6 @@ public class CustomerServiceImpl implements CustomerService {
     private final AppConf appConf;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final RepairerDAO repairerDAO;
-    private final BalanceDAO balanceDAO;
-    private final TransactionHistoryDAO transactionHistoryDAO;
     private final StatusDAO statusDAO;
     private final ValidatorService validatorService;
     private final AddressService addressService;
@@ -57,6 +54,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
     private final Long NAME_MAX_LENGTH;
+    private final Long DESCRIPTION_MAX_LENGTH;
 
     public CustomerServiceImpl(RepairRequestDAO repairRequestDAO,
                                VoucherDAO voucherDAO,
@@ -69,8 +67,6 @@ public class CustomerServiceImpl implements CustomerService {
                                AppConf appConf,
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
                                RepairerDAO repairerDAO,
-                               BalanceDAO balanceDAO,
-                               TransactionHistoryDAO transactionHistoryDAO,
                                StatusDAO statusDAO,
                                ValidatorService validatorService,
                                AddressService addressService,
@@ -87,14 +83,13 @@ public class CustomerServiceImpl implements CustomerService {
         this.appConf = appConf;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
         this.repairerDAO = repairerDAO;
-        this.balanceDAO = balanceDAO;
-        this.transactionHistoryDAO = transactionHistoryDAO;
         this.statusDAO = statusDAO;
         this.validatorService = validatorService;
         this.addressService = addressService;
         this.voucherService = voucherService;
         this.requestService = requestService;
         this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
+        this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
     }
 
     @Override
@@ -105,7 +100,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         String description = request.getDescription();
-        if (description != null && description.length() > this.appConf.getDescriptionMaxLength()) {
+        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH) {
             throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
         }
 
@@ -201,15 +196,7 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, PAYMENT_METHOD_NOT_VALID_FOR_THIS_VOUCHER);
         }
 
-        Long serviceId = usingVoucherDTO.getServiceId();
-        if (serviceId == null) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
-        }
-
-        Optional<com.fu.flix.entity.Service> optionalService = serviceDAO.findById(serviceId);
-        if (optionalService.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
-        }
+        validatorService.getServiceValidated(usingVoucherDTO.getServiceId());
 
         UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
         if (userVoucher == null) {
@@ -300,29 +287,29 @@ public class CustomerServiceImpl implements CustomerService {
         Repairer repairer = repairerDAO.findByUserId(repairRequestMatching.getRepairerId()).get();
 
         updateRepairerStatus(repairer);
-        returnMoneyForRepairer(repairer, requestCode);
+//        returnMoneyForRepairer(repairer, requestCode);
     }
 
     private void updateRepairerStatus(Repairer repairer) {
         repairer.setRepairing(false);
     }
 
-    private void returnMoneyForRepairer(Repairer repairer, String requestCode) {
-        TransactionHistory commissionsTransaction = transactionHistoryDAO
-                .findByRequestCodeAndType(requestCode, PAY_COMMISSIONS.name()).get();
-        Long userId = repairer.getUserId();
-        Balance balance = balanceDAO.findByUserId(userId).get();
-        Long refunds = commissionsTransaction.getAmount();
-
-        balance.setBalance(balance.getBalance() + refunds);
-
-        TransactionHistory refundsTransaction = new TransactionHistory();
-        refundsTransaction.setUserId(userId);
-        refundsTransaction.setAmount(refunds);
-        refundsTransaction.setType(REFUNDS.name());
-        refundsTransaction.setRequestCode(requestCode);
-        transactionHistoryDAO.save(refundsTransaction);
-    }
+//    private void returnMoneyForRepairer(Repairer repairer, String requestCode) {
+//        TransactionHistory commissionsTransaction = transactionHistoryDAO
+//                .findByRequestCodeAndType(requestCode, PAY_COMMISSIONS.name()).get();
+//        Long userId = repairer.getUserId();
+//        Balance balance = balanceDAO.findByUserId(userId).get();
+//        Long refunds = commissionsTransaction.getAmount();
+//
+//        balance.setBalance(balance.getBalance() + refunds);
+//
+//        TransactionHistory refundsTransaction = new TransactionHistory();
+//        refundsTransaction.setUserId(userId);
+//        refundsTransaction.setAmount(refunds);
+//        refundsTransaction.setType(REFUNDS.name());
+//        refundsTransaction.setRequestCode(requestCode);
+//        transactionHistoryDAO.save(refundsTransaction);
+//    }
 
     private void updateRepairRequest(CancelRequestForCustomerRequest request, RepairRequest repairRequest) {
         repairRequest.setStatusId(CANCELLED.getId());
@@ -396,7 +383,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<RequestingDetailForCustomerResponse> getDetailFixingRequest(RequestingDetailForCustomerRequest request) {
         String requestCode = request.getRequestCode();
-        if (requestService.isEmptyRequestCode(requestCode)) {
+        if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
@@ -466,17 +453,19 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<UserAddressResponse> getCustomerAddresses(UserAddressRequest request) {
         User user = validatorService.getUserValidated(request.getUsername());
-        List<UserAddress> userAddresses = userAddressDAO.findByUserIdAndDeletedAtIsNull(user.getId());
+        List<IAddressDTO> userAddresses = userAddressDAO.findByUserIdAndDeletedAtIsNull(user.getId());
 
         List<UserAddressDTO> addresses = userAddresses.stream()
-                .map(userAddress -> {
-                    Long addressId = userAddress.getId();
+                .map(ua -> {
                     UserAddressDTO dto = new UserAddressDTO();
-                    dto.setAddressId(addressId);
-                    dto.setCustomerName(userAddress.getName());
-                    dto.setPhone(userAddress.getPhone());
-                    dto.setAddressName(addressService.getAddressFormatted(addressId));
-                    dto.setMainAddress(userAddress.isMainAddress());
+                    dto.setAddressId(ua.getAddressId());
+                    dto.setAddressName(ua.getAddressName());
+                    dto.setCustomerName(ua.getCustomerName());
+                    dto.setPhone(ua.getCustomerPhone());
+                    dto.setMainAddress(ua.getIsMainAddress());
+                    dto.setDistrictId(ua.getDistrictId());
+                    dto.setCityId(ua.getCityId());
+                    dto.setCommuneId(ua.getCommuneId());
                     return dto;
                 }).collect(Collectors.toList());
 
@@ -632,7 +621,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         String email = request.getEmail();
-        if (email != null && !InputValidation.isEmailValid(email)) {
+        if (!InputValidation.isEmailValid(email, true)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_EMAIL);
         }
 
@@ -669,11 +658,11 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
-        RepairerProfileResponse response = new RepairerProfileResponse();
+    public ResponseEntity<RepairerResponse> getRepairerProfile(RepairerRequest request) {
+        RepairerResponse response = new RepairerResponse();
         Long repairerId = request.getRepairerId();
         if (repairerId != null) {
-            IRepairerProfileDTO repairerProfile = commentDAO.findRepairerProfile(repairerId);
+            ICustomerGetRepairerDTO repairerProfile = commentDAO.findRepairerProfile(repairerId);
             ISuccessfulRepairDTO successfulRepair = commentDAO.findSuccessfulRepair(repairerId);
             response.setJointAt(repairerProfile.getJoinAt());
             response.setSuccessfulRepair(successfulRepair.getSuccessfulRepair());
@@ -695,11 +684,11 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         Integer offset = request.getOffset() == null
-                ? this.appConf.getOffsetDefault()
+                ? this.appConf.getDefaultOffset()
                 : request.getOffset();
 
         Integer limit = request.getLimit() == null
-                ? this.appConf.getLimitQueryDefault()
+                ? this.appConf.getDefaultLimitQuery()
                 : request.getLimit();
 
         if (offset < 0) {

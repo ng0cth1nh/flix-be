@@ -1,8 +1,14 @@
 package com.fu.flix.util;
 
+import com.fu.flix.constant.enums.FeedbackType;
+import com.fu.flix.dto.error.GeneralException;
+import org.springframework.http.HttpStatus;
+
 import java.text.Normalizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.fu.flix.constant.Constant.INVALID_FEEDBACK_TYPE;
 
 public class InputValidation {
     private static final String PHONE_REGEX = "^(03|05|07|08|09|01[2|6|8|9])([0-9]{8})$";
@@ -38,8 +44,10 @@ public class InputValidation {
         return matcher.matches();
     }
 
-    public static boolean isEmailValid(String email) {
-        if (email == null) {
+    public static boolean isEmailValid(String email, boolean isNullable) {
+        if (email == null && isNullable) {
+            return true;
+        } else if (email == null) {
             return false;
         }
         Pattern pattern = Pattern.compile(EMAIL_REGEX, Pattern.CASE_INSENSITIVE);
@@ -81,5 +89,15 @@ public class InputValidation {
         String temp = Normalizer.normalize(s, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         return pattern.matcher(temp).replaceAll("");
+    }
+
+    public static String getFeedbackTypeValidated(String feedbackType) {
+        for (FeedbackType t : FeedbackType.values()) {
+            if (t.name().equals(feedbackType)) {
+                return feedbackType;
+            }
+        }
+
+        throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_TYPE);
     }
 }

@@ -1,5 +1,6 @@
 package com.fu.flix.service;
 
+import com.fu.flix.dto.MainAddressDTO;
 import com.fu.flix.dto.request.CommuneRequest;
 import com.fu.flix.dto.request.DistrictRequest;
 import com.fu.flix.dto.response.CityResponse;
@@ -14,4 +15,5 @@ public interface AddressService {
 
     ResponseEntity<CommuneResponse> getCommunesByDistrict(CommuneRequest request);
     String getAddressFormatted(Long addressId);
+    void saveNewMainAddress(MainAddressDTO mainAddressDTO);
 }

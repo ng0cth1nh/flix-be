@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class OTPInfo {
-    private  String username;
-    private int otp;
+    private String username;
+    private Integer otp;
     private OTPType otpType;
 }

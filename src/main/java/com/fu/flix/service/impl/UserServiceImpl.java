@@ -3,16 +3,13 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.Constant;
-import com.fu.flix.constant.enums.FeedbackType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.NotificationDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
-import com.fu.flix.service.CloudStorageService;
-import com.fu.flix.service.UserService;
-import com.fu.flix.service.ValidatorService;
+import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
@@ -41,8 +39,8 @@ public class UserServiceImpl implements UserService {
     private final NotificationDAO notificationDAO;
     private final PasswordEncoder passwordEncoder;
     private final FeedbackDAO feedbackDAO;
-    private final RepairRequestDAO repairRequestDAO;
     private final ValidatorService validatorService;
+    private final FeedbackService feedbackService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public UserServiceImpl(ImageDAO imageDAO,
@@ -52,8 +50,8 @@ public class UserServiceImpl implements UserService {
                            NotificationDAO notificationDAO,
                            PasswordEncoder passwordEncoder,
                            FeedbackDAO feedbackDAO,
-                           RepairRequestDAO repairRequestDAO,
-                           ValidatorService validatorService) {
+                           ValidatorService validatorService,
+                           FeedbackService feedbackService) {
         this.imageDAO = imageDAO;
         this.cloudStorageService = cloudStorageService;
         this.userDAO = userDAO;
@@ -61,8 +59,8 @@ public class UserServiceImpl implements UserService {
         this.notificationDAO = notificationDAO;
         this.passwordEncoder = passwordEncoder;
         this.feedbackDAO = feedbackDAO;
-        this.repairRequestDAO = repairRequestDAO;
         this.validatorService = validatorService;
+        this.feedbackService = feedbackService;
     }
 
     @Override
@@ -158,55 +156,48 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<FeedbackResponse> createFeedback(FeedbackRequest request) throws IOException {
-        String requestCode = request.getRequestCode();
-        if (requestCode == null || repairRequestDAO.findByRequestCode(requestCode).isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
-        }
+    public ResponseEntity<UserCreateFeedbackResponse> createFeedback(UserCreateFeedbackRequest request) throws IOException {
+        validatorService.validateCreateFeedbackInput(request);
 
-        String title = request.getTitle();
-        if (title == null || title.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, TITLE_IS_REQUIRED);
-        }
-
-        String description = request.getDescription();
-        if (description == null || description.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, DESCRIPTION_IS_REQUIRED);
-        }
-
+        Long userId = request.getUserId();
         Feedback feedback = new Feedback();
-        feedback.setCreatedById(request.getUserId());
-        feedback.setTitle(title);
-        feedback.setDescription(description);
+        feedback.setCreatedById(userId);
+        feedback.setUserId(userId);
+        feedback.setTitle(request.getTitle());
+        feedback.setDescription(request.getDescription());
         feedback.setStatusId(PENDING.getId());
-        feedback.setType(getFeedbackTypeValidated(request.getFeedbackType()));
-        feedback.setRequestCode(requestCode);
-
-        for (MultipartFile multipartFile : request.getImages()) {
-            String url = cloudStorageService.uploadImage(multipartFile);
-            Image image = new Image();
-            image.setName(title);
-            image.setUrl(url);
-            Image savedImage = imageDAO.save(image);
-
-            feedback.getImages().add(savedImage);
-        }
-
+        feedback.setType(request.getFeedbackType());
+        feedback.setRequestCode(request.getRequestCode());
+        feedbackService.postFeedbackImages(feedback, request.getImages());
         feedbackDAO.save(feedback);
 
-        FeedbackResponse response = new FeedbackResponse();
+        UserCreateFeedbackResponse response = new UserCreateFeedbackResponse();
         response.setMessage(CREATE_FEEDBACK_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private String getFeedbackTypeValidated(String feedbackType) {
-        for (FeedbackType t : FeedbackType.values()) {
-            if (t.name().equals(feedbackType)) {
-                return feedbackType;
-            }
+    @Override
+    public ResponseEntity<UserInfoResponse> getUserInfo(UserInfoRequest request) {
+        Long id = request.getId();
+        if (id == null) {
+            throw new GeneralException(HttpStatus.GONE, USER_ID_IS_REQUIRED);
         }
 
-        throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_TYPE);
+        Optional<User> optionalUser = userDAO.findById(id);
+        if (optionalUser.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, USER_NOT_FOUND);
+        }
+
+        User user = optionalUser.get();
+        Optional<Image> optionalAvatar = imageDAO.findById(user.getAvatar());
+
+        UserInfoResponse response = new UserInfoResponse();
+        response.setId(id);
+        response.setFullName(user.getFullName());
+        response.setPhone(user.getPhone());
+        response.setAvatar(optionalAvatar.map(Image::getUrl).orElse(null));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

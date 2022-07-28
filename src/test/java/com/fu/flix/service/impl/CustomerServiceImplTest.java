@@ -9,6 +9,7 @@ import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.entity.User;
+import com.fu.flix.entity.UserAddress;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.RepairerService;
 import com.fu.flix.service.ValidatorService;
@@ -1776,29 +1777,26 @@ class CustomerServiceImplTest {
     @Test
     public void test_get_repairer_profile_success() {
         // given
-        RepairerProfileRequest request = new RepairerProfileRequest();
+        RepairerRequest request = new RepairerRequest();
         request.setRepairerId(52L);
 
         // when
         setUserContext(36L, "0865390037");
-        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+        RepairerResponse response = underTest.getRepairerProfile(request).getBody();
 
         // then
-        Assertions.assertEquals("20 năm trong nghề", response.getExperienceDescription());
-        Assertions.assertEquals("Thợ", response.getRepairerName());
-        Assertions.assertEquals("21/06/2022", response.getJointAt());
-        Assertions.assertEquals(3, response.getExperienceYear());
+        Assertions.assertNotNull(response);
     }
 
     @Test
     public void test_get_repairer_profile_return_null_field_when_repairer_id_is_null() {
         // given
-        RepairerProfileRequest request = new RepairerProfileRequest();
+        RepairerRequest request = new RepairerRequest();
         request.setRepairerId(null);
 
         // when
         setUserContext(36L, "0865390037");
-        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+        RepairerResponse response = underTest.getRepairerProfile(request).getBody();
 
         // then
         Assertions.assertNull(response.getExperienceDescription());
@@ -1812,12 +1810,12 @@ class CustomerServiceImplTest {
     @Test
     public void test_get_repairer_profile_return_null_field_when_repairer_id_is_0() {
         // given
-        RepairerProfileRequest request = new RepairerProfileRequest();
+        RepairerRequest request = new RepairerRequest();
         request.setRepairerId(0L);
 
         // when
         setUserContext(36L, "0865390037");
-        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+        RepairerResponse response = underTest.getRepairerProfile(request).getBody();
 
         // then
         Assertions.assertNull(response.getExperienceDescription());
@@ -1831,12 +1829,12 @@ class CustomerServiceImplTest {
     @Test
     public void test_get_repairer_profile_return_null_field_when_repairer_id_is_negative_number() {
         // given
-        RepairerProfileRequest request = new RepairerProfileRequest();
+        RepairerRequest request = new RepairerRequest();
         request.setRepairerId(-1L);
 
         // when
         setUserContext(36L, "0865390037");
-        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+        RepairerResponse response = underTest.getRepairerProfile(request).getBody();
 
         // then
         Assertions.assertNull(response.getExperienceDescription());
@@ -1989,6 +1987,40 @@ class CustomerServiceImplTest {
 
         // then
         Assertions.assertNotNull(response.getRepairerComments());
+    }
+
+    @Test
+    public void test_choose_main_address_success() {
+        // given
+        long userId = 36L;
+        long addressId = 21L;
+        ChooseMainAddressRequest request = new ChooseMainAddressRequest();
+        request.setAddressId(addressId);
+
+
+        // when
+        setUserContext(userId, "0865390037");
+        ChooseMainAddressResponse response = underTest.chooseMainAddress(request).getBody();
+        UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(userId, true).get();
+
+        // then
+        Assertions.assertEquals(CHOOSING_MAIN_ADDRESS_SUCCESS, response.getMessage());
+        Assertions.assertEquals(addressId, userAddress.getId());
+    }
+
+    @Test
+    public void test_choose_main_address_fail_when_address_id_is_null() {
+        // given
+        long userId = 36L;
+        ChooseMainAddressRequest request = new ChooseMainAddressRequest();
+        request.setAddressId(null);
+
+        // when
+        setUserContext(userId, "0865390037");
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.chooseMainAddress(request).getBody());
+
+        // then
+        Assertions.assertEquals(ADDRESS_ID_IS_REQUIRED, exception.getMessage());
     }
 
     void setUserContext(Long id, String phone) {

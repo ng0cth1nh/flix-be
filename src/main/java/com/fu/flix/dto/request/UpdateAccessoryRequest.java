@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SearchServicesRequest extends DataRequest{
-    private String keyword;
+public class UpdateAccessoryRequest extends ModifyAccessoryRequest {
+    private Long id;
 }

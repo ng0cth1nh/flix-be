@@ -57,4 +57,9 @@ public class AccountController {
     public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) throws IOException {
         return accountService.confirmRegisterRepairer(request);
     }
+
+    @PostMapping("login")
+    public ResponseEntity<LoginResponse> login(LoginRequest request) {
+        return accountService.login(request);
+    }
 }

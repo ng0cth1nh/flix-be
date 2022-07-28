@@ -1,19 +1,11 @@
 package com.fu.flix.controller;
 
-import com.fu.flix.dto.request.RequestingFilterRequest;
-import com.fu.flix.dto.request.RequestingSuggestionRequest;
-import com.fu.flix.dto.request.SearchAccessoriesRequest;
-import com.fu.flix.dto.request.SearchSubServicesRequest;
-import com.fu.flix.dto.response.RequestingFilterResponse;
-import com.fu.flix.dto.response.RequestingSuggestionResponse;
-import com.fu.flix.dto.response.SearchAccessoriesResponse;
-import com.fu.flix.dto.response.SearchSubServicesResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.service.CommonRepairerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -43,5 +35,15 @@ public class CommonRepairerController {
     @GetMapping("accessories")
     public ResponseEntity<SearchAccessoriesResponse> searchAccessoriesByService(SearchAccessoriesRequest request) {
         return commonRepairerService.searchAccessoriesByService(request);
+    }
+
+    @GetMapping("profile")
+    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
+        return commonRepairerService.getRepairerProfile(request);
+    }
+
+    @PutMapping("profile")
+    public ResponseEntity<UpdateRepairerResponse> updateRepairerProfile(@RequestBody UpdateRepairerRequest request) {
+        return commonRepairerService.updateRepairerProfile(request);
     }
 }

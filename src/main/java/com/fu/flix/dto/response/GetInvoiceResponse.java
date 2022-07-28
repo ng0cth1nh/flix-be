@@ -29,4 +29,9 @@ public class GetInvoiceResponse {
     private Long totalPrice;
     private Long vatPrice;
     private String approvedTime;
+    private String serviceName;
+    private String serviceImage;
+    private Long serviceId;
+    private String status;
+    private Boolean isCustomerCommented;
 }

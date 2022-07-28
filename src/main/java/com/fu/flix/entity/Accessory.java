@@ -20,6 +20,8 @@ public class Accessory {
 
     private String name;
 
+    private String description;
+
     private Long price;
 
     private Long serviceId;
@@ -28,5 +30,5 @@ public class Accessory {
 
     private String country;
 
-    private Boolean isActive;
+    private String manufacture;
 }

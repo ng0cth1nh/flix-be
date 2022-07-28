@@ -151,7 +151,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
     @Override
     public ResponseEntity<GetInvoiceResponse> getInvoice(GetInvoiceRequest request) {
         String requestCode = request.getRequestCode();
-        if (requestCode == null || requestCode.isEmpty()) {
+        if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
         }
 
@@ -190,11 +190,12 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
             response.setActualPrice(dto.getActualPrice());
             response.setTotalPrice(dto.getTotalPrice());
             response.setVatPrice(dto.getVatPrice());
-            response.setApprovedTime(
-                    dto.getApprovedTime() == null
-                            ? null
-                            : DateFormatUtil.toString(dto.getApprovedTime(), DATE_TIME_PATTERN)
-            );
+            response.setApprovedTime(DateFormatUtil.toString(dto.getApprovedTime(), DATE_TIME_PATTERN));
+            response.setServiceName(dto.getServiceName());
+            response.setServiceImage(dto.getServiceImage());
+            response.setServiceId(dto.getServiceId());
+            response.setStatus(dto.getStatus());
+            response.setIsCustomerCommented(dto.getIsCustomerCommented());
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -258,10 +259,10 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
         return invoice.getAccessories().stream()
                 .map(accessory -> {
                     AccessoryOutputDTO dto = new AccessoryOutputDTO();
-                    dto.setId(accessory.getId());
                     dto.setName(accessory.getName());
                     dto.setPrice(accessory.getPrice());
                     dto.setInsuranceTime(accessory.getInsuranceTime());
+                    dto.setId(accessory.getId());
                     return dto;
                 }).collect(Collectors.toList());
     }

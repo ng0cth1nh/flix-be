@@ -8,12 +8,9 @@ import java.util.List;
 
 @Getter
 @Setter
-public class CFRegisterRepairerRequest extends OTPRequest {
+public class CFRegisterRepairerRequest extends CFRegisterUserRequest {
     private MultipartFile avatar;
-    private String fullName;
     private String password;
-    private String communeId;
-    private String streetAddress;
     private String identityCardNumber;
     private String identityCardType;
     private MultipartFile frontImage;

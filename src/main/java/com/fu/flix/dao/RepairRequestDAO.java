@@ -2,6 +2,7 @@ package com.fu.flix.dao;
 
 import com.fu.flix.dto.IDetailFixingRequestForCustomerDTO;
 import com.fu.flix.dto.IDetailFixingRequestForRepairerDTO;
+import com.fu.flix.dto.IRequestInfoDTO;
 import com.fu.flix.dto.IRequestingDTO;
 import com.fu.flix.entity.RepairRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -51,6 +52,8 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON repairer_avatar.id = repairer.avatar " +
             "WHERE rr.request_code = :requestCode " +
             "AND customer.is_active " +
+            "AND c_address.deleted_at IS NULL " +
+            "AND r_address.deleted_at IS NULL " +
             "AND customer.id = :customerId", nativeQuery = true)
     IDetailFixingRequestForCustomerDTO findDetailFixingRequestForCustomer(Long customerId, String requestCode);
 
@@ -81,6 +84,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "LEFT JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
             "WHERE rr.request_code = :requestCode " +
+            "AND ua.deleted_at IS NULL " +
             "AND (" +
             "   CASE WHEN rr.status_id <> 'PE' " +
             "   THEN rrm.repairer_id = :repairerId " +
@@ -111,6 +115,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "JOIN  images icon " +
             "ON icon.id = sv.icon_id " +
             "WHERE rr.status_id = 'PE' " +
+            "AND ua.deleted_at IS NULL " +
             "AND rr.service_id in (:serviceIds) " +
             "AND district_id = :districtId", nativeQuery = true)
     List<IRequestingDTO> findPendingRequestByDistrict(List<Long> serviceIds, String districtId);
@@ -136,6 +141,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON d.city_id = ct.id " +
             "WHERE rr.status_id = 'PE' " +
             "AND rr.service_id in (:serviceIds) " +
+            "AND ua.deleted_at IS NULL " +
             "AND ct.id = :cityId", nativeQuery = true)
     List<IRequestingDTO> findPendingRequestByCity(List<Long> serviceIds, String cityId);
 
@@ -156,6 +162,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON icon.id = sv.icon_id " +
             "WHERE rr.status_id = 'PE' " +
             "AND rr.service_id in (:serviceIds) " +
+            "AND ua.deleted_at IS NULL " +
             "AND c.id = :communeId", nativeQuery = true)
     List<IRequestingDTO> findPendingRequestByCommune(List<Long> serviceIds, String communeId);
 
@@ -176,6 +183,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON icon.id = sv.icon_id " +
             "WHERE rr.status_id = 'PE' " +
             "AND rr.service_id in (:serviceIds) " +
+            "AND ua.deleted_at IS NULL " +
             "AND c.id = :communeId " +
             "AND rr.expect_start_fixing_at >= :start AND rr.expect_start_fixing_at <= :end", nativeQuery = true)
     List<IRequestingDTO> filterPendingRequestByCommune(List<Long> serviceIds, String communeId, LocalDateTime start, LocalDateTime end);
@@ -201,6 +209,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON d.city_id = ct.id " +
             "WHERE rr.status_id = 'PE' " +
             "AND rr.service_id in (:serviceIds) " +
+            "AND ua.deleted_at IS NULL " +
             "AND ct.id = :cityId " +
             "AND rr.expect_start_fixing_at >= :start AND rr.expect_start_fixing_at <= :end", nativeQuery = true)
     List<IRequestingDTO> filterPendingRequestByCity(List<Long> serviceIds, String cityId, LocalDateTime start, LocalDateTime end);
@@ -224,7 +233,25 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON icon.id = sv.icon_id " +
             "WHERE rr.status_id = 'PE' " +
             "AND rr.service_id in (:serviceIds) " +
+            "AND ua.deleted_at IS NULL " +
             "AND district_id = :districtId " +
             "AND rr.expect_start_fixing_at >= :start AND rr.expect_start_fixing_at <= :end", nativeQuery = true)
     List<IRequestingDTO> filterPendingRequestByDistrict(List<Long> serviceIds, String districtId, LocalDateTime start, LocalDateTime end);
+
+    @Query(value = "SELECT * " +
+            "FROM (SELECT ROW_NUMBER() OVER (ORDER BY createdAt DESC) row_num, tb1.* " +
+            "FROM (SELECT rr.request_code as requestCode, customer.id as customerId,customer.full_name as customerName, customer.phone as customerPhone, " +
+            "repairer.id as repairerId, repairer.full_name as repairerName, repairer.phone as repairerPhone, stt.name as status, rr.created_at as createdAt " +
+            "FROM repair_requests rr " +
+            "JOIN users customer " +
+            "ON rr.user_id = customer.id " +
+            "LEFT JOIN repair_requests_matching rrm " +
+            "ON rr.request_code = rrm.request_code " +
+            "LEFT JOIN users repairer " +
+            "ON repairer.id = rrm.repairer_id " +
+            "JOIN status stt " +
+            "ON stt.id = rr.status_id) AS tb1 ) " +
+            "AS tb2 " +
+            "WHERE row_num BETWEEN :start and :end", nativeQuery = true)
+    List<IRequestInfoDTO> findAllRequestForAdmin(Integer start, Integer end);
 }

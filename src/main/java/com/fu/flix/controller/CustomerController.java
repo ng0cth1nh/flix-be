@@ -43,7 +43,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("address")
-    public ResponseEntity<DeleteAddressResponse> deleteCustomerAddress(@RequestBody DeleteAddressRequest request) {
+    public ResponseEntity<DeleteAddressResponse> deleteCustomerAddress(DeleteAddressRequest request) {
         return customerService.deleteCustomerAddress(request);
     }
 
@@ -73,7 +73,7 @@ public class CustomerController {
     }
 
     @GetMapping("repairer/profile")
-    public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
+    public ResponseEntity<RepairerResponse> getRepairerProfile(RepairerRequest request) {
         return customerService.getRepairerProfile(request);
     }
 

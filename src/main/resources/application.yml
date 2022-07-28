@@ -2,14 +2,17 @@ app:
   secretKey: 'secret'
   lifeTimeToke: 86400000 #milliseconds
   lifeTimeRefreshToken: 172800000 #milliseconds
-  limitQueryDefault: 20
-  offsetDefault: 0
+  defaultLimitQuery: 20
+  defaultOffset: 0
   vat: 0.05
   profitRate: 0.2
   fine: 20000
   minTimeFined: 3600 #milliseconds
   descriptionMaxLength: 2500
   nameMaxLength: 150
+  defaultPageSize: 10
+  defaultPageNumber: 0
+  milestoneMoney: 20000
   twilioInfo:
     accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'
     authToken: 'b2bdec58830ce248a8e2d60bdfa6205c'
@@ -39,7 +42,7 @@ app:
     currCode: 'VND'
     secureHash: 'MPBTQAIUBXZUPPPWJEGMCTPCDZRNRLZV'
     payUrl: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
-    returnUrl: 'https://www.facebook.com/'
+    returnUrl: 'flix://request/invoice'
 
 server:
   port: 8080

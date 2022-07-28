@@ -158,4 +158,9 @@ public class AdminController {
     public ResponseEntity<GetRepairerDetailResponse> getRepairerDetail(GetRepairerDetailRequest request) {
         return adminService.getRepairerDetail(request);
     }
+
+    @GetMapping("search/categories")
+    public ResponseEntity<SearchCategoriesResponse> searchCategories(SearchCategoriesRequest request) {
+        return adminService.searchCategories(request);
+    }
 }

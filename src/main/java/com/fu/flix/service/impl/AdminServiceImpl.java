@@ -947,4 +947,18 @@ public class AdminServiceImpl implements AdminService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<SearchCategoriesResponse> searchCategories(SearchCategoriesRequest request) {
+        String keyword = request.getKeyword();
+        if (keyword == null || keyword.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        List<ICategoryDTO> categories = categoryDAO.searchCategories(keyword);
+        SearchCategoriesResponse response = new SearchCategoriesResponse();
+        response.setCategories(categories);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

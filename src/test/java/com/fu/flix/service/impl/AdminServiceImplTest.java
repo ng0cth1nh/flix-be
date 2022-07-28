@@ -1620,6 +1620,36 @@ class AdminServiceImplTest {
         Assertions.assertNotNull(response);
     }
 
+    @Test
+    void test_search_categories_success() {
+        // given
+        SearchCategoriesRequest request = new SearchCategoriesRequest();
+        request.setKeyword("điện");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchCategoriesResponse response = underTest.searchCategories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getCategories());
+    }
+
+    @Test
+    void test_search_categories_fail_when_keyword_is_null() {
+        // given
+        SearchCategoriesRequest request = new SearchCategoriesRequest();
+        request.setKeyword(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchCategories(request));
+
+        // then
+        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
+    }
+
     void setManagerContext(Long id, String phone) {
         String[] roles = {"ROLE_MANAGER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();

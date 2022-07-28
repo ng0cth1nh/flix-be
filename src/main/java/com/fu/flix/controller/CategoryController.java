@@ -1,9 +1,11 @@
 package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.SearchActiveServicesRequest;
+import com.fu.flix.dto.request.SearchCategoriesRequest;
 import com.fu.flix.dto.request.ServiceRequest;
 import com.fu.flix.dto.request.ServiceResponse;
 import com.fu.flix.dto.response.SearchActiveServicesResponse;
+import com.fu.flix.dto.response.SearchCategoriesResponse;
 import com.fu.flix.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

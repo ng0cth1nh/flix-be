@@ -170,7 +170,12 @@ public class AdminController {
     }
 
     @GetMapping("search/customers")
-    public ResponseEntity<SearchCustomerResponse> searchCustomers(SearchCustomerRequest request) {
+    public ResponseEntity<SearchCustomersResponse> searchCustomers(SearchCustomersRequest request) {
         return adminService.searchCustomers(request);
+    }
+
+    @GetMapping("search/repairers")
+    public ResponseEntity<SearchRepairersResponse> searchRepairers(SearchRepairersRequest request) {
+        return adminService.searchRepairers(request);
     }
 }

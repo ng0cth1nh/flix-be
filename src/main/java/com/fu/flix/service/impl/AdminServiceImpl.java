@@ -1013,15 +1013,29 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<SearchCustomerResponse> searchCustomers(SearchCustomerRequest request) {
+    public ResponseEntity<SearchCustomersResponse> searchCustomers(SearchCustomersRequest request) {
         String phone = request.getKeyword();
         if (Strings.isEmpty(phone)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
         }
 
         List<ISearchCustomerDTO> customers = userDAO.searchCustomersForAdmin(phone);
-        SearchCustomerResponse response = new SearchCustomerResponse();
+        SearchCustomersResponse response = new SearchCustomersResponse();
         response.setCustomers(customers);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<SearchRepairersResponse> searchRepairers(SearchRepairersRequest request) {
+        String phone = request.getKeyword();
+        if (Strings.isEmpty(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone);
+        SearchRepairersResponse response = new SearchRepairersResponse();
+        response.setRepairers(repairers);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

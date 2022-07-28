@@ -8,6 +8,6 @@ import java.util.List;
 
 @Getter
 @Setter
-public class SearchCustomerResponse {
+public class SearchCustomersResponse {
     private List<ISearchCustomerDTO> customers;
 }

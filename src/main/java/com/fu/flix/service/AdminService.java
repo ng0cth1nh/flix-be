@@ -67,5 +67,7 @@ public interface AdminService {
 
     ResponseEntity<SearchFeedbackResponse> searchFeedbacks(SearchFeedbackRequest request);
 
-    ResponseEntity<SearchCustomerResponse> searchCustomers(SearchCustomerRequest request);
+    ResponseEntity<SearchCustomersResponse> searchCustomers(SearchCustomersRequest request);
+
+    ResponseEntity<SearchRepairersResponse> searchRepairers(SearchRepairersRequest request);
 }

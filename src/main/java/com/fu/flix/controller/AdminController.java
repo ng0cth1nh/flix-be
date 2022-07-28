@@ -164,8 +164,13 @@ public class AdminController {
         return adminService.searchCategories(request);
     }
 
-    @GetMapping("search/feedback")
+    @GetMapping("search/feedbacks")
     public ResponseEntity<SearchFeedbackResponse> searchFeedbacks(SearchFeedbackRequest request) {
         return adminService.searchFeedbacks(request);
+    }
+
+    @GetMapping("search/customers")
+    public ResponseEntity<SearchCustomerResponse> searchCustomers(SearchCustomerRequest request) {
+        return adminService.searchCustomers(request);
     }
 }

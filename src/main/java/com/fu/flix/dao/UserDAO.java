@@ -134,4 +134,16 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "AND ua.deleted_at IS NULL " +
             "AND u.id = :repairerId", nativeQuery = true)
     Optional<IRepairerProfileDTO> findRepairerProfile(Long repairerId);
+
+    @Query(value = "SELECT customer.id, avatar.url as avatar, customer.full_name as customerName, customer.phone as customerPhone, " +
+            "CASE WHEN customer.is_active THEN 'ACTIVE' ELSE 'BAN' END as status " +
+            "FROM users customer " +
+            "JOIN user_roles ur " +
+            "ON ur.user_id = customer.id " +
+            "JOIN images avatar " +
+            "ON customer.avatar = avatar.id " +
+            "WHERE ur.role_id = 'C' " +
+            "AND customer.phone " +
+            "LIKE %:phone%", nativeQuery = true)
+    List<ISearchCustomerDTO> searchCustomersForAdmin(String phone);
 }

@@ -2,6 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.FeedbackStatus;
+import com.fu.flix.constant.enums.FeedbackType;
 import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
@@ -24,9 +25,7 @@ import javax.transaction.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
@@ -832,15 +831,6 @@ public class AdminServiceImpl implements AdminService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private String getFeedbackStatusValidated(String status) {
-        for (FeedbackStatus stt : FeedbackStatus.values()) {
-            if (stt.name().equals(status)) {
-                return status;
-            }
-        }
-        throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_STATUS);
-    }
-
     @Override
     public ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request) {
         int pageSize = validatorService.getPageSize(request.getPageSize());
@@ -960,5 +950,65 @@ public class AdminServiceImpl implements AdminService {
         response.setCategories(categories);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<SearchFeedbackResponse> searchFeedbacks(SearchFeedbackRequest request) {
+        String phone = request.getKeyword() == null
+                ? Strings.EMPTY
+                : request.getKeyword();
+
+        List<String> feedbackStatusIds = getQueryFeedbackStatusIds(request.getStatus());
+        List<String> feedbackTypes = getQueryFeedbackTypes(request.getFeedbackType());
+
+        List<ISearchFeedbackDTO> feedbacks = feedbackDAO
+                .searchFeedbackForAdmin(phone, feedbackStatusIds, feedbackTypes);
+
+        SearchFeedbackResponse response = new SearchFeedbackResponse();
+        response.setFeedbackList(feedbacks);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private List<String> getQueryFeedbackStatusIds(String status) {
+        if (Strings.isEmpty(status)) {
+            return Arrays.stream(FeedbackStatus.values())
+                    .map(FeedbackStatus::getId)
+                    .collect(Collectors.toList());
+        }
+
+        List<String> result = new ArrayList<>();
+        result.add(FeedbackStatus.valueOf(getFeedbackStatusValidated(status)).getId());
+        return result;
+    }
+
+    private String getFeedbackStatusValidated(String status) {
+        for (FeedbackStatus stt : FeedbackStatus.values()) {
+            if (stt.name().equals(status)) {
+                return status;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_STATUS);
+    }
+
+    private List<String> getQueryFeedbackTypes(String type) {
+        if (Strings.isEmpty(type)) {
+            return Arrays.stream(FeedbackType.values())
+                    .map(FeedbackType::name)
+                    .collect(Collectors.toList());
+        }
+
+        List<String> result = new ArrayList<>();
+        result.add(getFeedbackTypeValidated(type));
+        return result;
+    }
+
+    private String getFeedbackTypeValidated(String type) {
+        for (FeedbackType ft : FeedbackType.values()) {
+            if (ft.name().equals(type)) {
+                return type;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_TYPE);
     }
 }

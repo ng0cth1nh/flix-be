@@ -1011,4 +1011,18 @@ public class AdminServiceImpl implements AdminService {
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_TYPE);
     }
+
+    @Override
+    public ResponseEntity<SearchCustomerResponse> searchCustomers(SearchCustomerRequest request) {
+        String phone = request.getKeyword();
+        if (Strings.isEmpty(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        List<ISearchCustomerDTO> customers = userDAO.searchCustomersForAdmin(phone);
+        SearchCustomerResponse response = new SearchCustomerResponse();
+        response.setCustomers(customers);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

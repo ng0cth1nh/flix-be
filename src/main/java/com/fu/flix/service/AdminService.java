@@ -66,4 +66,6 @@ public interface AdminService {
     ResponseEntity<SearchCategoriesResponse> searchCategories(SearchCategoriesRequest request);
 
     ResponseEntity<SearchFeedbackResponse> searchFeedbacks(SearchFeedbackRequest request);
+
+    ResponseEntity<SearchCustomerResponse> searchCustomers(SearchCustomerRequest request);
 }

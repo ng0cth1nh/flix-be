@@ -18,4 +18,6 @@ public interface AccessoryDAO extends JpaRepository<Accessory, Long> {
             "WHERE service_id = :serviceId " +
             "AND name LIKE %:keyword% ", nativeQuery = true)
     List<Accessory> searchAccessoriesByService(String keyword, Long serviceId);
+
+    List<Accessory> findByServiceId(Long serviceId);
 }

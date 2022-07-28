@@ -1,6 +1,7 @@
 package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.AccessoriesResponse;
 import com.fu.flix.dto.response.SearchActiveServicesResponse;
 import com.fu.flix.dto.response.SearchCategoriesResponse;
 import com.fu.flix.dto.response.SubServiceResponse;
@@ -34,5 +35,10 @@ public class CategoryController {
     @GetMapping("services/subServices")
     public ResponseEntity<SubServiceResponse> getSubServicesByServiceId(SubServiceRequest request) {
         return categoryService.getSubServicesByServiceId(request);
+    }
+
+    @GetMapping("services/accessories")
+    public ResponseEntity<AccessoriesResponse> getAccessoriesByServiceId(AccessoriesRequest request) {
+        return categoryService.getAccessoriesByServiceId(request);
     }
 }

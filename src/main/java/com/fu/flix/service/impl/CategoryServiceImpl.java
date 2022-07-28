@@ -1,20 +1,17 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.constant.Constant;
+import com.fu.flix.dao.AccessoryDAO;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.ServiceDAO;
 import com.fu.flix.dao.SubServiceDAO;
-import com.fu.flix.dto.ISearchActiveServiceDTO;
-import com.fu.flix.dto.SearchServiceDTO;
-import com.fu.flix.dto.ServiceDTO;
-import com.fu.flix.dto.SubServiceOutputDTO;
+import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.SearchActiveServicesRequest;
-import com.fu.flix.dto.request.ServiceRequest;
-import com.fu.flix.dto.request.ServiceResponse;
-import com.fu.flix.dto.request.SubServiceRequest;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.AccessoriesResponse;
 import com.fu.flix.dto.response.SearchActiveServicesResponse;
 import com.fu.flix.dto.response.SubServiceResponse;
+import com.fu.flix.entity.Accessory;
 import com.fu.flix.entity.Image;
 import com.fu.flix.entity.SubService;
 import com.fu.flix.service.CategoryService;
@@ -38,13 +35,16 @@ public class CategoryServiceImpl implements CategoryService {
     private final ServiceDAO serviceDAO;
     private final ImageDAO imageDAO;
     private final SubServiceDAO subServiceDAO;
+    private final AccessoryDAO accessoryDAO;
 
     public CategoryServiceImpl(ServiceDAO serviceDAO,
                                ImageDAO imageDAO,
-                               SubServiceDAO subServiceDAO) {
+                               SubServiceDAO subServiceDAO,
+                               AccessoryDAO accessoryDAO) {
         this.serviceDAO = serviceDAO;
         this.imageDAO = imageDAO;
         this.subServiceDAO = subServiceDAO;
+        this.accessoryDAO = accessoryDAO;
     }
 
     @Override
@@ -131,6 +131,30 @@ public class CategoryServiceImpl implements CategoryService {
 
         SubServiceResponse response = new SubServiceResponse();
         response.setSubServices(subServiceDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<AccessoriesResponse> getAccessoriesByServiceId(AccessoriesRequest request) {
+        Long serviceId = request.getServiceId();
+        if (serviceId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
+        }
+
+        List<Accessory> accessories = accessoryDAO.findByServiceId(serviceId);
+        List<AccessoryOutputDTO> accessoryDTOS = accessories.stream()
+                .map(accessory -> {
+                    AccessoryOutputDTO dto = new AccessoryOutputDTO();
+                    dto.setId(accessory.getId());
+                    dto.setName(accessory.getName());
+                    dto.setPrice(accessory.getPrice());
+                    dto.setInsuranceTime(accessory.getInsuranceTime());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        AccessoriesResponse response = new AccessoriesResponse();
+        response.setAccessories(accessoryDTOS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

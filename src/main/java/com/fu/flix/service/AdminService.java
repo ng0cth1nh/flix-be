@@ -64,4 +64,6 @@ public interface AdminService {
     ResponseEntity<GetRepairerDetailResponse> getRepairerDetail(GetRepairerDetailRequest request);
 
     ResponseEntity<SearchCategoriesResponse> searchCategories(SearchCategoriesRequest request);
+
+    ResponseEntity<SearchFeedbackResponse> searchFeedbacks(SearchFeedbackRequest request);
 }

@@ -78,4 +78,6 @@ public interface AdminService {
     ResponseEntity<AdminGetRequestDetailResponse> getRequestDetail(AdminGetRequestDetailRequest request);
 
     ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request);
+
+    ResponseEntity<TransactionDetailResponse> getTransactionDetail(TransactionDetailRequest request);
 }

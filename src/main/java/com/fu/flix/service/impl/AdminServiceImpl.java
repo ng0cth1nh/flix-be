@@ -1190,4 +1190,32 @@ public class AdminServiceImpl implements AdminService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<TransactionDetailResponse> getTransactionDetail(TransactionDetailRequest request) {
+        Long transactionId = request.getId();
+        if (transactionId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_ID);
+        }
+
+        TransactionDetailResponse response = new TransactionDetailResponse();
+        Optional<ITransactionDetailDTO> optionalTransaction = transactionHistoryDAO.findTransactionDetail(transactionId);
+        optionalTransaction.ifPresent(transaction -> {
+            response.setId(transaction.getId());
+            response.setRequestCode(transaction.getRequestCode());
+            response.setVnpTransactionNo(transaction.getVnpTransactionNo());
+            response.setAmount(transaction.getAmount());
+            response.setTransactionType(transaction.getTransactionType());
+            response.setFullName(transaction.getFullName());
+            response.setPhone(transaction.getPhone());
+            response.setPayDate(transaction.getPayDate());
+            response.setBankCode(transaction.getBankCode());
+            response.setCardType(transaction.getCardType());
+            response.setOrderInfo(transaction.getOrderInfo());
+            response.setVnpBankTranNo(transaction.getVnpBankTranNo());
+            response.setResponseResult(transaction.getResponseResult());
+        });
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

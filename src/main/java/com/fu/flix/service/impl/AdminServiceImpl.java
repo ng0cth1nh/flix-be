@@ -1055,6 +1055,8 @@ public class AdminServiceImpl implements AdminService {
                     dto.setName(accessory.getName());
                     dto.setPrice(accessory.getPrice());
                     dto.setInsuranceTime(accessory.getInsuranceTime());
+                    dto.setManufacture(accessory.getManufacture());
+                    dto.setCountry(accessory.getCountry());
                     return dto;
                 }).collect(Collectors.toList());
 

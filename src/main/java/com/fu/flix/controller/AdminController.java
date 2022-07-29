@@ -188,4 +188,9 @@ public class AdminController {
     public ResponseEntity<TransactionsResponse> getTransactions(TransactionsRequest request) {
         return adminService.getTransactions(request);
     }
+
+    @GetMapping("request")
+    public ResponseEntity<AdminGetRequestDetailResponse> getRequestDetail(AdminGetRequestDetailRequest request) {
+        return adminService.getRequestDetail(request);
+    }
 }

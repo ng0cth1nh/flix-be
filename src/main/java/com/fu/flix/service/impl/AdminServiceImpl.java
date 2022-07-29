@@ -53,7 +53,10 @@ public class AdminServiceImpl implements AdminService {
     private final CertificateDAO certificateDAO;
     private final AccessoryDAO accessoryDAO;
     private final RepairerDAO repairerDAO;
+    private final ExtraServiceDAO extraServiceDAO;
     private final TransactionHistoryDAO transactionHistoryDAO;
+    private final VoucherService voucherService;
+    private final InvoiceDAO invoiceDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -76,7 +79,10 @@ public class AdminServiceImpl implements AdminService {
                             CertificateDAO certificateDAO,
                             AccessoryDAO accessoryDAO,
                             RepairerDAO repairerDAO,
-                            TransactionHistoryDAO transactionHistoryDAO) {
+                            ExtraServiceDAO extraServiceDAO,
+                            TransactionHistoryDAO transactionHistoryDAO,
+                            VoucherService voucherService,
+                            InvoiceDAO invoiceDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -97,7 +103,10 @@ public class AdminServiceImpl implements AdminService {
         this.certificateDAO = certificateDAO;
         this.accessoryDAO = accessoryDAO;
         this.repairerDAO = repairerDAO;
+        this.extraServiceDAO = extraServiceDAO;
         this.transactionHistoryDAO = transactionHistoryDAO;
+        this.voucherService = voucherService;
+        this.invoiceDAO = invoiceDAO;
     }
 
     @Override
@@ -1081,5 +1090,80 @@ public class AdminServiceImpl implements AdminService {
         response.setTransactions(transactions);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<AdminGetRequestDetailResponse> getRequestDetail(AdminGetRequestDetailRequest request) {
+        String requestCode = request.getRequestCode();
+        if (Strings.isEmpty(requestCode)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
+        AdminGetRequestDetailResponse response = new AdminGetRequestDetailResponse();
+        Optional<IDetailRequestDTO> requestDetail = repairRequestDAO.findRequestDetailForAdmin(requestCode);
+        requestDetail.ifPresent(rd -> {
+            VoucherDTO voucherInfo = voucherService.getVoucherInfo(rd.getVoucherId());
+            Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+
+            response.setRequestCode(requestCode);
+            response.setCustomerName(rd.getCustomerName());
+            response.setCustomerPhone(rd.getCustomerPhone());
+            response.setRepairerName(rd.getRepairerName());
+            response.setRepairerPhone(rd.getRepairerPhone());
+            response.setStatus(rd.getStatus());
+            response.setCustomerAddress(addressService.getAddressFormatted(rd.getCustomerAddressId()));
+            response.setDescription(rd.getDescription());
+            response.setServiceName(rd.getServiceName());
+            response.setVoucherCode(voucherInfo.getVoucherCode());
+            response.setVoucherDiscount(voucherInfo.getVoucherDiscount());
+            response.setVoucherDescription(voucherInfo.getVoucherDescription());
+            response.setExpectedFixingTime(DateFormatUtil.toString(rd.getExpectedFixingTime(), DATE_TIME_PATTERN));
+            response.setPaymentMethod(rd.getPaymentMethod());
+            response.setCancelReason(rd.getCancelReason());
+            response.setCreatedAt(DateFormatUtil.toString(rd.getCreatedAt(), DATE_TIME_PATTERN));
+            response.setTotalPrice(rd.getTotalPrice());
+            response.setVatPrice(rd.getVatPrice());
+            response.setActualPrice(rd.getActualPrice());
+            response.setTotalDiscount(rd.getTotalDiscount());
+            response.setInspectionPrice(rd.getInspectionPrice());
+            response.setTotalSubServicePrice(rd.getTotalSubServicePrice());
+            response.setTotalAccessoryPrice(rd.getTotalAccessoryPrice());
+            response.setTotalExtraServicePrice(rd.getTotalExtraServicePrice());
+            response.setSubServices(getSubServiceDTOs(invoice));
+            response.setAccessories(getAccessoryDTOs(invoice));
+            response.setExtraServices(getExtraServiceDTOs(requestCode));
+        });
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private List<SubServiceOutputDTO> getSubServiceDTOs(Invoice invoice) {
+        return invoice.getSubServices().stream()
+                .map(subService -> {
+                    SubServiceOutputDTO dto = new SubServiceOutputDTO();
+                    dto.setName(subService.getName());
+                    dto.setPrice(subService.getPrice());
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+    private List<AccessoryOutputDTO> getAccessoryDTOs(Invoice invoice) {
+        return invoice.getAccessories().stream()
+                .map(accessory -> {
+                    AccessoryOutputDTO dto = new AccessoryOutputDTO();
+                    dto.setName(accessory.getName());
+                    dto.setPrice(accessory.getPrice());
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+    private List<ExtraServiceOutputDTO> getExtraServiceDTOs(String requestCode) {
+        return extraServiceDAO.findByRequestCode(requestCode).stream()
+                .map(extraService -> {
+                    ExtraServiceOutputDTO dto = new ExtraServiceOutputDTO();
+                    dto.setName(extraService.getName());
+                    dto.setPrice(extraService.getPrice());
+                    return dto;
+                }).collect(Collectors.toList());
     }
 }

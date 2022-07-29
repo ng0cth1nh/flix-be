@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.*;
 import static com.fu.flix.constant.enums.TransactionType.*;
+import static com.fu.flix.constant.enums.VnPayResult.SUCCESS;
 
 @Service
 @Slf4j
@@ -215,6 +216,7 @@ public class RepairerServiceImpl implements RepairerService {
         finedTransaction.setAmount(fineMoney);
         finedTransaction.setType(FINED.name());
         finedTransaction.setRequestCode(requestCode);
+        finedTransaction.setStatus(SUCCESS.name());
         transactionHistoryDAO.save(finedTransaction);
     }
 
@@ -315,6 +317,7 @@ public class RepairerServiceImpl implements RepairerService {
         transactionHistory.setAmount(commission);
         transactionHistory.setType(PAY_COMMISSIONS.name());
         transactionHistory.setRequestCode(requestCode);
+        transactionHistory.setStatus(SUCCESS.name());
         transactionHistoryDAO.save(transactionHistory);
     }
 

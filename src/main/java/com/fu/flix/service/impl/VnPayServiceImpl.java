@@ -3,6 +3,7 @@ package com.fu.flix.service.impl;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.PaymentMethod;
 import com.fu.flix.constant.enums.RequestStatus;
+import com.fu.flix.constant.enums.VnPayResult;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CustomerPaymentUrlRequest;
@@ -31,6 +32,8 @@ import java.util.*;
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.TransactionType.CUSTOMER_PAYMENT;
 import static com.fu.flix.constant.enums.TransactionType.RECEIVE_INVOICE_MONEY;
+import static com.fu.flix.constant.enums.VnPayResult.FAIL;
+import static com.fu.flix.constant.enums.VnPayResult.SUCCESS;
 
 @Service
 @Slf4j
@@ -202,49 +205,32 @@ public class VnPayServiceImpl implements VNPayService {
         // Check checksum
         String signValue = hashAllFields(requestParams);
         if (!signValue.equals(vnp_SecureHash)) {
+            saveTransactions(requestParams, null, null, false);
             response.setMessage(INVALID_CHECKSUM);
             response.setRspCode(VN_PAY_RESPONSE.get(INVALID_CHECKSUM));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        String responseCode = requestParams.get(VNP_RESPONSE_CODE);
-        if (!VN_PAY_SUCCESS_CODE.equals(responseCode)) {
-            response.setMessage(PAYMENT_FAILED);
-            response.setRspCode(VN_PAY_RESPONSE.get(PAYMENT_FAILED));
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-
         String requestCode = requestParams.get(VNP_TNX_REF);
         if (isRequestCodeNotFound(requestCode)) {
+            saveTransactions(requestParams, null, null, false);
             response.setMessage(VNP_TXN_REF_IS_REQUIRED);
             response.setRspCode(VN_PAY_RESPONSE.get(VNP_TXN_REF_IS_REQUIRED));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        if (vnPayTransactionDAO.findByVnpTxnRef(requestCode).isPresent()) {
-            response.setMessage(VNP_TXN_REF_EXISTED_IN_DATABASE);
-            response.setRspCode(VN_PAY_RESPONSE.get(VNP_TXN_REF_EXISTED_IN_DATABASE));
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-
         Optional<RepairRequest> optionalRepairRequest = repairRequestDAO.findByRequestCode(requestCode);
         if (optionalRepairRequest.isEmpty()) {
+            saveTransactions(requestParams, null, null, false);
             response.setMessage(REPAIR_REQUEST_NOT_FOUND);
             response.setRspCode(VN_PAY_RESPONSE.get(REPAIR_REQUEST_NOT_FOUND));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
-        Long amount = Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
-        if (!invoice.getActualProceeds().equals(amount)) {
-            log.info("Actual proceed: " + invoice.getActualProceeds() + ", amount: " + amount);
-            response.setMessage(AMOUNT_DOES_NOT_MATCH_TO_INVOICE);
-            response.setRspCode(VN_PAY_RESPONSE.get(AMOUNT_DOES_NOT_MATCH_TO_INVOICE));
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-
         RepairRequest repairRequest = optionalRepairRequest.get();
+        Long customerId = repairRequest.getUserId();
         if (!RequestStatus.PAYMENT_WAITING.getId().equals(repairRequest.getStatusId())) {
+            saveTransactions(requestParams, null, customerId, false);
             response.setMessage(CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
             response.setRspCode(VN_PAY_RESPONSE.get(CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING));
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -254,14 +240,37 @@ public class VnPayServiceImpl implements VNPayService {
         Long repairerId = repairRequestMatching.getRepairerId();
         Repairer repairer = repairerDAO.findByUserId(repairerId).get();
 
+        String responseCode = requestParams.get(VNP_RESPONSE_CODE);
+        if (!VN_PAY_SUCCESS_CODE.equals(responseCode)) {
+            saveTransactions(requestParams, repairerId, customerId, false);
+            response.setMessage(PAYMENT_FAILED);
+            response.setRspCode(VN_PAY_RESPONSE.get(PAYMENT_FAILED));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
+        if (vnPayTransactionDAO.findByVnpTxnRefAndResponseCode(requestCode, VN_PAY_SUCCESS_CODE).isPresent()) {
+            saveTransactions(requestParams, repairerId, customerId, false);
+            response.setMessage(VNP_TXN_REF_EXISTED_IN_DATABASE);
+            response.setRspCode(VN_PAY_RESPONSE.get(VNP_TXN_REF_EXISTED_IN_DATABASE));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        Long amount = Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
+        if (!invoice.getActualProceeds().equals(amount)) {
+            saveTransactions(requestParams, repairerId, customerId, false);
+            log.info("Actual proceed: " + invoice.getActualProceeds() + ", amount: " + amount);
+            response.setMessage(AMOUNT_DOES_NOT_MATCH_TO_INVOICE);
+            response.setRspCode(VN_PAY_RESPONSE.get(AMOUNT_DOES_NOT_MATCH_TO_INVOICE));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
         plusBalanceForRepairer(amount, repairerId);
-        VnPayTransaction savedVnPayTransaction = saveVnPayTransaction(requestParams);
-        saveCustomerTransactionHistory(requestParams, repairRequest.getUserId(), savedVnPayTransaction.getId());
-        saveRepairerTransactionHistory(requestParams, repairerId);
+        saveTransactions(requestParams, repairerId, customerId, true);
         repairer.setRepairing(false);
         repairRequest.setStatusId(RequestStatus.DONE.getId());
 
-        log.info("user id: " + repairRequest.getUserId() + "payment success for request " + requestCode + " success");
+        log.info("user id: " + customerId + "payment success for request " + requestCode + " success");
         response.setMessage(PAYMENT_SUCCESS);
         response.setRspCode(VN_PAY_RESPONSE.get(PAYMENT_SUCCESS));
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -270,6 +279,12 @@ public class VnPayServiceImpl implements VNPayService {
     private void plusBalanceForRepairer(Long amount, Long repairerId) {
         Balance balance = balanceDAO.findByUserId(repairerId).get();
         balance.setBalance(balance.getBalance() + amount);
+    }
+
+    private void saveTransactions(Map<String, String> requestParams, Long repairerId, Long customerId, boolean isSuccess) {
+        VnPayTransaction savedVnPayTransaction = saveVnPayTransaction(requestParams);
+        saveCustomerTransactionHistory(requestParams, customerId, savedVnPayTransaction.getId(), isSuccess);
+        saveRepairerTransactionHistory(requestParams, repairerId, isSuccess);
     }
 
     private VnPayTransaction saveVnPayTransaction(Map<String, String> requestParams) {
@@ -289,22 +304,29 @@ public class VnPayServiceImpl implements VNPayService {
         return vnPayTransactionDAO.save(vnPayTransaction);
     }
 
-    private void saveCustomerTransactionHistory(Map<String, String> requestParams, Long customerId, Long vnPayTransactionId) {
+    private void saveCustomerTransactionHistory(Map<String, String> requestParams,
+                                                Long customerId,
+                                                Long vnPayTransactionId,
+                                                boolean isSuccess) {
         TransactionHistory transactionHistory = new TransactionHistory();
         transactionHistory.setRequestCode(requestParams.get(VNP_TNX_REF));
         transactionHistory.setAmount(Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate);
         transactionHistory.setType(CUSTOMER_PAYMENT.name());
         transactionHistory.setUserId(customerId);
         transactionHistory.setVnpayTransactionId(vnPayTransactionId);
+        transactionHistory.setStatus(isSuccess ? SUCCESS.name() : FAIL.name());
         transactionHistoryDAO.save(transactionHistory);
     }
 
-    private void saveRepairerTransactionHistory(Map<String, String> requestParams, Long repairerId) {
+    private void saveRepairerTransactionHistory(Map<String, String> requestParams,
+                                                Long repairerId,
+                                                boolean isSuccess) {
         TransactionHistory transactionHistory = new TransactionHistory();
         transactionHistory.setRequestCode(requestParams.get(VNP_TNX_REF));
         transactionHistory.setAmount(Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate);
         transactionHistory.setType(RECEIVE_INVOICE_MONEY.name());
         transactionHistory.setUserId(repairerId);
+        transactionHistory.setStatus(isSuccess ? SUCCESS.name() : FAIL.name());
         transactionHistoryDAO.save(transactionHistory);
     }
 

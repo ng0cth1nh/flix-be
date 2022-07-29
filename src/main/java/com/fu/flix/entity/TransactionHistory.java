@@ -31,6 +31,8 @@ public class TransactionHistory {
 
     private Long vnpayTransactionId;
 
+    private String status;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

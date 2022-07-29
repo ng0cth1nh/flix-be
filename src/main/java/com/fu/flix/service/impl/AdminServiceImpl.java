@@ -1166,4 +1166,28 @@ public class AdminServiceImpl implements AdminService {
                     return dto;
                 }).collect(Collectors.toList());
     }
+
+    @Override
+    public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request) {
+        String keyword = request.getKeyword();
+        if (Strings.isEmpty(keyword)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        List<SubService> subServiceDTOs = subServiceDAO.searchSubServicesForAdmin(keyword);
+        List<SubServiceOutputDTO> subServices = subServiceDTOs.stream()
+                .map(subService -> {
+                    SubServiceOutputDTO dto = new SubServiceOutputDTO();
+                    dto.setId(subService.getId());
+                    dto.setName(subService.getName());
+                    dto.setPrice(subService.getPrice());
+                    dto.setStatus(subService.getIsActive() ? "ACTIVE" : "INACTIVE");
+                    return dto;
+                }).collect(Collectors.toList());
+
+        AdminSearchSubServicesResponse response = new AdminSearchSubServicesResponse();
+        response.setSubServices(subServices);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

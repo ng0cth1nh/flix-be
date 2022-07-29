@@ -17,7 +17,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             " u.phone, DATE_FORMAT(th.created_at, '%Y-%m-%d %H:%i:%s') as payDate " +
             "FROM transaction_histories th " +
             "LEFT JOIN vnpay_transactions vt " +
-            "ON vt.vnp_txn_ref = th.request_code " +
+            "ON vt.id = th.vnpay_transaction_id " +
             "JOIN users u " +
             "ON u.id = th.user_id limit :limit offset :offset", nativeQuery = true)
     List<ITransactionDTO> findTransactionsForAdmin(Integer limit, Integer offset);

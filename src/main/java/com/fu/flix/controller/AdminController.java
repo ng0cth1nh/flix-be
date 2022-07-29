@@ -183,4 +183,9 @@ public class AdminController {
     public ResponseEntity<AdminSearchAccessoriesResponse> searchAccessories(AdminSearchAccessoriesRequest request) {
         return adminService.searchAccessories(request);
     }
+
+    @GetMapping("transactions")
+    public ResponseEntity<TransactionsResponse> getTransactions(TransactionsRequest request) {
+        return adminService.getTransactions(request);
+    }
 }

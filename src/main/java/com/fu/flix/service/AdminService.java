@@ -72,4 +72,6 @@ public interface AdminService {
     ResponseEntity<SearchRepairersResponse> searchRepairers(SearchRepairersRequest request);
 
     ResponseEntity<AdminSearchAccessoriesResponse> searchAccessories(AdminSearchAccessoriesRequest request);
+
+    ResponseEntity<TransactionsResponse> getTransactions(TransactionsRequest request);
 }

@@ -53,6 +53,7 @@ public class AdminServiceImpl implements AdminService {
     private final CertificateDAO certificateDAO;
     private final AccessoryDAO accessoryDAO;
     private final RepairerDAO repairerDAO;
+    private final TransactionHistoryDAO transactionHistoryDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -74,7 +75,8 @@ public class AdminServiceImpl implements AdminService {
                             StatusDAO statusDAO,
                             CertificateDAO certificateDAO,
                             AccessoryDAO accessoryDAO,
-                            RepairerDAO repairerDAO) {
+                            RepairerDAO repairerDAO,
+                            TransactionHistoryDAO transactionHistoryDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -95,6 +97,7 @@ public class AdminServiceImpl implements AdminService {
         this.certificateDAO = certificateDAO;
         this.accessoryDAO = accessoryDAO;
         this.repairerDAO = repairerDAO;
+        this.transactionHistoryDAO = transactionHistoryDAO;
     }
 
     @Override
@@ -1036,6 +1039,46 @@ public class AdminServiceImpl implements AdminService {
         List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone);
         SearchRepairersResponse response = new SearchRepairersResponse();
         response.setRepairers(repairers);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<AdminSearchAccessoriesResponse> searchAccessories(AdminSearchAccessoriesRequest request) {
+        String keyword = request.getKeyword();
+        if (Strings.isEmpty(keyword)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        List<Accessory> accessories = accessoryDAO.searchAccessories(keyword);
+        List<AccessoryOutputDTO> accessoryOutputDTOS = accessories.stream()
+                .map(accessory -> {
+                    AccessoryOutputDTO dto = new AccessoryOutputDTO();
+                    dto.setId(accessory.getId());
+                    dto.setName(accessory.getName());
+                    dto.setPrice(accessory.getPrice());
+                    dto.setInsuranceTime(accessory.getInsuranceTime());
+                    dto.setManufacture(accessory.getManufacture());
+                    dto.setCountry(accessory.getCountry());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        AdminSearchAccessoriesResponse response = new AdminSearchAccessoriesResponse();
+        response.setAccessories(accessoryOutputDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<TransactionsResponse> getTransactions(TransactionsRequest request) {
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+
+        int offset = pageNumber * pageSize;
+
+        List<ITransactionDTO> transactions = transactionHistoryDAO.findTransactionsForAdmin(pageSize, offset);
+        TransactionsResponse response = new TransactionsResponse();
+        response.setTransactions(transactions);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

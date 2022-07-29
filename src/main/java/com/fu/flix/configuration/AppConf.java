@@ -30,6 +30,7 @@ public class AppConf {
     private Integer defaultPageSize;
     private Integer defaultPageNumber;
     private Long milestoneMoney;
+    private Long minVnPay;
 
     @Data
     public static class TwilioInfo {

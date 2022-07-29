@@ -3,16 +3,18 @@ package com.fu.flix.service.impl;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.PaymentMethod;
 import com.fu.flix.constant.enums.RequestStatus;
-import com.fu.flix.constant.enums.VnPayResult;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CustomerPaymentUrlRequest;
+import com.fu.flix.dto.request.RepairerDepositUrlRequest;
 import com.fu.flix.dto.response.CustomerPaymentResponse;
 import com.fu.flix.dto.response.CustomerPaymentUrlResponse;
+import com.fu.flix.dto.response.RepairerDepositUrlResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.VNPayService;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
+import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
@@ -48,6 +50,7 @@ public class VnPayServiceImpl implements VNPayService {
     private final AppConf.VnPayInfo vnPayInfo;
     private final Integer vnPayAmountRate;
     private final RepairerDAO repairerDAO;
+    private final AppConf appConf;
 
     private final String VN_PAY_SUCCESS_CODE = "00";
     private final String VNP_AMOUNT = "vnp_Amount";
@@ -78,7 +81,8 @@ public class VnPayServiceImpl implements VNPayService {
                             BalanceDAO balanceDAO,
                             InvoiceDAO invoiceDAO,
                             TransactionHistoryDAO transactionHistoryDAO,
-                            RepairerDAO repairerDAO) {
+                            RepairerDAO repairerDAO,
+                            AppConf appConf1) {
         this.repairRequestDAO = repairRequestDAO;
         this.vnPayTransactionDAO = vnPayTransactionDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -87,6 +91,7 @@ public class VnPayServiceImpl implements VNPayService {
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.vnPayInfo = appConf.getVnPayInfo();
         this.repairerDAO = repairerDAO;
+        this.appConf = appConf1;
         this.vnPayAmountRate = this.vnPayInfo.getVnPayAmountRate();
     }
 
@@ -97,67 +102,15 @@ public class VnPayServiceImpl implements VNPayService {
         validatePaymentInput(customerPaymentUrlRequest);
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
 
-        LocalDateTime now = LocalDateTime.now();
-        String vnpVersion = vnPayInfo.getVersion();
-        String vnpCommand = vnPayInfo.getCommand();
         String vnpOrderInfo = customerPaymentUrlRequest.getOrderInfo();
         String vnpIpAddress = getIpAddress(httpServletRequest);
-        String vnpTmnCode = vnPayInfo.getTmnCode();
-        String locate = vnPayInfo.getLocate();
         int amount = invoice.getActualProceeds().intValue() * vnPayAmountRate;
-        log.info("Create customer payment url with amount: " + amount);
+        String bankCode = customerPaymentUrlRequest.getBankCode();
 
-        Map<String, String> vnpParams = new HashMap<>();
-        vnpParams.put(VNP_VERSION, vnpVersion);
-        vnpParams.put(VNP_COMMAND, vnpCommand);
-        vnpParams.put(VNP_TMN_CODE, vnpTmnCode);
-        vnpParams.put(VNP_AMOUNT, String.valueOf(amount));
-        vnpParams.put(VNP_CURR_CODE, vnPayInfo.getCurrCode());
-        String bank_code = customerPaymentUrlRequest.getBankCode();
-        if (bank_code != null && !bank_code.isEmpty()) {
-            vnpParams.put(VNP_BANK_CODE, bank_code);
-        }
-        vnpParams.put(VNP_TNX_REF, requestCode);
-        vnpParams.put(VNP_ORDER_INFO, vnpOrderInfo);
-        vnpParams.put(VNP_LOCALE, locate);
-        vnpParams.put(VNP_RETURN_URL, vnPayInfo.getReturnUrl());
-        vnpParams.put(VNP_IP_ADDR, vnpIpAddress);
-        vnpParams.put(VNP_CREATE_DATE, DateFormatUtil.toString(now, vnPayInfo.getDatePattern()));
-
-        //Build data to hash and querystring
-        List<String> fieldNames = new ArrayList<>(vnpParams.keySet());
-        Collections.sort(fieldNames);
-        StringBuilder hashData = new StringBuilder();
-        StringBuilder query = new StringBuilder();
-        Iterator<String> itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = itr.next();
-            String fieldValue = vnpParams.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-
-                //Build hash data
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-
-                //Build query
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
-                query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                if (itr.hasNext()) {
-                    query.append('&');
-                    hashData.append('&');
-                }
-            }
-        }
-        String queryUrl = query.toString();
-        String vnp_SecureHash = hmacSHA512(vnPayInfo.getSecureHash(), hashData.toString());
-        queryUrl += "&" + VNP_SECURE_HASH + "=" + vnp_SecureHash;
-        String paymentUrl = vnPayInfo.getPayUrl() + "?" + queryUrl;
-
+        Map<String, String> vnpParams = buildVnpParams(vnpOrderInfo, amount, bankCode, vnpIpAddress);
         CustomerPaymentUrlResponse response = new CustomerPaymentUrlResponse();
         response.setMessage(CREATE_PAYMENT_URL_SUCCESS);
-        response.setData(paymentUrl);
+        response.setData(buildPaymentUrl(vnpParams));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -194,6 +147,106 @@ public class VnPayServiceImpl implements VNPayService {
             throw new GeneralException(HttpStatus.GONE, PAYMENT_METHOD_MUST_BE_VN_PAY);
         }
     }
+
+    @Override
+    public ResponseEntity<RepairerDepositUrlResponse> createRepairerDepositUrl(RepairerDepositUrlRequest repairerDepositUrlRequest,
+                                                                               HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
+        validateDepositInput(repairerDepositUrlRequest);
+
+        String vnpOrderInfo = repairerDepositUrlRequest.getOrderInfo();
+        String vnpIpAddress = getIpAddress(httpServletRequest);
+        int amount = repairerDepositUrlRequest.getAmount().intValue() * vnPayAmountRate;
+        String bankCode = repairerDepositUrlRequest.getBankCode();
+
+        Map<String, String> vnpParams = buildVnpParams(vnpOrderInfo, amount, bankCode, vnpIpAddress);
+        RepairerDepositUrlResponse response = new RepairerDepositUrlResponse();
+        response.setMessage(CREATE_PAYMENT_URL_SUCCESS);
+        response.setData(buildPaymentUrl(vnpParams));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void validateDepositInput(RepairerDepositUrlRequest repairerDepositUrlRequest) {
+        String orderInfo = InputValidation.removeAccent(repairerDepositUrlRequest.getOrderInfo());
+        repairerDepositUrlRequest.setOrderInfo(orderInfo);
+
+        if (Strings.isEmpty(orderInfo)) {
+            throw new GeneralException(HttpStatus.GONE, ORDER_INFO_IS_REQUIRED);
+        }
+
+        if (Strings.isEmpty(repairerDepositUrlRequest.getBankCode())) {
+            throw new GeneralException(HttpStatus.GONE, BANK_CODE_IS_REQUIRED);
+        }
+
+        Long minVnPay = appConf.getMinVnPay();
+        if (repairerDepositUrlRequest.getAmount() == null || repairerDepositUrlRequest.getAmount() < minVnPay) {
+            throw new GeneralException(HttpStatus.GONE, AMOUNT_MUST_BE_GREATER_OR_EQUAL_ + minVnPay);
+        }
+    }
+
+    private Map<String, String> buildVnpParams(String vnpOrderInfo, int amount, String bankCode, String vnpIpAddress) {
+        LocalDateTime now = LocalDateTime.now();
+        String vnpVersion = vnPayInfo.getVersion();
+        String vnpCommand = vnPayInfo.getCommand();
+
+        String vnpTmnCode = vnPayInfo.getTmnCode();
+        String locate = vnPayInfo.getLocate();
+        log.info("create vnPay url success, amount: " + amount / vnPayAmountRate);
+
+        Map<String, String> vnpParams = new HashMap<>();
+        vnpParams.put(VNP_VERSION, vnpVersion);
+        vnpParams.put(VNP_COMMAND, vnpCommand);
+        vnpParams.put(VNP_TMN_CODE, vnpTmnCode);
+        vnpParams.put(VNP_AMOUNT, String.valueOf(amount));
+        vnpParams.put(VNP_CURR_CODE, vnPayInfo.getCurrCode());
+        if (bankCode != null && !bankCode.isEmpty()) {
+            vnpParams.put(VNP_BANK_CODE, bankCode);
+        }
+        vnpParams.put(VNP_TNX_REF, RandomUtil.generateCode());
+        vnpParams.put(VNP_ORDER_INFO, vnpOrderInfo);
+        vnpParams.put(VNP_LOCALE, locate);
+        vnpParams.put(VNP_RETURN_URL, vnPayInfo.getReturnUrl());
+        vnpParams.put(VNP_IP_ADDR, vnpIpAddress);
+        vnpParams.put(VNP_CREATE_DATE, DateFormatUtil.toString(now, vnPayInfo.getDatePattern()));
+
+        return vnpParams;
+    }
+
+    private String buildPaymentUrl(Map<String, String> vnpParams) throws UnsupportedEncodingException {
+        //Build data to hash and querystring
+        List<String> fieldNames = new ArrayList<>(vnpParams.keySet());
+        Collections.sort(fieldNames);
+        StringBuilder hashData = new StringBuilder();
+        StringBuilder query = new StringBuilder();
+        Iterator<String> itr = fieldNames.iterator();
+
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
+            String fieldValue = vnpParams.get(fieldName);
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+
+                //Build hash data
+                hashData.append(fieldName);
+                hashData.append('=');
+                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+
+                //Build query
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
+                query.append('=');
+                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                if (itr.hasNext()) {
+                    query.append('&');
+                    hashData.append('&');
+                }
+            }
+        }
+
+        String queryUrl = query.toString();
+        String vnp_SecureHash = hmacSHA512(vnPayInfo.getSecureHash(), hashData.toString());
+        queryUrl += "&" + VNP_SECURE_HASH + "=" + vnp_SecureHash;
+        return vnPayInfo.getPayUrl() + "?" + queryUrl;
+    }
+
 
     @Override
     public ResponseEntity<CustomerPaymentResponse> responseCustomerPayment(Map<String, String> requestParams) {
@@ -289,7 +342,7 @@ public class VnPayServiceImpl implements VNPayService {
 
     private VnPayTransaction saveVnPayTransaction(Map<String, String> requestParams) {
         VnPayTransaction vnPayTransaction = new VnPayTransaction();
-        vnPayTransaction.setAmount(Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate);
+        vnPayTransaction.setAmount(getTransactionAmount(requestParams));
         vnPayTransaction.setBankCode(requestParams.get(VNP_BANK_CODE));
         vnPayTransaction.setBankTranNo(requestParams.get(VNP_BANK_TRAN_NO));
         vnPayTransaction.setCardType(requestParams.get(VNP_CARD_TYPE));
@@ -310,7 +363,7 @@ public class VnPayServiceImpl implements VNPayService {
                                                 boolean isSuccess) {
         TransactionHistory transactionHistory = new TransactionHistory();
         transactionHistory.setRequestCode(requestParams.get(VNP_TNX_REF));
-        transactionHistory.setAmount(Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate);
+        transactionHistory.setAmount(getTransactionAmount(requestParams));
         transactionHistory.setType(CUSTOMER_PAYMENT.name());
         transactionHistory.setUserId(customerId);
         transactionHistory.setVnpayTransactionId(vnPayTransactionId);
@@ -323,11 +376,19 @@ public class VnPayServiceImpl implements VNPayService {
                                                 boolean isSuccess) {
         TransactionHistory transactionHistory = new TransactionHistory();
         transactionHistory.setRequestCode(requestParams.get(VNP_TNX_REF));
-        transactionHistory.setAmount(Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate);
+        transactionHistory.setAmount(getTransactionAmount(requestParams));
         transactionHistory.setType(RECEIVE_INVOICE_MONEY.name());
         transactionHistory.setUserId(repairerId);
         transactionHistory.setStatus(isSuccess ? SUCCESS.name() : FAIL.name());
         transactionHistoryDAO.save(transactionHistory);
+    }
+
+    private Long getTransactionAmount(Map<String, String> requestParams) {
+        try {
+            return Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
+        } catch (Exception e) {
+            return 0L;
+        }
     }
 
     private boolean isRequestCodeNotFound(String requestCode) {

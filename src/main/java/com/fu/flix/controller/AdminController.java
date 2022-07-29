@@ -198,4 +198,9 @@ public class AdminController {
     public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request) {
         return adminService.searchSubServices(request);
     }
+
+    @GetMapping("transaction")
+    public ResponseEntity<TransactionDetailResponse> getTransactionDetail(TransactionDetailRequest request) {
+        return adminService.getTransactionDetail(request);
+    }
 }

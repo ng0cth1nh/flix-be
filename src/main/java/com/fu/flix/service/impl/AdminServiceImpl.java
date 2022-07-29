@@ -4,6 +4,7 @@ import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.FeedbackStatus;
 import com.fu.flix.constant.enums.FeedbackType;
 import com.fu.flix.constant.enums.RoleType;
+import com.fu.flix.constant.enums.TransactionType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
@@ -1217,5 +1218,40 @@ public class AdminServiceImpl implements AdminService {
         });
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<SearchTransactionsResponse> searchTransactions(SearchTransactionsRequest request) {
+        String requestCode = request.getKeyword() == null
+                ? Strings.EMPTY
+                : request.getKeyword();
+
+        List<String> transactionTypes = getTransactionTypeQueries(request.getTransactionType());
+        List<ITransactionDTO> transactions = transactionHistoryDAO.searchTransactionsForAdmin(requestCode, transactionTypes);
+        SearchTransactionsResponse response = new SearchTransactionsResponse();
+        response.setTransactions(transactions);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private List<String> getTransactionTypeQueries(String transactionType) {
+        if (Strings.isEmpty(transactionType)) {
+            return Arrays.stream(TransactionType.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
+        }
+
+        List<String> result = new ArrayList<>();
+        result.add(getTransactionTypeValidated(transactionType));
+        return result;
+    }
+
+    private String getTransactionTypeValidated(String transactionType) {
+        for (TransactionType tt : TransactionType.values()) {
+            if (tt.name().equals(transactionType)) {
+                return transactionType;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_TYPE);
     }
 }

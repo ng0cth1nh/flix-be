@@ -9,4 +9,5 @@ public class SubServiceOutputDTO {
     private Long id;
     private String name;
     private Long price;
+    private String status;
 }

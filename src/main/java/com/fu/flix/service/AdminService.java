@@ -76,4 +76,6 @@ public interface AdminService {
     ResponseEntity<TransactionsResponse> getTransactions(TransactionsRequest request);
 
     ResponseEntity<AdminGetRequestDetailResponse> getRequestDetail(AdminGetRequestDetailRequest request);
+
+    ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request);
 }

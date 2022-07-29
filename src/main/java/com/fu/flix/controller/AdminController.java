@@ -193,4 +193,9 @@ public class AdminController {
     public ResponseEntity<AdminGetRequestDetailResponse> getRequestDetail(AdminGetRequestDetailRequest request) {
         return adminService.getRequestDetail(request);
     }
+
+    @GetMapping("search/subServices")
+    public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request) {
+        return adminService.searchSubServices(request);
+    }
 }

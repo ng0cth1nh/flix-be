@@ -178,4 +178,9 @@ public class AdminController {
     public ResponseEntity<SearchRepairersResponse> searchRepairers(SearchRepairersRequest request) {
         return adminService.searchRepairers(request);
     }
+
+    @GetMapping("search/accessories")
+    public ResponseEntity<AdminSearchAccessoriesResponse> searchAccessories(AdminSearchAccessoriesRequest request) {
+        return adminService.searchAccessories(request);
+    }
 }

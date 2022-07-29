@@ -1039,4 +1039,28 @@ public class AdminServiceImpl implements AdminService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<AdminSearchAccessoriesResponse> searchAccessories(AdminSearchAccessoriesRequest request) {
+        String keyword = request.getKeyword();
+        if (Strings.isEmpty(keyword)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        List<Accessory> accessories = accessoryDAO.searchAccessories(keyword);
+        List<AccessoryOutputDTO> accessoryOutputDTOS = accessories.stream()
+                .map(accessory -> {
+                    AccessoryOutputDTO dto = new AccessoryOutputDTO();
+                    dto.setId(accessory.getId());
+                    dto.setName(accessory.getName());
+                    dto.setPrice(accessory.getPrice());
+                    dto.setInsuranceTime(accessory.getInsuranceTime());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        AdminSearchAccessoriesResponse response = new AdminSearchAccessoriesResponse();
+        response.setAccessories(accessoryOutputDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

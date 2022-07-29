@@ -38,6 +38,7 @@ public class VoucherServiceImpl implements VoucherService {
             if (optionalVoucher.isPresent()) {
                 Voucher voucher = optionalVoucher.get();
                 voucherDTO.setVoucherDescription(voucher.getDescription());
+                voucherDTO.setVoucherCode(voucher.getCode());
 
                 if (voucher.isDiscountMoney()) {
                     DiscountMoney discountMoney = discountMoneyDAO.findByVoucherId(voucherId).get();

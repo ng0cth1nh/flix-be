@@ -1,9 +1,6 @@
 package com.fu.flix.dao;
 
-import com.fu.flix.dto.IDetailFixingRequestForCustomerDTO;
-import com.fu.flix.dto.IDetailFixingRequestForRepairerDTO;
-import com.fu.flix.dto.IRequestInfoDTO;
-import com.fu.flix.dto.IRequestingDTO;
+import com.fu.flix.dto.*;
 import com.fu.flix.entity.RepairRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -52,7 +49,6 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON repairer_avatar.id = repairer.avatar " +
             "WHERE rr.request_code = :requestCode " +
             "AND customer.is_active " +
-            "AND c_address.deleted_at IS NULL " +
             "AND r_address.deleted_at IS NULL " +
             "AND customer.id = :customerId", nativeQuery = true)
     IDetailFixingRequestForCustomerDTO findDetailFixingRequestForCustomer(Long customerId, String requestCode);
@@ -84,7 +80,6 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "LEFT JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
             "WHERE rr.request_code = :requestCode " +
-            "AND ua.deleted_at IS NULL " +
             "AND (" +
             "   CASE WHEN rr.status_id <> 'PE' " +
             "   THEN rrm.repairer_id = :repairerId " +
@@ -254,4 +249,32 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "AS tb2 " +
             "WHERE row_num BETWEEN :start and :end", nativeQuery = true)
     List<IRequestInfoDTO> findAllRequestForAdmin(Integer start, Integer end);
+
+    @Query(value = "SELECT rr.request_code as requestCode, customer.full_name as customerName, customer.phone as customerPhone, " +
+            "repairer.full_name as repairerName, repairer.phone as repairerPhone, stt.name as status, cus_ua.id as customerAddressId, " +
+            "rr.description, sv.name as serviceName, voucher.id as voucherId, rr.expect_start_fixing_at as expectedFixingTime, pm.name as paymentMethod, " +
+            "rr.reason_cancel as cancelReason,  rr.created_at as createdAt, iv.total_price as totalPrice, iv.vat_price as vatPrice, iv.actual_proceeds as actualPrice, " +
+            "iv.total_discount as totalDiscount, iv.inspection_price as inspectionPrice, iv.total_sub_service_price as totalSubServicePrice, " +
+            "iv.total_accessory_price as totalAccessoryPrice, iv.total_extra_service_price as totalExtraServicePrice " +
+            "FROM repair_requests rr " +
+            "JOIN users customer " +
+            "ON customer.id = rr.user_id " +
+            "LEFT JOIN repair_requests_matching rrm " +
+            "ON rrm.request_code = rr.request_code " +
+            "LEFT JOIN users repairer " +
+            "ON repairer.id = rrm.repairer_id " +
+            "JOIN status stt " +
+            "ON stt.id = rr.status_id " +
+            "JOIN user_addresses cus_ua " +
+            "ON cus_ua.id = rr.address_id " +
+            "JOIN services sv " +
+            "ON sv.id = rr.service_id " +
+            "LEFT JOIN vouchers voucher " +
+            "ON rr.voucher_id = voucher.id " +
+            "JOIN invoices iv  " +
+            "ON iv.request_code = rr.request_code " +
+            "JOIN payment_methods pm " +
+            "ON pm.id = rr.payment_method_id " +
+            "WHERE rr.request_code = :requestCode", nativeQuery = true)
+    Optional<IDetailRequestDTO> findRequestDetailForAdmin(String requestCode);
 }

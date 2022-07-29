@@ -1,8 +1,10 @@
 package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.CustomerPaymentUrlRequest;
+import com.fu.flix.dto.request.RepairerDepositUrlRequest;
 import com.fu.flix.dto.response.CustomerPaymentResponse;
 import com.fu.flix.dto.response.CustomerPaymentUrlResponse;
+import com.fu.flix.dto.response.RepairerDepositUrlResponse;
 import com.fu.flix.service.VNPayService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -34,5 +36,13 @@ public class VnPayController {
     @GetMapping("payment/response")
     public ResponseEntity<CustomerPaymentResponse> responseCustomerPayment(@RequestParam Map<String, String> requestParams) {
         return vnPayService.responseCustomerPayment(requestParams);
+    }
+
+    @PostMapping("repairer/vnpay/deposit/url")
+    public ResponseEntity<RepairerDepositUrlResponse> createRepairerDepositUrl(
+            @RequestBody RepairerDepositUrlRequest repairerDepositUrlRequest,
+            HttpServletRequest httpServletRequest
+    ) throws UnsupportedEncodingException {
+        return vnPayService.createRepairerDepositUrl(repairerDepositUrlRequest, httpServletRequest);
     }
 }

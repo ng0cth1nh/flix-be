@@ -80,4 +80,6 @@ public interface AdminService {
     ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request);
 
     ResponseEntity<TransactionDetailResponse> getTransactionDetail(TransactionDetailRequest request);
+
+    ResponseEntity<SearchTransactionsResponse> searchTransactions(SearchTransactionsRequest request);
 }

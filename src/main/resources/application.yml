@@ -32,7 +32,8 @@ app:
                    '/api/v1/address/city',
                    '/api/v1/address/district',
                    '/api/v1/address/commune',
-                   '/api/v1/payment/response' ]
+                   '/api/v1/payment/response',
+                   '/api/v1/deposit/response' ]
   vnPayInfo:
     version: '2.1.0'
     command: 'pay'

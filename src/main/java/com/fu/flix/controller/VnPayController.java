@@ -47,7 +47,7 @@ public class VnPayController {
     }
 
     @GetMapping("deposit/response")
-    public ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(Map<String, String> requestParams) {
+    public ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(@RequestParam  Map<String, String> requestParams) {
         return vnPayService.responseRepairerDeposit(requestParams);
     }
 }

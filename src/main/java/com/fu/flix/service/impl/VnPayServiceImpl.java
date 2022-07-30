@@ -469,7 +469,6 @@ public class VnPayServiceImpl implements VNPayService {
                                                 Long vnPayTransactionId,
                                                 String failReason) {
         TransactionHistory transactionHistory = new TransactionHistory();
-        transactionHistory.setRequestCode(requestParams.get(VNP_TNX_REF));
         transactionHistory.setAmount(getTransactionAmount(requestParams));
         transactionHistory.setType(DEPOSIT.name());
         transactionHistory.setUserId(repairerId);

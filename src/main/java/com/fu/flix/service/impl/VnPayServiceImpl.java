@@ -387,6 +387,9 @@ public class VnPayServiceImpl implements VNPayService {
         // Check checksum
         String signValue = hashAllFields(requestParams, vnPayInfo.getDepositInfo().getSecureHash());
         if (!signValue.equals(vnp_SecureHash)) {
+            log.info("Invalid check sum");
+            log.info("sign value: " + signValue);
+            log.info("secure hash: " + vnp_SecureHash);
             saveRepairerDepositTransactions(requestParams, null, INVALID_CHECKSUM);
             response.setMessage(INVALID_CHECKSUM);
             response.setRspCode(VN_PAY_RESPONSE.get(INVALID_CHECKSUM));

@@ -3,7 +3,7 @@ package com.fu.flix.dto;
 public interface ITransactionDTO {
     Long getId();
 
-    String getRequestCode();
+    String getTransactionCode();
 
     String getVnpTransactionNo();
 

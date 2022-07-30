@@ -1203,7 +1203,7 @@ public class AdminServiceImpl implements AdminService {
         Optional<ITransactionDetailDTO> optionalTransaction = transactionHistoryDAO.findTransactionDetail(transactionId);
         optionalTransaction.ifPresent(transaction -> {
             response.setId(transaction.getId());
-            response.setRequestCode(transaction.getRequestCode());
+            response.setTransactionCode(transaction.getTransactionCode());
             response.setVnpTransactionNo(transaction.getVnpTransactionNo());
             response.setAmount(transaction.getAmount());
             response.setTransactionType(transaction.getTransactionType());

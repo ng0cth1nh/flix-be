@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory, Long> {
     Optional<TransactionHistory> findByRequestCodeAndType(String requestCode, String type);
 
-    @Query(value = "SELECT th.id, th.request_code as requestCode, vt.transaction_no as vnpTransactionNo, th.amount, th.type as transactionType, u.full_name as fullName, " +
+    @Query(value = "SELECT th.id, th.transaction_code as transactionCode, vt.transaction_no as vnpTransactionNo, th.amount, th.type as transactionType, u.full_name as fullName, " +
             "u.phone, DATE_FORMAT(th.created_at, '%Y-%m-%d %H:%i:%s') as payDate " +
             "FROM transaction_histories th " +
             "LEFT JOIN vnpay_transactions vt " +
@@ -23,7 +23,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "ON u.id = th.user_id limit :limit offset :offset", nativeQuery = true)
     List<ITransactionDTO> findTransactionsForAdmin(Integer limit, Integer offset);
 
-    @Query(value = "SELECT th.id, th.request_code as requestCode, vt.transaction_no as vnpTransactionNo, th.amount, th.type as transactionType, u.full_name as fullName, " +
+    @Query(value = "SELECT th.id, th.transaction_code as transactionCode, vt.transaction_no as vnpTransactionNo, th.amount, th.type as transactionType, u.full_name as fullName, " +
             "u.phone, DATE_FORMAT(th.created_at, '%Y-%m-%d %H:%i:%s') as payDate, vt.bank_code as bankCode, vt.card_type as cardType, " +
             "vt.order_info as orderInfo, vt.bank_tran_no as vnpBankTranNo,th.status as responseResult " +
             "FROM transaction_histories th " +
@@ -34,7 +34,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "WHERE th.id = :id", nativeQuery = true)
     Optional<ITransactionDetailDTO> findTransactionDetail(Long id);
 
-    @Query(value = "SELECT th.id, th.request_code as requestCode, vt.transaction_no as vnpTransactionNo, th.amount, th.type as transactionType, u.full_name as fullName, " +
+    @Query(value = "SELECT th.id, th.transaction_code as transactionCode, vt.transaction_no as vnpTransactionNo, th.amount, th.type as transactionType, u.full_name as fullName, " +
             "u.phone, DATE_FORMAT(th.created_at, '%Y-%m-%d %H:%i:%s') as payDate " +
             "FROM transaction_histories th " +
             "LEFT JOIN vnpay_transactions vt " +

@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 
@@ -29,7 +28,7 @@ public class VnPayController {
     public ResponseEntity<CustomerPaymentUrlResponse> createCustomerPaymentUrl(
             @RequestBody CustomerPaymentUrlRequest customerPaymentUrlRequest,
             HttpServletRequest httpServletRequest
-    ) throws UnsupportedEncodingException {
+    ) {
         return vnPayService.createCustomerPaymentUrl(customerPaymentUrlRequest, httpServletRequest);
     }
 
@@ -42,7 +41,7 @@ public class VnPayController {
     public ResponseEntity<RepairerDepositUrlResponse> createRepairerDepositUrl(
             @RequestBody RepairerDepositUrlRequest repairerDepositUrlRequest,
             HttpServletRequest httpServletRequest
-    ) throws UnsupportedEncodingException {
+    ) {
         return vnPayService.createRepairerDepositUrl(repairerDepositUrlRequest, httpServletRequest);
     }
 }

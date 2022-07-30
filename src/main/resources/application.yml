@@ -48,8 +48,8 @@ app:
       tmnCode: '1TZDUKO5'
     depositInfo:
       returnUrl: 'https://www.facebook.com/'
-      secureHash: 'XFPRQGOXAORAIZRMIIEKNWEDXNVNFEPI'
-      tmnCode: 'VTKU1RSJ'
+      secureHash: 'KNWFOELNUTYJDIBSGAJFGCIOIDLLUSXJ'
+      tmnCode: 'AF4ODYBY'
 server:
   port: 8080
 

@@ -12,8 +12,6 @@ import java.util.Optional;
 
 @Repository
 public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory, Long> {
-    Optional<TransactionHistory> findByRequestCodeAndType(String requestCode, String type);
-
     @Query(value = "SELECT th.id, th.transaction_code as transactionCode, vt.transaction_no as vnpTransactionNo, th.amount, th.type as transactionType, u.full_name as fullName, " +
             "u.phone, DATE_FORMAT(th.created_at, '%Y-%m-%d %H:%i:%s') as payDate " +
             "FROM transaction_histories th " +
@@ -41,7 +39,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "ON vt.id = th.vnpay_transaction_id " +
             "LEFT JOIN users u " +
             "ON u.id = th.user_id " +
-            "WHERE th.request_code LIKE %:keyword% " +
+            "WHERE th.transaction_code LIKE %:keyword% " +
             "AND th.type IN (:transactionTypes)", nativeQuery = true)
     List<ITransactionDTO> searchTransactionsForAdmin(String keyword, List<String> transactionTypes);
 }

@@ -361,6 +361,7 @@ public class VnPayServiceImpl implements VNPayService {
         transactionHistory.setVnpayTransactionId(vnPayTransactionId);
         transactionHistory.setStatus(Strings.isEmpty(failReason) ? SUCCESS.name() : FAIL.name());
         transactionHistory.setFailReason(failReason);
+        transactionHistory.setTransactionCode(RandomUtil.generateCode());
         transactionHistoryDAO.save(transactionHistory);
     }
 
@@ -374,6 +375,7 @@ public class VnPayServiceImpl implements VNPayService {
         transactionHistory.setUserId(repairerId);
         transactionHistory.setStatus(Strings.isEmpty(failReason) ? SUCCESS.name() : FAIL.name());
         transactionHistory.setFailReason(failReason);
+        transactionHistory.setTransactionCode(RandomUtil.generateCode());
         transactionHistoryDAO.save(transactionHistory);
     }
 
@@ -480,6 +482,7 @@ public class VnPayServiceImpl implements VNPayService {
         transactionHistory.setVnpayTransactionId(vnPayTransactionId);
         transactionHistory.setStatus(Strings.isEmpty(failReason) ? SUCCESS.name() : FAIL.name());
         transactionHistory.setFailReason(failReason);
+        transactionHistory.setTransactionCode(RandomUtil.generateCode());
         transactionHistoryDAO.save(transactionHistory);
     }
 

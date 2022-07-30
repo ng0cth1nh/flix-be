@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class TransactionDetailResponse {
     private Long id;
-    private String requestCode;
+    private String transactionCode;
     private String vnpTransactionNo;
     private Long amount;
     private String transactionType;

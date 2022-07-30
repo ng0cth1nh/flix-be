@@ -21,6 +21,8 @@ public class TransactionHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String transactionCode;
+
     private String requestCode;
 
     private Long amount;

@@ -109,7 +109,7 @@ public class VnPayServiceImpl implements VNPayService {
         String returnUrl = vnPayInfo.getPaymentInfo().getReturnUrl();
         String secureHash = vnPayInfo.getPaymentInfo().getSecureHash();
 
-        Map<String, String> vnpParams = buildVnpParams(vnpOrderInfo, amount, bankCode, vnpIpAddress, vnpTmnCode, returnUrl);
+        Map<String, String> vnpParams = buildVnpParams(vnpOrderInfo, amount, bankCode, vnpIpAddress, vnpTmnCode, returnUrl, requestCode);
         CustomerPaymentUrlResponse response = new CustomerPaymentUrlResponse();
         response.setMessage(CREATE_PAYMENT_URL_SUCCESS);
         response.setData(buildPaymentUrl(vnpParams, secureHash));
@@ -159,11 +159,12 @@ public class VnPayServiceImpl implements VNPayService {
         String vnpIpAddress = getIpAddress(httpServletRequest);
         int amount = repairerDepositUrlRequest.getAmount().intValue() * vnPayAmountRate;
         String bankCode = repairerDepositUrlRequest.getBankCode();
-        String vnpTmnCode = repairerDepositUrlRequest.getUserId() + "_" + vnPayInfo.getDepositInfo().getTmnCode();
+        String vnpTmnCode = vnPayInfo.getDepositInfo().getTmnCode();
         String returnUrl = vnPayInfo.getDepositInfo().getReturnUrl();
         String secureHash = vnPayInfo.getDepositInfo().getSecureHash();
+        String txnRef = repairerDepositUrlRequest.getUserId() + "_" + RandomUtil.generateCode();
 
-        Map<String, String> vnpParams = buildVnpParams(vnpOrderInfo, amount, bankCode, vnpIpAddress, vnpTmnCode, returnUrl);
+        Map<String, String> vnpParams = buildVnpParams(vnpOrderInfo, amount, bankCode, vnpIpAddress, vnpTmnCode, returnUrl, txnRef);
         RepairerDepositUrlResponse response = new RepairerDepositUrlResponse();
         response.setMessage(CREATE_PAYMENT_URL_SUCCESS);
         response.setData(buildPaymentUrl(vnpParams, secureHash));
@@ -194,7 +195,8 @@ public class VnPayServiceImpl implements VNPayService {
                                                String bankCode,
                                                String vnpIpAddress,
                                                String vnpTmnCode,
-                                               String returnUrl) {
+                                               String returnUrl,
+                                               String tnxRef) {
         LocalDateTime now = LocalDateTime.now();
         String vnpVersion = vnPayInfo.getVersion();
         String vnpCommand = vnPayInfo.getCommand();
@@ -211,7 +213,7 @@ public class VnPayServiceImpl implements VNPayService {
         if (bankCode != null && !bankCode.isEmpty()) {
             vnpParams.put(VNP_BANK_CODE, bankCode);
         }
-        vnpParams.put(VNP_TNX_REF, RandomUtil.generateCode());
+        vnpParams.put(VNP_TNX_REF, tnxRef);
         vnpParams.put(VNP_ORDER_INFO, vnpOrderInfo);
         vnpParams.put(VNP_LOCALE, locate);
         vnpParams.put(VNP_RETURN_URL, returnUrl);
@@ -391,8 +393,8 @@ public class VnPayServiceImpl implements VNPayService {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        String tnxRef = requestParams.get(VNP_TNX_REF);
-        if (Strings.isEmpty(tnxRef)) {
+        String txnRef = requestParams.get(VNP_TNX_REF);
+        if (Strings.isEmpty(txnRef)) {
             saveRepairerDepositTransactions(requestParams, null, VNP_TXN_REF_IS_REQUIRED);
             response.setMessage(VNP_TXN_REF_IS_REQUIRED);
             response.setRspCode(VN_PAY_RESPONSE.get(VNP_TXN_REF_IS_REQUIRED));
@@ -401,7 +403,7 @@ public class VnPayServiceImpl implements VNPayService {
 
         Long repairerId;
         try {
-            repairerId = Long.valueOf(tnxRef.split("_")[0]);
+            repairerId = Long.valueOf(txnRef.split("_")[0]);
         } catch (Exception e) {
             saveRepairerDepositTransactions(requestParams, null, WRONG_FORMAT_TXN_REF);
             response.setMessage(WRONG_FORMAT_TXN_REF);
@@ -417,7 +419,7 @@ public class VnPayServiceImpl implements VNPayService {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        if (vnPayTransactionDAO.findByVnpTxnRefAndResponseCode(tnxRef, VN_PAY_SUCCESS_CODE).isPresent()) {
+        if (vnPayTransactionDAO.findByVnpTxnRefAndResponseCode(txnRef, VN_PAY_SUCCESS_CODE).isPresent()) {
             saveRepairerDepositTransactions(requestParams, repairerId, VNP_TXN_REF_EXISTED_IN_DATABASE);
             response.setMessage(VNP_TXN_REF_EXISTED_IN_DATABASE);
             response.setRspCode(VN_PAY_RESPONSE.get(VNP_TXN_REF_EXISTED_IN_DATABASE));

@@ -4,6 +4,7 @@ import com.fu.flix.dto.request.CustomerPaymentUrlRequest;
 import com.fu.flix.dto.request.RepairerDepositUrlRequest;
 import com.fu.flix.dto.response.CustomerPaymentResponse;
 import com.fu.flix.dto.response.CustomerPaymentUrlResponse;
+import com.fu.flix.dto.response.RepairerDepositResponse;
 import com.fu.flix.dto.response.RepairerDepositUrlResponse;
 import com.fu.flix.service.VNPayService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,5 +44,10 @@ public class VnPayController {
             HttpServletRequest httpServletRequest
     ) {
         return vnPayService.createRepairerDepositUrl(repairerDepositUrlRequest, httpServletRequest);
+    }
+
+    @GetMapping("deposit/response")
+    public ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(Map<String, String> requestParams) {
+        return vnPayService.responseRepairerDeposit(requestParams);
     }
 }

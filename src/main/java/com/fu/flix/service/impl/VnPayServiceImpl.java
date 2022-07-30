@@ -338,7 +338,10 @@ public class VnPayServiceImpl implements VNPayService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void savePaymentTransactions(Map<String, String> requestParams, Long repairerId, Long customerId, String failReason) {
+    private void savePaymentTransactions(Map<String, String> requestParams,
+                                         Long repairerId,
+                                         Long customerId,
+                                         String failReason) {
         VnPayTransaction savedVnPayTransaction = saveVnPayTransaction(requestParams);
         saveCustomerPaymentTransaction(requestParams, customerId, savedVnPayTransaction.getId(), failReason);
         saveRepairerReceivePaymentTransaction(requestParams, repairerId, failReason);
@@ -355,6 +358,7 @@ public class VnPayServiceImpl implements VNPayService {
         transactionHistory.setUserId(customerId);
         transactionHistory.setVnpayTransactionId(vnPayTransactionId);
         transactionHistory.setStatus(Strings.isEmpty(failReason) ? SUCCESS.name() : FAIL.name());
+        transactionHistory.setFailReason(failReason);
         transactionHistoryDAO.save(transactionHistory);
     }
 
@@ -367,6 +371,7 @@ public class VnPayServiceImpl implements VNPayService {
         transactionHistory.setType(RECEIVE_INVOICE_MONEY.name());
         transactionHistory.setUserId(repairerId);
         transactionHistory.setStatus(Strings.isEmpty(failReason) ? SUCCESS.name() : FAIL.name());
+        transactionHistory.setFailReason(failReason);
         transactionHistoryDAO.save(transactionHistory);
     }
 
@@ -459,7 +464,6 @@ public class VnPayServiceImpl implements VNPayService {
         return vnPayTransactionDAO.save(vnPayTransaction);
     }
 
-
     private void saveRepairerDepositTransaction(Map<String, String> requestParams,
                                                 Long repairerId,
                                                 Long vnPayTransactionId,
@@ -471,6 +475,7 @@ public class VnPayServiceImpl implements VNPayService {
         transactionHistory.setUserId(repairerId);
         transactionHistory.setVnpayTransactionId(vnPayTransactionId);
         transactionHistory.setStatus(Strings.isEmpty(failReason) ? SUCCESS.name() : FAIL.name());
+        transactionHistory.setFailReason(failReason);
         transactionHistoryDAO.save(transactionHistory);
     }
 

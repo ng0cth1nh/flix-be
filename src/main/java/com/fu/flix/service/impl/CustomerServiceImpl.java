@@ -309,6 +309,7 @@ public class CustomerServiceImpl implements CustomerService {
 //        refundsTransaction.setType(REFUNDS.name());
 //        refundsTransaction.setRequestCode(requestCode);
 //        refundsTransaction.setStatus(SUCCESS.name());
+//        refundsTransaction.setTransactionCode(RandomUtil.generateCode());
 //        transactionHistoryDAO.save(refundsTransaction);
 //    }
 

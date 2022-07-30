@@ -12,6 +12,7 @@ import com.fu.flix.entity.*;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
+import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
@@ -217,6 +218,7 @@ public class RepairerServiceImpl implements RepairerService {
         finedTransaction.setType(FINED.name());
         finedTransaction.setRequestCode(requestCode);
         finedTransaction.setStatus(SUCCESS.name());
+        finedTransaction.setTransactionCode(RandomUtil.generateCode());
         transactionHistoryDAO.save(finedTransaction);
     }
 
@@ -318,6 +320,7 @@ public class RepairerServiceImpl implements RepairerService {
         transactionHistory.setType(PAY_COMMISSIONS.name());
         transactionHistory.setRequestCode(requestCode);
         transactionHistory.setStatus(SUCCESS.name());
+        transactionHistory.setTransactionCode(RandomUtil.generateCode());
         transactionHistoryDAO.save(transactionHistory);
     }
 

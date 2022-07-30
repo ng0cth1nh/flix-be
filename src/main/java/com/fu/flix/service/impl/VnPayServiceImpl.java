@@ -117,6 +117,28 @@ public class VnPayServiceImpl implements VNPayService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Override
+    public ResponseEntity<RepairerDepositUrlResponse> createRepairerDepositUrl(RepairerDepositUrlRequest repairerDepositUrlRequest,
+                                                                               HttpServletRequest httpServletRequest) {
+        validateDepositInput(repairerDepositUrlRequest);
+
+        String vnpOrderInfo = repairerDepositUrlRequest.getOrderInfo();
+        String vnpIpAddress = getIpAddress(httpServletRequest);
+        int amount = repairerDepositUrlRequest.getAmount().intValue() * vnPayAmountRate;
+        String bankCode = repairerDepositUrlRequest.getBankCode();
+        String vnpTmnCode = vnPayInfo.getDepositInfo().getTmnCode();
+        String returnUrl = vnPayInfo.getDepositInfo().getReturnUrl();
+        String secureHash = vnPayInfo.getDepositInfo().getSecureHash();
+        String txnRef = repairerDepositUrlRequest.getUserId() + "_" + RandomUtil.generateCode();
+
+        Map<String, String> vnpParams = buildVnpParams(vnpOrderInfo, amount, bankCode, vnpIpAddress, vnpTmnCode, returnUrl, txnRef);
+        RepairerDepositUrlResponse response = new RepairerDepositUrlResponse();
+        response.setMessage(CREATE_PAYMENT_URL_SUCCESS);
+        response.setData(buildPaymentUrl(vnpParams, secureHash));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     private void validatePaymentInput(CustomerPaymentUrlRequest customerPaymentUrlRequest) {
         String orderInfo = InputValidation.removeAccent(customerPaymentUrlRequest.getOrderInfo());
         customerPaymentUrlRequest.setOrderInfo(orderInfo);
@@ -148,28 +170,6 @@ public class VnPayServiceImpl implements VNPayService {
         if (!PaymentMethod.VNPay.getId().equals(repairRequest.getPaymentMethodId())) {
             throw new GeneralException(HttpStatus.GONE, PAYMENT_METHOD_MUST_BE_VN_PAY);
         }
-    }
-
-    @Override
-    public ResponseEntity<RepairerDepositUrlResponse> createRepairerDepositUrl(RepairerDepositUrlRequest repairerDepositUrlRequest,
-                                                                               HttpServletRequest httpServletRequest) {
-        validateDepositInput(repairerDepositUrlRequest);
-
-        String vnpOrderInfo = repairerDepositUrlRequest.getOrderInfo();
-        String vnpIpAddress = getIpAddress(httpServletRequest);
-        int amount = repairerDepositUrlRequest.getAmount().intValue() * vnPayAmountRate;
-        String bankCode = repairerDepositUrlRequest.getBankCode();
-        String vnpTmnCode = vnPayInfo.getDepositInfo().getTmnCode();
-        String returnUrl = vnPayInfo.getDepositInfo().getReturnUrl();
-        String secureHash = vnPayInfo.getDepositInfo().getSecureHash();
-        String txnRef = repairerDepositUrlRequest.getUserId() + "_" + RandomUtil.generateCode();
-
-        Map<String, String> vnpParams = buildVnpParams(vnpOrderInfo, amount, bankCode, vnpIpAddress, vnpTmnCode, returnUrl, txnRef);
-        RepairerDepositUrlResponse response = new RepairerDepositUrlResponse();
-        response.setMessage(CREATE_PAYMENT_URL_SUCCESS);
-        response.setData(buildPaymentUrl(vnpParams, secureHash));
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private void validateDepositInput(RepairerDepositUrlRequest repairerDepositUrlRequest) {

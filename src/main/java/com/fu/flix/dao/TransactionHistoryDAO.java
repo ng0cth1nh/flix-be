@@ -19,7 +19,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "FROM transaction_histories th " +
             "LEFT JOIN vnpay_transactions vt " +
             "ON vt.id = th.vnpay_transaction_id " +
-            "JOIN users u " +
+            "LEFT JOIN users u " +
             "ON u.id = th.user_id limit :limit offset :offset", nativeQuery = true)
     List<ITransactionDTO> findTransactionsForAdmin(Integer limit, Integer offset);
 
@@ -29,7 +29,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "FROM transaction_histories th " +
             "LEFT JOIN vnpay_transactions vt " +
             "ON vt.id = th.vnpay_transaction_id " +
-            "JOIN users u " +
+            "LEFT JOIN users u " +
             "ON u.id = th.user_id " +
             "WHERE th.id = :id", nativeQuery = true)
     Optional<ITransactionDetailDTO> findTransactionDetail(Long id);
@@ -39,7 +39,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "FROM transaction_histories th " +
             "LEFT JOIN vnpay_transactions vt " +
             "ON vt.id = th.vnpay_transaction_id " +
-            "JOIN users u " +
+            "LEFT JOIN users u " +
             "ON u.id = th.user_id " +
             "WHERE th.request_code LIKE %:keyword% " +
             "AND th.type IN (:transactionTypes)", nativeQuery = true)

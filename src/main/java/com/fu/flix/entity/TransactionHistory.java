@@ -33,6 +33,8 @@ public class TransactionHistory {
 
     private String status;
 
+    private String failReason;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

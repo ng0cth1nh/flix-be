@@ -50,6 +50,8 @@ public class RepairerServiceImpl implements RepairerService {
     private final VoucherService voucherService;
     private final SubServiceDAO subServiceDAO;
     private final RequestService requestService;
+    private final WithdrawRequestDAO withdrawRequestDAO;
+    private final BankInfoDAO bankInfoDAO;
     private final AccessoryDAO accessoryDAO;
     private final ExtraServiceDAO extraServiceDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -67,6 +69,8 @@ public class RepairerServiceImpl implements RepairerService {
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
                                RequestService requestService,
+                               WithdrawRequestDAO withdrawRequestDAO,
+                               BankInfoDAO bankInfoDAO,
                                AccessoryDAO accessoryDAO,
                                ExtraServiceDAO extraServiceDAO) {
         this.repairerDAO = repairerDAO;
@@ -82,6 +86,8 @@ public class RepairerServiceImpl implements RepairerService {
         this.voucherService = voucherService;
         this.subServiceDAO = subServiceDAO;
         this.requestService = requestService;
+        this.withdrawRequestDAO = withdrawRequestDAO;
+        this.bankInfoDAO = bankInfoDAO;
         this.accessoryDAO = accessoryDAO;
         this.extraServiceDAO = extraServiceDAO;
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
@@ -567,5 +573,67 @@ public class RepairerServiceImpl implements RepairerService {
         invoice.setTotalDiscount(newTotalDiscount);
         invoice.setVatPrice(newVatPrice);
         invoice.setActualProceeds(beforeVat + newVatPrice);
+    }
+
+    @Override
+    public ResponseEntity<RepairerWithdrawResponse> requestWithdraw(RepairerWithdrawRequest request) {
+        Long amount = request.getAmount();
+        if (amount == null || amount < appConf.getMinVnPay()) {
+            throw new GeneralException(HttpStatus.GONE, AMOUNT_MUST_BE_GREATER_OR_EQUAL_ + appConf.getMinVnPay());
+        }
+
+        Long repairerId = request.getUserId();
+        Balance balance = balanceDAO.findByUserId(repairerId).get();
+        if (balance.getBalance() < amount) {
+            throw new GeneralException(HttpStatus.GONE, BALANCE_NOT_ENOUGH);
+        }
+
+        String withdrawType = getWithdrawTypeValidated(request.getWithdrawType());
+        boolean isNullable = WithdrawType.CASH.name().equals(withdrawType);
+        validatedBankInfo(request, isNullable);
+
+        WithdrawRequest withdrawRequest = new WithdrawRequest();
+        withdrawRequest.setWithdrawCode(RandomUtil.generateCode());
+        withdrawRequest.setRepairerId(repairerId);
+        withdrawRequest.setAmount(request.getAmount());
+        withdrawRequest.setType(withdrawType);
+        withdrawRequest.setBankCode(request.getBankCode());
+        withdrawRequest.setBankAccountNumber(request.getBankAccountNumber());
+        withdrawRequest.setBankAccountName(request.getBankAccountName());
+        withdrawRequest.setStatusId(WithdrawStatus.PENDING.getId());
+        withdrawRequestDAO.save(withdrawRequest);
+
+        RepairerWithdrawResponse response = new RepairerWithdrawResponse();
+        response.setMessage(CREATE_REQUEST_WITHDRAW_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getWithdrawTypeValidated(String type) {
+        for (WithdrawType wt : WithdrawType.values()) {
+            if (wt.name().equals(type)) {
+                return type;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_WITHDRAW_TYPE);
+    }
+
+    private void validatedBankInfo(RepairerWithdrawRequest request, boolean isNullable) {
+        if (!InputValidation.isBankNameValid(request.getBankAccountName(), isNullable)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_BANK_ACCOUNT_NAME);
+        } else if (!InputValidation.isBankNumberValid(request.getBankAccountNumber(), isNullable)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_BANK_ACCOUNT_NUMBER);
+        } else if (isInvalidBankCode(request.getBankCode(), isNullable)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_BANK_CODE);
+        }
+    }
+
+    private boolean isInvalidBankCode(String bankCode, boolean isNullable) {
+        if (bankCode == null && isNullable) {
+            return false;
+        } else if (bankCode == null) {
+            return true;
+        }
+        return bankInfoDAO.findById(bankCode).isEmpty();
     }
 }

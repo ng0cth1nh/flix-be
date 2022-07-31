@@ -66,4 +66,9 @@ public class RepairerController {
     public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(@RequestBody AddExtraServiceToInvoiceRequest request) {
         return repairerService.putExtraServicesToInvoice(request);
     }
+
+    @PostMapping("withdraw")
+    public ResponseEntity<RepairerWithdrawResponse> requestWithdraw(@RequestBody RepairerWithdrawRequest request) {
+        return repairerService.requestWithdraw(request);
+    }
 }

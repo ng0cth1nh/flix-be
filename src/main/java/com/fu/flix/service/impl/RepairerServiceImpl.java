@@ -598,8 +598,6 @@ public class RepairerServiceImpl implements RepairerService {
         validatedBankInfo(request, isNullable);
 
         WithdrawRequest withdrawRequest = new WithdrawRequest();
-        withdrawRequest.setRepairerId(repairerId);
-        withdrawRequest.setAmount(request.getAmount());
         withdrawRequest.setType(withdrawType);
         withdrawRequest.setBankCode(request.getBankCode());
         withdrawRequest.setBankAccountNumber(request.getBankAccountNumber());

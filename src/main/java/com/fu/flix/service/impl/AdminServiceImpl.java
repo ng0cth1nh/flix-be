@@ -1265,20 +1265,18 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, WITHDRAW_REQUEST_ID_IS_REQUIRED);
         }
 
-        Optional<WithdrawRequest> optionalWithdrawRequest = withdrawRequestDAO.findById(withdrawRequestId);
-        if (optionalWithdrawRequest.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, WITHDRAW_REQUEST_ID_NOT_FOUND);
+        if (withdrawRequestDAO.findById(withdrawRequestId).isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, WITHDRAW_REQUEST_NOT_FOUND);
         }
 
-        WithdrawRequest withdrawRequest = optionalWithdrawRequest.get();
         TransactionHistory transactionHistory = transactionHistoryDAO.findByWithdrawRequestId(withdrawRequestId).get();
 
         if (!TransactionStatus.PENDING.name().equals(transactionHistory.getStatus())) {
             throw new GeneralException(HttpStatus.GONE, JUST_CAN_ACCEPT_PENDING_WITHDRAW_REQUEST);
         }
 
-        Long repairerId = withdrawRequest.getRepairerId();
-        Long amount = withdrawRequest.getAmount();
+        Long repairerId = transactionHistory.getUserId();
+        Long amount = transactionHistory.getAmount();
 
         Balance balance = balanceDAO.findByUserId(repairerId).get();
         Long oldBalance = balance.getBalance();

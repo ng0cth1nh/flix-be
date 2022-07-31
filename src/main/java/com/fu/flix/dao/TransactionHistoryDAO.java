@@ -43,7 +43,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "AND th.type IN (:transactionTypes)", nativeQuery = true)
     List<ITransactionDTO> searchTransactionsForAdmin(String keyword, List<String> transactionTypes);
 
-    Optional<TransactionHistory> findByWithdrawRequestId(Long withdrawRequestId);
+    Optional<TransactionHistory> findByIdAndType(Long id, String type);
 
     @Query(value = "SELECT * FROM transaction_histories " +
             "WHERE user_id = :repairerId limit :limit offset :offset", nativeQuery = true)

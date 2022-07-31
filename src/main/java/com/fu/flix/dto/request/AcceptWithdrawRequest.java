@@ -6,5 +6,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AcceptWithdrawRequest extends DataRequest {
-    private Long withdrawRequestId;
+    private Long transactionId;
 }

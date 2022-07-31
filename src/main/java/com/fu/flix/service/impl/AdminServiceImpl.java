@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.ActiveState.ACTIVE;
 import static com.fu.flix.constant.enums.ActiveState.INACTIVE;
+import static com.fu.flix.constant.enums.TransactionType.WITHDRAW;
 
 @Service
 @Transactional
@@ -55,7 +56,6 @@ public class AdminServiceImpl implements AdminService {
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final VoucherService voucherService;
     private final InvoiceDAO invoiceDAO;
-    private final WithdrawRequestDAO withdrawRequestDAO;
     private final BalanceDAO balanceDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
@@ -83,7 +83,6 @@ public class AdminServiceImpl implements AdminService {
                             TransactionHistoryDAO transactionHistoryDAO,
                             VoucherService voucherService,
                             InvoiceDAO invoiceDAO,
-                            WithdrawRequestDAO withdrawRequestDAO,
                             BalanceDAO balanceDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
@@ -109,7 +108,6 @@ public class AdminServiceImpl implements AdminService {
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.voucherService = voucherService;
         this.invoiceDAO = invoiceDAO;
-        this.withdrawRequestDAO = withdrawRequestDAO;
         this.balanceDAO = balanceDAO;
     }
 
@@ -1260,17 +1258,18 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<AcceptWithdrawResponse> acceptWithdraw(AcceptWithdrawRequest request) {
-        Long withdrawRequestId = request.getWithdrawRequestId();
-        if (withdrawRequestId == null) {
-            throw new GeneralException(HttpStatus.GONE, WITHDRAW_REQUEST_ID_IS_REQUIRED);
+        Long transactionId = request.getTransactionId();
+        if (transactionId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_ID);
         }
 
-        if (withdrawRequestDAO.findById(withdrawRequestId).isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, WITHDRAW_REQUEST_NOT_FOUND);
+        Optional<TransactionHistory> optionalTransactionHistory = transactionHistoryDAO
+                .findByIdAndType(transactionId, WITHDRAW.name());
+        if (optionalTransactionHistory.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, TRANSACTION_NOT_FOUND);
         }
 
-        TransactionHistory transactionHistory = transactionHistoryDAO.findByWithdrawRequestId(withdrawRequestId).get();
-
+        TransactionHistory transactionHistory = optionalTransactionHistory.get();
         if (!TransactionStatus.PENDING.name().equals(transactionHistory.getStatus())) {
             throw new GeneralException(HttpStatus.GONE, JUST_CAN_ACCEPT_PENDING_WITHDRAW_REQUEST);
         }

@@ -31,8 +31,9 @@ import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.*;
+import static com.fu.flix.constant.enums.TransactionStatus.PENDING;
 import static com.fu.flix.constant.enums.TransactionType.*;
-import static com.fu.flix.constant.enums.TransactionResult.SUCCESS;
+import static com.fu.flix.constant.enums.TransactionStatus.SUCCESS;
 
 @Service
 @Slf4j
@@ -47,6 +48,8 @@ public class RepairerServiceImpl implements RepairerService {
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final CustomerService customerService;
     private final AddressService addressService;
+
+    private final ValidatorService validatorService;
     private final VoucherService voucherService;
     private final SubServiceDAO subServiceDAO;
     private final RequestService requestService;
@@ -66,6 +69,7 @@ public class RepairerServiceImpl implements RepairerService {
                                TransactionHistoryDAO transactionHistoryDAO,
                                CustomerService customerService,
                                AddressService addressService,
+                               ValidatorService validatorService,
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
                                RequestService requestService,
@@ -83,6 +87,7 @@ public class RepairerServiceImpl implements RepairerService {
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.customerService = customerService;
         this.addressService = addressService;
+        this.validatorService = validatorService;
         this.voucherService = voucherService;
         this.subServiceDAO = subServiceDAO;
         this.requestService = requestService;
@@ -98,7 +103,7 @@ public class RepairerServiceImpl implements RepairerService {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
-        if (!PENDING.getId().equals(repairRequest.getStatusId())) {
+        if (!RequestStatus.PENDING.getId().equals(repairRequest.getStatusId())) {
             throw new GeneralException(HttpStatus.CONFLICT, JUST_CAN_ACCEPT_PENDING_REQUEST);
         }
 
@@ -593,15 +598,22 @@ public class RepairerServiceImpl implements RepairerService {
         validatedBankInfo(request, isNullable);
 
         WithdrawRequest withdrawRequest = new WithdrawRequest();
-        withdrawRequest.setWithdrawCode(RandomUtil.generateCode());
         withdrawRequest.setRepairerId(repairerId);
         withdrawRequest.setAmount(request.getAmount());
         withdrawRequest.setType(withdrawType);
         withdrawRequest.setBankCode(request.getBankCode());
         withdrawRequest.setBankAccountNumber(request.getBankAccountNumber());
         withdrawRequest.setBankAccountName(request.getBankAccountName());
-        withdrawRequest.setStatusId(WithdrawStatus.PENDING.getId());
-        withdrawRequestDAO.save(withdrawRequest);
+        WithdrawRequest savedWithdrawRequest = withdrawRequestDAO.save(withdrawRequest);
+
+        TransactionHistory transactionHistory = new TransactionHistory();
+        transactionHistory.setTransactionCode(RandomUtil.generateCode());
+        transactionHistory.setAmount(amount);
+        transactionHistory.setType(WITHDRAW.name());
+        transactionHistory.setUserId(repairerId);
+        transactionHistory.setStatus(PENDING.name());
+        transactionHistory.setWithdrawRequestId(savedWithdrawRequest.getId());
+        transactionHistoryDAO.save(transactionHistory);
 
         RepairerWithdrawResponse response = new RepairerWithdrawResponse();
         response.setMessage(CREATE_REQUEST_WITHDRAW_SUCCESS);
@@ -635,5 +647,33 @@ public class RepairerServiceImpl implements RepairerService {
             return true;
         }
         return bankInfoDAO.findById(bankCode).isEmpty();
+    }
+
+    @Override
+    public ResponseEntity<RepairerTransactionsResponse> getTransactionHistories(RepairerTransactionsRequest request) {
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int offset = pageNumber * pageSize;
+
+        Long repairerId = request.getUserId();
+        List<TransactionHistory> transactionDTOs = transactionHistoryDAO
+                .findTransactionsForRepairer(repairerId, pageSize, offset);
+        List<RepairerTransactionDTO> transactions = transactionDTOs.stream()
+                .map(transaction -> {
+                    RepairerTransactionDTO dto = new RepairerTransactionDTO();
+                    dto.setId(transaction.getId());
+                    dto.setAmount(transaction.getAmount());
+                    dto.setTransactionCode(transaction.getTransactionCode());
+                    dto.setType(transaction.getType());
+                    dto.setStatus(transaction.getStatus());
+                    dto.setCreatedAt(DateFormatUtil.toString(transaction.getCreatedAt(), DATE_TIME_PATTERN));
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        RepairerTransactionsResponse response = new RepairerTransactionsResponse();
+        response.setTransactions(transactions);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

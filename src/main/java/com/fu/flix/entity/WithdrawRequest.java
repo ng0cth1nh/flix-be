@@ -21,8 +21,6 @@ public class WithdrawRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String withdrawCode;
-
     private Long repairerId;
 
     private Long amount;
@@ -34,10 +32,6 @@ public class WithdrawRequest {
     private String bankAccountNumber;
 
     private String bankAccountName;
-
-    private String statusId;
-
-    private String failReason;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

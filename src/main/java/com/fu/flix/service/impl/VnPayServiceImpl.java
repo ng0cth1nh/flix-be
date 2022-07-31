@@ -33,8 +33,8 @@ import java.util.*;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.TransactionType.*;
-import static com.fu.flix.constant.enums.VnPayResult.FAIL;
-import static com.fu.flix.constant.enums.VnPayResult.SUCCESS;
+import static com.fu.flix.constant.enums.TransactionResult.FAIL;
+import static com.fu.flix.constant.enums.TransactionResult.SUCCESS;
 
 @Service
 @Slf4j

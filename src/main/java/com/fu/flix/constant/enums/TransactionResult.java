@@ -1,5 +1,5 @@
 package com.fu.flix.constant.enums;
 
-public enum VnPayResult {
+public enum TransactionResult {
     SUCCESS, FAIL
 }

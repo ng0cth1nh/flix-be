@@ -1,10 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
-import com.fu.flix.constant.enums.FeedbackStatus;
-import com.fu.flix.constant.enums.FeedbackType;
-import com.fu.flix.constant.enums.RoleType;
-import com.fu.flix.constant.enums.TransactionType;
+import com.fu.flix.constant.enums.*;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
@@ -14,6 +11,7 @@ import com.fu.flix.entity.*;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
+import com.fu.flix.util.RandomUtil;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +30,8 @@ import java.util.stream.Collectors;
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.ActiveState.ACTIVE;
 import static com.fu.flix.constant.enums.ActiveState.INACTIVE;
+import static com.fu.flix.constant.enums.TransactionResult.SUCCESS;
+import static com.fu.flix.constant.enums.TransactionType.WITHDRAW;
 
 @Service
 @Transactional
@@ -58,6 +58,8 @@ public class AdminServiceImpl implements AdminService {
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final VoucherService voucherService;
     private final InvoiceDAO invoiceDAO;
+    private final WithdrawRequestDAO withdrawRequestDAO;
+    private final BalanceDAO balanceDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -83,7 +85,9 @@ public class AdminServiceImpl implements AdminService {
                             ExtraServiceDAO extraServiceDAO,
                             TransactionHistoryDAO transactionHistoryDAO,
                             VoucherService voucherService,
-                            InvoiceDAO invoiceDAO) {
+                            InvoiceDAO invoiceDAO,
+                            WithdrawRequestDAO withdrawRequestDAO,
+                            BalanceDAO balanceDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -108,6 +112,8 @@ public class AdminServiceImpl implements AdminService {
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.voucherService = voucherService;
         this.invoiceDAO = invoiceDAO;
+        this.withdrawRequestDAO = withdrawRequestDAO;
+        this.balanceDAO = balanceDAO;
     }
 
     @Override
@@ -1253,5 +1259,51 @@ public class AdminServiceImpl implements AdminService {
             }
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_TYPE);
+    }
+
+    @Override
+    public ResponseEntity<AcceptWithdrawResponse> acceptWithdraw(AcceptWithdrawRequest request) {
+        Long withdrawRequestId = request.getWithdrawRequestId();
+        if (withdrawRequestId == null) {
+            throw new GeneralException(HttpStatus.GONE, WITHDRAW_REQUEST_ID_IS_REQUIRED);
+        }
+
+        Optional<WithdrawRequest> optionalWithdrawRequest = withdrawRequestDAO.findById(withdrawRequestId);
+        if (optionalWithdrawRequest.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, WITHDRAW_REQUEST_ID_NOT_FOUND);
+        }
+
+        WithdrawRequest withdrawRequest = optionalWithdrawRequest.get();
+        if (!WithdrawStatus.PENDING.getId().equals(withdrawRequest.getStatusId())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_ACCEPT_PENDING_WITHDRAW_REQUEST);
+        }
+
+        Long repairerId = withdrawRequest.getRepairerId();
+        Long amount = withdrawRequest.getAmount();
+
+        Balance balance = balanceDAO.findByUserId(repairerId).get();
+        Long oldBalance = balance.getBalance();
+
+        if (oldBalance < amount) {
+            throw new GeneralException(HttpStatus.GONE, BALANCE_NOT_ENOUGH);
+        }
+
+        balance.setBalance(oldBalance - amount);
+
+        withdrawRequest.setStatusId(WithdrawStatus.SUCCESS.getId());
+
+        TransactionHistory transactionHistory = new TransactionHistory();
+        transactionHistory.setTransactionCode(RandomUtil.generateCode());
+        transactionHistory.setAmount(amount);
+        transactionHistory.setType(WITHDRAW.name());
+        transactionHistory.setUserId(repairerId);
+        transactionHistory.setStatus(SUCCESS.name());
+        transactionHistory.setWithdrawRequestId(withdrawRequestId);
+        transactionHistoryDAO.save(transactionHistory);
+
+        AcceptWithdrawResponse response = new AcceptWithdrawResponse();
+        response.setMessage(ACCEPT_WITHDRAW_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

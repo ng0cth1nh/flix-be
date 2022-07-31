@@ -13,31 +13,31 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@Table(name = "transaction_histories")
+@Table(name = "withdraw_requests")
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionHistory {
+public class WithdrawRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String transactionCode;
+    private String withdrawCode;
 
-    private String requestCode;
+    private Long repairerId;
 
     private Long amount;
 
     private String type;
 
-    private Long userId;
+    private String bankCode;
 
-    private Long vnpayTransactionId;
+    private String bankAccountNumber;
 
-    private String status;
+    private String bankAccountName;
+
+    private String statusId;
 
     private String failReason;
-
-    private Long withdrawRequestId;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

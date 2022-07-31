@@ -150,4 +150,98 @@ class InputValidationTest {
         // then
         Assertions.assertTrue(check);
     }
+
+    @Test
+    void should_valid_bank_name() {
+        // given
+        String bankName = "CHI DUNG";
+
+        // when
+        boolean check = InputValidation.isBankNameValid(bankName, true);
+
+        // then
+        Assertions.assertTrue(check);
+    }
+
+    @Test
+    void should_invalid_bank_name() {
+        // given
+        String bankName = "CHI DUNg";
+
+        // when
+        boolean check = InputValidation.isBankNameValid(bankName, true);
+
+        // then
+        Assertions.assertFalse(check);
+    }
+
+    @Test
+    void should_valid_bank_name_when_ban_name_is_null_and_allow_nullable() {
+        Assertions.assertTrue(InputValidation.isBankNameValid(null, true));
+    }
+
+    @Test
+    void should_invalid_bank_name_when_ban_name_is_null_and_not_allow_nullable() {
+        Assertions.assertFalse(InputValidation.isBankNameValid(null, false));
+    }
+
+    @Test
+    void should_valid_bank_number_when_length_is_8() {
+        // given
+        String bankNumber = "12345678";
+
+        // when
+        boolean check = InputValidation.isBankNumberValid(bankNumber, true);
+
+        // then
+        Assertions.assertTrue(check);
+    }
+
+    @Test
+    void should_valid_bank_number_when_length_is_17() {
+        // given
+        String bankNumber = "12345678912345678";
+
+        // when
+        boolean check = InputValidation.isBankNumberValid(bankNumber, true);
+
+        // then
+        Assertions.assertTrue(check);
+    }
+
+    @Test
+    void should_invalid_bank_number_when_length_is_7() {
+        // given
+        String bankNumber = "1234567";
+
+        // when
+        boolean check = InputValidation.isBankNumberValid(bankNumber, true);
+
+        // then
+        Assertions.assertFalse(check);
+    }
+
+    @Test
+    void should_invalid_bank_number_when_length_is_18() {
+        // given
+        String bankNumber = "123456789123456789";
+
+        // when
+        boolean check = InputValidation.isBankNumberValid(bankNumber, true);
+
+        // then
+        Assertions.assertFalse(check);
+    }
+
+    @Test
+    void should_invalid_bank_number_when_length_contain_character() {
+        // given
+        String bankNumber = "1234567abc";
+
+        // when
+        boolean check = InputValidation.isBankNumberValid(bankNumber, true);
+
+        // then
+        Assertions.assertFalse(check);
+    }
 }

@@ -213,4 +213,9 @@ public class AdminController {
     public ResponseEntity<AcceptWithdrawResponse> acceptWithdraw(@RequestBody AcceptWithdrawRequest request) {
         return adminService.acceptWithdraw(request);
     }
+
+    @GetMapping("repairer/withdraw/histories")
+    public ResponseEntity<WithdrawHistoriesResponse> getRepairerWithdrawHistories(WithdrawHistoriesRequest request) {
+        return adminService.getRepairerWithdrawHistories(request);
+    }
 }

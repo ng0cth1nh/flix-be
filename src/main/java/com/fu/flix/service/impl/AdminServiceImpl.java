@@ -11,7 +11,6 @@ import com.fu.flix.entity.*;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
-import com.fu.flix.util.RandomUtil;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,8 +29,6 @@ import java.util.stream.Collectors;
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.ActiveState.ACTIVE;
 import static com.fu.flix.constant.enums.ActiveState.INACTIVE;
-import static com.fu.flix.constant.enums.TransactionResult.SUCCESS;
-import static com.fu.flix.constant.enums.TransactionType.WITHDRAW;
 
 @Service
 @Transactional
@@ -1274,7 +1271,9 @@ public class AdminServiceImpl implements AdminService {
         }
 
         WithdrawRequest withdrawRequest = optionalWithdrawRequest.get();
-        if (!WithdrawStatus.PENDING.getId().equals(withdrawRequest.getStatusId())) {
+        TransactionHistory transactionHistory = transactionHistoryDAO.findByWithdrawRequestId(withdrawRequestId).get();
+
+        if (!TransactionStatus.PENDING.name().equals(transactionHistory.getStatus())) {
             throw new GeneralException(HttpStatus.GONE, JUST_CAN_ACCEPT_PENDING_WITHDRAW_REQUEST);
         }
 
@@ -1290,16 +1289,7 @@ public class AdminServiceImpl implements AdminService {
 
         balance.setBalance(oldBalance - amount);
 
-        withdrawRequest.setStatusId(WithdrawStatus.SUCCESS.getId());
-
-        TransactionHistory transactionHistory = new TransactionHistory();
-        transactionHistory.setTransactionCode(RandomUtil.generateCode());
-        transactionHistory.setAmount(amount);
-        transactionHistory.setType(WITHDRAW.name());
-        transactionHistory.setUserId(repairerId);
-        transactionHistory.setStatus(SUCCESS.name());
-        transactionHistory.setWithdrawRequestId(withdrawRequestId);
-        transactionHistoryDAO.save(transactionHistory);
+        transactionHistory.setStatus(TransactionStatus.SUCCESS.name());
 
         AcceptWithdrawResponse response = new AcceptWithdrawResponse();
         response.setMessage(ACCEPT_WITHDRAW_SUCCESS);

@@ -27,4 +27,6 @@ public interface RepairerService {
     ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServicesToInvoice(AddExtraServiceToInvoiceRequest request);
 
     ResponseEntity<RepairerWithdrawResponse> requestWithdraw(RepairerWithdrawRequest request);
+
+    ResponseEntity<RepairerTransactionsResponse> getTransactionHistories(RepairerTransactionsRequest request);
 }

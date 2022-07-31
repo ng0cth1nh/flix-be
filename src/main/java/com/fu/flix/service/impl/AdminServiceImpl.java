@@ -1293,4 +1293,19 @@ public class AdminServiceImpl implements AdminService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<WithdrawHistoriesResponse> getRepairerWithdrawHistories(WithdrawHistoriesRequest request) {
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+
+        int offset = pageNumber * pageSize;
+
+        List<IWithdrawHistoryDTO> repairerWithdrawHistories = transactionHistoryDAO
+                .findRepairerWithdrawHistories(pageSize, offset);
+        WithdrawHistoriesResponse response = new WithdrawHistoriesResponse();
+        response.setWithdrawList(repairerWithdrawHistories);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

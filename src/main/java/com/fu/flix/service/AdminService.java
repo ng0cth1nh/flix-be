@@ -84,4 +84,6 @@ public interface AdminService {
     ResponseEntity<SearchTransactionsResponse> searchTransactions(SearchTransactionsRequest request);
 
     ResponseEntity<AcceptWithdrawResponse> acceptWithdraw(AcceptWithdrawRequest request);
+
+    ResponseEntity<WithdrawHistoriesResponse> getRepairerWithdrawHistories(WithdrawHistoriesRequest request);
 }

@@ -21,10 +21,6 @@ public class WithdrawRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long repairerId;
-
-    private Long amount;
-
     private String type;
 
     private String bankCode;

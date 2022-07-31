@@ -208,4 +208,9 @@ public class AdminController {
     public ResponseEntity<SearchTransactionsResponse> searchTransactions(SearchTransactionsRequest request) {
         return adminService.searchTransactions(request);
     }
+
+    @PostMapping("accept/withdraw")
+    public ResponseEntity<AcceptWithdrawResponse> acceptWithdraw(@RequestBody AcceptWithdrawRequest request) {
+        return adminService.acceptWithdraw(request);
+    }
 }

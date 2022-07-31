@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.*;
 import static com.fu.flix.constant.enums.TransactionType.*;
-import static com.fu.flix.constant.enums.VnPayResult.SUCCESS;
+import static com.fu.flix.constant.enums.TransactionResult.SUCCESS;
 
 @Service
 @Slf4j

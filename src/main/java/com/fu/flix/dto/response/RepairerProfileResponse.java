@@ -1,7 +1,10 @@
 package com.fu.flix.dto.response;
 
+import com.fu.flix.dto.IRegisterServiceDTO;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,4 +20,5 @@ public class RepairerProfileResponse {
     private String identityCardNumber;
     private String address;
     private String balance;
+    private List<IRegisterServiceDTO> registerServices;
 }

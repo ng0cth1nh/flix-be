@@ -255,7 +255,7 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
                     ? DateFormatUtil.toString(profile.getDateOfBirth(), DATE_PATTERN)
                     : null;
 
-            List<IRegisterServiceDTO> registerServices = repairerDAO.findRegisterServices(repairerId);
+            List<IRegisterServiceProfileDTO> registerServices = repairerDAO.findRegisterServices(repairerId);
 
             response.setFullName(profile.getFullName());
             response.setAvatar(profile.getAvatar());
@@ -268,6 +268,9 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
             response.setIdentityCardNumber(profile.getIdentityCardNumber());
             response.setAddress(addressService.getAddressFormatted(profile.getAddressId()));
             response.setBalance(profile.getBalance());
+            response.setCommuneId(profile.getCommuneId());
+            response.setDistrictId(profile.getDistrictId());
+            response.setCityId(profile.getCityId());
             response.setRegisterServices(registerServices);
         }
 

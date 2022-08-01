@@ -21,7 +21,13 @@ public interface IRepairerProfileDTO {
 
     Long getAddressId();
 
-    String getBalance();
+    Long getBalance();
 
     String getRole();
+
+    Long getCityId();
+
+    Long getDistrictId();
+
+    Long getCommuneId();
 }

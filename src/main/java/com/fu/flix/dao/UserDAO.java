@@ -113,7 +113,8 @@ public interface UserDAO extends JpaRepository<User, Long> {
     List<IPendingRepairerDTO> findPendingRepairers(Integer limit, Integer offset);
 
     @Query(value = "SELECT u.full_name as fullName, avatar.url as avatar, u.phone, u.date_of_birth as dateOfBirth, u.gender, u.email, " +
-            "r.experience_description as experienceDescription, ic.identity_card_number as identityCardNumber, ua.id addressId, b.balance, role.name as role " +
+            "r.experience_description as experienceDescription, ic.identity_card_number as identityCardNumber, ua.id addressId, b.balance, " +
+            "role.name as role, district.id as districtId, city.id as cityId, commune.id as communeId " +
             "FROM users u " +
             "JOIN images avatar " +
             "ON avatar.id = u.avatar " +
@@ -125,6 +126,12 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "ON ic.repairer_id = r.user_id " +
             "JOIN user_addresses ua " +
             "ON ua.user_id = r.user_id " +
+            "JOIN communes commune " +
+            "ON commune.id = ua.commune_id " +
+            "JOIN districts district " +
+            "ON district.id = commune.district_id " +
+            "JOIN cities city " +
+            "ON city.id = district.city_id " +
             "JOIN balances b " +
             "ON b.user_id = r.user_id " +
             "JOIN roles role " +

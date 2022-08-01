@@ -262,7 +262,7 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
                     ? DateFormatUtil.toString(profile.getDateOfBirth(), DATE_PATTERN)
                     : null;
 
-            List<IRegisterServiceProfileDTO> registerServices = repairerDAO.findRegisterServices(repairerId);
+            List<IRegisterServiceProfileDTO> registerServices = repairerDAO.findRegisterServicesProfile(repairerId);
 
             response.setFullName(profile.getFullName());
             response.setAvatar(profile.getAvatar());

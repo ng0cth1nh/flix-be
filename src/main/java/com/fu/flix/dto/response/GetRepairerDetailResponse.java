@@ -1,5 +1,6 @@
 package com.fu.flix.dto.response;
 
+import com.fu.flix.dto.IAdminCheckRegisterServiceDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,4 +28,5 @@ public class GetRepairerDetailResponse {
     private String acceptedAccountAt;
     private List<String> certificates;
     private String role;
+    private List<IAdminCheckRegisterServiceDTO> registerServices;
 }

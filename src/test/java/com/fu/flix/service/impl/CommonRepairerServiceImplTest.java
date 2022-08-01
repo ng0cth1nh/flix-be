@@ -465,10 +465,13 @@ class CommonRepairerServiceImplTest {
     void test_updateRepairerProfile_success() {
         // given
         UpdateRepairerRequest request = new UpdateRepairerRequest();
+        List<Long> registerServices = new ArrayList<>();
+        registerServices.add(1L);
         request.setEmail("thongu@gmail.com");
         request.setExperienceDescription("Tài ba nhất cái đất Thạch Thất 2");
         request.setCommuneId("00001");
         request.setStreetAddress("Trường Ép Tao Dê 2");
+        request.setRegisterServices(registerServices);
 
         setRepairerContext(52L, "0865390057");
 
@@ -483,10 +486,13 @@ class CommonRepairerServiceImplTest {
     void test_updateRepairerProfile_success_when_address_is_change() {
         // given
         UpdateRepairerRequest request = new UpdateRepairerRequest();
+        List<Long> registerServices = new ArrayList<>();
+        registerServices.add(1L);
         request.setEmail("thongu@gmail.com");
         request.setExperienceDescription("Tài ba nhất cái đất Thạch Thất 2");
         request.setCommuneId("00004");
         request.setStreetAddress("Trường Ép Tao Dê 2");
+        request.setRegisterServices(registerServices);
 
         setRepairerContext(52L, "0865390057");
 

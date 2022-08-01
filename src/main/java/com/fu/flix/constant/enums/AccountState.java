@@ -1,5 +1,5 @@
 package com.fu.flix.constant.enums;
 
-public enum UserState {
+public enum AccountState {
     ACTIVE, BAN
 }

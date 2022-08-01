@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
 import static com.fu.flix.constant.enums.TransactionType.WITHDRAW;
-import static com.fu.flix.constant.enums.UserState.ACTIVE;
+import static com.fu.flix.constant.enums.AccountState.ACTIVE;
 
 @Service
 @Transactional
@@ -1033,23 +1033,14 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
         }
 
-        String status = getUserStatusValidated(request.getStatus());
-        boolean accountState = ACTIVE.name().equals(status);
+        String accountState = getAccountStateValidated(request.getStatus());
+        Boolean isActiveState = ACTIVE.name().equals(accountState);
 
-        List<ISearchCustomerDTO> customers = userDAO.searchCustomersForAdmin(phone, accountState);
+        List<ISearchCustomerDTO> customers = userDAO.searchCustomersForAdmin(phone, isActiveState);
         SearchCustomersResponse response = new SearchCustomersResponse();
         response.setCustomers(customers);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private String getUserStatusValidated(String status) {
-        for (UserState us : UserState.values()) {
-            if (us.name().equals(status)) {
-                return status;
-            }
-        }
-        throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
     }
 
     @Override
@@ -1059,11 +1050,28 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
         }
 
-        List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone);
+        String accountState = getAccountStateValidated(request.getStatus());
+        Boolean isActiveState = ACTIVE.name().equals(accountState);
+
+        Boolean isVerified = request.getIsVerified();
+        if (isVerified == null) {
+            throw new GeneralException(HttpStatus.GONE, ACCOUNT_VERIFY_PARAM_IS_REQUIRED);
+        }
+
+        List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone, isActiveState, isVerified);
         SearchRepairersResponse response = new SearchRepairersResponse();
         response.setRepairers(repairers);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getAccountStateValidated(String state) {
+        for (AccountState us : AccountState.values()) {
+            if (us.name().equals(state)) {
+                return state;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
     }
 
     @Override

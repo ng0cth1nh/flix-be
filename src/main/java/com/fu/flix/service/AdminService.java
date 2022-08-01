@@ -86,4 +86,6 @@ public interface AdminService {
     ResponseEntity<AcceptWithdrawResponse> acceptWithdraw(AcceptWithdrawRequest request);
 
     ResponseEntity<WithdrawHistoriesResponse> getRepairerWithdrawHistories(WithdrawHistoriesRequest request);
+
+    ResponseEntity<RejectWithdrawResponse> rejectWithdraw(RejectWithdrawRequest request);
 }

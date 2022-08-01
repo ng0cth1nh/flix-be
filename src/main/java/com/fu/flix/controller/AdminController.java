@@ -209,7 +209,7 @@ public class AdminController {
         return adminService.searchTransactions(request);
     }
 
-    @PostMapping("withdraw/accept")
+    @PutMapping("withdraw/accept")
     public ResponseEntity<AcceptWithdrawResponse> acceptWithdraw(@RequestBody AcceptWithdrawRequest request) {
         return adminService.acceptWithdraw(request);
     }
@@ -217,5 +217,10 @@ public class AdminController {
     @GetMapping("repairer/withdraw/histories")
     public ResponseEntity<WithdrawHistoriesResponse> getRepairerWithdrawHistories(WithdrawHistoriesRequest request) {
         return adminService.getRepairerWithdrawHistories(request);
+    }
+
+    @PutMapping("withdraw/reject")
+    public ResponseEntity<RejectWithdrawResponse> rejectWithdraw(@RequestBody RejectWithdrawRequest request) {
+        return adminService.rejectWithdraw(request);
     }
 }

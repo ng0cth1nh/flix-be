@@ -53,7 +53,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "AND th.status IN (:transactionStatus)", nativeQuery = true)
     List<ITransactionDTO> searchTransactionsForAdmin(String keyword, List<String> transactionTypes, List<String> transactionStatus);
 
-    Optional<TransactionHistory> findByIdAndType(Long id, String type);
+    Optional<TransactionHistory> findByIdAndTypeAndStatus(Long id, String type, String status);
 
     @Query(value = "SELECT * FROM transaction_histories " +
             "WHERE user_id = :repairerId limit :limit offset :offset", nativeQuery = true)

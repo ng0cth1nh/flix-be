@@ -5,7 +5,7 @@ public interface ITransactionDTO {
 
     String getTransactionCode();
 
-    String getVnpTransactionNo();
+    String getStatus();
 
     Long getAmount();
 

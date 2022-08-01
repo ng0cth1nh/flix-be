@@ -8,4 +8,5 @@ import lombok.Setter;
 public class SearchTransactionsRequest extends DataRequest {
     private String keyword;
     private String transactionType;
+    private String status;
 }

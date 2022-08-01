@@ -18,5 +18,6 @@ public class TransactionDetailResponse {
     private String cardType;
     private String orderInfo;
     private String vnpBankTranNo;
-    private String responseResult;
+    private String status;
+    private String failReason;
 }

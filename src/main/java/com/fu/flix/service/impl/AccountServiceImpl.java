@@ -327,9 +327,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private void validateRegisterRepairerInput(CFRegisterRepairerRequest request) {
-        if (CollectionUtils.isEmpty(request.getRegisterServices())) {
-            throw new GeneralException(HttpStatus.GONE, REGISTER_SERVICES_IS_REQUIRED);
-        } else if (!InputValidation.isPhoneValid(request.getPhone())) {
+        if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
             throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
@@ -364,7 +362,7 @@ public class AccountServiceImpl implements AccountService {
         } else if (isNotValidOTP(request.getOtp())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
         } else if (isInvalidRegisterServices(request.getRegisterServices())) {
-            throw new GeneralException(HttpStatus.GONE, REGISTER_SERVICES_CONTAIN_INVALID_ID);
+            throw new GeneralException(HttpStatus.GONE, INVALID_REGISTER_SERVICE_IDS);
         }
 //        else if (isNotValidOTP(request, OTPType.REGISTER)) {
 //            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
@@ -420,7 +418,11 @@ public class AccountServiceImpl implements AccountService {
         return identityCardDAO.findByIdentityCardNumber(card).isPresent();
     }
 
-    private boolean isInvalidRegisterServices(List<Long> registerServices) {
+    @Override
+    public boolean isInvalidRegisterServices(List<Long> registerServices) {
+        if (CollectionUtils.isEmpty(registerServices)) {
+            return true;
+        }
         return registerServices.stream()
                 .anyMatch(id -> serviceDAO.findById(id).isEmpty());
     }
@@ -467,13 +469,16 @@ public class AccountServiceImpl implements AccountService {
         repairer.setExperienceYear(request.getExperienceYear());
 
         Repairer savedRepairer = repairerDAO.save(repairer);
-        addServicesToRepairer(request, savedRepairer);
-    }
 
-    private void addServicesToRepairer(CFRegisterRepairerRequest request, Repairer repairer) {
         List<com.fu.flix.entity.Service> services = request.getRegisterServices().stream()
                 .map(id -> serviceDAO.findById(id).get())
                 .collect(Collectors.toList());
+        updateServicesToRepairer(services, savedRepairer);
+    }
+
+    @Override
+    public void updateServicesToRepairer(List<com.fu.flix.entity.Service> services, Repairer repairer) {
+        repairer.getServices().clear();
         repairer.getServices().addAll(services);
     }
 

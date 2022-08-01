@@ -928,6 +928,8 @@ public class AdminServiceImpl implements AdminService {
                 ? DateFormatUtil.toString(dto.getAcceptedAccountAt(), DATE_TIME_PATTERN)
                 : null;
 
+        List<IAdminCheckRegisterServiceDTO> registerServiceDTOs = repairerDAO.findRegisterServicesForAdmin(repairerId);
+
         GetRepairerDetailResponse response = new GetRepairerDetailResponse();
         response.setId(dto.getId());
         response.setAvatar(dto.getAvatar());
@@ -948,6 +950,7 @@ public class AdminServiceImpl implements AdminService {
         response.setAcceptedAccountAt(acceptedAccountAt);
         response.setCertificates(certificates.stream().map(Certificate::getUrl).collect(Collectors.toList()));
         response.setRole(dto.getRole());
+        response.setRegisterServices(registerServiceDTOs);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

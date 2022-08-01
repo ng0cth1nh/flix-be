@@ -1235,7 +1235,8 @@ public class AdminServiceImpl implements AdminService {
             response.setCardType(transaction.getCardType());
             response.setOrderInfo(transaction.getOrderInfo());
             response.setVnpBankTranNo(transaction.getVnpBankTranNo());
-            response.setResponseResult(transaction.getResponseResult());
+            response.setStatus(transaction.getStatus());
+            response.setFailReason(transaction.getFailReason());
         });
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -1248,7 +1249,11 @@ public class AdminServiceImpl implements AdminService {
                 : request.getKeyword();
 
         List<String> transactionTypes = getTransactionTypeQueries(request.getTransactionType());
-        List<ITransactionDTO> transactions = transactionHistoryDAO.searchTransactionsForAdmin(requestCode, transactionTypes);
+        List<String> transactionStatus = getTransactionStatusQueries(request.getStatus());
+
+        List<ITransactionDTO> transactions = transactionHistoryDAO
+                .searchTransactionsForAdmin(requestCode, transactionTypes, transactionStatus);
+
         SearchTransactionsResponse response = new SearchTransactionsResponse();
         response.setTransactions(transactions);
 
@@ -1274,6 +1279,27 @@ public class AdminServiceImpl implements AdminService {
             }
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_TYPE);
+    }
+
+    private List<String> getTransactionStatusQueries(String transactionStatus) {
+        if (Strings.isEmpty(transactionStatus)) {
+            return Arrays.stream(TransactionStatus.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
+        }
+
+        List<String> result = new ArrayList<>();
+        result.add(getTransactionStatusValidated(transactionStatus));
+        return result;
+    }
+
+    private String getTransactionStatusValidated(String transactionStatus) {
+        for (TransactionStatus ts : TransactionStatus.values()) {
+            if (ts.name().equals(transactionStatus)) {
+                return transactionStatus;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_STATUS);
     }
 
     @Override

@@ -25,5 +25,7 @@ public interface ITransactionDetailDTO {
 
     String getVnpBankTranNo();
 
-    String getResponseResult();
+    String getStatus();
+
+    String getFailReason();
 }

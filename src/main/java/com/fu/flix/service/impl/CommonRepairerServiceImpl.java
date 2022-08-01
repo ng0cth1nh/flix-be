@@ -244,7 +244,8 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
 
     @Override
     public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
-        Optional<IRepairerProfileDTO> optionalProfile = userDAO.findRepairerProfile(request.getUserId());
+        Long repairerId = request.getUserId();
+        Optional<IRepairerProfileDTO> optionalProfile = userDAO.findRepairerProfile(repairerId);
         RepairerProfileResponse response = new RepairerProfileResponse();
 
         if (optionalProfile.isPresent()) {
@@ -253,6 +254,8 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
             String dob = profile.getDateOfBirth() != null
                     ? DateFormatUtil.toString(profile.getDateOfBirth(), DATE_PATTERN)
                     : null;
+
+            List<IRegisterServiceProfileDTO> registerServices = repairerDAO.findRegisterServices(repairerId);
 
             response.setFullName(profile.getFullName());
             response.setAvatar(profile.getAvatar());
@@ -265,6 +268,10 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
             response.setIdentityCardNumber(profile.getIdentityCardNumber());
             response.setAddress(addressService.getAddressFormatted(profile.getAddressId()));
             response.setBalance(profile.getBalance());
+            response.setCommuneId(profile.getCommuneId());
+            response.setDistrictId(profile.getDistrictId());
+            response.setCityId(profile.getCityId());
+            response.setRegisterServices(registerServices);
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);

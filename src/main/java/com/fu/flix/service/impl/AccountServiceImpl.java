@@ -56,6 +56,7 @@ public class AccountServiceImpl implements AccountService {
     private final RepairerDAO repairerDAO;
     private final BalanceDAO balanceDAO;
     private final ValidatorService validatorService;
+    private final ServiceDAO serviceDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final IdentityCardDAO identityCardDAO;
@@ -76,6 +77,7 @@ public class AccountServiceImpl implements AccountService {
                               RepairerDAO repairerDAO,
                               BalanceDAO balanceDAO,
                               ValidatorService validatorService,
+                              ServiceDAO serviceD,
                               IdentityCardDAO identityCardDAO,
                               ImageDAO imageDAO,
                               CertificateDAO certificateDAO,
@@ -94,6 +96,7 @@ public class AccountServiceImpl implements AccountService {
         this.validatorService = validatorService;
         this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
+        this.serviceDAO = serviceD;
         this.identityCardDAO = identityCardDAO;
         this.imageDAO = imageDAO;
         this.certificateDAO = certificateDAO;
@@ -324,7 +327,9 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private void validateRegisterRepairerInput(CFRegisterRepairerRequest request) {
-        if (!InputValidation.isPhoneValid(request.getPhone())) {
+        if (CollectionUtils.isEmpty(request.getRegisterServices())) {
+            throw new GeneralException(HttpStatus.GONE, REGISTER_SERVICES_IS_REQUIRED);
+        } else if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
             throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
@@ -358,6 +363,8 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, IDENTITY_CARD_NUMBER_EXISTED);
         } else if (isNotValidOTP(request.getOtp())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
+        } else if (isInvalidRegisterServices(request.getRegisterServices())) {
+            throw new GeneralException(HttpStatus.GONE, REGISTER_SERVICES_CONTAIN_INVALID_ID);
         }
 //        else if (isNotValidOTP(request, OTPType.REGISTER)) {
 //            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
@@ -413,6 +420,11 @@ public class AccountServiceImpl implements AccountService {
         return identityCardDAO.findByIdentityCardNumber(card).isPresent();
     }
 
+    private boolean isInvalidRegisterServices(List<Long> registerServices) {
+        return registerServices.stream()
+                .anyMatch(id -> serviceDAO.findById(id).isEmpty());
+    }
+
     private User buildRepairerUser(CFRegisterRepairerRequest registerAccount, MultipartFile avatar) throws IOException {
         User user = new User();
         user.setFullName(registerAccount.getFullName());
@@ -453,7 +465,16 @@ public class AccountServiceImpl implements AccountService {
         repairer.setUserId(user.getId());
         repairer.setExperienceDescription(request.getExperienceDescription());
         repairer.setExperienceYear(request.getExperienceYear());
-        repairerDAO.save(repairer);
+
+        Repairer savedRepairer = repairerDAO.save(repairer);
+        addServicesToRepairer(request, savedRepairer);
+    }
+
+    private void addServicesToRepairer(CFRegisterRepairerRequest request, Repairer repairer) {
+        List<com.fu.flix.entity.Service> services = request.getRegisterServices().stream()
+                .map(id -> serviceDAO.findById(id).get())
+                .collect(Collectors.toList());
+        repairer.getServices().addAll(services);
     }
 
     private void createBalance(User user) {

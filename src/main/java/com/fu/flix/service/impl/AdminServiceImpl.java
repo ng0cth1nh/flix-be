@@ -27,9 +27,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.ActiveState.ACTIVE;
-import static com.fu.flix.constant.enums.ActiveState.INACTIVE;
+import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
 import static com.fu.flix.constant.enums.TransactionType.WITHDRAW;
+import static com.fu.flix.constant.enums.AccountState.ACTIVE;
 
 @Service
 @Transactional
@@ -156,7 +156,7 @@ public class AdminServiceImpl implements AdminService {
 
                     CategoryDTO dto = new CategoryDTO();
                     dto.setCategoryName(category.getName());
-                    dto.setStatus(category.isActive() ? ACTIVE.name() : INACTIVE.name());
+                    dto.setStatus(category.isActive() ? ServiceState.ACTIVE.name() : INACTIVE.name());
                     dto.setId(category.getId());
                     dto.setIcon(optionalIcon.map(Image::getUrl).orElse(null));
                     dto.setImage(optionalImage.map(Image::getUrl).orElse(null));
@@ -415,7 +415,7 @@ public class AdminServiceImpl implements AdminService {
                     dto.setId(subService.getId());
                     dto.setSubServiceName(subService.getName());
                     dto.setPrice(subService.getPrice());
-                    dto.setStatus(subService.getIsActive() ? ACTIVE.name() : INACTIVE.name());
+                    dto.setStatus(subService.getIsActive() ? ServiceState.ACTIVE.name() : INACTIVE.name());
                     dto.setDescription(subService.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
@@ -1033,7 +1033,10 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
         }
 
-        List<ISearchCustomerDTO> customers = userDAO.searchCustomersForAdmin(phone);
+        String accountState = getAccountStateValidated(request.getStatus());
+        Boolean isActiveState = ACTIVE.name().equals(accountState);
+
+        List<ISearchCustomerDTO> customers = userDAO.searchCustomersForAdmin(phone, isActiveState);
         SearchCustomersResponse response = new SearchCustomersResponse();
         response.setCustomers(customers);
 
@@ -1047,11 +1050,28 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
         }
 
-        List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone);
+        String accountState = getAccountStateValidated(request.getStatus());
+        Boolean isActiveState = ACTIVE.name().equals(accountState);
+
+        Boolean isVerified = request.getIsVerified();
+        if (isVerified == null) {
+            throw new GeneralException(HttpStatus.GONE, ACCOUNT_VERIFY_PARAM_IS_REQUIRED);
+        }
+
+        List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone, isActiveState, isVerified);
         SearchRepairersResponse response = new SearchRepairersResponse();
         response.setRepairers(repairers);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getAccountStateValidated(String state) {
+        for (AccountState us : AccountState.values()) {
+            if (us.name().equals(state)) {
+                return state;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
     }
 
     @Override

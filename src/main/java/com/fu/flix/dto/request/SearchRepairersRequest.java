@@ -7,4 +7,6 @@ import lombok.Setter;
 @Setter
 public class SearchRepairersRequest extends DataRequest {
     private String keyword;
+    private String status;
+    private Boolean isVerified;
 }

@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.INVALID_KEY_WORD;
 import static com.fu.flix.constant.Constant.INVALID_SERVICE;
-import static com.fu.flix.constant.enums.ActiveState.ACTIVE;
-import static com.fu.flix.constant.enums.ActiveState.INACTIVE;
+import static com.fu.flix.constant.enums.ServiceState.ACTIVE;
+import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
 
 @Service
 @Slf4j

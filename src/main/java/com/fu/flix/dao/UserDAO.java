@@ -144,8 +144,9 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "ON customer.avatar = avatar.id " +
             "WHERE ur.role_id = 'C' " +
             "AND customer.phone " +
-            "LIKE %:phone%", nativeQuery = true)
-    List<ISearchCustomerDTO> searchCustomersForAdmin(String phone);
+            "LIKE %:phone% " +
+            "AND customer.is_active = :isActiveState", nativeQuery = true)
+    List<ISearchCustomerDTO> searchCustomersForAdmin(String phone, Boolean isActiveState);
 
     @Query(value = "SELECT repairer.id, avatar.url as avatar, repairer.full_name as repairerName, repairer.phone as repairerPhone, " +
             "CASE WHEN repairer.is_active THEN 'ACTIVE' ELSE 'BAN' END as status, role.name as role " +
@@ -156,7 +157,15 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "ON repairer.avatar = avatar.id " +
             "JOIN roles role " +
             "ON role.id = ur.role_id " +
+            "JOIN repairers repairer_info " +
+            "ON repairer_info.user_id = repairer.id " +
             "WHERE (ur.role_id = 'PR' OR ur.role_id = 'R') " +
-            "AND repairer.phone LIKE %:phone%", nativeQuery = true)
-    List<ISearchRepairersDTO> searchRepairersForAdmin(String phone);
+            "AND repairer.phone LIKE %:phone% " +
+            "AND repairer.is_active = :isActiveState " +
+            "AND (CASE " +
+            "           WHEN :isVerified " +
+            "           THEN repairer_info.accepted_account_at IS NOT NULL " +
+            "           ELSE repairer_info.accepted_account_at IS NULL " +
+            "END)", nativeQuery = true)
+    List<ISearchRepairersDTO> searchRepairersForAdmin(String phone, Boolean isActiveState, Boolean isVerified);
 }

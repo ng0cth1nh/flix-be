@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
-import static com.fu.flix.constant.enums.TransactionType.WITHDRAW;
+import static com.fu.flix.constant.enums.TransactionStatus.FAIL;
 import static com.fu.flix.constant.enums.AccountState.ACTIVE;
 
 @Service
@@ -1305,20 +1305,8 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<AcceptWithdrawResponse> acceptWithdraw(AcceptWithdrawRequest request) {
         Long transactionId = request.getTransactionId();
-        if (transactionId == null) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_ID);
-        }
-
-        Optional<TransactionHistory> optionalTransactionHistory = transactionHistoryDAO
-                .findByIdAndType(transactionId, WITHDRAW.name());
-        if (optionalTransactionHistory.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, TRANSACTION_NOT_FOUND);
-        }
-
-        TransactionHistory transactionHistory = optionalTransactionHistory.get();
-        if (!TransactionStatus.PENDING.name().equals(transactionHistory.getStatus())) {
-            throw new GeneralException(HttpStatus.GONE, JUST_CAN_ACCEPT_PENDING_WITHDRAW_REQUEST);
-        }
+        TransactionHistory transactionHistory = validatorService
+                .getPendingWithdrawTransactionValidated(transactionId);
 
         Long repairerId = transactionHistory.getUserId();
         Long amount = transactionHistory.getAmount();
@@ -1351,6 +1339,26 @@ public class AdminServiceImpl implements AdminService {
                 .findRepairerWithdrawHistories(pageSize, offset);
         WithdrawHistoriesResponse response = new WithdrawHistoriesResponse();
         response.setWithdrawList(repairerWithdrawHistories);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<RejectWithdrawResponse> rejectWithdraw(RejectWithdrawRequest request) {
+        String reason = request.getReason();
+        if (Strings.isEmpty(reason) || reason.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REASON);
+        }
+
+        Long transactionId = request.getTransactionId();
+        TransactionHistory transactionHistory = validatorService
+                .getPendingWithdrawTransactionValidated(transactionId);
+
+        transactionHistory.setStatus(FAIL.name());
+        transactionHistory.setFailReason(reason);
+
+        RejectWithdrawResponse response = new RejectWithdrawResponse();
+        response.setMessage(REJECT_WITHDRAW_REQUEST_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

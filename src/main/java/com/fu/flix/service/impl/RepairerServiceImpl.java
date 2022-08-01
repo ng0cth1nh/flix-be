@@ -665,6 +665,7 @@ public class RepairerServiceImpl implements RepairerService {
                     dto.setType(transaction.getType());
                     dto.setStatus(transaction.getStatus());
                     dto.setCreatedAt(DateFormatUtil.toString(transaction.getCreatedAt(), DATE_TIME_PATTERN));
+                    dto.setTransactionId(transaction.getId());
                     return dto;
                 })
                 .collect(Collectors.toList());

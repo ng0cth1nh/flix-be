@@ -9,6 +9,7 @@ public class RepairerTransactionDTO {
     private Long id;
     private Long amount;
     private String transactionCode;
+    private Long transactionId;
     private String type;
     private String status;
     private String createdAt;

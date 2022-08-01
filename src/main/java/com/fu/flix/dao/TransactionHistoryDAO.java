@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory, Long> {
     @Query(value = "SELECT th.id, th.transaction_code as transactionCode, th.status as status, th.amount, th.type as transactionType, u.full_name as fullName, " +
-            "u.phone, DATE_FORMAT(th.created_at, '%Y-%m-%d %H:%i:%s') as payDate " +
+            "u.phone, DATE_FORMAT(th.created_at, '%Y-%m-%d %H:%i:%s') as payDate, th.id as transactionId " +
             "FROM transaction_histories th " +
             "LEFT JOIN vnpay_transactions vt " +
             "ON vt.id = th.vnpay_transaction_id " +
@@ -42,7 +42,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
     Optional<ITransactionDetailDTO> findTransactionDetail(Long id);
 
     @Query(value = "SELECT th.id, th.transaction_code as transactionCode, th.status as status, th.amount, th.type as transactionType, u.full_name as fullName, " +
-            "u.phone, DATE_FORMAT(th.created_at, '%Y-%m-%d %H:%i:%s') as payDate " +
+            "u.phone, DATE_FORMAT(th.created_at, '%Y-%m-%d %H:%i:%s') as payDate, th.id as transactionId " +
             "FROM transaction_histories th " +
             "LEFT JOIN vnpay_transactions vt " +
             "ON vt.id = th.vnpay_transaction_id " +

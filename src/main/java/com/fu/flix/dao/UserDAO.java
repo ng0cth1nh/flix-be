@@ -144,8 +144,9 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "ON customer.avatar = avatar.id " +
             "WHERE ur.role_id = 'C' " +
             "AND customer.phone " +
-            "LIKE %:phone%", nativeQuery = true)
-    List<ISearchCustomerDTO> searchCustomersForAdmin(String phone);
+            "LIKE %:phone% " +
+            "AND customer.is_active = :accountState", nativeQuery = true)
+    List<ISearchCustomerDTO> searchCustomersForAdmin(String phone, boolean accountState);
 
     @Query(value = "SELECT repairer.id, avatar.url as avatar, repairer.full_name as repairerName, repairer.phone as repairerPhone, " +
             "CASE WHEN repairer.is_active THEN 'ACTIVE' ELSE 'BAN' END as status, role.name as role " +

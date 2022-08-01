@@ -7,4 +7,5 @@ import lombok.Setter;
 @Setter
 public class SearchCustomersRequest extends DataRequest {
     private String keyword;
+    private String status;
 }

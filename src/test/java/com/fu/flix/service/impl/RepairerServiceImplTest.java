@@ -1,5 +1,7 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.configuration.AppConf;
+import com.fu.flix.dao.BalanceDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.RepairerDAO;
 import com.fu.flix.dto.ExtraServiceInputDTO;
@@ -7,6 +9,7 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
+import com.fu.flix.entity.Balance;
 import com.fu.flix.entity.RepairRequest;
 import com.fu.flix.entity.Repairer;
 import com.fu.flix.service.CustomerService;
@@ -48,6 +51,10 @@ class RepairerServiceImplTest {
     @Autowired
     RepairRequestDAO repairRequestDAO;
     String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    @Autowired
+    BalanceDAO balanceDAO;
+    @Autowired
+    AppConf appConf;
 
     @Test
     public void test_approval_request_success() throws IOException {
@@ -152,7 +159,7 @@ class RepairerServiceImplTest {
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
 
         // then
-        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + "3150", exception.getMessage());
+        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + appConf.getMilestoneMoney(), exception.getMessage());
     }
 
     @Test
@@ -612,6 +619,26 @@ class RepairerServiceImplTest {
     }
 
     @Test
+    public void test_create_invoice_fail_when_balance_less_than_comission() throws IOException {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService3();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        CreateInvoiceRequest request = new CreateInvoiceRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+
+        Balance balance = balanceDAO.findByUserId(56L).get();
+        balance.setBalance(0L);
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
+
+        // then
+        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + "3900", exception.getMessage());
+    }
+
+    @Test
     public void test_confirm_invoice_paid_success() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService3();
@@ -936,7 +963,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        AddExtraServiceToInvoiceResponse response = underTest.putExtraServiceToInvoice(request).getBody();
+        AddExtraServiceToInvoiceResponse response = underTest.putExtraServicesToInvoice(request).getBody();
 
         // then
         Assertions.assertEquals(PUT_EXTRA_SERVICE_TO_INVOICE_SUCCESS, response.getMessage());
@@ -956,7 +983,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        AddExtraServiceToInvoiceResponse response = underTest.putExtraServiceToInvoice(request).getBody();
+        AddExtraServiceToInvoiceResponse response = underTest.putExtraServicesToInvoice(request).getBody();
 
         // then
         Assertions.assertEquals(PUT_EXTRA_SERVICE_TO_INVOICE_SUCCESS, response.getMessage());
@@ -980,7 +1007,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServiceToInvoice(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServicesToInvoice(request));
 
         // then
         Assertions.assertEquals(LIST_EXTRA_SERVICES_CONTAIN_INVALID_ELEMENT, exception.getMessage());
@@ -1004,7 +1031,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServiceToInvoice(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServicesToInvoice(request));
 
         // then
         Assertions.assertEquals(LIST_EXTRA_SERVICES_CONTAIN_INVALID_ELEMENT, exception.getMessage());
@@ -1028,7 +1055,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServiceToInvoice(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServicesToInvoice(request));
 
         // then
         Assertions.assertEquals(LIST_EXTRA_SERVICES_CONTAIN_INVALID_ELEMENT, exception.getMessage());
@@ -1051,7 +1078,7 @@ class RepairerServiceImplTest {
         setRepairerContext(56L, "0865390056");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServiceToInvoice(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServicesToInvoice(request));
 
         // then
         Assertions.assertEquals(JUST_CAN_ADD_EXTRA_SERVICE_WHEN_REQUEST_STATUS_IS_FIXING, exception.getMessage());
@@ -1075,7 +1102,7 @@ class RepairerServiceImplTest {
         setRepairerContext(52L, "0865390056");
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServiceToInvoice(request));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.putExtraServicesToInvoice(request));
 
         // then
         Assertions.assertEquals(REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_EXTRA_SERVICE_FOR_THIS_INVOICE, exception.getMessage());

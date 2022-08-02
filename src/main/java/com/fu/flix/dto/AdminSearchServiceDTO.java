@@ -11,4 +11,5 @@ public class AdminSearchServiceDTO {
     private String icon;
     private String image;
     private String status;
+    private String description;
 }

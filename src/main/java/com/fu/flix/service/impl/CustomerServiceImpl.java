@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.*;
-import static com.fu.flix.constant.enums.TransactionType.PAY_COMMISSIONS;
-import static com.fu.flix.constant.enums.TransactionType.REFUNDS;
 
 @Service
 @Slf4j
@@ -50,8 +48,6 @@ public class CustomerServiceImpl implements CustomerService {
     private final AppConf appConf;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final RepairerDAO repairerDAO;
-    private final BalanceDAO balanceDAO;
-    private final TransactionHistoryDAO transactionHistoryDAO;
     private final StatusDAO statusDAO;
     private final ValidatorService validatorService;
     private final AddressService addressService;
@@ -74,8 +70,6 @@ public class CustomerServiceImpl implements CustomerService {
                                AppConf appConf,
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
                                RepairerDAO repairerDAO,
-                               BalanceDAO balanceDAO,
-                               TransactionHistoryDAO transactionHistoryDAO,
                                StatusDAO statusDAO,
                                ValidatorService validatorService,
                                AddressService addressService,
@@ -92,8 +86,6 @@ public class CustomerServiceImpl implements CustomerService {
         this.appConf = appConf;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
         this.repairerDAO = repairerDAO;
-        this.balanceDAO = balanceDAO;
-        this.transactionHistoryDAO = transactionHistoryDAO;
         this.statusDAO = statusDAO;
         this.validatorService = validatorService;
         this.addressService = addressService;
@@ -146,7 +138,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         PushNotificationRequest notification = new PushNotificationRequest();
         notification.setToken(fcmService.getFCMToken(userId));
-        String title= appConf.getNotification().getTitle().get("request");
+        String title = appConf.getNotification().getTitle().get("request");
         String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_CREATE_SUCCESS.name()), savedRepairRequest.getRequestCode());
         notification.setTitle(title);
         notification.setBody(message);
@@ -290,9 +282,9 @@ public class CustomerServiceImpl implements CustomerService {
         refundVoucher(repairRequest);
         updateRepairRequest(request, repairRequest);
         PushNotificationRequest notification = new PushNotificationRequest();
-        Long repairerId= repairRequestMatchingDAO.findByRequestCode(requestCode).get().getRepairerId();
+        Long repairerId = repairRequestMatchingDAO.findByRequestCode(requestCode).get().getRepairerId();
         notification.setToken(fcmService.getFCMToken(repairerId));
-        String title= appConf.getNotification().getTitle().get("request");
+        String title = appConf.getNotification().getTitle().get("request");
         String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_CANCELED.name()), requestCode);
         notification.setTitle(title);
         notification.setBody(message);
@@ -315,29 +307,31 @@ public class CustomerServiceImpl implements CustomerService {
         Repairer repairer = repairerDAO.findByUserId(repairRequestMatching.getRepairerId()).get();
 
         updateRepairerStatus(repairer);
-        returnMoneyForRepairer(repairer, requestCode);
+//        returnMoneyForRepairer(repairer, requestCode);
     }
 
     private void updateRepairerStatus(Repairer repairer) {
         repairer.setRepairing(false);
     }
 
-    private void returnMoneyForRepairer(Repairer repairer, String requestCode) {
-        TransactionHistory commissionsTransaction = transactionHistoryDAO
-                .findByRequestCodeAndType(requestCode, PAY_COMMISSIONS.name()).get();
-        Long userId = repairer.getUserId();
-        Balance balance = balanceDAO.findByUserId(userId).get();
-        Long refunds = commissionsTransaction.getAmount();
-
-        balance.setBalance(balance.getBalance() + refunds);
-
-        TransactionHistory refundsTransaction = new TransactionHistory();
-        refundsTransaction.setUserId(userId);
-        refundsTransaction.setAmount(refunds);
-        refundsTransaction.setType(REFUNDS.name());
-        refundsTransaction.setRequestCode(requestCode);
-        transactionHistoryDAO.save(refundsTransaction);
-    }
+//    private void returnMoneyForRepairer(Repairer repairer, String requestCode) {
+//        TransactionHistory commissionsTransaction = transactionHistoryDAO
+//                .findByRequestCodeAndType(requestCode, PAY_COMMISSIONS.name()).get();
+//        Long userId = repairer.getUserId();
+//        Balance balance = balanceDAO.findByUserId(userId).get();
+//        Long refunds = commissionsTransaction.getAmount();
+//
+//        balance.setBalance(balance.getBalance() + refunds);
+//
+//        TransactionHistory refundsTransaction = new TransactionHistory();
+//        refundsTransaction.setUserId(userId);
+//        refundsTransaction.setAmount(refunds);
+//        refundsTransaction.setType(REFUNDS.name());
+//        refundsTransaction.setRequestCode(requestCode);
+//        refundsTransaction.setStatus(SUCCESS.name());
+//        refundsTransaction.setTransactionCode(RandomUtil.generateCode());
+//        transactionHistoryDAO.save(refundsTransaction);
+//    }
 
     private void updateRepairRequest(CancelRequestForCustomerRequest request, RepairRequest repairRequest) {
         repairRequest.setStatusId(CANCELLED.getId());
@@ -481,17 +475,19 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public ResponseEntity<UserAddressResponse> getCustomerAddresses(UserAddressRequest request) {
         User user = validatorService.getUserValidated(request.getUsername());
-        List<UserAddress> userAddresses = userAddressDAO.findByUserIdAndDeletedAtIsNull(user.getId());
+        List<IAddressDTO> userAddresses = userAddressDAO.findByUserIdAndDeletedAtIsNull(user.getId());
 
         List<UserAddressDTO> addresses = userAddresses.stream()
-                .map(userAddress -> {
-                    Long addressId = userAddress.getId();
+                .map(ua -> {
                     UserAddressDTO dto = new UserAddressDTO();
-                    dto.setAddressId(addressId);
-                    dto.setCustomerName(userAddress.getName());
-                    dto.setPhone(userAddress.getPhone());
-                    dto.setAddressName(addressService.getAddressFormatted(addressId));
-                    dto.setMainAddress(userAddress.isMainAddress());
+                    dto.setAddressId(ua.getAddressId());
+                    dto.setAddressName(ua.getAddressName());
+                    dto.setCustomerName(ua.getCustomerName());
+                    dto.setPhone(ua.getCustomerPhone());
+                    dto.setMainAddress(ua.getIsMainAddress());
+                    dto.setDistrictId(ua.getDistrictId());
+                    dto.setCityId(ua.getCityId());
+                    dto.setCommuneId(ua.getCommuneId());
                     return dto;
                 }).collect(Collectors.toList());
 

@@ -7,7 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
-public class CFRegisterCustomerUserRequest extends CFRegisterUserRequest {
+public class CFRegisterCustomerRequest extends CFRegisterUserRequest {
     private MultipartFile avatar;
     private String password;
 }

@@ -10,11 +10,9 @@
 //import com.fu.flix.configuration.AppConf;
 //import com.fu.flix.dao.*;
 //import com.fu.flix.dto.error.GeneralException;
-//import com.fu.flix.dto.request.CFForgotPassRequest;
-//import com.fu.flix.dto.request.CFRegisterCustomerRequest;
-//import com.fu.flix.dto.request.SendForgotPassOTPRequest;
-//import com.fu.flix.dto.request.SendRegisterOTPRequest;
+//import com.fu.flix.dto.request.*;
 //import com.fu.flix.dto.response.*;
+//import com.fu.flix.dto.security.UserPrincipal;
 //import com.fu.flix.entity.OTPInfo;
 //import com.fu.flix.entity.User;
 //import com.fu.flix.service.AccountService;
@@ -29,11 +27,18 @@
 //import org.springframework.mock.web.MockHttpServletRequest;
 //import org.springframework.mock.web.MockHttpServletResponse;
 //import org.springframework.mock.web.MockMultipartFile;
+//import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+//import org.springframework.security.core.authority.SimpleGrantedAuthority;
+//import org.springframework.security.core.context.SecurityContextHolder;
 //import org.springframework.test.context.junit4.SpringRunner;
+//import org.springframework.web.multipart.MultipartFile;
 //
 //import javax.transaction.Transactional;
 //import java.io.IOException;
+//import java.util.ArrayList;
+//import java.util.Collection;
 //import java.util.Date;
+//import java.util.List;
 //import java.util.concurrent.CompletableFuture;
 //
 //import static com.fu.flix.constant.Constant.*;
@@ -80,7 +85,7 @@
 //
 //        Algorithm algorithm = Algorithm.HMAC256(this.appConf.getSecretKey().getBytes());
 //        String refreshToken = JWT.create()
-//                .withJWTId(String.valueOf(userId))
+//                .withClaim(USER_ID, userId)
 //                .withSubject(username)
 //                .withExpiresAt(new Date(System.currentTimeMillis() + this.appConf.getLifeTimeRefreshToken()))
 //                .sign(algorithm);
@@ -1302,7 +1307,7 @@
 //        DecodedJWT decodedJWT = verifier.verify(accessToken);
 //
 //        String username = decodedJWT.getSubject();
-//        Long id = Long.valueOf(decodedJWT.getId());
+//        Long id = decodedJWT.getClaim(USER_ID).asLong();
 //        User user = userDAO.findByUsername(username).get();
 //
 //        // then
@@ -1451,5 +1456,771 @@
 //            }
 //        });
 //        Async.await(future);
+//    }
+//
+//    @Test
+//    public void test_reset_password_success() {
+//        // given
+//        ResetPasswordRequest request = new ResetPasswordRequest();
+//        request.setNewPassword("123abc");
+//
+//        // when
+//        setCustomerContext(36L, "0865390037");
+//        ResetPasswordResponse response = underTest.resetPassword(request).getBody();
+//
+//        // then
+//        Assertions.assertEquals(RESET_PASSWORD_SUCCESS, response.getMessage());
+//    }
+//
+//    @Test
+//    public void test_reset_password_fail_when_password_is_123() {
+//        // given
+//        ResetPasswordRequest request = new ResetPasswordRequest();
+//        request.setNewPassword("123");
+//
+//        // when
+//        setCustomerContext(36L, "0865390037");
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.resetPassword(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_reset_password_fail_when_password_contain_white_space() {
+//        // given
+//        ResetPasswordRequest request = new ResetPasswordRequest();
+//        request.setNewPassword("123 abc");
+//
+//        // when
+//        setCustomerContext(36L, "0865390037");
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.resetPassword(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_reset_password_fail_when_password_is_too_long() {
+//        // given
+//        ResetPasswordRequest request = new ResetPasswordRequest();
+//        request.setNewPassword("123456abcdefg");
+//
+//        // when
+//        setCustomerContext(36L, "0865390037");
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.resetPassword(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_reset_password_fail_when_password_is_abcdefgh() {
+//        // given
+//        ResetPasswordRequest request = new ResetPasswordRequest();
+//        request.setNewPassword("abcdefgh");
+//
+//        // when
+//        setCustomerContext(36L, "0865390037");
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.resetPassword(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_reset_password_fail_when_password_is_1234567() {
+//        // given
+//        ResetPasswordRequest request = new ResetPasswordRequest();
+//        request.setNewPassword("1234567");
+//
+//        // when
+//        setCustomerContext(36L, "0865390037");
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.resetPassword(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_reset_password_fail_when_password_is_contain_special_character() {
+//        // given
+//        ResetPasswordRequest request = new ResetPasswordRequest();
+//        request.setNewPassword("123abc@");
+//
+//        // when
+//        setCustomerContext(36L, "0865390037");
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.resetPassword(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_reset_password_fail_when_password_is_empty() {
+//        // given
+//        ResetPasswordRequest request = new ResetPasswordRequest();
+//        request.setNewPassword("@");
+//
+//        // when
+//        setCustomerContext(36L, "0865390037");
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.resetPassword(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_reset_password_fail_when_password_is_null() {
+//        // given
+//        ResetPasswordRequest request = new ResetPasswordRequest();
+//        request.setNewPassword(null);
+//
+//        // when
+//        setCustomerContext(36L, "0865390037");
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.resetPassword(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_success() throws IOException {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        CFRegisterRepairerResponse response = underTest.confirmRegisterRepairer(request).getBody();
+//
+//        // then
+//        Assertions.assertEquals(CONFIRM_REGISTER_SUCCESS, response.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_phone_is_invalid() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setPhone("0865");
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_account_existed() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setPhone("0865390037");
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(ACCOUNT_EXISTED, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_password_invalid() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setPassword("123");
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_PASSWORD, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_commune_invalid() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setCommuneId("01");
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_full_name_is_null() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setFullName(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_FULL_NAME, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_street_address_is_null() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setStreetAddress(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_STREET_ADDRESS, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_experience_description_is_null() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setExperienceDescription(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_EXPERIENCE_DESCRIPTION, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_certificates_invalid() {
+//        // given
+//        MockMultipartFile certi1 = new MockMultipartFile(
+//                "certi1",
+//                "certi1.txt",
+//                MediaType.TEXT_XML_VALUE,
+//                "certi1".getBytes());
+//        List<MultipartFile> certificates = new ArrayList<>();
+//        certificates.add(certi1);
+//
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setCertificates(certificates);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(CERTIFICATE_FILE_MUST_BE_IMAGE_OR_PDF, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_success_when_certificates_is_null() throws IOException {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setCertificates(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        CFRegisterRepairerResponse response = underTest.confirmRegisterRepairer(request).getBody();
+//
+//        // then
+//        Assertions.assertEquals(CONFIRM_REGISTER_SUCCESS, response.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_experience_years_is_null() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setExperienceYear(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_EXPERIENCE_YEARS, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_front_image_is_null() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setFrontImage(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(FRONT_IMAGE_MUST_BE_IMAGE, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_back_image_is_null() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setBackSideImage(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(BACK_SIDE_IMAGE_MUST_BE_IMAGE, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_identity_number_invalid() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setIdentityCardNumber("123");
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_IDENTITY_CARD_NUMBER, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_identity_type_invalid() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setIdentityCardType("CC");
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(IDENTITY_CARD_TYPE_MUST_BE_CCCD_OR_CMND, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_gender_is_null() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setGender(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(GENDER_IS_REQUIRED, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_dob_is_null() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setDateOfBirth(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_DATE_OF_BIRTH, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_identity_number_existed() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setIdentityCardNumber("0343432444");
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(IDENTITY_CARD_NUMBER_EXISTED, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_invalid_otp() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setOtp(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(123456);
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_OTP, exception.getMessage());
+//    }
+//
+//    @Test
+//    public void test_confirm_register_repairer_fail_when_commune_id_is_null() {
+//        // given
+//        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+//        request.setCommuneId(null);
+//
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setOtpType(REGISTER);
+//
+//        awaitSaveOTP(otpInfo);
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
+//    }
+//
+//    private CFRegisterRepairerRequest getCfRegisterRepairerRequestValidated() {
+//        MockMultipartFile avatar = new MockMultipartFile(
+//                "avatar",
+//                "filename.jpg",
+//                MediaType.IMAGE_JPEG_VALUE,
+//                "avatar".getBytes());
+//
+//        String password = "123abc";
+//
+//        String identityCardNumber = "0756283956";
+//
+//        String identityCardType = "CCCD";
+//
+//        MockMultipartFile frontImage = new MockMultipartFile(
+//                "front_image",
+//                "front.jpg",
+//                MediaType.IMAGE_JPEG_VALUE,
+//                "front".getBytes());
+//
+//        MockMultipartFile backSideImage = new MockMultipartFile(
+//                "back_image",
+//                "back.jpg",
+//                MediaType.IMAGE_JPEG_VALUE,
+//                "back".getBytes());
+//
+//        Integer experienceYear = 3;
+//
+//        String experienceDescription = "pro vip";
+//
+//        MockMultipartFile certi1 = new MockMultipartFile(
+//                "certi1",
+//                "certi1.jpg",
+//                MediaType.APPLICATION_PDF_VALUE,
+//                "certi1".getBytes());
+//        List<MultipartFile> certificates = new ArrayList<>();
+//        certificates.add(certi1);
+//
+//        Boolean gender = true;
+//
+//        String dateOfBirth = "08-03-2000";
+//
+//        String fullName = "Nguyễn Thị Hồng Nhung";
+//
+//        String communeId = "00006";
+//
+//        String streetAddress = "Đường 30m Hòa Lạc";
+//
+//        int otp = 123456;
+//
+//        String phone = "0865390031";
+//
+//        CFRegisterRepairerRequest request = new CFRegisterRepairerRequest();
+//        request.setAvatar(avatar);
+//        request.setPassword(password);
+//        request.setIdentityCardNumber(identityCardNumber);
+//        request.setIdentityCardType(identityCardType);
+//        request.setFrontImage(frontImage);
+//        request.setBackSideImage(backSideImage);
+//        request.setExperienceYear(experienceYear);
+//        request.setExperienceDescription(experienceDescription);
+//        request.setCertificates(certificates);
+//        request.setGender(gender);
+//        request.setDateOfBirth(dateOfBirth);
+//        request.setFullName(fullName);
+//        request.setCommuneId(communeId);
+//        request.setStreetAddress(streetAddress);
+//        request.setOtp(otp);
+//        request.setPhone(phone);
+//
+//        return request;
+//    }
+//
+//    @Test
+//    void test_login_success_for_repairer() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390051");
+//        request.setPassword("123abc");
+//        request.setRoleType("REPAIRER");
+//
+//        // when
+//        LoginResponse response = underTest.login(request).getBody();
+//
+//        // then
+//        Assertions.assertNotNull(response);
+//    }
+//
+//    @Test
+//    void test_login_success_for_admin_manager() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390063");
+//        request.setPassword("123abc");
+//        request.setRoleType("ADMIN");
+//
+//        // when
+//        LoginResponse response = underTest.login(request).getBody();
+//
+//        // then
+//        Assertions.assertNotNull(response);
+//    }
+//
+//    @Test
+//    void test_login_success_for_admin_customer() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390037");
+//        request.setPassword("123abc");
+//        request.setRoleType("CUSTOMER");
+//
+//        // when
+//        LoginResponse response = underTest.login(request).getBody();
+//
+//        // then
+//        Assertions.assertNotNull(response);
+//    }
+//
+//    @Test
+//    void test_login_success_for_pending_repairer() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390068");
+//        request.setPassword("123abc");
+//        request.setRoleType("REPAIRER");
+//
+//        // when
+//        LoginResponse response = underTest.login(request).getBody();
+//
+//        // then
+//        Assertions.assertNotNull(response);
+//    }
+//
+//    @Test
+//    void test_login_fail_when_invalid_type() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390051");
+//        request.setPassword("123abc");
+//        request.setRoleType("abc");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(INVALID_TYPE, exception.getMessage());
+//    }
+//
+//    @Test
+//    void test_login_fail_when_login_type_not_match() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390051");
+//        request.setPassword("123abc");
+//        request.setRoleType("ADMIN");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(LOGIN_FAILED, exception.getMessage());
+//    }
+//
+//    @Test
+//    void test_login_fail_when_invalid_phone() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("123");
+//        request.setPassword("123abc");
+//        request.setRoleType("REPAIRER");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(LOGIN_FAILED, exception.getMessage());
+//    }
+//
+//    @Test
+//    void test_login_fail_when_user_not_found() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865111111");
+//        request.setPassword("123abc");
+//        request.setRoleType("REPAIRER");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(LOGIN_FAILED, exception.getMessage());
+//    }
+//
+//    @Test
+//    void test_login_fail_when_password_not_match() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390051");
+//        request.setPassword("abc123");
+//        request.setRoleType("REPAIRER");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(LOGIN_FAILED, exception.getMessage());
+//    }
+//
+//    @Test
+//    void test_login_fail_when_user_is_inactive() {
+//        // given
+//        LoginRequest request = new LoginRequest();
+//        request.setUsername("0865390041");
+//        request.setPassword("123abc");
+//        request.setRoleType("CUSTOMER");
+//
+//        // when
+//        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.login(request));
+//
+//        // then
+//        Assertions.assertEquals(USER_IS_INACTIVE, exception.getMessage());
+//    }
+//
+//    void setCustomerContext(Long id, String phone) {
+//        String[] roles = {"ROLE_CUSTOMER"};
+//        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+//        for (String role : roles) {
+//            authorities.add(new SimpleGrantedAuthority(role));
+//        }
+//        UsernamePasswordAuthenticationToken authenticationToken
+//                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
+//        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 //    }
 //}

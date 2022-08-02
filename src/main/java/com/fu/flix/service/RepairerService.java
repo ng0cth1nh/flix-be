@@ -2,6 +2,7 @@ package com.fu.flix.service;
 
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
+import com.fu.flix.entity.Balance;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
@@ -25,5 +26,9 @@ public interface RepairerService {
 
     ResponseEntity<AddAccessoriesToInvoiceResponse> putAccessoriesToInvoice(AddAccessoriesToInvoiceRequest request);
 
-    ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(AddExtraServiceToInvoiceRequest request);
+    ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServicesToInvoice(AddExtraServiceToInvoiceRequest request);
+
+    ResponseEntity<RepairerWithdrawResponse> requestWithdraw(RepairerWithdrawRequest request);
+
+    ResponseEntity<RepairerTransactionsResponse> getTransactionHistories(RepairerTransactionsRequest request);
 }

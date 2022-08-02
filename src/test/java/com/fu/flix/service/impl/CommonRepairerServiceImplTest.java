@@ -1,9 +1,11 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
+import com.fu.flix.entity.User;
 import com.fu.flix.service.CommonRepairerService;
 import com.fu.flix.service.CustomerService;
 import com.fu.flix.util.DateFormatUtil;
@@ -19,6 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 
+import java.time.LocalDate;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,12 +34,11 @@ import static com.fu.flix.constant.Constant.*;
 @SpringBootTest
 @Transactional
 class CommonRepairerServiceImplTest {
-
     @Autowired
     CommonRepairerService underTest;
-
     String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-
+    @Autowired
+    UserDAO userDAO;
     @Autowired
     CustomerService customerService;
 
@@ -429,6 +431,167 @@ class CommonRepairerServiceImplTest {
 
         // then
         Assertions.assertEquals(SERVICE_ID_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_get_repairer_profile_success() {
+        // given
+        RepairerProfileRequest request = new RepairerProfileRequest();
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_get_repairer_profile_success_when_dob_is_null() {
+        // given
+        RepairerProfileRequest request = new RepairerProfileRequest();
+        setRepairerContext(52L, "0865390057");
+
+        User user = userDAO.findById(52L).get();
+        user.setDateOfBirth(LocalDate.now().minusYears(20L));
+
+        // when
+        RepairerProfileResponse response = underTest.getRepairerProfile(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_updateRepairerProfile_success() {
+        // given
+        UpdateRepairerRequest request = new UpdateRepairerRequest();
+        List<Long> registerServices = new ArrayList<>();
+        registerServices.add(1L);
+        request.setEmail("thongu@gmail.com");
+        request.setExperienceDescription("Tài ba nhất cái đất Thạch Thất 2");
+        request.setCommuneId("00001");
+        request.setStreetAddress("Trường Ép Tao Dê 2");
+        request.setRegisterServices(registerServices);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        UpdateRepairerResponse response = underTest.updateRepairerProfile(request).getBody();
+
+        // then
+        Assertions.assertEquals(UPDATE_REPAIRER_PROFILE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_updateRepairerProfile_success_when_address_is_change() {
+        // given
+        UpdateRepairerRequest request = new UpdateRepairerRequest();
+        List<Long> registerServices = new ArrayList<>();
+        registerServices.add(1L);
+        request.setEmail("thongu@gmail.com");
+        request.setExperienceDescription("Tài ba nhất cái đất Thạch Thất 2");
+        request.setCommuneId("00004");
+        request.setStreetAddress("Trường Ép Tao Dê 2");
+        request.setRegisterServices(registerServices);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        UpdateRepairerResponse response = underTest.updateRepairerProfile(request).getBody();
+
+        // then
+        Assertions.assertEquals(UPDATE_REPAIRER_PROFILE_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_updateRepairerProfile_fail_when_invalid_email() {
+        // given
+        UpdateRepairerRequest request = new UpdateRepairerRequest();
+        request.setEmail("123");
+        request.setExperienceDescription("Tài ba nhất cái đất Thạch Thất 2");
+        request.setCommuneId("00004");
+        request.setStreetAddress("Trường Ép Tao Dê 2");
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateRepairerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_EMAIL, exception.getMessage());
+    }
+
+    @Test
+    void test_updateRepairerProfile_fail_when_invalid_street_address() {
+        // given
+        UpdateRepairerRequest request = new UpdateRepairerRequest();
+        request.setEmail("dung@gmail.com");
+        request.setExperienceDescription("Tài ba nhất cái đất Thạch Thất 2");
+        request.setCommuneId("00004");
+        request.setStreetAddress(null);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateRepairerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_STREET_ADDRESS, exception.getMessage());
+    }
+
+    @Test
+    void test_updateRepairerProfile_fail_when_invalid_experience_description() {
+        // given
+        UpdateRepairerRequest request = new UpdateRepairerRequest();
+        request.setEmail("dung@gmail.com");
+        request.setExperienceDescription(null);
+        request.setCommuneId("00004");
+        request.setStreetAddress("la la");
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateRepairerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_EXPERIENCE_DESCRIPTION, exception.getMessage());
+    }
+
+    @Test
+    void test_updateRepairerProfile_fail_when_invalid_commune() {
+        // given
+        UpdateRepairerRequest request = new UpdateRepairerRequest();
+        request.setEmail("dung@gmail.com");
+        request.setExperienceDescription("lal  al la");
+        request.setCommuneId("01");
+        request.setStreetAddress("la la");
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateRepairerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
+    }
+
+    @Test
+    void test_updateRepairerProfile_fail_when_commune_is_null() {
+        // given
+        UpdateRepairerRequest request = new UpdateRepairerRequest();
+        request.setEmail("dung@gmail.com");
+        request.setExperienceDescription("lal  al la");
+        request.setCommuneId(null);
+        request.setStreetAddress("la la");
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateRepairerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
     }
 
     void setRepairerContext(Long id, String phone) {

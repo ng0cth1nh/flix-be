@@ -10,14 +10,12 @@ import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.*;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.MainAddressDTO;
-import com.fu.flix.dto.PhoneDTO;
 import com.fu.flix.entity.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
-import com.fu.flix.util.PhoneFormatter;
 import com.fu.flix.dto.request.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -58,6 +56,7 @@ public class AccountServiceImpl implements AccountService {
     private final RepairerDAO repairerDAO;
     private final BalanceDAO balanceDAO;
     private final ValidatorService validatorService;
+    private final ServiceDAO serviceDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final IdentityCardDAO identityCardDAO;
@@ -78,6 +77,7 @@ public class AccountServiceImpl implements AccountService {
                               RepairerDAO repairerDAO,
                               BalanceDAO balanceDAO,
                               ValidatorService validatorService,
+                              ServiceDAO serviceD,
                               IdentityCardDAO identityCardDAO,
                               ImageDAO imageDAO,
                               CertificateDAO certificateDAO,
@@ -96,6 +96,7 @@ public class AccountServiceImpl implements AccountService {
         this.validatorService = validatorService;
         this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
+        this.serviceDAO = serviceD;
         this.identityCardDAO = identityCardDAO;
         this.imageDAO = imageDAO;
         this.certificateDAO = certificateDAO;
@@ -231,8 +232,8 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.CONFLICT, ACCOUNT_EXISTED);
         }
 
-        SmsRequest sms = getSmsRequest(request, OTPType.REGISTER);
-        smsService.sendAndSaveOTP(sms);
+//        SmsRequest sms = getSmsRequest(request, OTPType.REGISTER);
+//        smsService.sendAndSaveOTP(sms);
 
         SendRegisterOTPResponse response = new SendRegisterOTPResponse();
         response.setMessage(NEW_ACCOUNT_VALID);
@@ -240,7 +241,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerUserRequest request) throws IOException {
+    public ResponseEntity<CFRegisterCustomerResponse> confirmRegisterCustomer(CFRegisterCustomerRequest request) throws IOException {
         validateRegisterCustomerInput(request);
 
         User user = buildCustomerUser(request, request.getAvatar());
@@ -252,8 +253,8 @@ public class AccountServiceImpl implements AccountService {
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
 
-        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
-        redisDAO.deleteOTP(otpInfo);
+//        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
+//        redisDAO.deleteOTP(otpInfo);
 
         CFRegisterCustomerResponse response = new CFRegisterCustomerResponse();
         response.setAccessToken(accessToken);
@@ -264,7 +265,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerUserRequest request) throws IOException {
+    public ResponseEntity<CFRegisterRepairerResponse> confirmRegisterRepairer(CFRegisterRepairerRequest request) throws IOException {
         validateRegisterRepairerInput(request);
 
         User user = buildRepairerUser(request, request.getAvatar());
@@ -281,8 +282,8 @@ public class AccountServiceImpl implements AccountService {
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
         String refreshToken = getToken(user, TokenType.REFRESH_TOKEN);
 
-        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
-        redisDAO.deleteOTP(otpInfo);
+//        OTPInfo otpInfo = getOTPInfo(request, OTPType.REGISTER);
+//        redisDAO.deleteOTP(otpInfo);
 
         CFRegisterRepairerResponse response = new CFRegisterRepairerResponse();
         response.setAccessToken(accessToken);
@@ -292,7 +293,7 @@ public class AccountServiceImpl implements AccountService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void validateRegisterCustomerInput(CFRegisterCustomerUserRequest request) {
+    private void validateRegisterCustomerInput(CFRegisterCustomerRequest request) {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
@@ -305,12 +306,16 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_FULL_NAME);
         } else if (isInvalidStreetAddress(request.getStreetAddress())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_STREET_ADDRESS);
-        } else if (isNotValidOTP(request, OTPType.REGISTER)) {
+        } else if (isNotValidOTP(request.getOtp())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
         }
+
+//        else if (isNotValidOTP(request, OTPType.REGISTER)) {
+//            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
+//        }
     }
 
-    private User buildCustomerUser(CFRegisterCustomerUserRequest registerAccount, MultipartFile avatar) throws IOException {
+    private User buildCustomerUser(CFRegisterCustomerRequest registerAccount, MultipartFile avatar) throws IOException {
         User user = new User();
         user.setFullName(registerAccount.getFullName());
         user.setPhone(registerAccount.getPhone());
@@ -321,7 +326,7 @@ public class AccountServiceImpl implements AccountService {
         return user;
     }
 
-    private void validateRegisterRepairerInput(CFRegisterRepairerUserRequest request) {
+    private void validateRegisterRepairerInput(CFRegisterRepairerRequest request) {
         if (!InputValidation.isPhoneValid(request.getPhone())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         } else if (userDAO.findByUsername(request.getPhone()).isPresent()) {
@@ -336,16 +341,14 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_STREET_ADDRESS);
         } else if (isInvalidExperienceDescription(request.getExperienceDescription())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_EXPERIENCE_DESCRIPTION);
-        } else if (isEmptyCertificates(request.getCertificates())) {
-            throw new GeneralException(HttpStatus.GONE, CERTIFICATE_IS_REQUIRED);
         } else if (isInvalidCertificates(request.getCertificates())) {
             throw new GeneralException(HttpStatus.GONE, CERTIFICATE_FILE_MUST_BE_IMAGE_OR_PDF);
         } else if (isInvalidExperienceYears(request.getExperienceYear())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_EXPERIENCE_YEARS);
         } else if (isInvalidImage(request.getFrontImage())) {
-            throw new GeneralException(HttpStatus.GONE, FRONT_IMAGE_MUST_BE_IMAGE_OR_PDF);
+            throw new GeneralException(HttpStatus.GONE, FRONT_IMAGE_MUST_BE_IMAGE);
         } else if (isInvalidImage(request.getBackSideImage())) {
-            throw new GeneralException(HttpStatus.GONE, BACK_SIDE_IMAGE_MUST_BE_IMAGE_OR_PDF);
+            throw new GeneralException(HttpStatus.GONE, BACK_SIDE_IMAGE_MUST_BE_IMAGE);
         } else if (!InputValidation.isIdentityCardNumberValid(request.getIdentityCardNumber())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_IDENTITY_CARD_NUMBER);
         } else if (isInvalidIdentityCardType(request.getIdentityCardType())) {
@@ -356,9 +359,14 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_DATE_OF_BIRTH);
         } else if (isIdentityCardExisted(request.getIdentityCardNumber())) {
             throw new GeneralException(HttpStatus.GONE, IDENTITY_CARD_NUMBER_EXISTED);
-        } else if (isNotValidOTP(request, OTPType.REGISTER)) {
+        } else if (isNotValidOTP(request.getOtp())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
+        } else if (isInvalidRegisterServices(request.getRegisterServices())) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REGISTER_SERVICE_IDS);
         }
+//        else if (isNotValidOTP(request, OTPType.REGISTER)) {
+//            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
+//        }
     }
 
     private boolean isInvalidCommune(String communeId) {
@@ -377,11 +385,10 @@ public class AccountServiceImpl implements AccountService {
         return Strings.isEmpty(experienceDescription) || experienceDescription.length() > DESCRIPTION_MAX_LENGTH;
     }
 
-    private boolean isEmptyCertificates(List<MultipartFile> certificates) {
-        return CollectionUtils.isEmpty(certificates);
-    }
-
     private boolean isInvalidCertificates(List<MultipartFile> certificates) {
+        if (CollectionUtils.isEmpty(certificates)) {
+            return false;
+        }
         for (MultipartFile file : certificates) {
             if (!cloudStorageService.isCertificateFile(file)) {
                 return true;
@@ -411,7 +418,16 @@ public class AccountServiceImpl implements AccountService {
         return identityCardDAO.findByIdentityCardNumber(card).isPresent();
     }
 
-    private User buildRepairerUser(CFRegisterRepairerUserRequest registerAccount, MultipartFile avatar) throws IOException {
+    @Override
+    public boolean isInvalidRegisterServices(List<Long> registerServices) {
+        if (CollectionUtils.isEmpty(registerServices)) {
+            return true;
+        }
+        return registerServices.stream()
+                .anyMatch(id -> serviceDAO.findById(id).isEmpty());
+    }
+
+    private User buildRepairerUser(CFRegisterRepairerRequest registerAccount, MultipartFile avatar) throws IOException {
         User user = new User();
         user.setFullName(registerAccount.getFullName());
         user.setPhone(registerAccount.getPhone());
@@ -446,12 +462,24 @@ public class AccountServiceImpl implements AccountService {
         addressService.saveNewMainAddress(mainAddressDTO);
     }
 
-    private void createRepairer(User user, CFRegisterRepairerUserRequest request) {
+    private void createRepairer(User user, CFRegisterRepairerRequest request) {
         Repairer repairer = new Repairer();
         repairer.setUserId(user.getId());
         repairer.setExperienceDescription(request.getExperienceDescription());
         repairer.setExperienceYear(request.getExperienceYear());
-        repairerDAO.save(repairer);
+
+        Repairer savedRepairer = repairerDAO.save(repairer);
+
+        List<com.fu.flix.entity.Service> services = request.getRegisterServices().stream()
+                .map(id -> serviceDAO.findById(id).get())
+                .collect(Collectors.toList());
+        updateServicesToRepairer(services, savedRepairer);
+    }
+
+    @Override
+    public void updateServicesToRepairer(List<com.fu.flix.entity.Service> services, Repairer repairer) {
+        repairer.getServices().clear();
+        repairer.getServices().addAll(services);
     }
 
     private void createBalance(User user) {
@@ -461,7 +489,7 @@ public class AccountServiceImpl implements AccountService {
         balanceDAO.save(balance);
     }
 
-    private void createIdentityCard(User user, CFRegisterRepairerUserRequest request) throws IOException {
+    private void createIdentityCard(User user, CFRegisterRepairerRequest request) throws IOException {
         IdentityCard identityCard = new IdentityCard();
         identityCard.setIdentityCardNumber(request.getIdentityCardNumber());
         identityCard.setType(request.getIdentityCardType());
@@ -472,17 +500,19 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private void createCertificates(User user, List<MultipartFile> certificateFiles) throws IOException {
-        List<Certificate> certificates = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(certificateFiles)) {
+            List<Certificate> certificates = new ArrayList<>();
 
-        for (MultipartFile file : certificateFiles) {
-            String url = cloudStorageService.uploadCertificateFile(file);
-            Certificate certificate = new Certificate();
-            certificate.setRepairerId(user.getId());
-            certificate.setUrl(url);
-            certificates.add(certificate);
+            for (MultipartFile file : certificateFiles) {
+                String url = cloudStorageService.uploadCertificateFile(file);
+                Certificate certificate = new Certificate();
+                certificate.setRepairerId(user.getId());
+                certificate.setUrl(url);
+                certificates.add(certificate);
+            }
+
+            certificateDAO.saveAll(certificates);
         }
-
-        certificateDAO.saveAll(certificates);
     }
 
     private String getToken(User user, TokenType tokenType) {
@@ -553,21 +583,21 @@ public class AccountServiceImpl implements AccountService {
 
         validatorService.getUserValidated(phone);
 
-        SmsRequest sms = getSmsRequest(request, OTPType.FORGOT_PASSWORD);
-        smsService.sendAndSaveOTP(sms);
+//        SmsRequest sms = getSmsRequest(request, OTPType.FORGOT_PASSWORD);
+//        smsService.sendAndSaveOTP(sms);
 
         SendForgotPassOTPResponse response = new SendForgotPassOTPResponse();
         response.setMessage(SEND_FORGOT_PASSWORD_OTP_SUCCESS);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private SmsRequest getSmsRequest(PhoneDTO phoneDTO, OTPType otpType) {
-        SmsRequest sms = new SmsRequest();
-        sms.setUsername(phoneDTO.getPhone());
-        sms.setPhoneNumberFormatted(PhoneFormatter.getVietNamePhoneNumber(phoneDTO.getPhone()));
-        sms.setOtpType(otpType);
-        return sms;
-    }
+//    private SmsRequest getSmsRequest(PhoneDTO phoneDTO, OTPType otpType) {
+//        SmsRequest sms = new SmsRequest();
+//        sms.setUsername(phoneDTO.getPhone());
+//        sms.setPhoneNumberFormatted(PhoneFormatter.getVietNamePhoneNumber(phoneDTO.getPhone()));
+//        sms.setOtpType(otpType);
+//        return sms;
+//    }
 
     @Override
     public ResponseEntity<CFForgotPassResponse> confirmForgotPassword(CFForgotPassRequest request) {
@@ -576,15 +606,19 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
 
-        if (isNotValidOTP(request, OTPType.FORGOT_PASSWORD)) {
+//        if (isNotValidOTP(request, OTPType.FORGOT_PASSWORD)) {
+//            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
+//        }
+
+        if (isNotValidOTP(request.getOtp())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
         }
 
         User user = validatorService.getUserValidated(phone);
         String accessToken = getToken(user, TokenType.ACCESS_TOKEN);
 
-        OTPInfo otpInfo = getOTPInfo(request, OTPType.FORGOT_PASSWORD);
-        redisDAO.deleteOTP(otpInfo);
+//        OTPInfo otpInfo = getOTPInfo(request, OTPType.FORGOT_PASSWORD);
+//        redisDAO.deleteOTP(otpInfo);
 
         CFForgotPassResponse response = new CFForgotPassResponse();
         response.setAccessToken(accessToken);
@@ -592,16 +626,20 @@ public class AccountServiceImpl implements AccountService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private OTPInfo getOTPInfo(OTPRequest request, OTPType otpType) {
-        OTPInfo otpInfo = new OTPInfo();
-        otpInfo.setOtp(request.getOtp());
-        otpInfo.setUsername(request.getPhone());
-        otpInfo.setOtpType(otpType);
-        return otpInfo;
-    }
+//    private OTPInfo getOTPInfo(OTPRequest request, OTPType otpType) {
+//        OTPInfo otpInfo = new OTPInfo();
+//        otpInfo.setOtp(request.getOtp());
+//        otpInfo.setUsername(request.getPhone());
+//        otpInfo.setOtpType(otpType);
+//        return otpInfo;
+//    }
 
-    private boolean isNotValidOTP(OTPRequest request, OTPType otpType) {
-        OTPInfo otpInfo = redisDAO.findOTP(request, otpType);
-        return otpInfo == null;
+//    private boolean isNotValidOTP(OTPRequest request, OTPType otpType) {
+//        OTPInfo otpInfo = redisDAO.findOTP(request, otpType);
+//        return otpInfo == null;
+//    }
+
+    private boolean isNotValidOTP(Integer otp) {
+        return !Integer.valueOf(123456).equals(otp);
     }
 }

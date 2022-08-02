@@ -45,7 +45,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("address")
-    public ResponseEntity<DeleteAddressResponse> deleteCustomerAddress(@RequestBody DeleteAddressRequest request) {
+    public ResponseEntity<DeleteAddressResponse> deleteCustomerAddress(DeleteAddressRequest request) {
         return customerService.deleteCustomerAddress(request);
     }
 

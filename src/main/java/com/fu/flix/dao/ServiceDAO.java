@@ -9,9 +9,11 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface ServiceDAO extends JpaRepository<Service, Long> {
-    List<Service> findByCategoryId(Long categoryId);
+    List<Service> findByCategoryIdAndIsActive(Long categoryId, Boolean isActive);
 
-    @Query(value = "SELECT sv.id as serviceId, sv.name as serviceName, icon.url as icon, image.url as image " +
+    @Query(value = "SELECT sv.id as serviceId, sv.name as serviceName, icon.url as icon, " +
+            "image.url as image, sv.inspection_price as price, " +
+            "CASE WHEN sv.is_active THEN 'ACTIVE' ELSE 'INACTIVE' END as status " +
             "FROM services sv " +
             "JOIN images icon " +
             "ON sv.icon_id = icon.id " +
@@ -21,7 +23,7 @@ public interface ServiceDAO extends JpaRepository<Service, Long> {
             "AND sv.is_active", nativeQuery = true)
     List<ISearchActiveServiceDTO> searchActiveServices(String keyword);
 
-    @Query(value = "SELECT sv.id as serviceId, sv.name as serviceName, icon.url as icon, image.url as image, " +
+    @Query(value = "SELECT sv.id as serviceId, sv.name as serviceName, icon.url as icon, image.url as image, sv.description as description, " +
             "CASE WHEN sv.is_active THEN 'ACTIVE' ELSE 'INACTIVE' END as status " +
             "FROM services sv " +
             "JOIN images icon " +

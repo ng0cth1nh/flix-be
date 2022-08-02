@@ -66,6 +66,16 @@ public class RepairerController {
 
     @PutMapping("request/fixedExtraService")
     public ResponseEntity<AddExtraServiceToInvoiceResponse> putExtraServiceToInvoice(@RequestBody AddExtraServiceToInvoiceRequest request) {
-        return repairerService.putExtraServiceToInvoice(request);
+        return repairerService.putExtraServicesToInvoice(request);
+    }
+
+    @PostMapping("withdraw")
+    public ResponseEntity<RepairerWithdrawResponse> requestWithdraw(@RequestBody RepairerWithdrawRequest request) {
+        return repairerService.requestWithdraw(request);
+    }
+
+    @GetMapping("transactions")
+    public ResponseEntity<RepairerTransactionsResponse> getTransactionHistories(RepairerTransactionsRequest request) {
+        return repairerService.getTransactionHistories(request);
     }
 }

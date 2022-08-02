@@ -33,6 +33,8 @@ public class AppConf {
     private Long nameMaxLength;
     private Integer defaultPageSize;
     private Integer defaultPageNumber;
+    private Long milestoneMoney;
+    private Long minVnPay;
 
     @Data
     public static class Notification {
@@ -52,14 +54,26 @@ public class AppConf {
     public static class VnPayInfo {
         private String version;
         private String command;
-        private String tmnCode;
         private String locate;
         private Integer vnPayAmountRate;
         private String datePattern;
         private String currCode;
-        private String secureHash;
         private String payUrl;
+        private PaymentInfo paymentInfo;
+        private DepositInfo depositInfo;
+    }
+
+    @Data
+    public static class PaymentInfo {
+        private String tmnCode;
+        private String secureHash;
         private String returnUrl;
     }
 
+    @Data
+    public static class DepositInfo {
+        private String tmnCode;
+        private String secureHash;
+        private String returnUrl;
+    }
 }

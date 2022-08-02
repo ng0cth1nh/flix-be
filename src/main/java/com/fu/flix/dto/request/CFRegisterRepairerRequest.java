@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class CFRegisterRepairerUserRequest extends CFRegisterUserRequest {
+public class CFRegisterRepairerRequest extends CFRegisterUserRequest {
     private MultipartFile avatar;
     private String password;
     private String identityCardNumber;
@@ -20,4 +20,5 @@ public class CFRegisterRepairerUserRequest extends CFRegisterUserRequest {
     private List<MultipartFile> certificates;
     private Boolean gender;
     private String dateOfBirth;
+    private List<Long> registerServices;
 }

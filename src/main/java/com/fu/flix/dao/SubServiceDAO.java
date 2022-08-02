@@ -20,4 +20,9 @@ public interface SubServiceDAO extends JpaRepository<SubService, Long> {
             "AND name LIKE %:keyword% " +
             "AND is_active", nativeQuery = true)
     List<SubService> searchSubServicesByService(String keyword, Long serviceId);
+
+    List<SubService> findByServiceIdAndIsActive(Long serviceId, Boolean isActive);
+
+    @Query(value = "SELECT * FROM sub_services WHERE name LIKE %:keyword%", nativeQuery = true)
+    List<SubService> searchSubServicesForAdmin(String keyword);
 }

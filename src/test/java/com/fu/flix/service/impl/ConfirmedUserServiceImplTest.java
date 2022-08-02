@@ -1,11 +1,10 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.CommentDAO;
+import com.fu.flix.dto.ExtraServiceInputDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
-import com.fu.flix.dto.response.CommentResponse;
-import com.fu.flix.dto.response.GetInvoiceResponse;
-import com.fu.flix.dto.response.RequestingRepairResponse;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.service.ConfirmedUserService;
 import com.fu.flix.service.CustomerService;
@@ -28,6 +27,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static com.fu.flix.constant.Constant.*;
 
@@ -40,7 +40,6 @@ class ConfirmedUserServiceImplTest {
     @Autowired
     CommentDAO commentDAO;
     String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-
     @Autowired
     RepairerService repairerService;
     @Autowired
@@ -374,6 +373,155 @@ class ConfirmedUserServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    public void test_get_fixed_services_success_by_repairer() throws IOException {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390037");
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        putExtraServiceToInvoiceByRepairerId56(requestCode);
+        putSubServicesToInvoiceByRepairerId56(requestCode);
+        putAccessoriesToInvoiceByRepairerId56(requestCode);
+        createInvoiceByRepairerId56(requestCode);
+
+        GetFixedServiceRequest request = new GetFixedServiceRequest();
+        request.setRequestCode(requestCode);
+
+        setRepairerContext(56L, "0865390052");
+
+        // when
+        GetFixedServiceResponse response = underTest.getFixedServices(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    public void test_get_fixed_services_fail_when_status_is_not_valid() throws IOException {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390037");
+        approvalRequestByRepairerId56(requestCode);
+
+        GetFixedServiceRequest request = new GetFixedServiceRequest();
+        request.setRequestCode(requestCode);
+
+        setRepairerContext(56L, "0865390052");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixedServices(request));
+
+        // then
+        Assertions.assertEquals(JUST_CAN_GET_FIXED_SERVICES_WHEN_REQUEST_STATUS_IS_PAYMENT_WAITING_OR_DONE_OR_FIXING, exception.getMessage());
+    }
+
+    @Test
+    public void test_get_fixed_services_fail_when_customer_does_not_have_permission() throws IOException {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390037");
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        putExtraServiceToInvoiceByRepairerId56(requestCode);
+        putSubServicesToInvoiceByRepairerId56(requestCode);
+        putAccessoriesToInvoiceByRepairerId56(requestCode);
+        createInvoiceByRepairerId56(requestCode);
+
+        GetFixedServiceRequest request = new GetFixedServiceRequest();
+        request.setRequestCode(requestCode);
+
+        setCustomerContext(48L, "0865390052");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixedServices(request));
+
+        // then
+        Assertions.assertEquals(CUSTOMER_DOES_NOT_HAVE_PERMISSION_TO_GET_FIXED_SERVICES_FOR_THIS_INVOICE, exception.getMessage());
+    }
+
+    @Test
+    public void test_get_fixed_services_fail_when_repairer_does_not_have_permission() throws IOException {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390037");
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        putExtraServiceToInvoiceByRepairerId56(requestCode);
+        putSubServicesToInvoiceByRepairerId56(requestCode);
+        putAccessoriesToInvoiceByRepairerId56(requestCode);
+        createInvoiceByRepairerId56(requestCode);
+
+        GetFixedServiceRequest request = new GetFixedServiceRequest();
+        request.setRequestCode(requestCode);
+
+        setRepairerContext(52L, "0865390052");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getFixedServices(request));
+
+        // then
+        Assertions.assertEquals(REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_GET_FIXED_SERVICES_FOR_THIS_INVOICE, exception.getMessage());
+    }
+
+    @Test
+    public void test_get_fixed_services_success_by_customer() throws IOException {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390037");
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        putExtraServiceToInvoiceByRepairerId56(requestCode);
+        putSubServicesToInvoiceByRepairerId56(requestCode);
+        putAccessoriesToInvoiceByRepairerId56(requestCode);
+        createInvoiceByRepairerId56(requestCode);
+
+        GetFixedServiceRequest request = new GetFixedServiceRequest();
+        request.setRequestCode(requestCode);
+
+        setCustomerContext(36L, "0865390052");
+
+        // when
+        GetFixedServiceResponse response = underTest.getFixedServices(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    private void putExtraServiceToInvoiceByRepairerId56(String requestCode) {
+        List<ExtraServiceInputDTO> extraServices = new ArrayList<>();
+        extraServices.add(new ExtraServiceInputDTO("Tiền lau WC", null, 25000L, null));
+        extraServices.add(new ExtraServiceInputDTO("Tiền thổi kèn", "meo meo", 25000L, 3));
+
+        AddExtraServiceToInvoiceRequest request = new AddExtraServiceToInvoiceRequest();
+        request.setRequestCode(requestCode);
+        request.setExtraServices(extraServices);
+
+        setRepairerContext(56L, "0865390056");
+        repairerService.putExtraServicesToInvoice(request);
+    }
+
+    private void putSubServicesToInvoiceByRepairerId56(String requestCode) {
+        List<Long> serviceIds = new ArrayList<>();
+        serviceIds.add(1L);
+        serviceIds.add(2L);
+
+        AddSubServicesToInvoiceRequest request = new AddSubServicesToInvoiceRequest();
+        request.setRequestCode(requestCode);
+        request.setSubServiceIds(serviceIds);
+
+        setRepairerContext(56L, "0865390056");
+        repairerService.putSubServicesToInvoice(request);
+    }
+
+    private void putAccessoriesToInvoiceByRepairerId56(String requestCode) {
+        List<Long> accessoryIds = new ArrayList<>();
+        accessoryIds.add(1L);
+        accessoryIds.add(2L);
+
+        AddAccessoriesToInvoiceRequest request = new AddAccessoriesToInvoiceRequest();
+        request.setRequestCode(requestCode);
+        request.setAccessoryIds(accessoryIds);
+
+        setRepairerContext(56L, "0865390056");
+        repairerService.putAccessoriesToInvoice(request).getBody();
     }
 
     void setCustomerContext(Long id, String phone) {

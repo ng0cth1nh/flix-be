@@ -3,14 +3,8 @@ package com.fu.flix.service.impl;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.ChangePasswordRequest;
-import com.fu.flix.dto.request.NotificationRequest;
-import com.fu.flix.dto.request.UpdateAvatarRequest;
-import com.fu.flix.dto.request.UserCreateFeedbackRequest;
-import com.fu.flix.dto.response.ChangePasswordResponse;
-import com.fu.flix.dto.response.NotificationResponse;
-import com.fu.flix.dto.response.UpdateAvatarResponse;
-import com.fu.flix.dto.response.UserCreateFeedbackResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.UserService;
@@ -398,6 +392,51 @@ class UserServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_FEEDBACK_TYPE, exception.getMessage());
+    }
+
+    @Test
+    void test_get_other_user_info_success() {
+        // given
+        UserInfoRequest request = new UserInfoRequest();
+        request.setId(52L);
+
+        setCustomerContext(36L, "0865390037");
+
+        // when
+        UserInfoResponse response = underTest.getUserInfo(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_get_other_user_info_fail_when_id_is_null() {
+        // given
+        UserInfoRequest request = new UserInfoRequest();
+        request.setId(null);
+
+        setCustomerContext(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getUserInfo(request));
+
+        // then
+        Assertions.assertEquals(USER_ID_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_get_other_user_info_fail_when_id_is_not_found() {
+        // given
+        UserInfoRequest request = new UserInfoRequest();
+        request.setId(1000000L);
+
+        setCustomerContext(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getUserInfo(request));
+
+        // then
+        Assertions.assertEquals(USER_NOT_FOUND, exception.getMessage());
     }
 
     private List<MultipartFile> getListImages() {

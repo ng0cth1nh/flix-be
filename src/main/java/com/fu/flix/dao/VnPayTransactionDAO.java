@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface VnPayTransactionDAO extends JpaRepository<VnPayTransaction, Long> {
-    Optional<VnPayTransaction> findByVnpTxnRef(String vnpTxnRef);
+    Optional<VnPayTransaction> findByVnpTxnRefAndResponseCode(String vnpTxnRef, String responseCode);
 }

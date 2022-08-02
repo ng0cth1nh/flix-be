@@ -28,6 +28,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -56,7 +57,7 @@ class RepairerServiceImplTest {
     AppConf appConf;
 
     @Test
-    public void test_approval_request_success() {
+    public void test_approval_request_success() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         RepairerApproveRequest request = new RepairerApproveRequest();
@@ -130,7 +131,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_approval_request_fail_when_repairer_on_another_fixing() {
+    public void test_approval_request_fail_when_repairer_on_another_fixing() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         RepairerApproveRequest request = new RepairerApproveRequest();
@@ -147,7 +148,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_approval_request_fail_when_repairer_balance_not_enough() {
+    public void test_approval_request_fail_when_repairer_balance_not_enough() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         RepairerApproveRequest request = new RepairerApproveRequest();
@@ -204,7 +205,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void cancel_fixing_request_success() {
+    public void cancel_fixing_request_success() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -222,7 +223,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void cancel_fixing_request_success_when_reason_is_null() {
+    public void cancel_fixing_request_success_when_reason_is_null() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -240,7 +241,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void cancel_fixing_request_success_when_reason_is_empty() {
+    public void cancel_fixing_request_success_when_reason_is_empty() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -303,7 +304,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void cancel_fixing_request_fail_when_repairer_does_not_have_permission_to_cancel_request() {
+    public void cancel_fixing_request_fail_when_repairer_does_not_have_permission_to_cancel_request() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -321,7 +322,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void cancel_fixing_request_fail_when_request_does_not_fixing_or_approval() {
+    public void cancel_fixing_request_fail_when_request_does_not_fixing_or_approval() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -340,7 +341,7 @@ class RepairerServiceImplTest {
         Assertions.assertEquals(ONLY_CAN_CANCEL_REQUEST_FIXING_OR_APPROVED, exception.getMessage());
     }
 
-    private void approvalRequestByRepairerId56(String requestCode) {
+    private void approvalRequestByRepairerId56(String requestCode) throws IOException {
         setRepairerContext(56L, "0865390056");
         RepairerApproveRequest request = new RepairerApproveRequest();
         request.setRequestCode(requestCode);
@@ -433,7 +434,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_confirm_fixing_success() {
+    public void test_confirm_fixing_success() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -491,7 +492,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_confirm_fixing_fail_when_request_status_is_not_APPROVAL() {
+    public void test_confirm_fixing_fail_when_request_status_is_not_APPROVAL() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         ConfirmFixingRequest request = new ConfirmFixingRequest();
@@ -506,7 +507,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_confirm_fixing_fail_when_repairer_does_not_have_permission() {
+    public void test_confirm_fixing_fail_when_repairer_does_not_have_permission() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -522,7 +523,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_confirm_fixing_fail_when_repairer_on_another_fixing() {
+    public void test_confirm_fixing_fail_when_repairer_on_another_fixing() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -542,7 +543,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_create_invoice_success() {
+    public void test_create_invoice_success() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService3();
         approvalRequestByRepairerId56(requestCode);
@@ -559,7 +560,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_create_invoice_fail_when_repairer_does_not_have_permission() {
+    public void test_create_invoice_fail_when_repairer_does_not_have_permission() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService3();
         approvalRequestByRepairerId56(requestCode);
@@ -618,7 +619,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_create_invoice_fail_when_balance_less_than_comission() {
+    public void test_create_invoice_fail_when_balance_less_than_comission() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService3();
         approvalRequestByRepairerId56(requestCode);
@@ -638,7 +639,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_confirm_invoice_paid_success() {
+    public void test_confirm_invoice_paid_success() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService3();
         approvalRequestByRepairerId56(requestCode);
@@ -670,7 +671,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_confirm_invoice_paid_fail_when_payment_is_not_cash() {
+    public void test_confirm_invoice_paid_fail_when_payment_is_not_cash() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForVNPAY();
         approvalRequestByRepairerId56(requestCode);
@@ -688,7 +689,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_confirm_invoice_paid_fail_when_status_is_not_PW() {
+    public void test_confirm_invoice_paid_fail_when_status_is_not_PW() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -705,7 +706,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_confirm_invoice_paid_fail_when_repairer_does_not_permission() {
+    public void test_confirm_invoice_paid_fail_when_repairer_does_not_permission() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService3();
         approvalRequestByRepairerId56(requestCode);
@@ -723,7 +724,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_accessories_to_invoice_success() {
+    public void test_put_accessories_to_invoice_success() throws IOException {
         // given
         List<Long> accessoryIds = new ArrayList<>();
         accessoryIds.add(1L);
@@ -747,7 +748,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_accessories_to_invoice_fail_when_status_is_not_fixing() {
+    public void test_put_accessories_to_invoice_fail_when_status_is_not_fixing() throws IOException {
         // given
         List<Long> accessoryIds = new ArrayList<>();
         accessoryIds.add(1L);
@@ -770,7 +771,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_accessories_to_invoice_fail_when_repairer_does_not_have_permission() {
+    public void test_put_accessories_to_invoice_fail_when_repairer_does_not_have_permission() throws IOException {
         // given
         List<Long> accessoryIds = new ArrayList<>();
         accessoryIds.add(1L);
@@ -814,7 +815,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_accessories_to_invoice_success_when_list_sub_service_is_null() {
+    public void test_put_accessories_to_invoice_success_when_list_sub_service_is_null() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -834,7 +835,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_subService_to_invoice_success() {
+    public void test_put_subService_to_invoice_success() throws IOException {
         // given
         List<Long> serviceIds = new ArrayList<>();
         serviceIds.add(1L);
@@ -858,7 +859,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_subService_to_invoice_fail_when_status_is_not_fixing() {
+    public void test_put_subService_to_invoice_fail_when_status_is_not_fixing() throws IOException {
         // given
         List<Long> serviceIds = new ArrayList<>();
         serviceIds.add(1L);
@@ -881,7 +882,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_subService_to_invoice_fail_when_repairer_does_not_have_permission() {
+    public void test_put_subService_to_invoice_fail_when_repairer_does_not_have_permission() throws IOException {
         // given
         List<Long> serviceIds = new ArrayList<>();
         serviceIds.add(1L);
@@ -925,7 +926,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_subService_to_invoice_success_when_list_sub_service_is_null() {
+    public void test_put_subService_to_invoice_success_when_list_sub_service_is_null() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -945,7 +946,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_extra_services_success() {
+    public void test_put_extra_services_success() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -969,7 +970,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_extra_services_success_when_extra_list_is_null() {
+    public void test_put_extra_services_success_when_extra_list_is_null() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -989,7 +990,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_extra_services_fail_when_extra_service_have_name_is_null() {
+    public void test_put_extra_services_fail_when_extra_service_have_name_is_null() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -1013,7 +1014,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_extra_services_fail_when_extra_service_have_description_length_greater_than_2500() {
+    public void test_put_extra_services_fail_when_extra_service_have_description_length_greater_than_2500() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -1037,7 +1038,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_extra_services_fail_when_extra_service_have_price_is_null() {
+    public void test_put_extra_services_fail_when_extra_service_have_price_is_null() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -1061,7 +1062,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_extra_services_fail_when_status_is_not_fixing() {
+    public void test_put_extra_services_fail_when_status_is_not_fixing() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -1084,7 +1085,7 @@ class RepairerServiceImplTest {
     }
 
     @Test
-    public void test_put_extra_services_fail_when_repairer_does_not_have_permission() {
+    public void test_put_extra_services_fail_when_repairer_does_not_have_permission() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
@@ -1107,14 +1108,14 @@ class RepairerServiceImplTest {
         Assertions.assertEquals(REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_EXTRA_SERVICE_FOR_THIS_INVOICE, exception.getMessage());
     }
 
-    private void createInvoiceByRepairerId56(String requestCode) {
+    private void createInvoiceByRepairerId56(String requestCode) throws IOException {
         CreateInvoiceRequest request = new CreateInvoiceRequest();
         request.setRequestCode(requestCode);
         setRepairerContext(56L, "0865390037");
         underTest.createInvoice(request);
     }
 
-    private void confirmFixingByRepairerId56(String requestCode) {
+    private void confirmFixingByRepairerId56(String requestCode) throws IOException {
         ConfirmFixingRequest request = new ConfirmFixingRequest();
         request.setRequestCode(requestCode);
         setRepairerContext(56L, "0865390037");
@@ -1143,7 +1144,7 @@ class RepairerServiceImplTest {
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 
-    private String createFixingRequestByCustomerId36ForService1() {
+    private String createFixingRequestByCustomerId36ForService1() throws IOException {
         Long serviceId = 1L;
         Long addressId = 7L;
         String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
@@ -1165,7 +1166,7 @@ class RepairerServiceImplTest {
         return response.getRequestCode();
     }
 
-    private String createFixingRequestByCustomerId36ForVNPAY() {
+    private String createFixingRequestByCustomerId36ForVNPAY() throws IOException {
         Long serviceId = 1L;
         Long addressId = 7L;
         String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
@@ -1185,7 +1186,7 @@ class RepairerServiceImplTest {
         return response.getRequestCode();
     }
 
-    private String createFixingRequestByCustomerId36ForService3() {
+    private String createFixingRequestByCustomerId36ForService3() throws IOException {
         Long serviceId = 3L;
         Long addressId = 7L;
         String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);

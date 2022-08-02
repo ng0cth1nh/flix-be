@@ -5,10 +5,12 @@ import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.RepairRequest;
 import org.springframework.http.ResponseEntity;
 
-public interface CustomerService {
-    ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request);
+import java.io.IOException;
 
-    ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request);
+public interface CustomerService {
+    ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) throws IOException;
+
+    ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request) throws IOException;
 
     ResponseEntity<HistoryRequestForCustomerResponse> getFixingRequestHistories(HistoryRequestForCustomerRequest request);
 

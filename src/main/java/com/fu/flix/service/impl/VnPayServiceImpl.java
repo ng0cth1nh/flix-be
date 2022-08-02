@@ -1,17 +1,20 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.NotificationType;
 import com.fu.flix.constant.enums.PaymentMethod;
 import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CustomerPaymentUrlRequest;
+import com.fu.flix.dto.request.PushNotificationRequest;
 import com.fu.flix.dto.request.RepairerDepositUrlRequest;
 import com.fu.flix.dto.response.CustomerPaymentResponse;
 import com.fu.flix.dto.response.CustomerPaymentUrlResponse;
 import com.fu.flix.dto.response.RepairerDepositResponse;
 import com.fu.flix.dto.response.RepairerDepositUrlResponse;
 import com.fu.flix.entity.*;
+import com.fu.flix.service.FCMService;
 import com.fu.flix.service.VNPayService;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
@@ -26,6 +29,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -47,9 +51,10 @@ public class VnPayServiceImpl implements VNPayService {
     private final InvoiceDAO invoiceDAO;
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final AppConf.VnPayInfo vnPayInfo;
+    private final AppConf appConf;
+    private final FCMService fcmService;
     private final Integer vnPayAmountRate;
     private final RepairerDAO repairerDAO;
-    private final AppConf appConf;
 
     private final String VN_PAY_SUCCESS_CODE = "00";
     private final String VNP_AMOUNT = "vnp_Amount";
@@ -81,7 +86,7 @@ public class VnPayServiceImpl implements VNPayService {
                             InvoiceDAO invoiceDAO,
                             TransactionHistoryDAO transactionHistoryDAO,
                             RepairerDAO repairerDAO,
-                            AppConf appConf1) {
+                            FCMService fcmService) {
         this.repairRequestDAO = repairRequestDAO;
         this.vnPayTransactionDAO = vnPayTransactionDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -89,8 +94,9 @@ public class VnPayServiceImpl implements VNPayService {
         this.invoiceDAO = invoiceDAO;
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.vnPayInfo = appConf.getVnPayInfo();
+        this.appConf = appConf;
+        this.fcmService = fcmService;
         this.repairerDAO = repairerDAO;
-        this.appConf = appConf1;
         this.vnPayAmountRate = this.vnPayInfo.getVnPayAmountRate();
     }
 
@@ -260,7 +266,7 @@ public class VnPayServiceImpl implements VNPayService {
 
 
     @Override
-    public ResponseEntity<CustomerPaymentResponse> responseCustomerPayment(Map<String, String> requestParams) {
+    public ResponseEntity<CustomerPaymentResponse> responseCustomerPayment(Map<String, String> requestParams) throws IOException {
         CustomerPaymentResponse response = new CustomerPaymentResponse();
         String vnp_SecureHash = requestParams.get(VNP_SECURE_HASH);
         requestParams.remove(VNP_SECURE_HASH_TYPE);
@@ -334,6 +340,23 @@ public class VnPayServiceImpl implements VNPayService {
         repairer.setRepairing(false);
         repairRequest.setStatusId(RequestStatus.DONE.getId());
 
+        //send noti here
+        String title = appConf.getNotification().getTitle().get("request");
+        String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_DONE.name()), requestCode);
+
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
+
+        PushNotificationRequest repairerNotification = new PushNotificationRequest();
+        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
+        repairerNotification.setTitle(title);
+        repairerNotification.setBody(message);
+        fcmService.sendPnsToDevice(repairerNotification);
+
+        log.info("user id: " + repairRequest.getUserId() + "payment success for request " + requestCode + " success");
         log.info("user id: " + customerId + "payment success for request " + requestCode + " success");
         response.setMessage(PAYMENT_SUCCESS);
         response.setRspCode(VN_PAY_RESPONSE.get(PAYMENT_SUCCESS));

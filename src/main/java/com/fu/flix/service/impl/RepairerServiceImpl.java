@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final VoucherService voucherService;
     private final SubServiceDAO subServiceDAO;
     private final RequestService requestService;
+    private final FCMService fcmService;
     private final WithdrawRequestDAO withdrawRequestDAO;
     private final BankInfoDAO bankInfoDAO;
     private final AccessoryDAO accessoryDAO;
@@ -73,10 +75,10 @@ public class RepairerServiceImpl implements RepairerService {
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
                                RequestService requestService,
+                               FCMService fcmService, AccessoryDAO accessoryDAO,
+                               ExtraServiceDAO extraServiceDAO,
                                WithdrawRequestDAO withdrawRequestDAO,
-                               BankInfoDAO bankInfoDAO,
-                               AccessoryDAO accessoryDAO,
-                               ExtraServiceDAO extraServiceDAO) {
+                               BankInfoDAO bankInfoDAO) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -91,6 +93,7 @@ public class RepairerServiceImpl implements RepairerService {
         this.voucherService = voucherService;
         this.subServiceDAO = subServiceDAO;
         this.requestService = requestService;
+        this.fcmService = fcmService;
         this.withdrawRequestDAO = withdrawRequestDAO;
         this.bankInfoDAO = bankInfoDAO;
         this.accessoryDAO = accessoryDAO;
@@ -99,7 +102,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<RepairerApproveResponse> approveRequest(RepairerApproveRequest request) {
+    public ResponseEntity<RepairerApproveResponse> approveRequest(RepairerApproveRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -124,6 +127,21 @@ public class RepairerServiceImpl implements RepairerService {
 
         RepairRequestMatching repairRequestMatching = buildRepairRequestMatching(requestCode, repairerId);
         repairRequestMatchingDAO.save(repairRequestMatching);
+
+        String title = appConf.getNotification().getTitle().get("request");
+        String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_APPROVED.name()), requestCode);
+
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
+
+        PushNotificationRequest repairerNotification = new PushNotificationRequest();
+        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
+        repairerNotification.setTitle(title);
+        repairerNotification.setBody(message);
+        fcmService.sendPnsToDevice(repairerNotification);
 
         RepairerApproveResponse response = new RepairerApproveResponse();
         response.setMessage(APPROVAL_REQUEST_SUCCESS);
@@ -181,7 +199,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) {
+    public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
@@ -209,6 +227,14 @@ public class RepairerServiceImpl implements RepairerService {
 
         customerService.refundVoucher(repairRequest);
         updateRepairRequest(request, repairRequest);
+
+        PushNotificationRequest notification = new PushNotificationRequest();
+        notification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        String title = appConf.getNotification().getTitle().get("request");
+        String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_CANCELED.name()), requestCode);
+        notification.setTitle(title);
+        notification.setBody(message);
+        fcmService.sendPnsToDevice(notification);
 
         CancelRequestForRepairerResponse response = new CancelRequestForRepairerResponse();
         response.setMessage(CANCEL_REPAIR_REQUEST_SUCCESSFUL);
@@ -286,7 +312,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request) {
+    public ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -304,6 +330,21 @@ public class RepairerServiceImpl implements RepairerService {
         if (isCanNotApplyVoucherToInvoice(invoice)) {
             customerService.refundVoucher(repairRequest);
         }
+
+        String title = appConf.getNotification().getTitle().get("request");
+        String message = String.format(appConf.getNotification().getContent().get(NotificationType.CREATE_INVOICE.name()), requestCode);
+
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
+
+        PushNotificationRequest repairerNotification = new PushNotificationRequest();
+        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
+        repairerNotification.setTitle(title);
+        repairerNotification.setBody(message);
+        fcmService.sendPnsToDevice(repairerNotification);
 
         Balance balance = balanceDAO.findByUserId(repairerId).get();
         Long commission = getCommission(invoice);
@@ -341,7 +382,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(ConfirmInvoicePaidRequest request) {
+    public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(ConfirmInvoicePaidRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -363,6 +404,22 @@ public class RepairerServiceImpl implements RepairerService {
 
         repairer.setRepairing(false);
         repairRequest.setStatusId(DONE.getId());
+
+        String title = appConf.getNotification().getTitle().get("request");
+        String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_DONE.name()), requestCode);
+
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
+
+        PushNotificationRequest repairerNotification = new PushNotificationRequest();
+        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
+        repairerNotification.setTitle(title);
+        repairerNotification.setBody(message);
+        fcmService.sendPnsToDevice(repairerNotification);
+
         ConfirmInvoicePaidResponse response = new ConfirmInvoicePaidResponse();
         response.setMessage(CONFIRM_INVOICE_PAID_SUCCESS);
 
@@ -370,7 +427,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<ConfirmFixingResponse> confirmFixing(ConfirmFixingRequest request) {
+    public ResponseEntity<ConfirmFixingResponse> confirmFixing(ConfirmFixingRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -391,6 +448,20 @@ public class RepairerServiceImpl implements RepairerService {
 
         repairRequest.setStatusId(FIXING.getId());
         repairer.setRepairing(true);
+        String title = appConf.getNotification().getTitle().get("request");
+        String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_CONFIRM_FIXING.name()), requestCode);
+
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
+
+        PushNotificationRequest repairerNotification = new PushNotificationRequest();
+        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
+        repairerNotification.setTitle(title);
+        repairerNotification.setBody(message);
+        fcmService.sendPnsToDevice(repairerNotification);
 
         ConfirmFixingResponse response = new ConfirmFixingResponse();
         response.setMessage(CONFIRM_FIXING_SUCCESS);

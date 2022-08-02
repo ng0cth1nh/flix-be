@@ -542,13 +542,10 @@ public class AccountServiceImpl implements AccountService {
 
 
     private User postUserAvatar(User user, MultipartFile avatar) throws IOException {
-        if (avatar != null) {
-            String url = cloudStorageService.uploadImage(avatar);
-            user = userService.addNewAvatarToUser(user, url);
-        } else {
-            user.setAvatar(appConf.getDefaultAvatar());
-        }
-        return user;
+        String url = avatar != null
+                ? cloudStorageService.uploadImage(avatar)
+                : appConf.getDefaultIcon();
+        return userService.addNewAvatarToUser(user, url);
     }
 
     public IdentityCard postFrontIdentityImage(IdentityCard identityCard, MultipartFile imageFile) throws IOException {

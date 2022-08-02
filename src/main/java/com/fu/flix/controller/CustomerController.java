@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
 @Slf4j
 @RequestMapping("api/v1/customer")
@@ -18,12 +20,12 @@ public class CustomerController {
     }
 
     @PostMapping("request/repair")
-    public ResponseEntity<RequestingRepairResponse> createFixingRequest(@RequestBody RequestingRepairRequest request) {
+    public ResponseEntity<RequestingRepairResponse> createFixingRequest(@RequestBody RequestingRepairRequest request) throws IOException {
         return customerService.createFixingRequest(request);
     }
 
     @PostMapping("request/cancel")
-    public ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(@RequestBody CancelRequestForCustomerRequest request) {
+    public ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(@RequestBody CancelRequestForCustomerRequest request) throws IOException {
         return customerService.cancelFixingRequest(request);
     }
 

@@ -1,12 +1,16 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.dao.UserDAO;
+import com.fu.flix.dto.ExtraServiceInputDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.AdminService;
+import com.fu.flix.service.CustomerService;
+import com.fu.flix.service.RepairerService;
+import com.fu.flix.util.DateFormatUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -38,6 +43,14 @@ class AdminServiceImplTest {
 
     @Autowired
     UserDAO userDAO;
+
+    @Autowired
+    CustomerService customerService;
+
+    @Autowired
+    RepairerService repairerService;
+
+    String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @Test
     void test_get_admin_profile_success() {
@@ -1850,6 +1863,326 @@ class AdminServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_STATUS, exception.getMessage());
+    }
+
+    @Test
+    void test_get_transactions_success() {
+        // given
+        TransactionsRequest request = new TransactionsRequest();
+        request.setPageNumber(0);
+        request.setPageSize(5);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        TransactionsResponse response = underTest.getTransactions(request).getBody();
+
+        // then
+        Assertions.assertEquals(5, response.getTransactions().size());
+    }
+
+    @Test
+    void test_get_request_detail_success() throws IOException {
+        // given
+        String requestCode = createFixingRequest(36L, "0865390031");
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
+        putAccessoriesToInvoiceByRepairerId56(requestCode);
+        putExtraServicesToInvoiceByRepairerId56(requestCode);
+        putSubServicesToInvoiceByRepairerId56(requestCode);
+        createInvoiceByRepairerId56(requestCode);
+
+        AdminGetRequestDetailRequest request = new AdminGetRequestDetailRequest();
+        request.setRequestCode(requestCode);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminGetRequestDetailResponse response = underTest.getRequestDetail(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_get_request_detail_fail_when_request_code_is_null() {
+        // given
+        AdminGetRequestDetailRequest request = new AdminGetRequestDetailRequest();
+        request.setRequestCode(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getRequestDetail(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REQUEST_CODE, exception.getMessage());
+    }
+
+    @Test
+    void test_searchSubServices_success() {
+        // given
+        AdminSearchServicesRequest request = new AdminSearchServicesRequest();
+        request.setKeyword("Loi");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminSearchSubServicesResponse response = underTest.searchSubServices(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getSubServices());
+    }
+
+    @Test
+    void test_searchSubServices_fail_when_keyword_is_null() {
+        // given
+        AdminSearchServicesRequest request = new AdminSearchServicesRequest();
+        request.setKeyword(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchSubServices(request));
+
+        // then
+        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
+    }
+
+    @Test
+    void test_getTransactionDetail_success() {
+        // given
+        TransactionDetailRequest request = new TransactionDetailRequest();
+        request.setId(2126L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        TransactionDetailResponse response = underTest.getTransactionDetail(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_getTransactionDetail_fail_when_id_is_null() {
+        // given
+        TransactionDetailRequest request = new TransactionDetailRequest();
+        request.setId(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getTransactionDetail(request));
+
+        // then
+        Assertions.assertEquals(INVALID_TRANSACTION_ID, exception.getMessage());
+    }
+
+    @Test
+    void test_searchTransactions_success() {
+        // given
+        SearchTransactionsRequest request = new SearchTransactionsRequest();
+        request.setKeyword("31");
+        request.setStatus("SUCCESS");
+        request.setTransactionType("DEPOSIT");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchTransactionsResponse response = underTest.searchTransactions(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getTransactions());
+    }
+
+    @Test
+    void test_searchTransactions_success_when_keyword_is_null() {
+        // given
+        SearchTransactionsRequest request = new SearchTransactionsRequest();
+        request.setKeyword(null);
+        request.setStatus("SUCCESS");
+        request.setTransactionType("DEPOSIT");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchTransactionsResponse response = underTest.searchTransactions(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getTransactions());
+    }
+
+    @Test
+    void test_searchTransactions_success_when_transaction_type_is_null() {
+        // given
+        SearchTransactionsRequest request = new SearchTransactionsRequest();
+        request.setKeyword(null);
+        request.setStatus("SUCCESS");
+        request.setTransactionType(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchTransactionsResponse response = underTest.searchTransactions(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getTransactions());
+    }
+
+    @Test
+    void test_searchTransactions_fail_when_transaction_type_is_invalid() {
+        // given
+        SearchTransactionsRequest request = new SearchTransactionsRequest();
+        request.setKeyword(null);
+        request.setStatus("SUCCESS");
+        request.setTransactionType("DEPO");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchTransactions(request));
+
+        // then
+        Assertions.assertEquals(INVALID_TRANSACTION_TYPE, exception.getMessage());
+    }
+
+    @Test
+    void test_searchTransactions_success_when_status_is_null() {
+        // given
+        SearchTransactionsRequest request = new SearchTransactionsRequest();
+        request.setKeyword(null);
+        request.setStatus(null);
+        request.setTransactionType(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchTransactionsResponse response = underTest.searchTransactions(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getTransactions());
+    }
+
+    @Test
+    void test_searchTransactions_fail_when_status_is_invalid() {
+        // given
+        SearchTransactionsRequest request = new SearchTransactionsRequest();
+        request.setKeyword(null);
+        request.setStatus("SU");
+        request.setTransactionType(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchTransactions(request));
+
+        // then
+        Assertions.assertEquals(INVALID_TRANSACTION_STATUS, exception.getMessage());
+    }
+
+    private void putAccessoriesToInvoiceByRepairerId56(String requestCode) {
+        List<Long> accessoryIds = new ArrayList<>();
+        accessoryIds.add(1L);
+        accessoryIds.add(2L);
+
+        AddAccessoriesToInvoiceRequest request = new AddAccessoriesToInvoiceRequest();
+        request.setRequestCode(requestCode);
+        request.setAccessoryIds(accessoryIds);
+
+        setRepairerContext(56L, "0865390056");
+        repairerService.putAccessoriesToInvoice(request);
+    }
+
+    private void putExtraServicesToInvoiceByRepairerId56(String requestCode) {
+        List<ExtraServiceInputDTO> extraServices = new ArrayList<>();
+        extraServices.add(new ExtraServiceInputDTO("Tiền lau WC", null, 25000L, null));
+        extraServices.add(new ExtraServiceInputDTO("Tiền thổi kèn", "meo meo", 25000L, 3));
+
+        AddExtraServiceToInvoiceRequest request = new AddExtraServiceToInvoiceRequest();
+        request.setRequestCode(requestCode);
+        request.setExtraServices(extraServices);
+
+        setRepairerContext(56L, "0865390056");
+        repairerService.putExtraServicesToInvoice(request);
+    }
+
+    private void putSubServicesToInvoiceByRepairerId56(String requestCode) {
+        List<Long> serviceIds = new ArrayList<>();
+        serviceIds.add(1L);
+        serviceIds.add(2L);
+
+        AddSubServicesToInvoiceRequest request = new AddSubServicesToInvoiceRequest();
+        request.setRequestCode(requestCode);
+        request.setSubServiceIds(serviceIds);
+
+        setRepairerContext(56L, "0865390056");
+        repairerService.putSubServicesToInvoice(request);
+    }
+
+    private String createFixingRequest(Long userId, String phone) throws IOException {
+        setUserContext(userId, phone);
+        Long serviceId = 1L;
+        Long addressId = 7L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        RequestingRepairResponse response = customerService.createFixingRequest(request).getBody();
+        return response.getRequestCode();
+    }
+
+    private void approvalRequestByRepairerId56(String requestCode) throws IOException {
+        setRepairerContext(56L, "0865390056");
+        RepairerApproveRequest request = new RepairerApproveRequest();
+        request.setRequestCode(requestCode);
+        repairerService.approveRequest(request);
+    }
+
+    void setUserContext(Long id, String phone) {
+        String[] roles = {"ROLE_CUSTOMER"};
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (String role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        UsernamePasswordAuthenticationToken authenticationToken
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
+
+    private void confirmFixingByRepairerId56(String requestCode) throws IOException {
+        ConfirmFixingRequest request = new ConfirmFixingRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+        repairerService.confirmFixing(request);
+    }
+
+    private void createInvoiceByRepairerId56(String requestCode) throws IOException {
+        CreateInvoiceRequest request = new CreateInvoiceRequest();
+        request.setRequestCode(requestCode);
+        setRepairerContext(56L, "0865390037");
+        repairerService.createInvoice(request);
+    }
+
+
+    void setRepairerContext(Long id, String phone) {
+        String[] roles = {"ROLE_REPAIRER"};
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (String role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        UsernamePasswordAuthenticationToken authenticationToken
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 
     void setManagerContext(Long id, String phone) {

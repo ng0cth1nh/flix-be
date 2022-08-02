@@ -36,6 +36,7 @@ public class AppConf {
 
     @Data
     public static class Notification {
+        private String defaultImage;
         private Map<String, String> title;
         private Map<String, String> content;
     }

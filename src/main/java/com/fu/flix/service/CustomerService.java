@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import java.io.IOException;
 
 public interface CustomerService {
-    ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request);
+    ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) throws IOException;
 
     ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request) throws IOException;
 

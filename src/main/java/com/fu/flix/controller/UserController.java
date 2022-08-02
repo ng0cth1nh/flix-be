@@ -21,7 +21,7 @@ public class UserController {
 
     public UserController(UserService userService, FCMService fcmService) {
         this.userService = userService;
-        this.fcmService= fcmService;
+        this.fcmService = fcmService;
     }
 
     @PutMapping("avatar")
@@ -44,12 +44,12 @@ public class UserController {
         return userService.createFeedback(request);
     }
 
-    @PostMapping("/saveFCMToken")
-    public ResponseEntity<SaveFCMTokenResponse> saveFCMToken(@RequestBody SaveFCMTokenRequest request){
+    @PostMapping("saveFCMToken")
+    public ResponseEntity<SaveFCMTokenResponse> saveFCMToken(@RequestBody SaveFCMTokenRequest request) {
         return fcmService.saveFCMToken(request);
     }
 
-    @PostMapping("/pushNotification")
+    @PostMapping("pushNotification")
     public ResponseEntity<PushNotificationResponse> pushNotification(@RequestBody PushNotificationRequest request) throws IOException {
         return fcmService.sendPnsToDevice(request);
     }

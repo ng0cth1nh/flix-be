@@ -55,11 +55,11 @@ public interface AdminService {
 
     ResponseEntity<UpdateAccessoryResponse> updateAccessory(UpdateAccessoryRequest request);
 
-    ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request);
+    ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request) throws IOException;
 
     ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request);
 
-    ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request);
+    ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) throws IOException;
 
     ResponseEntity<GetRepairerDetailResponse> getRepairerDetail(GetRepairerDetailRequest request);
 }

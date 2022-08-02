@@ -2,6 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.FeedbackStatus;
+import com.fu.flix.constant.enums.NotificationType;
 import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
@@ -50,6 +51,7 @@ public class AdminServiceImpl implements AdminService {
     private final RoleDAO roleDAO;
     private final AddressService addressService;
     private final FeedbackService feedbackService;
+    private final FCMService fcmService;
     private final StatusDAO statusDAO;
     private final CertificateDAO certificateDAO;
     private final AccessoryDAO accessoryDAO;
@@ -72,7 +74,7 @@ public class AdminServiceImpl implements AdminService {
                             FeedbackDAO feedbackDAO,
                             RoleDAO roleDAO, AddressService addressService,
                             FeedbackService feedbackService,
-                            StatusDAO statusDAO,
+                            FCMService fcmService, StatusDAO statusDAO,
                             CertificateDAO certificateDAO,
                             AccessoryDAO accessoryDAO,
                             RepairerDAO repairerDAO) {
@@ -92,6 +94,7 @@ public class AdminServiceImpl implements AdminService {
         this.roleDAO = roleDAO;
         this.addressService = addressService;
         this.feedbackService = feedbackService;
+        this.fcmService = fcmService;
         this.statusDAO = statusDAO;
         this.certificateDAO = certificateDAO;
         this.accessoryDAO = accessoryDAO;
@@ -811,7 +814,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request) {
+    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request) throws IOException {
         String status = getFeedbackStatusValidated(request.getStatus());
         String adminResponse = request.getResponse();
         if (Strings.isEmpty(adminResponse) || adminResponse.length() > DESCRIPTION_MAX_LENGTH) {
@@ -822,6 +825,16 @@ public class AdminServiceImpl implements AdminService {
         feedback.setStatusId(FeedbackStatus.valueOf(status).getId());
         feedback.setResponse(adminResponse);
         feedback.setHandleByAdminId(request.getUserId());
+
+        String title = appConf.getNotification().getTitle().get("feedback");
+        String message = String.format(appConf.getNotification().getContent().get(status), request.getResponse() );
+
+        PushNotificationRequest customerNoti = new PushNotificationRequest();
+
+        customerNoti.setToken(fcmService.getFCMToken(feedback.getUserId()));
+        customerNoti.setTitle(title);
+        customerNoti.setBody(message);
+        fcmService.sendPnsToDevice(customerNoti);
 
         ResponseFeedbackResponse response = new ResponseFeedbackResponse();
         response.setMessage(RESPONSE_FEEDBACK_SUCCESS);
@@ -837,6 +850,7 @@ public class AdminServiceImpl implements AdminService {
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_STATUS);
     }
+
 
     @Override
     public ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request) {
@@ -866,7 +880,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) {
+    public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) throws IOException {
         User user = validatorService.getUserValidated(request.getRepairerId());
         Collection<Role> roles = user.getRoles();
         if (!isPendingRepairer(roles)) {
@@ -876,6 +890,16 @@ public class AdminServiceImpl implements AdminService {
         Repairer repairer = repairerDAO.findByUserId(user.getId()).get();
         repairer.setAcceptedAccountAt(LocalDateTime.now());
         updateToRepairerRole(roles);
+
+        String title = appConf.getNotification().getTitle().get("register");
+        String message = appConf.getNotification().getContent().get(NotificationType.REGISTER_SUCCESS.name());
+
+        PushNotificationRequest customerNoti = new PushNotificationRequest();
+
+        customerNoti.setToken(fcmService.getFCMToken(user.getId()));
+        customerNoti.setTitle(title);
+        customerNoti.setBody(message);
+        fcmService.sendPnsToDevice(customerNoti);
 
         AcceptCVResponse response = new AcceptCVResponse();
         response.setMessage(ACCEPT_CV_SUCCESS);

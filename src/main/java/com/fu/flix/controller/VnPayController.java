@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class VnPayController {
     }
 
     @GetMapping("payment/response")
-    public ResponseEntity<CustomerPaymentResponse> responseCustomerPayment(@RequestParam Map<String, String> requestParams) {
+    public ResponseEntity<CustomerPaymentResponse> responseCustomerPayment(@RequestParam Map<String, String> requestParams) throws IOException {
         return vnPayService.responseCustomerPayment(requestParams);
     }
 }

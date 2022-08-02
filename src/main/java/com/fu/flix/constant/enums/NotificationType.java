@@ -13,4 +13,6 @@ public enum NotificationType {
     FEEDBACK_PENDING,
     DEPOSIT_SUCCESS,
     DEPOSIT_FAILED,
+    REGISTER_SUCCESS,
+    REGISTER_FAIL
 }

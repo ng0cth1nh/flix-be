@@ -67,8 +67,6 @@ public class RepairerServiceImpl implements RepairerService {
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
                                RequestService requestService,
-                               AccessoryDAO accessoryDAO,
-                               ExtraServiceDAO extraServiceDAO) throws IOException {
                                FCMService fcmService, AccessoryDAO accessoryDAO,
                                ExtraServiceDAO extraServiceDAO,
                                ValidatorService validatorService) {
@@ -341,7 +339,7 @@ public class RepairerServiceImpl implements RepairerService {
         customerNoti.setBody(message);
         fcmService.sendPnsToDevice(customerNoti);
 
-        Long repairerId= repairRequestMatchingDAO.getById(requestCode).getRepairerId();
+        Long repairerId= repairRequestMatchingDAO.findByRequestCode(requestCode).get().getRepairerId();
         repairerNoti.setToken(fcmService.getFCMToken(repairerId));
         repairerNoti.setTitle(title);
         repairerNoti.setBody(message);

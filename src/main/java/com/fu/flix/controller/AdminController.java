@@ -140,7 +140,7 @@ public class AdminController {
     }
 
     @PutMapping("feedback")
-    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(@RequestBody ResponseFeedbackRequest request) {
+    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(@RequestBody ResponseFeedbackRequest request) throws IOException {
         return adminService.responseFeedback(request);
     }
 
@@ -150,7 +150,7 @@ public class AdminController {
     }
 
     @PutMapping("cv")
-    public ResponseEntity<AcceptCVResponse> acceptCV(@RequestBody AcceptCVRequest request) {
+    public ResponseEntity<AcceptCVResponse> acceptCV(@RequestBody AcceptCVRequest request) throws IOException {
         return adminService.acceptCV(request);
     }
 

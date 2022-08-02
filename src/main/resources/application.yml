@@ -13,7 +13,9 @@ app:
   defaultPageSize: 20
   defaultPageNumber: 0
   notification:
+    defaultImage: 'https://firebasestorage.googleapis.com/v0/b/flix-cb844.appspot.com/o/images%2Fic_notification.jpg?alt=media&token=b2e68977-8764-44ef-8ec2-c1b38dba417f'
     title:
+      register: 'Đăng kí tài khoản'
       request: 'Thông tin đơn hàng'
       feedback: 'Thông tin phản hồi'
     content:
@@ -29,6 +31,8 @@ app:
       FEEDBACK_PENDING: 'Phản hồi : "%s" đã được gửi lên hệ thống'
       DEPOSIT_SUCCESS: 'Bạn đã nạp %s thành công vào tài khoản.Số dư hiện tại là %s'
       DEPOSIT_FAILED: 'Nạp tiền thất bại do %s'
+      REGISTER_SUCCESS: 'Tài khoản của bạn đã được đăng kí thành công!'
+      REGISTER_FAIL: 'Đăng kí tài khoản thất bại do %s'
   twilioInfo:
     accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'
     authToken: 'b2bdec58830ce248a8e2d60bdfa6205c'

@@ -19,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +41,7 @@ class CommonRepairerServiceImplTest {
     CustomerService customerService;
 
     @Test
-    void getSuggestionRequestList_success_when_type_is_SUGGESTED() {
+    void getSuggestionRequestList_success_when_type_is_SUGGESTED() throws IOException {
         // given
         RequestingSuggestionRequest request = new RequestingSuggestionRequest();
         request.setType("SUGGESTED");
@@ -55,7 +56,7 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
-    void getSuggestionRequestList_success_when_type_is_INTERESTED() {
+    void getSuggestionRequestList_success_when_type_is_INTERESTED() throws IOException {
         // given
         RequestingSuggestionRequest request = new RequestingSuggestionRequest();
         request.setType("INTERESTED");
@@ -111,7 +112,7 @@ class CommonRepairerServiceImplTest {
         Assertions.assertEquals(INVALID_REPAIRER_SUGGESTION_TYPE, exception.getMessage());
     }
 
-    private String createFixingRequest(Long userId, String phone) {
+    private String createFixingRequest(Long userId, String phone) throws IOException {
         setCustomerContext(userId, phone);
         Long serviceId = 1L;
         Long addressId = 7L;
@@ -133,7 +134,7 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
-    public void test_get_filter_request_list_success_when_location_type_is_COMMUNE() {
+    public void test_get_filter_request_list_success_when_location_type_is_COMMUNE() throws IOException {
         // given
         List<Long> serviceIds = new ArrayList<>();
         serviceIds.add(1L);
@@ -159,7 +160,7 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
-    public void test_get_filter_request_list_fail_when_list_service_is_null() {
+    public void test_get_filter_request_list_fail_when_list_service_is_null() throws IOException {
         // given
         RequestingFilterRequest request = new RequestingFilterRequest();
         request.setServiceIds(null);
@@ -179,7 +180,7 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
-    public void test_get_filter_request_list_success_when_location_id_is_null() {
+    public void test_get_filter_request_list_success_when_location_id_is_null() throws IOException {
         // given
         List<Long> serviceIds = new ArrayList<>();
         serviceIds.add(1L);
@@ -205,7 +206,7 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
-    public void test_get_filter_request_list_fail_when_location_type_is_null() {
+    public void test_get_filter_request_list_fail_when_location_type_is_null() throws IOException {
         // given
         List<Long> serviceIds = new ArrayList<>();
         serviceIds.add(1L);
@@ -231,7 +232,7 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
-    public void test_get_filter_request_list_success_when_location_type_is_CITY() {
+    public void test_get_filter_request_list_success_when_location_type_is_CITY() throws IOException {
         // given
         List<Long> serviceIds = new ArrayList<>();
         serviceIds.add(1L);
@@ -257,7 +258,7 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
-    public void test_get_filter_request_list_success_when_location_type_is_DISTRICT() {
+    public void test_get_filter_request_list_success_when_location_type_is_DISTRICT() throws IOException {
         // given
         List<Long> serviceIds = new ArrayList<>();
         serviceIds.add(1L);
@@ -283,7 +284,7 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
-    public void test_get_filter_request_list_fail_when_start_date_is_null() {
+    public void test_get_filter_request_list_fail_when_start_date_is_null() throws IOException {
         // given
         List<Long> serviceIds = new ArrayList<>();
         serviceIds.add(1L);
@@ -309,7 +310,7 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
-    public void test_get_filter_request_list_fail_when_start_date_is_wrong_format() {
+    public void test_get_filter_request_list_fail_when_start_date_is_wrong_format() throws IOException {
         // given
         List<Long> serviceIds = new ArrayList<>();
         serviceIds.add(1L);

@@ -105,7 +105,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) {
+    public ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) throws IOException {
         Long userId = request.getUserId();
         if (isHaveAnyPaymentWaitingRequest(userId)) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CREATE_NEW_REQUEST_WHEN_HAVE_OTHER_PAYMENT_WAITING_REQUEST);
@@ -139,10 +139,18 @@ public class CustomerServiceImpl implements CustomerService {
         repairRequest.setVoucherId(voucherId);
         repairRequest.setAddressId(getAddressIdValidated(request.getAddressId(), userId));
         repairRequest.setVat(this.appConf.getVat());
-        repairRequestDAO.save(repairRequest);
+        RepairRequest savedRepairRequest = repairRequestDAO.save(repairRequest);
 
         Invoice invoice = buildInvoice(repairRequest);
         invoiceDAO.save(invoice);
+
+        PushNotificationRequest notification = new PushNotificationRequest();
+        notification.setToken(fcmService.getFCMToken(userId));
+        String title= appConf.getNotification().getTitle().get("request");
+        String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_CREATE_SUCCESS.name()), savedRepairRequest.getRequestCode());
+        notification.setTitle(title);
+        notification.setBody(message);
+        fcmService.sendPnsToDevice(notification);
 
         RequestingRepairResponse response = new RequestingRepairResponse();
         response.setRequestCode(repairRequest.getRequestCode());
@@ -282,7 +290,7 @@ public class CustomerServiceImpl implements CustomerService {
         refundVoucher(repairRequest);
         updateRepairRequest(request, repairRequest);
         PushNotificationRequest notification = new PushNotificationRequest();
-        Long repairerId= repairRequestMatchingDAO.getById(requestCode).getRepairerId();
+        Long repairerId= repairRequestMatchingDAO.findByRequestCode(requestCode).get().getRepairerId();
         notification.setToken(fcmService.getFCMToken(repairerId));
         String title= appConf.getNotification().getTitle().get("request");
         String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_CANCELED.name()), requestCode);

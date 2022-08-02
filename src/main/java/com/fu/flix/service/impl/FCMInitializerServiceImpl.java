@@ -1,7 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
-import com.fu.flix.service.FCMInitializer;
+import com.fu.flix.service.FCMInitializerService;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
@@ -15,19 +15,21 @@ import java.io.IOException;
 
 @Service
 @Slf4j
-public class FCMInitializerImpl implements FCMInitializer {
+public class FCMInitializerServiceImpl implements FCMInitializerService {
     private final AppConf appConf;
     private FirebaseApp firebaseApp;
-    public  FCMInitializerImpl(AppConf appConf){
-        this.appConf= appConf;
+
+    public FCMInitializerServiceImpl(AppConf appConf) {
+        this.appConf = appConf;
     }
 
     @Override
     @PostConstruct
-    public void initialize() throws IOException{
+    public void initialize() {
         try {
             FirebaseOptions options = new FirebaseOptions.Builder()
-                    .setCredentials(GoogleCredentials.fromStream(new ClassPathResource(appConf.getFirebaseConfig()).getInputStream())).build();
+                    .setCredentials(GoogleCredentials.fromStream(new ClassPathResource(appConf.getFirebaseConfig()).getInputStream()))
+                    .build();
 
             if (FirebaseApp.getApps().isEmpty()) {
                 this.firebaseApp = FirebaseApp.initializeApp(options);

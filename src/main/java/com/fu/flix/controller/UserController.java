@@ -19,7 +19,8 @@ public class UserController {
     private final UserService userService;
     private final FCMService fcmService;
 
-    public UserController(UserService userService, FCMService fcmService) {
+    public UserController(UserService userService,
+                          FCMService fcmService) {
         this.userService = userService;
         this.fcmService = fcmService;
     }

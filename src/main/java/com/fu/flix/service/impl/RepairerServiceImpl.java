@@ -131,18 +131,17 @@ public class RepairerServiceImpl implements RepairerService {
         String title = appConf.getNotification().getTitle().get("request");
         String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_APPROVED.name()), requestCode);
 
-        PushNotificationRequest customerNoti = new PushNotificationRequest();
-        PushNotificationRequest repairerNoti = new PushNotificationRequest();
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
 
-        customerNoti.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
-        customerNoti.setTitle(title);
-        customerNoti.setBody(message);
-        fcmService.sendPnsToDevice(customerNoti);
-
-        repairerNoti.setToken(fcmService.getFCMToken(repairerId));
-        repairerNoti.setTitle(title);
-        repairerNoti.setBody(message);
-        fcmService.sendPnsToDevice(repairerNoti);
+        PushNotificationRequest repairerNotification = new PushNotificationRequest();
+        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
+        repairerNotification.setTitle(title);
+        repairerNotification.setBody(message);
+        fcmService.sendPnsToDevice(repairerNotification);
 
         RepairerApproveResponse response = new RepairerApproveResponse();
         response.setMessage(APPROVAL_REQUEST_SUCCESS);
@@ -334,18 +333,18 @@ public class RepairerServiceImpl implements RepairerService {
 
         String title = appConf.getNotification().getTitle().get("request");
         String message = String.format(appConf.getNotification().getContent().get(NotificationType.CREATE_INVOICE.name()), requestCode);
-        PushNotificationRequest customerNoti = new PushNotificationRequest();
-        PushNotificationRequest repairerNoti = new PushNotificationRequest();
 
-        customerNoti.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
-        customerNoti.setTitle(title);
-        customerNoti.setBody(message);
-        fcmService.sendPnsToDevice(customerNoti);
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
 
-        repairerNoti.setToken(fcmService.getFCMToken(repairerId));
-        repairerNoti.setTitle(title);
-        repairerNoti.setBody(message);
-        fcmService.sendPnsToDevice(repairerNoti);
+        PushNotificationRequest repairerNotification = new PushNotificationRequest();
+        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
+        repairerNotification.setTitle(title);
+        repairerNotification.setBody(message);
+        fcmService.sendPnsToDevice(repairerNotification);
 
         Balance balance = balanceDAO.findByUserId(repairerId).get();
         Long commission = getCommission(invoice);
@@ -409,18 +408,17 @@ public class RepairerServiceImpl implements RepairerService {
         String title = appConf.getNotification().getTitle().get("request");
         String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_DONE.name()), requestCode);
 
-        PushNotificationRequest customerNoti = new PushNotificationRequest();
-        PushNotificationRequest repairerNoti = new PushNotificationRequest();
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
 
-        customerNoti.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
-        customerNoti.setTitle(title);
-        customerNoti.setBody(message);
-        fcmService.sendPnsToDevice(customerNoti);
-
-        repairerNoti.setToken(fcmService.getFCMToken(repairerId));
-        repairerNoti.setTitle(title);
-        repairerNoti.setBody(message);
-        fcmService.sendPnsToDevice(repairerNoti);
+        PushNotificationRequest repairerNotification = new PushNotificationRequest();
+        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
+        repairerNotification.setTitle(title);
+        repairerNotification.setBody(message);
+        fcmService.sendPnsToDevice(repairerNotification);
 
         ConfirmInvoicePaidResponse response = new ConfirmInvoicePaidResponse();
         response.setMessage(CONFIRM_INVOICE_PAID_SUCCESS);
@@ -453,18 +451,17 @@ public class RepairerServiceImpl implements RepairerService {
         String title = appConf.getNotification().getTitle().get("request");
         String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_CONFIRM_FIXING.name()), requestCode);
 
-        PushNotificationRequest customerNoti = new PushNotificationRequest();
-        PushNotificationRequest repairerNoti = new PushNotificationRequest();
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
 
-        customerNoti.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
-        customerNoti.setTitle(title);
-        customerNoti.setBody(message);
-        fcmService.sendPnsToDevice(customerNoti);
-
-        repairerNoti.setToken(fcmService.getFCMToken(repairerId));
-        repairerNoti.setTitle(title);
-        repairerNoti.setBody(message);
-        fcmService.sendPnsToDevice(repairerNoti);
+        PushNotificationRequest repairerNotification = new PushNotificationRequest();
+        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
+        repairerNotification.setTitle(title);
+        repairerNotification.setBody(message);
+        fcmService.sendPnsToDevice(repairerNotification);
 
         ConfirmFixingResponse response = new ConfirmFixingResponse();
         response.setMessage(CONFIRM_FIXING_SUCCESS);

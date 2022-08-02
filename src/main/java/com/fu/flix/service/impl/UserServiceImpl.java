@@ -71,13 +71,7 @@ public class UserServiceImpl implements UserService {
 
         if (avatar != null) {
             String url = cloudStorageService.uploadImage(avatar);
-
-            if (isDefaultAvatar(oldImage)) {
-                user = addNewAvatarToUser(user, url);
-                userDAO.save(user);
-            } else {
-                oldImage.setUrl(url);
-            }
+            oldImage.setUrl(url);
         }
 
         UpdateAvatarResponse response = new UpdateAvatarResponse();
@@ -94,10 +88,6 @@ public class UserServiceImpl implements UserService {
         Image savedImage = imageDAO.save(newImage);
         user.setAvatar(savedImage.getId());
         return user;
-    }
-
-    private boolean isDefaultAvatar(Image image) {
-        return image.getId().equals(appConf.getDefaultAvatar());
     }
 
     @Override

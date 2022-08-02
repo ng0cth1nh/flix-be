@@ -344,18 +344,17 @@ public class VnPayServiceImpl implements VNPayService {
         String title = appConf.getNotification().getTitle().get("request");
         String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_DONE.name()), requestCode);
 
-        PushNotificationRequest customerNoti = new PushNotificationRequest();
-        PushNotificationRequest repairerNoti = new PushNotificationRequest();
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
 
-        customerNoti.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
-        customerNoti.setTitle(title);
-        customerNoti.setBody(message);
-        fcmService.sendPnsToDevice(customerNoti);
-
-        repairerNoti.setToken(fcmService.getFCMToken(repairerId));
-        repairerNoti.setTitle(title);
-        repairerNoti.setBody(message);
-        fcmService.sendPnsToDevice(repairerNoti);
+        PushNotificationRequest repairerNotification = new PushNotificationRequest();
+        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
+        repairerNotification.setTitle(title);
+        repairerNotification.setBody(message);
+        fcmService.sendPnsToDevice(repairerNotification);
 
         log.info("user id: " + repairRequest.getUserId() + "payment success for request " + requestCode + " success");
         log.info("user id: " + customerId + "payment success for request " + requestCode + " success");

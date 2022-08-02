@@ -76,7 +76,7 @@ class UserServiceImplTest {
 
         long userId = 36L;
         User user = userDAO.findById(userId).get();
-        user.setAvatar(appConf.getDefaultAvatar());
+        user.setAvatar(1L);
 
         setCustomerContext(userId, "0865390037");
 

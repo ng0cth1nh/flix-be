@@ -13,6 +13,7 @@ app:
   defaultPageSize: 10
   defaultPageNumber: 0
   notification:
+    defaultImageName: 'Notification Image'
     defaultImage: 'https://firebasestorage.googleapis.com/v0/b/flix-cb844.appspot.com/o/images%2Fic_notification.jpg?alt=media&token=b2e68977-8764-44ef-8ec2-c1b38dba417f'
     title:
       register: 'Đăng kí tài khoản'
@@ -40,7 +41,8 @@ app:
     authToken: 'b2bdec58830ce248a8e2d60bdfa6205c'
     fromNumber: '+17579977028'
   firebaseConfig: 'flix-cb844-firebase-adminsdk-297yq-b523f2743e.json'
-  defaultAvatar: 1
+  defaultIcon: 'https://firebasestorage.googleapis.com/v0/b/flix-cb844.appspot.com/o/images%2Fic_notification.jpg?alt=media&token=b2e68977-8764-44ef-8ec2-c1b38dba417f'
+  defaultImage: 'https://firebasestorage.googleapis.com/v0/b/flix-cb844.appspot.com/o/images%2Fic_notification.jpg?alt=media&token=b2e68977-8764-44ef-8ec2-c1b38dba417f'
   permitAllApis: [ '/api/v1/login',
                    '/api/v1/token/refresh',
                    '/api/v1/register/sendOTP',

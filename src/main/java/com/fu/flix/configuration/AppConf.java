@@ -19,7 +19,8 @@ public class AppConf {
     private Long lifeTimeRefreshToken;
     private TwilioInfo twilioInfo;
     private String firebaseConfig;
-    private Long defaultAvatar;
+    private String defaultIcon;
+    private String defaultImage;
     private String[] permitAllApis;
     private Integer defaultLimitQuery;
     private Integer defaultOffset;
@@ -38,6 +39,7 @@ public class AppConf {
 
     @Data
     public static class Notification {
+        private String defaultImageName;
         private String defaultImage;
         private Map<String, String> title;
         private Map<String, String> content;

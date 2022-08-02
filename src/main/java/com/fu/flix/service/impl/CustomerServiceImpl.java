@@ -74,7 +74,8 @@ public class CustomerServiceImpl implements CustomerService {
                                ValidatorService validatorService,
                                AddressService addressService,
                                VoucherService voucherService,
-                               RequestService requestService, FCMService fcmService) {
+                               RequestService requestService,
+                               FCMService fcmService) {
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
         this.serviceDAO = serviceDAO;
@@ -139,7 +140,10 @@ public class CustomerServiceImpl implements CustomerService {
         PushNotificationRequest notification = new PushNotificationRequest();
         notification.setToken(fcmService.getFCMToken(userId));
         String title = appConf.getNotification().getTitle().get("request");
-        String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_CREATE_SUCCESS.name()), savedRepairRequest.getRequestCode());
+        String message = String.format(appConf.getNotification()
+                        .getContent().
+                        get(NotificationType.REQUEST_CREATE_SUCCESS.name()),
+                savedRepairRequest.getRequestCode());
         notification.setTitle(title);
         notification.setBody(message);
         fcmService.sendPnsToDevice(notification);
@@ -285,7 +289,10 @@ public class CustomerServiceImpl implements CustomerService {
         Long repairerId = repairRequestMatchingDAO.findByRequestCode(requestCode).get().getRepairerId();
         notification.setToken(fcmService.getFCMToken(repairerId));
         String title = appConf.getNotification().getTitle().get("request");
-        String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_CANCELED.name()), requestCode);
+        String message = String.format(appConf.getNotification()
+                        .getContent()
+                        .get(NotificationType.REQUEST_CANCELED.name()),
+                requestCode);
         notification.setTitle(title);
         notification.setBody(message);
         fcmService.sendPnsToDevice(notification);

@@ -236,23 +236,19 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private void postCategoryIcon(Category category, MultipartFile icon) throws IOException {
-        if (icon != null) {
-            String url = cloudStorageService.uploadImage(icon);
-            Image savedImage = saveImage(category.getName(), url);
-            category.setIconId(savedImage.getId());
-        } else {
-            category.setIconId(appConf.getDefaultAvatar());
-        }
+        String url = icon != null
+                ? cloudStorageService.uploadImage(icon)
+                : appConf.getDefaultIcon();
+        Image savedImage = saveImage(category.getName(), url);
+        category.setIconId(savedImage.getId());
     }
 
     private void postCategoryImage(Category category, MultipartFile image) throws IOException {
-        if (image != null) {
-            String url = cloudStorageService.uploadImage(image);
-            Image savedImage = saveImage(category.getName(), url);
-            category.setImageId(savedImage.getId());
-        } else {
-            category.setImageId(appConf.getDefaultAvatar());
-        }
+        String url = image != null
+                ? cloudStorageService.uploadImage(image)
+                : appConf.getDefaultImage();
+        Image savedImage = saveImage(category.getName(), url);
+        category.setImageId(savedImage.getId());
     }
 
     @Override
@@ -353,23 +349,19 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private void postServiceIcon(com.fu.flix.entity.Service service, MultipartFile icon) throws IOException {
-        if (icon != null) {
-            String url = cloudStorageService.uploadImage(icon);
-            Image savedImage = saveImage(service.getName(), url);
-            service.setIconId(savedImage.getId());
-        } else {
-            service.setIconId(appConf.getDefaultAvatar());
-        }
+        String url = icon != null
+                ? cloudStorageService.uploadImage(icon)
+                : appConf.getDefaultIcon();
+        Image savedImage = saveImage(service.getName(), url);
+        service.setIconId(savedImage.getId());
     }
 
     private void postServiceImage(com.fu.flix.entity.Service service, MultipartFile image) throws IOException {
-        if (image != null) {
-            String url = cloudStorageService.uploadImage(image);
-            Image savedImage = saveImage(service.getName(), url);
-            service.setImageId(savedImage.getId());
-        } else {
-            service.setImageId(appConf.getDefaultAvatar());
-        }
+        String url = image != null
+                ? cloudStorageService.uploadImage(image)
+                : appConf.getDefaultImage();
+        Image savedImage = saveImage(service.getName(), url);
+        service.setImageId(savedImage.getId());
     }
 
     private Image saveImage(String name, String url) {
@@ -842,13 +834,16 @@ public class AdminServiceImpl implements AdminService {
         feedback.setHandleByAdminId(request.getUserId());
 
         String title = appConf.getNotification().getTitle().get("feedback");
-        String message = String.format(appConf.getNotification().getContent().get(getFeedbackNotificationKey(status)), request.getResponse());
+        String message = String.format(appConf.getNotification()
+                        .getContent()
+                        .get(getFeedbackNotificationKey(status)),
+                request.getResponse());
 
-        PushNotificationRequest customerNoti = new PushNotificationRequest();
-        customerNoti.setToken(fcmService.getFCMToken(feedback.getUserId()));
-        customerNoti.setTitle(title);
-        customerNoti.setBody(message);
-        fcmService.sendPnsToDevice(customerNoti);
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(feedback.getUserId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
 
         ResponseFeedbackResponse response = new ResponseFeedbackResponse();
         response.setMessage(RESPONSE_FEEDBACK_SUCCESS);
@@ -857,9 +852,9 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private String getFeedbackNotificationKey(String status) {
-        if (FeedbackStatus.PENDING.name() == status) return NotificationType.FEEDBACK_PENDING.name();
-        else if (FeedbackStatus.PROCESSING.name() == status) return NotificationType.FEEDBACK_PROCESSING.name();
-        else if (FeedbackStatus.REJECTED.name() == status) return NotificationType.FEEDBACK_REJECTED.name();
+        if (FeedbackStatus.PENDING.name().equals(status)) return NotificationType.FEEDBACK_PENDING.name();
+        else if (FeedbackStatus.PROCESSING.name().equals(status)) return NotificationType.FEEDBACK_PROCESSING.name();
+        else if (FeedbackStatus.REJECTED.name().equals(status)) return NotificationType.FEEDBACK_REJECTED.name();
         else return NotificationType.FEEDBACK_DONE.name();
     }
 
@@ -871,7 +866,6 @@ public class AdminServiceImpl implements AdminService {
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_STATUS);
     }
-
 
     @Override
     public ResponseEntity<FeedbacksResponse> getFeedbacks(FeedbacksRequest request) {
@@ -915,12 +909,11 @@ public class AdminServiceImpl implements AdminService {
         String title = appConf.getNotification().getTitle().get("register");
         String message = appConf.getNotification().getContent().get(NotificationType.REGISTER_SUCCESS.name());
 
-        PushNotificationRequest customerNoti = new PushNotificationRequest();
-
-        customerNoti.setToken(fcmService.getFCMToken(user.getId()));
-        customerNoti.setTitle(title);
-        customerNoti.setBody(message);
-        fcmService.sendPnsToDevice(customerNoti);
+        PushNotificationRequest customerNotification = new PushNotificationRequest();
+        customerNotification.setToken(fcmService.getFCMToken(user.getId()));
+        customerNotification.setTitle(title);
+        customerNotification.setBody(message);
+        fcmService.sendPnsToDevice(customerNotification);
 
         AcceptCVResponse response = new AcceptCVResponse();
         response.setMessage(ACCEPT_CV_SUCCESS);

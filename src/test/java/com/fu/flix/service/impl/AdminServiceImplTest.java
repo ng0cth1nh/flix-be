@@ -1664,7 +1664,7 @@ class AdminServiceImplTest {
         SearchFeedbackResponse response = underTest.searchFeedbacks(request).getBody();
 
         // then
-        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getFeedbackList());
     }
 
     @Test
@@ -1681,7 +1681,175 @@ class AdminServiceImplTest {
         SearchFeedbackResponse response = underTest.searchFeedbacks(request).getBody();
 
         // then
-        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getFeedbackList());
+    }
+
+    @Test
+    void test_search_feedback_success_when_status_is_empty() {
+        // given
+        SearchFeedbackRequest request = new SearchFeedbackRequest();
+        request.setKeyword("");
+        request.setFeedbackType("COMMENT");
+        request.setStatus("");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchFeedbackResponse response = underTest.searchFeedbacks(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getFeedbackList());
+    }
+
+    @Test
+    void test_search_feedback_fail_when_status_is_invalid() {
+        // given
+        SearchFeedbackRequest request = new SearchFeedbackRequest();
+        request.setKeyword("08");
+        request.setFeedbackType("COMMENT");
+        request.setStatus("PEN");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchFeedbacks(request));
+
+        // then
+        Assertions.assertEquals(INVALID_FEEDBACK_STATUS, exception.getMessage());
+    }
+
+    @Test
+    void test_search_feedback_success_when_feedback_type_is_null() {
+        // given
+        SearchFeedbackRequest request = new SearchFeedbackRequest();
+        request.setKeyword("08");
+        request.setFeedbackType(null);
+        request.setStatus("PENDING");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchFeedbackResponse response = underTest.searchFeedbacks(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getFeedbackList());
+    }
+
+    @Test
+    void test_search_feedback_fail_when_feedback_type_is_invalid() {
+        // given
+        SearchFeedbackRequest request = new SearchFeedbackRequest();
+        request.setKeyword("08");
+        request.setFeedbackType("COM");
+        request.setStatus("PENDING");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchFeedbacks(request));
+
+        // then
+        Assertions.assertEquals(INVALID_FEEDBACK_TYPE, exception.getMessage());
+    }
+
+    @Test
+    void test_search_customer_success() {
+        // given
+        SearchCustomersRequest request = new SearchCustomersRequest();
+        request.setKeyword("08");
+        request.setStatus("BAN");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchCustomersResponse response = underTest.searchCustomers(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getCustomers());
+    }
+
+    @Test
+    void test_search_customer_fail_when_key_word_is_empty() {
+        // given
+        SearchCustomersRequest request = new SearchCustomersRequest();
+        request.setKeyword("");
+        request.setStatus("BAN");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchCustomers(request));
+
+        // then
+        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
+    }
+
+    @Test
+    void test_search_repairer_success() {
+        // given
+        SearchRepairersRequest request = new SearchRepairersRequest();
+        request.setStatus("ACTIVE");
+        request.setKeyword("0");
+        request.setIsVerified(true);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchRepairersResponse response = underTest.searchRepairers(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRepairers());
+    }
+
+    @Test
+    void test_search_repairer_fail_when_keyword_is_null() {
+        // given
+        SearchRepairersRequest request = new SearchRepairersRequest();
+        request.setStatus("ACTIVE");
+        request.setKeyword(null);
+        request.setIsVerified(true);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchRepairers(request));
+
+        // then
+        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
+    }
+
+    @Test
+    void test_search_repairer_fail_when_verify_is_null() {
+        // given
+        SearchRepairersRequest request = new SearchRepairersRequest();
+        request.setStatus("ACTIVE");
+        request.setKeyword("0");
+        request.setIsVerified(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchRepairers(request));
+
+        // then
+        Assertions.assertEquals(ACCOUNT_VERIFY_PARAM_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_search_repairer_fail_when_invalid_status() {
+        // given
+        SearchRepairersRequest request = new SearchRepairersRequest();
+        request.setStatus("AC");
+        request.setKeyword("0");
+        request.setIsVerified(true);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchRepairers(request));
+
+        // then
+        Assertions.assertEquals(INVALID_STATUS, exception.getMessage());
     }
 
     void setManagerContext(Long id, String phone) {

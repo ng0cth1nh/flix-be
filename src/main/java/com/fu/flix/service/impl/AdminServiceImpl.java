@@ -971,7 +971,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<SearchFeedbackResponse> searchFeedbacks(SearchFeedbackRequest request) {
-        String phone = request.getKeyword() == null
+        String phone = Strings.isEmpty(request.getKeyword())
                 ? Strings.EMPTY
                 : request.getKeyword();
 

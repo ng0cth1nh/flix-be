@@ -19,6 +19,7 @@ app:
       register: 'Đăng kí tài khoản'
       request: 'Thông tin đơn hàng'
       feedback: 'Thông tin phản hồi'
+      transaction: 'Thông tin giao dịch'
     content:
       REQUEST_CREATE_SUCCESS: 'Yêu cầu #%s đã được tạo thành công'
       REQUEST_APPROVED: 'Yêu cầu #%s đã được chấp nhận'
@@ -31,7 +32,7 @@ app:
       FEEDBACK_DONE: 'Phản hồi : "%s" đã được chấp nhận'
       FEEDBACK_PENDING: 'Phản hồi : "%s" đã được gửi lên hệ thống'
       DEPOSIT_SUCCESS: 'Bạn đã nạp %s thành công vào tài khoản.Số dư hiện tại là %s'
-      DEPOSIT_FAILED: 'Nạp tiền thất bại do %s'
+      DEPOSIT_FAILED: 'Nạp tiền không thành công! Vui lòng thử lại sau, hoặc gửi phản hồi để nhận được hỗ trợ từ FLIX'
       REGISTER_SUCCESS: 'Tài khoản của bạn đã được đăng kí thành công!'
       REGISTER_FAIL: 'Đăng kí tài khoản thất bại do %s'
   milestoneMoney: 20000

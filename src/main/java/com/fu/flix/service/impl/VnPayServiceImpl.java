@@ -7,7 +7,6 @@ import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CustomerPaymentUrlRequest;
-import com.fu.flix.dto.request.PushNotificationRequest;
 import com.fu.flix.dto.request.RepairerDepositUrlRequest;
 import com.fu.flix.dto.response.CustomerPaymentResponse;
 import com.fu.flix.dto.response.CustomerPaymentUrlResponse;
@@ -16,6 +15,7 @@ import com.fu.flix.dto.response.RepairerDepositUrlResponse;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.FCMService;
 import com.fu.flix.service.VNPayService;
+import com.fu.flix.util.DataFormatter;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import com.fu.flix.util.RandomUtil;
@@ -340,21 +340,8 @@ public class VnPayServiceImpl implements VNPayService {
         repairer.setRepairing(false);
         repairRequest.setStatusId(RequestStatus.DONE.getId());
 
-        //send noti here
-        String title = appConf.getNotification().getTitle().get("request");
-        String message = String.format(appConf.getNotification().getContent().get(NotificationType.REQUEST_DONE.name()), requestCode);
-
-        PushNotificationRequest customerNotification = new PushNotificationRequest();
-        customerNotification.setToken(fcmService.getFCMToken(repairRequest.getUserId()));
-        customerNotification.setTitle(title);
-        customerNotification.setBody(message);
-        fcmService.sendPnsToDevice(customerNotification);
-
-        PushNotificationRequest repairerNotification = new PushNotificationRequest();
-        repairerNotification.setToken(fcmService.getFCMToken(repairerId));
-        repairerNotification.setTitle(title);
-        repairerNotification.setBody(message);
-        fcmService.sendPnsToDevice(repairerNotification);
+        fcmService.sendNotification("request", NotificationType.REQUEST_DONE.name(), customerId, requestCode);
+        fcmService.sendNotification("request", NotificationType.REQUEST_DONE.name(), repairerId, requestCode);
 
         log.info("user id: " + repairRequest.getUserId() + "payment success for request " + requestCode + " success");
         log.info("user id: " + customerId + "payment success for request " + requestCode + " success");
@@ -403,7 +390,7 @@ public class VnPayServiceImpl implements VNPayService {
     }
 
     @Override
-    public ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(Map<String, String> requestParams) {
+    public ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(Map<String, String> requestParams) throws IOException {
         RepairerDepositResponse response = new RepairerDepositResponse();
         String vnp_SecureHash = requestParams.get(VNP_SECURE_HASH);
         requestParams.remove(VNP_SECURE_HASH_TYPE);
@@ -441,6 +428,7 @@ public class VnPayServiceImpl implements VNPayService {
 
         String responseCode = requestParams.get(VNP_RESPONSE_CODE);
         if (!VN_PAY_SUCCESS_CODE.equals(responseCode)) {
+            fcmService.sendNotification("transaction", NotificationType.DEPOSIT_FAILED.name(), repairerId);
             saveRepairerDepositTransactions(requestParams, repairerId, PAYMENT_FAILED);
             response.setMessage(PAYMENT_FAILED);
             response.setRspCode(VN_PAY_RESPONSE.get(PAYMENT_FAILED));
@@ -448,6 +436,7 @@ public class VnPayServiceImpl implements VNPayService {
         }
 
         if (vnPayTransactionDAO.findByVnpTxnRefAndResponseCode(txnRef, VN_PAY_SUCCESS_CODE).isPresent()) {
+            fcmService.sendNotification("transaction", NotificationType.DEPOSIT_FAILED.name(), repairerId);
             saveRepairerDepositTransactions(requestParams, repairerId, VNP_TXN_REF_EXISTED_IN_DATABASE);
             response.setMessage(VNP_TXN_REF_EXISTED_IN_DATABASE);
             response.setRspCode(VN_PAY_RESPONSE.get(VNP_TXN_REF_EXISTED_IN_DATABASE));
@@ -457,6 +446,13 @@ public class VnPayServiceImpl implements VNPayService {
         Long amount = Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
         plusBalanceForRepairer(amount, repairerId);
         saveRepairerDepositTransactions(requestParams, repairerId, null);
+
+        Balance balance = balanceDAO.findByUserId(repairerId).get();
+        fcmService.sendNotification("transaction",
+                NotificationType.DEPOSIT_SUCCESS.name(),
+                repairerId,
+                DataFormatter.getVietnamMoneyFormatted(amount),
+                DataFormatter.getVietnamMoneyFormatted(balance.getBalance()));
 
         log.info("user id: " + repairerId + "deposit success, amount: " + amount);
         response.setMessage(PAYMENT_SUCCESS);

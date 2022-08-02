@@ -2,6 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.Constant;
+import com.fu.flix.constant.enums.NotificationType;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.NotificationDAO;
 import com.fu.flix.dao.UserDAO;
@@ -34,6 +35,7 @@ public class FCMServiceImpl implements FCMService {
     private final ImageDAO imageDAO;
     private final CloudStorageService cloudStorageService;
     private final AppConf appConf;
+
     public FCMServiceImpl(UserDAO userDAO,
                           NotificationDAO notificationDAO,
                           ImageDAO imageDAO,
@@ -104,5 +106,17 @@ public class FCMServiceImpl implements FCMService {
         SaveFCMTokenResponse response = new SaveFCMTokenResponse();
         response.setMessage(Constant.SAVE_FCM_TOKEN_SUCCESS);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public void sendNotification(String titleType, String messageType, Long userId, String... formatParams) throws IOException {
+        String title = appConf.getNotification().getTitle().get(titleType);
+        String message = String.format(appConf.getNotification().getContent().get(messageType), formatParams);
+
+        PushNotificationRequest notification = new PushNotificationRequest();
+        notification.setToken(getFCMToken(userId));
+        notification.setTitle(title);
+        notification.setBody(message);
+        sendPnsToDevice(notification);
     }
 }

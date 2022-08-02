@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class TransactionsResponse {
     private List<ITransactionDTO> transactions;
+    private long totalRecord;
 }

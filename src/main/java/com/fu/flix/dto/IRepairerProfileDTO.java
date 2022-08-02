@@ -25,9 +25,9 @@ public interface IRepairerProfileDTO {
 
     String getRole();
 
-    Long getCityId();
+    String getCityId();
 
-    Long getDistrictId();
+    String getDistrictId();
 
-    Long getCommuneId();
+    String getCommuneId();
 }

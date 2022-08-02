@@ -2,10 +2,10 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.dto.ServiceDTO;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.SearchActiveServicesRequest;
-import com.fu.flix.dto.request.ServiceRequest;
-import com.fu.flix.dto.request.ServiceResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.AccessoriesResponse;
 import com.fu.flix.dto.response.SearchActiveServicesResponse;
+import com.fu.flix.dto.response.SubServiceResponse;
 import com.fu.flix.service.CategoryService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -18,8 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.transaction.Transactional;
 import java.util.List;
 
-import static com.fu.flix.constant.Constant.INVALID_CATEGORY_ID;
-import static com.fu.flix.constant.Constant.INVALID_KEY_WORD;
+import static com.fu.flix.constant.Constant.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -134,5 +133,57 @@ class CategoryServiceImplTest {
 
         // then
         Assertions.assertTrue(response.getServices().isEmpty());
+    }
+
+    @Test
+    void test_get_sub_service_by_service_id_success() {
+        // given
+        SubServiceRequest request = new SubServiceRequest();
+        request.setServiceId(1L);
+
+        // when
+        SubServiceResponse response = underTest.getSubServicesByServiceId(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getSubServices());
+    }
+
+    @Test
+    void test_get_sub_service_by_service_id_fail_when_service_id_is_null() {
+        // given
+        SubServiceRequest request = new SubServiceRequest();
+        request.setServiceId(null);
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getSubServicesByServiceId(request));
+
+        // then
+        Assertions.assertEquals(INVALID_SERVICE, exception.getMessage());
+    }
+
+    @Test
+    void test_get_accessories_by_service_id_success() {
+        // given
+        AccessoriesRequest request = new AccessoriesRequest();
+        request.setServiceId(1L);
+
+        // when
+        AccessoriesResponse response = underTest.getAccessoriesByServiceId(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getAccessories());
+    }
+
+    @Test
+    void test_get_accessories_by_service_id_fail_when_service_id_is_null() {
+        // given
+        AccessoriesRequest request = new AccessoriesRequest();
+        request.setServiceId(null);
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getAccessoriesByServiceId(request));
+
+        // then
+        Assertions.assertEquals(INVALID_SERVICE, exception.getMessage());
     }
 }

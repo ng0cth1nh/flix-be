@@ -1650,6 +1650,40 @@ class AdminServiceImplTest {
         Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
     }
 
+    @Test
+    void test_search_feedback_success() {
+        // given
+        SearchFeedbackRequest request = new SearchFeedbackRequest();
+        request.setKeyword("08");
+        request.setFeedbackType("COMMENT");
+        request.setStatus("PENDING");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchFeedbackResponse response = underTest.searchFeedbacks(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_search_feedback_success_when_keyword_is_empty() {
+        // given
+        SearchFeedbackRequest request = new SearchFeedbackRequest();
+        request.setKeyword("");
+        request.setFeedbackType("COMMENT");
+        request.setStatus("PENDING");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchFeedbackResponse response = underTest.searchFeedbacks(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
     void setManagerContext(Long id, String phone) {
         String[] roles = {"ROLE_MANAGER"};
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();

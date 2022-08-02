@@ -20,8 +20,8 @@ public class RepairerProfileResponse {
     private String identityCardNumber;
     private String address;
     private Long balance;
-    private Long communeId;
-    private Long districtId;
-    private Long cityId;
+    private String communeId;
+    private String districtId;
+    private String cityId;
     private List<IRegisterServiceProfileDTO> registerServices;
 }

@@ -285,17 +285,21 @@ public class CustomerServiceImpl implements CustomerService {
 
         refundVoucher(repairRequest);
         updateRepairRequest(request, repairRequest);
-        PushNotificationRequest notification = new PushNotificationRequest();
-        Long repairerId = repairRequestMatchingDAO.findByRequestCode(requestCode).get().getRepairerId();
-        notification.setToken(fcmService.getFCMToken(repairerId));
-        String title = appConf.getNotification().getTitle().get("request");
-        String message = String.format(appConf.getNotification()
-                        .getContent()
-                        .get(NotificationType.REQUEST_CANCELED.name()),
-                requestCode);
-        notification.setTitle(title);
-        notification.setBody(message);
-        fcmService.sendPnsToDevice(notification);
+
+        Optional<RepairRequestMatching> optionalRepairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode);
+        if (optionalRepairRequestMatching.isPresent()) {
+            Long repairerId = optionalRepairRequestMatching.get().getRepairerId();
+            PushNotificationRequest notification = new PushNotificationRequest();
+            notification.setToken(fcmService.getFCMToken(repairerId));
+            String title = appConf.getNotification().getTitle().get("request");
+            String message = String.format(appConf.getNotification()
+                            .getContent()
+                            .get(NotificationType.REQUEST_CANCELED.name()),
+                    requestCode);
+            notification.setTitle(title);
+            notification.setBody(message);
+            fcmService.sendPnsToDevice(notification);
+        }
 
         CancelRequestForCustomerResponse response = new CancelRequestForCustomerResponse();
         response.setMessage(CANCEL_REPAIR_REQUEST_SUCCESSFUL);

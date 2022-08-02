@@ -730,6 +730,8 @@ public class RepairerServiceImpl implements RepairerService {
         Long repairerId = request.getUserId();
         List<TransactionHistory> transactionDTOs = transactionHistoryDAO
                 .findTransactionsForRepairer(repairerId, pageSize, offset);
+        long totalRecord = transactionHistoryDAO.countByUserId(repairerId);
+
         List<RepairerTransactionDTO> transactions = transactionDTOs.stream()
                 .map(transaction -> {
                     RepairerTransactionDTO dto = new RepairerTransactionDTO();
@@ -746,6 +748,7 @@ public class RepairerServiceImpl implements RepairerService {
 
         RepairerTransactionsResponse response = new RepairerTransactionsResponse();
         response.setTransactions(transactions);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

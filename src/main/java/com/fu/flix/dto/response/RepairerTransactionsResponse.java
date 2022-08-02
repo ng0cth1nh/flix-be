@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class RepairerTransactionsResponse {
     private List<RepairerTransactionDTO> transactions;
+    private long totalRecord;
 }

@@ -585,7 +585,6 @@ class CustomerServiceImplTest {
         repairerService.confirmFixing(request);
     }
 
-
     private String createFixingRequest(Long userId, String phone) {
         setUserContext(userId, phone);
         Long serviceId = 1L;

@@ -137,16 +137,7 @@ public class CustomerServiceImpl implements CustomerService {
         Invoice invoice = buildInvoice(repairRequest);
         invoiceDAO.save(invoice);
 
-        PushNotificationRequest notification = new PushNotificationRequest();
-        notification.setToken(fcmService.getFCMToken(userId));
-        String title = appConf.getNotification().getTitle().get("request");
-        String message = String.format(appConf.getNotification()
-                        .getContent().
-                        get(NotificationType.REQUEST_CREATE_SUCCESS.name()),
-                savedRepairRequest.getRequestCode());
-        notification.setTitle(title);
-        notification.setBody(message);
-        fcmService.sendPnsToDevice(notification);
+        fcmService.sendNotification("request", NotificationType.REQUEST_CREATE_SUCCESS.name(), userId, savedRepairRequest.getRequestCode());
 
         RequestingRepairResponse response = new RequestingRepairResponse();
         response.setRequestCode(repairRequest.getRequestCode());
@@ -289,16 +280,7 @@ public class CustomerServiceImpl implements CustomerService {
         Optional<RepairRequestMatching> optionalRepairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode);
         if (optionalRepairRequestMatching.isPresent()) {
             Long repairerId = optionalRepairRequestMatching.get().getRepairerId();
-            PushNotificationRequest notification = new PushNotificationRequest();
-            notification.setToken(fcmService.getFCMToken(repairerId));
-            String title = appConf.getNotification().getTitle().get("request");
-            String message = String.format(appConf.getNotification()
-                            .getContent()
-                            .get(NotificationType.REQUEST_CANCELED.name()),
-                    requestCode);
-            notification.setTitle(title);
-            notification.setBody(message);
-            fcmService.sendPnsToDevice(notification);
+            fcmService.sendNotification("request", NotificationType.REQUEST_CANCELED.name(), repairerId, requestCode);
         }
 
         CancelRequestForCustomerResponse response = new CancelRequestForCustomerResponse();

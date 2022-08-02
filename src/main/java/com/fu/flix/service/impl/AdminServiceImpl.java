@@ -833,17 +833,7 @@ public class AdminServiceImpl implements AdminService {
         feedback.setResponse(adminResponse);
         feedback.setHandleByAdminId(request.getUserId());
 
-        String title = appConf.getNotification().getTitle().get("feedback");
-        String message = String.format(appConf.getNotification()
-                        .getContent()
-                        .get(getFeedbackNotificationKey(status)),
-                request.getResponse());
-
-        PushNotificationRequest customerNotification = new PushNotificationRequest();
-        customerNotification.setToken(fcmService.getFCMToken(feedback.getUserId()));
-        customerNotification.setTitle(title);
-        customerNotification.setBody(message);
-        fcmService.sendPnsToDevice(customerNotification);
+        fcmService.sendNotification("feedback", getFeedbackNotificationKey(status), feedback.getUserId(), request.getResponse());
 
         ResponseFeedbackResponse response = new ResponseFeedbackResponse();
         response.setMessage(RESPONSE_FEEDBACK_SUCCESS);
@@ -906,14 +896,7 @@ public class AdminServiceImpl implements AdminService {
         repairer.setAcceptedAccountAt(LocalDateTime.now());
         updateToRepairerRole(roles);
 
-        String title = appConf.getNotification().getTitle().get("register");
-        String message = appConf.getNotification().getContent().get(NotificationType.REGISTER_SUCCESS.name());
-
-        PushNotificationRequest customerNotification = new PushNotificationRequest();
-        customerNotification.setToken(fcmService.getFCMToken(user.getId()));
-        customerNotification.setTitle(title);
-        customerNotification.setBody(message);
-        fcmService.sendPnsToDevice(customerNotification);
+        fcmService.sendNotification("register", NotificationType.REGISTER_SUCCESS.name(), user.getId());
 
         AcceptCVResponse response = new AcceptCVResponse();
         response.setMessage(ACCEPT_CV_SUCCESS);

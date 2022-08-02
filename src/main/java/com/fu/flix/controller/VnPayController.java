@@ -49,7 +49,7 @@ public class VnPayController {
     }
 
     @GetMapping("deposit/response")
-    public ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(@RequestParam  Map<String, String> requestParams) {
+    public ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(@RequestParam  Map<String, String> requestParams) throws IOException {
         return vnPayService.responseRepairerDeposit(requestParams);
     }
 }

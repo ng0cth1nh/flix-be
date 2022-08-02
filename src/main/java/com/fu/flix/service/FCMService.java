@@ -13,4 +13,6 @@ public interface FCMService {
     ResponseEntity<PushNotificationResponse> sendPnsToDevice(PushNotificationRequest notificationRequest) throws IOException;
     String getFCMToken (Long userId);
     ResponseEntity<SaveFCMTokenResponse> saveFCMToken(SaveFCMTokenRequest request);
+
+    void sendNotification(String titleType, String messageType, Long userId, String... formatParams) throws IOException;
 }

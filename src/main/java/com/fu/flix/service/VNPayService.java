@@ -22,5 +22,5 @@ public interface VNPayService {
     ResponseEntity<RepairerDepositUrlResponse> createRepairerDepositUrl(RepairerDepositUrlRequest repairerDepositUrlRequest,
                                                                         HttpServletRequest httpServletRequest);
 
-    ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(Map<String, String> requestParams);
+    ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(Map<String, String> requestParams) throws IOException;
 }

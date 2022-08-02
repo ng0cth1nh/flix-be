@@ -19,7 +19,9 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "LEFT JOIN vnpay_transactions vt " +
             "ON vt.id = th.vnpay_transaction_id " +
             "LEFT JOIN users u " +
-            "ON u.id = th.user_id limit :limit offset :offset", nativeQuery = true)
+            "ON u.id = th.user_id " +
+            "ORDER BY th.created_at DESC " +
+            "limit :limit offset :offset", nativeQuery = true)
     List<ITransactionDTO> findTransactionsForAdmin(Integer limit, Integer offset);
 
     @Query(value = "SELECT th.id, th.transaction_code as transactionCode, vt.transaction_no as vnpTransactionNo, th.amount, th.type as transactionType, u.full_name as fullName, " +
@@ -50,14 +52,19 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "ON u.id = th.user_id " +
             "WHERE th.transaction_code LIKE %:keyword% " +
             "AND th.type IN (:transactionTypes) " +
-            "AND th.status IN (:transactionStatus)", nativeQuery = true)
+            "AND th.status IN (:transactionStatus) " +
+            "ORDER BY th.created_at DESC", nativeQuery = true)
     List<ITransactionDTO> searchTransactionsForAdmin(String keyword, List<String> transactionTypes, List<String> transactionStatus);
 
     Optional<TransactionHistory> findByIdAndTypeAndStatus(Long id, String type, String status);
 
     @Query(value = "SELECT * FROM transaction_histories " +
-            "WHERE user_id = :repairerId limit :limit offset :offset", nativeQuery = true)
+            "WHERE user_id = :repairerId " +
+            "ORDER BY created_at DESC " +
+            "limit :limit offset :offset", nativeQuery = true)
     List<TransactionHistory> findTransactionsForRepairer(Long repairerId, Integer limit, Integer offset);
+
+    long countByUserId(Long repairerId);
 
     @Query(value = "SELECT repairer.id as repairerId, th.id as transactionId, repairer.full_name as repairerName, repairer.phone as repairerPhone, " +
             "wr.type as withdrawType, th.transaction_code as transactionCode, th.amount " +
@@ -66,6 +73,9 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "ON repairer.id = th.user_id " +
             "JOIN withdraw_requests wr " +
             "ON wr.id = th.withdraw_request_id " +
+            "ORDER BY th.created_at DESC " +
             "limit :limit offset :offset", nativeQuery = true)
     List<IWithdrawHistoryDTO> findRepairerWithdrawHistories(Integer limit, Integer offset);
+
+    long countByType(String type);
 }

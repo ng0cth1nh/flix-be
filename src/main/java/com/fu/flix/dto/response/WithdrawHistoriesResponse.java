@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class WithdrawHistoriesResponse {
     private List<IWithdrawHistoryDTO> withdrawList;
+    private long totalRecord;
 }

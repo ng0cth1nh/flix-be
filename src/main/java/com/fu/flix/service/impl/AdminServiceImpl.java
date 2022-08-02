@@ -1111,8 +1111,11 @@ public class AdminServiceImpl implements AdminService {
         int offset = pageNumber * pageSize;
 
         List<ITransactionDTO> transactions = transactionHistoryDAO.findTransactionsForAdmin(pageSize, offset);
+        long totalRecord = transactionHistoryDAO.count();
+
         TransactionsResponse response = new TransactionsResponse();
         response.setTransactions(transactions);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -1340,8 +1343,11 @@ public class AdminServiceImpl implements AdminService {
 
         List<IWithdrawHistoryDTO> repairerWithdrawHistories = transactionHistoryDAO
                 .findRepairerWithdrawHistories(pageSize, offset);
+        long totalRecord = transactionHistoryDAO.countByType(TransactionType.WITHDRAW.name());
+
         WithdrawHistoriesResponse response = new WithdrawHistoriesResponse();
         response.setWithdrawList(repairerWithdrawHistories);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

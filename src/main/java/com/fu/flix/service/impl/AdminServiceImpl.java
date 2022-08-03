@@ -30,6 +30,8 @@ import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
 import static com.fu.flix.constant.enums.TransactionStatus.FAIL;
 import static com.fu.flix.constant.enums.AccountState.ACTIVE;
+import static com.fu.flix.constant.enums.TransactionStatus.PENDING;
+import static com.fu.flix.constant.enums.TransactionType.WITHDRAW;
 
 @Service
 @Transactional
@@ -1348,8 +1350,8 @@ public class AdminServiceImpl implements AdminService {
         int offset = pageNumber * pageSize;
 
         List<IWithdrawHistoryDTO> repairerWithdrawHistories = transactionHistoryDAO
-                .findRepairerWithdrawHistories(pageSize, offset);
-        long totalRecord = transactionHistoryDAO.countByType(TransactionType.WITHDRAW.name());
+                .findRepairerWithdrawHistoriesForAdmin(pageSize, offset);
+        long totalRecord = transactionHistoryDAO.countByTypeAndStatus(WITHDRAW.name(), PENDING.name());
 
         WithdrawHistoriesResponse response = new WithdrawHistoriesResponse();
         response.setWithdrawList(repairerWithdrawHistories);

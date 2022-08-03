@@ -335,7 +335,9 @@ public class VnPayServiceImpl implements VNPayService {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        plusBalanceForRepairer(amount, repairerId);
+        Balance balance = balanceDAO.findByUserId(repairerId).get();
+
+        plusBalanceForRepairer(amount, balance);
         savePaymentTransactions(requestParams, repairerId, customerId, null);
         repairer.setRepairing(false);
         repairRequest.setStatusId(RequestStatus.DONE.getId());
@@ -444,17 +446,16 @@ public class VnPayServiceImpl implements VNPayService {
         }
 
         Long amount = Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
-        plusBalanceForRepairer(amount, repairerId);
+        Balance balance = balanceDAO.findByUserId(repairerId).get();
+
+        plusBalanceForRepairer(amount, balance);
         saveRepairerDepositTransactions(requestParams, repairerId, null);
 
-        Balance balance = balanceDAO.findByUserId(repairerId).get();
-        String vietnamMoneyFormatted = DataFormatter.getVietnamMoneyFormatted(amount);
-        String vietnamMoneyFormatted1 = DataFormatter.getVietnamMoneyFormatted(balance.getBalance());
         fcmService.sendNotification("transaction",
                 NotificationType.DEPOSIT_SUCCESS.name(),
                 repairerId,
-                vietnamMoneyFormatted,
-                vietnamMoneyFormatted1);
+                DataFormatter.getVietnamMoneyFormatted(amount),
+                DataFormatter.getVietnamMoneyFormatted(balance.getBalance()));
 
         log.info("user id: " + repairerId + "deposit success, amount: " + amount);
         response.setMessage(PAYMENT_SUCCESS);
@@ -462,8 +463,7 @@ public class VnPayServiceImpl implements VNPayService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void plusBalanceForRepairer(Long amount, Long repairerId) {
-        Balance balance = balanceDAO.findByUserId(repairerId).get();
+    private void plusBalanceForRepairer(Long amount, Balance balance) {
         balance.setBalance(balance.getBalance() + amount);
     }
 

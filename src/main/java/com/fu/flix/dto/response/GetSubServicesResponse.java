@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class GetSubServicesResponse {
     private List<AdminSubServiceDTO> subServices;
+    private long totalRecord;
 }

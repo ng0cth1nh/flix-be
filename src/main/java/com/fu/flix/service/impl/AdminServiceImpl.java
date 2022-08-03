@@ -153,6 +153,8 @@ public class AdminServiceImpl implements AdminService {
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
         Page<Category> categoryPage = categoryDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        long totalRecord = categoryDAO.count();
+
         List<CategoryDTO> categories = categoryPage.stream()
                 .map(category -> {
                     Optional<Image> optionalIcon = imageDAO.findById(category.getIconId());
@@ -170,6 +172,7 @@ public class AdminServiceImpl implements AdminService {
 
         GetCategoriesResponse response = new GetCategoriesResponse();
         response.setCategories(categories);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -259,12 +262,15 @@ public class AdminServiceImpl implements AdminService {
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
         Page<com.fu.flix.entity.Service> servicePage = serviceDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        long totalRecord = serviceDAO.count();
+
         List<ServiceDTO> serviceDTOS = servicePage.stream()
                 .map(categoryService::mapToServiceDTO)
                 .collect(Collectors.toList());
 
         GetServicesResponse response = new GetServicesResponse();
         response.setServices(serviceDTOS);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -405,6 +411,8 @@ public class AdminServiceImpl implements AdminService {
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
         Page<SubService> subServicePage = subServiceDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        long totalRecord = subServiceDAO.count();
+
         List<AdminSubServiceDTO> subServices = subServicePage.stream()
                 .map(subService -> {
                     AdminSubServiceDTO dto = new AdminSubServiceDTO();
@@ -418,6 +426,7 @@ public class AdminServiceImpl implements AdminService {
 
         GetSubServicesResponse response = new GetSubServicesResponse();
         response.setSubServices(subServices);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -494,6 +503,8 @@ public class AdminServiceImpl implements AdminService {
         int start = end - (pageSize - 1);
 
         List<IRequestInfoDTO> requestDTOs = repairRequestDAO.findAllRequestForAdmin(start, end);
+        long totalRecord = repairRequestDAO.count();
+
         List<AdminRequestingDTO> requestList = requestDTOs.stream()
                 .map(rq -> {
                     AdminRequestingDTO dto = new AdminRequestingDTO();
@@ -511,6 +522,7 @@ public class AdminServiceImpl implements AdminService {
 
         AdminRequestingResponse response = new AdminRequestingResponse();
         response.setRequestList(requestList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -522,8 +534,11 @@ public class AdminServiceImpl implements AdminService {
 
         int offset = pageNumber * pageSize;
         List<ICustomerDTO> customerDTOs = userDAO.findCustomersForAdmin(pageSize, offset);
+        long totalRecord = userDAO.countCustomers();
+
         GetCustomersResponse response = new GetCustomersResponse();
         response.setCustomerList(customerDTOs);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -535,8 +550,11 @@ public class AdminServiceImpl implements AdminService {
 
         int offset = pageNumber * pageSize;
         List<IRepairerDTO> repairerDTOS = userDAO.findRepairersForAdmin(pageSize, offset);
+        long totalRecord = userDAO.countRepairers();
+
         GetRepairersResponse response = new GetRepairersResponse();
         response.setRepairerList(repairerDTOS);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -575,6 +593,8 @@ public class AdminServiceImpl implements AdminService {
         int offset = pageNumber * pageSize;
 
         List<IBanUserDTO> banUserDTOs = userDAO.findBanUsers(pageSize, offset);
+        long totalRecord = userDAO.countBanUsers();
+
         List<BanUserDTO> userList = banUserDTOs.stream()
                 .map(banUser -> {
                     BanUserDTO dto = new BanUserDTO();
@@ -590,6 +610,7 @@ public class AdminServiceImpl implements AdminService {
 
         GetBanUsersResponse response = new GetBanUsersResponse();
         response.setUserList(userList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -711,6 +732,8 @@ public class AdminServiceImpl implements AdminService {
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
         Page<Accessory> accessoryPage = accessoryDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        long totalRecord = accessoryDAO.count();
+
         List<AccessoryOutputDTO> accessoryList = accessoryPage.stream()
                 .map(accessory -> {
                     AccessoryOutputDTO dto = new AccessoryOutputDTO();
@@ -726,6 +749,7 @@ public class AdminServiceImpl implements AdminService {
 
         AdminGetAccessoriesResponse response = new AdminGetAccessoriesResponse();
         response.setAccessoryList(accessoryList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -737,6 +761,8 @@ public class AdminServiceImpl implements AdminService {
 
         int offset = pageNumber * pageSize;
         List<IPendingRepairerDTO> pendingRepairerDTOs = userDAO.findPendingRepairers(pageSize, offset);
+        long totalRecord = userDAO.countPendingRepairers();
+
         List<PendingRepairerDTO> repairerList = pendingRepairerDTOs.stream()
                 .map(pr -> {
                     PendingRepairerDTO dto = new PendingRepairerDTO();
@@ -749,6 +775,7 @@ public class AdminServiceImpl implements AdminService {
 
         PendingRepairersResponse response = new PendingRepairersResponse();
         response.setRepairerList(repairerList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

@@ -26,6 +26,13 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "WHERE ur.role_id = 'C' limit :limit offset :offset", nativeQuery = true)
     List<ICustomerDTO> findCustomersForAdmin(Integer limit, Integer offset);
 
+    @Query(value = "SELECT count(*) " +
+            "FROM users customer " +
+            "JOIN user_roles ur " +
+            "ON ur.user_id = customer.id " +
+            "WHERE ur.role_id = 'C'", nativeQuery = true)
+    long countCustomers();
+
     @Query(value = "SELECT repairer.id as id, avatar.url as avatar, repairer.full_name as repairerName, repairer.phone as repairerPhone, " +
             "CASE " +
             "   WHEN repairer.is_active THEN 'ACTIVE' " +
@@ -41,6 +48,13 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "ON roles.id = ur.role_id " +
             "WHERE (ur.role_id = 'R' or ur.role_id = 'PR') limit :limit offset :offset", nativeQuery = true)
     List<IRepairerDTO> findRepairersForAdmin(Integer limit, Integer offset);
+
+    @Query(value = "SELECT count(*) " +
+            "FROM users repairer " +
+            "JOIN user_roles ur " +
+            "ON ur.user_id = repairer.id " +
+            "WHERE (ur.role_id = 'R' or ur.role_id = 'PR'); ", nativeQuery = true)
+    long countRepairers();
 
     @Query(value = "SELECT avatar.url as avatar, customer.full_name as customerName, customer.phone as customerPhone, " +
             "CASE " +
@@ -104,6 +118,14 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "AND NOT u.is_active limit :limit offset :offset", nativeQuery = true)
     List<IBanUserDTO> findBanUsers(Integer limit, Integer offset);
 
+    @Query(value = "SELECT count(*) " +
+            "FROM users u " +
+            "JOIN user_roles ur " +
+            "ON ur.user_id = u.id " +
+            "WHERE (ur.role_id = 'C' or ur.role_id = 'PR' or ur.role_id = 'R') " +
+            "AND NOT u.is_active; ", nativeQuery = true)
+    long countBanUsers();
+
     @Query(value = "SELECT repairer.id, repairer.full_name as repairerName, repairer.phone as repairerPhone, repairer.created_at as createdAt " +
             "FROM users repairer " +
             "JOIN user_roles ur " +
@@ -111,6 +133,13 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "WHERE ur.role_id = 'PR' " +
             "limit :limit offset :offset", nativeQuery = true)
     List<IPendingRepairerDTO> findPendingRepairers(Integer limit, Integer offset);
+
+    @Query(value = "SELECT count(*) " +
+            "FROM users u " +
+            "JOIN user_roles ur " +
+            "ON ur.user_id = u.id " +
+            "WHERE (ur.role_id = 'PR');", nativeQuery = true)
+    long countPendingRepairers();
 
     @Query(value = "SELECT u.full_name as fullName, avatar.url as avatar, u.phone, u.date_of_birth as dateOfBirth, u.gender, u.email, " +
             "r.experience_description as experienceDescription, ic.identity_card_number as identityCardNumber, ua.id addressId, b.balance, " +

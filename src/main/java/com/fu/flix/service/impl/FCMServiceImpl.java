@@ -91,7 +91,8 @@ public class FCMServiceImpl implements FCMService {
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (FirebaseMessagingException e) {
             log.error("Fail to send firebase notification", e);
-            throw new GeneralException(HttpStatus.METHOD_NOT_ALLOWED, PUSH_NOTIFICATION_FAIL);
+            response.setMessage(Constant.PUSH_NOTIFICATION_FAIL);
+            return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
         }
     }
 

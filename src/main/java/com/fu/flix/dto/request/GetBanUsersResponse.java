@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class GetBanUsersResponse {
     private List<BanUserDTO> userList;
+    private long totalRecord;
 }

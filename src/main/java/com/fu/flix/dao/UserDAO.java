@@ -134,6 +134,13 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "limit :limit offset :offset", nativeQuery = true)
     List<IPendingRepairerDTO> findPendingRepairers(Integer limit, Integer offset);
 
+    @Query(value = "SELECT count(*) " +
+            "FROM users u " +
+            "JOIN user_roles ur " +
+            "ON ur.user_id = u.id " +
+            "WHERE (ur.role_id = 'PR');", nativeQuery = true)
+    long countPendingRepairers();
+
     @Query(value = "SELECT u.full_name as fullName, avatar.url as avatar, u.phone, u.date_of_birth as dateOfBirth, u.gender, u.email, " +
             "r.experience_description as experienceDescription, ic.identity_card_number as identityCardNumber, ua.id addressId, b.balance, " +
             "role.name as role, district.id as districtId, city.id as cityId, commune.id as communeId " +

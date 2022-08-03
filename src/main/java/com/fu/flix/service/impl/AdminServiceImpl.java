@@ -761,6 +761,8 @@ public class AdminServiceImpl implements AdminService {
 
         int offset = pageNumber * pageSize;
         List<IPendingRepairerDTO> pendingRepairerDTOs = userDAO.findPendingRepairers(pageSize, offset);
+        long totalRecord = userDAO.countPendingRepairers();
+
         List<PendingRepairerDTO> repairerList = pendingRepairerDTOs.stream()
                 .map(pr -> {
                     PendingRepairerDTO dto = new PendingRepairerDTO();
@@ -773,6 +775,7 @@ public class AdminServiceImpl implements AdminService {
 
         PendingRepairersResponse response = new PendingRepairersResponse();
         response.setRepairerList(repairerList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

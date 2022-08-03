@@ -448,11 +448,13 @@ public class VnPayServiceImpl implements VNPayService {
         saveRepairerDepositTransactions(requestParams, repairerId, null);
 
         Balance balance = balanceDAO.findByUserId(repairerId).get();
+        String vietnamMoneyFormatted = DataFormatter.getVietnamMoneyFormatted(amount);
+        String vietnamMoneyFormatted1 = DataFormatter.getVietnamMoneyFormatted(balance.getBalance());
         fcmService.sendNotification("transaction",
                 NotificationType.DEPOSIT_SUCCESS.name(),
                 repairerId,
-                DataFormatter.getVietnamMoneyFormatted(amount),
-                DataFormatter.getVietnamMoneyFormatted(balance.getBalance()));
+                vietnamMoneyFormatted,
+                vietnamMoneyFormatted1);
 
         log.info("user id: " + repairerId + "deposit success, amount: " + amount);
         response.setMessage(PAYMENT_SUCCESS);

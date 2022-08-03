@@ -8,7 +8,7 @@ public class DataFormatter {
     }
 
     public static String getVietnamMoneyFormatted(Long money) {
-        DecimalFormat formatter = new DecimalFormat("#,###.00");
+        DecimalFormat formatter = new DecimalFormat("#,###");
         return formatter.format(money) + " VNĐ";
     }
 }

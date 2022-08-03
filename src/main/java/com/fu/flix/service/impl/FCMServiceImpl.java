@@ -117,6 +117,7 @@ public class FCMServiceImpl implements FCMService {
         notification.setToken(getFCMToken(userId));
         notification.setTitle(title);
         notification.setBody(message);
+        notification.setUserId(userId);
         sendPnsToDevice(notification);
     }
 }

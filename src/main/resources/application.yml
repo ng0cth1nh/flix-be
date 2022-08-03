@@ -72,7 +72,7 @@ app:
       secureHash: 'MPBTQAIUBXZUPPPWJEGMCTPCDZRNRLZV'
       tmnCode: '1TZDUKO5'
     depositInfo:
-      returnUrl: 'https://www.facebook.com/'
+      returnUrl: 'flix-repairer://profile/deposit'
       secureHash: 'KNWFOELNUTYJDIBSGAJFGCIOIDLLUSXJ'
       tmnCode: 'AF4ODYBY'
 server:

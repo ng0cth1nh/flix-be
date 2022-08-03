@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+import java.util.Map;
+
 @Configuration
 @EnableSwagger2
 @ConfigurationProperties(prefix = "app")
@@ -16,7 +18,9 @@ public class AppConf {
     private Long lifeTimeToke;
     private Long lifeTimeRefreshToken;
     private TwilioInfo twilioInfo;
-    private Long defaultAvatar;
+    private String firebaseConfig;
+    private String defaultIcon;
+    private String defaultImage;
     private String[] permitAllApis;
     private Integer defaultLimitQuery;
     private Integer defaultOffset;
@@ -25,11 +29,21 @@ public class AppConf {
     private Long minTimeFined;
     private Long fine;
     private VnPayInfo vnPayInfo;
+    private Notification notification;
     private Long descriptionMaxLength;
     private Long nameMaxLength;
     private Integer defaultPageSize;
     private Integer defaultPageNumber;
     private Long milestoneMoney;
+    private Long minVnPay;
+
+    @Data
+    public static class Notification {
+        private String defaultImageName;
+        private String defaultImage;
+        private Map<String, String> title;
+        private Map<String, String> content;
+    }
 
     @Data
     public static class TwilioInfo {
@@ -42,14 +56,26 @@ public class AppConf {
     public static class VnPayInfo {
         private String version;
         private String command;
-        private String tmnCode;
         private String locate;
         private Integer vnPayAmountRate;
         private String datePattern;
         private String currCode;
-        private String secureHash;
         private String payUrl;
+        private PaymentInfo paymentInfo;
+        private DepositInfo depositInfo;
+    }
+
+    @Data
+    public static class PaymentInfo {
+        private String tmnCode;
+        private String secureHash;
         private String returnUrl;
     }
 
+    @Data
+    public static class DepositInfo {
+        private String tmnCode;
+        private String secureHash;
+        private String returnUrl;
+    }
 }

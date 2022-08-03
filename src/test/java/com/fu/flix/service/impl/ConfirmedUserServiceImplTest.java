@@ -23,6 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -320,7 +321,7 @@ class ConfirmedUserServiceImplTest {
     }
 
     @Test
-    public void test_get_invoice_success_for_repairer() {
+    public void test_get_invoice_success_for_repairer() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         approvalRequestByRepairerId56(requestCode);
@@ -340,7 +341,7 @@ class ConfirmedUserServiceImplTest {
     }
 
     @Test
-    public void test_get_invoice_success_for_customer() {
+    public void test_get_invoice_success_for_customer() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         approvalRequestByRepairerId56(requestCode);
@@ -375,7 +376,7 @@ class ConfirmedUserServiceImplTest {
     }
 
     @Test
-    public void test_get_fixed_services_success_by_repairer() {
+    public void test_get_fixed_services_success_by_repairer() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         approvalRequestByRepairerId56(requestCode);
@@ -398,7 +399,7 @@ class ConfirmedUserServiceImplTest {
     }
 
     @Test
-    public void test_get_fixed_services_fail_when_status_is_not_valid() {
+    public void test_get_fixed_services_fail_when_status_is_not_valid() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         approvalRequestByRepairerId56(requestCode);
@@ -416,7 +417,7 @@ class ConfirmedUserServiceImplTest {
     }
 
     @Test
-    public void test_get_fixed_services_fail_when_customer_does_not_have_permission() {
+    public void test_get_fixed_services_fail_when_customer_does_not_have_permission() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         approvalRequestByRepairerId56(requestCode);
@@ -439,7 +440,7 @@ class ConfirmedUserServiceImplTest {
     }
 
     @Test
-    public void test_get_fixed_services_fail_when_repairer_does_not_have_permission() {
+    public void test_get_fixed_services_fail_when_repairer_does_not_have_permission() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         approvalRequestByRepairerId56(requestCode);
@@ -462,7 +463,7 @@ class ConfirmedUserServiceImplTest {
     }
 
     @Test
-    public void test_get_fixed_services_success_by_customer() {
+    public void test_get_fixed_services_success_by_customer() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         approvalRequestByRepairerId56(requestCode);
@@ -534,7 +535,7 @@ class ConfirmedUserServiceImplTest {
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 
-    private String createFixingRequest(Long userId, String phone) {
+    private String createFixingRequest(Long userId, String phone) throws IOException {
         setCustomerContext(userId, phone);
         Long serviceId = 1L;
         Long addressId = 7L;
@@ -555,21 +556,21 @@ class ConfirmedUserServiceImplTest {
         return response.getRequestCode();
     }
 
-    private void approvalRequestByRepairerId56(String requestCode) {
+    private void approvalRequestByRepairerId56(String requestCode) throws IOException {
         setRepairerContext(56L, "0865390056");
         RepairerApproveRequest request = new RepairerApproveRequest();
         request.setRequestCode(requestCode);
         repairerService.approveRequest(request);
     }
 
-    private void confirmFixingByRepairerId56(String requestCode) {
+    private void confirmFixingByRepairerId56(String requestCode) throws IOException {
         ConfirmFixingRequest request = new ConfirmFixingRequest();
         request.setRequestCode(requestCode);
         setRepairerContext(56L, "0865390037");
         repairerService.confirmFixing(request);
     }
 
-    private void createInvoiceByRepairerId56(String requestCode) {
+    private void createInvoiceByRepairerId56(String requestCode) throws IOException {
         CreateInvoiceRequest request = new CreateInvoiceRequest();
         request.setRequestCode(requestCode);
         setRepairerContext(56L, "0865390037");

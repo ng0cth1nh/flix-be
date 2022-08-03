@@ -20,4 +20,5 @@ public class CFRegisterRepairerRequest extends CFRegisterUserRequest {
     private List<MultipartFile> certificates;
     private Boolean gender;
     private String dateOfBirth;
+    private List<Long> registerServices;
 }

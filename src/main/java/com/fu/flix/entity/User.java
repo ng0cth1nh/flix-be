@@ -39,6 +39,8 @@ public class User {
 
     private String email;
 
+    private String fcmToken;
+
     private String banReason;
 
     @ManyToMany(fetch = FetchType.EAGER)

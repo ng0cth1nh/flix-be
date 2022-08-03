@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class GetCustomersResponse {
     private List<ICustomerDTO> customerList;
+    private long totalRecord;
 }

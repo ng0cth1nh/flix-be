@@ -140,7 +140,7 @@ public class AdminController {
     }
 
     @PutMapping("feedback")
-    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(@RequestBody ResponseFeedbackRequest request) {
+    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(@RequestBody ResponseFeedbackRequest request) throws IOException {
         return adminService.responseFeedback(request);
     }
 
@@ -150,7 +150,7 @@ public class AdminController {
     }
 
     @PutMapping("cv")
-    public ResponseEntity<AcceptCVResponse> acceptCV(@RequestBody AcceptCVRequest request) {
+    public ResponseEntity<AcceptCVResponse> acceptCV(@RequestBody AcceptCVRequest request) throws IOException {
         return adminService.acceptCV(request);
     }
 
@@ -162,5 +162,65 @@ public class AdminController {
     @GetMapping("search/categories")
     public ResponseEntity<SearchCategoriesResponse> searchCategories(SearchCategoriesRequest request) {
         return adminService.searchCategories(request);
+    }
+
+    @GetMapping("search/feedbacks")
+    public ResponseEntity<SearchFeedbackResponse> searchFeedbacks(SearchFeedbackRequest request) {
+        return adminService.searchFeedbacks(request);
+    }
+
+    @GetMapping("search/customers")
+    public ResponseEntity<SearchCustomersResponse> searchCustomers(SearchCustomersRequest request) {
+        return adminService.searchCustomers(request);
+    }
+
+    @GetMapping("search/repairers")
+    public ResponseEntity<SearchRepairersResponse> searchRepairers(SearchRepairersRequest request) {
+        return adminService.searchRepairers(request);
+    }
+
+    @GetMapping("search/accessories")
+    public ResponseEntity<AdminSearchAccessoriesResponse> searchAccessories(AdminSearchAccessoriesRequest request) {
+        return adminService.searchAccessories(request);
+    }
+
+    @GetMapping("transactions")
+    public ResponseEntity<TransactionsResponse> getTransactions(TransactionsRequest request) {
+        return adminService.getTransactions(request);
+    }
+
+    @GetMapping("request")
+    public ResponseEntity<AdminGetRequestDetailResponse> getRequestDetail(AdminGetRequestDetailRequest request) {
+        return adminService.getRequestDetail(request);
+    }
+
+    @GetMapping("search/subServices")
+    public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request) {
+        return adminService.searchSubServices(request);
+    }
+
+    @GetMapping("transaction")
+    public ResponseEntity<TransactionDetailResponse> getTransactionDetail(TransactionDetailRequest request) {
+        return adminService.getTransactionDetail(request);
+    }
+
+    @GetMapping("search/transactions")
+    public ResponseEntity<SearchTransactionsResponse> searchTransactions(SearchTransactionsRequest request) {
+        return adminService.searchTransactions(request);
+    }
+
+    @PutMapping("withdraw/accept")
+    public ResponseEntity<AcceptWithdrawResponse> acceptWithdraw(@RequestBody AcceptWithdrawRequest request) {
+        return adminService.acceptWithdraw(request);
+    }
+
+    @GetMapping("repairer/withdraw/histories")
+    public ResponseEntity<WithdrawHistoriesResponse> getRepairerWithdrawHistories(WithdrawHistoriesRequest request) {
+        return adminService.getRepairerWithdrawHistories(request);
+    }
+
+    @PutMapping("withdraw/reject")
+    public ResponseEntity<RejectWithdrawResponse> rejectWithdraw(@RequestBody RejectWithdrawRequest request) {
+        return adminService.rejectWithdraw(request);
     }
 }

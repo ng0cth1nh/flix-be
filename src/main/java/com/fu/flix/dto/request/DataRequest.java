@@ -11,8 +11,9 @@ public abstract class DataRequest {
     public String getUsername() {
         if (SecurityContextHolder.getContext() != null) {
             if (SecurityContextHolder.getContext().getAuthentication() != null) {
-                if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() != null) {
-                    return ((UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+                Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                if (principal != null) {
+                    return principal.equals("anonymousUser") ? null : ((UserPrincipal) principal).getUsername();
                 }
             }
         }
@@ -23,8 +24,9 @@ public abstract class DataRequest {
     public Long getUserId() {
         if (SecurityContextHolder.getContext() != null) {
             if (SecurityContextHolder.getContext().getAuthentication() != null) {
-                if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() != null) {
-                    return ((UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
+                Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                if (principal != null) {
+                    return principal.equals("anonymousUser") ? null : ((UserPrincipal) principal).getId();
                 }
             }
         }
@@ -35,8 +37,9 @@ public abstract class DataRequest {
     public String[] getRoles() {
         if (SecurityContextHolder.getContext() != null) {
             if (SecurityContextHolder.getContext().getAuthentication() != null) {
-                if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() != null) {
-                    return ((UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getRoles();
+                Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                if (principal != null) {
+                    return principal.equals("anonymousUser") ? null : ((UserPrincipal) principal).getRoles();
                 }
             }
         }

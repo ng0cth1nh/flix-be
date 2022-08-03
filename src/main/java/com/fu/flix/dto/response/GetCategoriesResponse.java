@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class GetCategoriesResponse {
     private List<CategoryDTO> categories;
+    private long totalRecord;
 }

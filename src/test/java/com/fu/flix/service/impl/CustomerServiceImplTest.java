@@ -26,6 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ class CustomerServiceImplTest {
     RepairerService repairerService;
 
     @Test
-    public void test_create_fixing_request_success() {
+    public void test_create_fixing_request_success() throws IOException {
         // given
         Long serviceId = 1L;
         Long addressId = 7L;
@@ -220,7 +221,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    public void test_create_fixing_request_success_when_description_and_voucher_are_null_and_payment_method_is_VNPAY() {
+    public void test_create_fixing_request_success_when_description_and_voucher_are_null_and_payment_method_is_VNPAY() throws IOException {
         // given
         Long serviceId = 1L;
         Long addressId = 7L;
@@ -485,7 +486,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    public void test_cancel_PENDING_request_success() {
+    public void test_cancel_PENDING_request_success() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         String reason = "Thợ không đẹp trai";
@@ -502,7 +503,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    public void test_cancel_request_success_when_reason_is_null() {
+    public void test_cancel_request_success_when_reason_is_null() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
@@ -518,7 +519,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    public void test_cancel_request_success_when_reason_is_empty() {
+    public void test_cancel_request_success_when_reason_is_empty() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         CancelRequestForCustomerRequest request = new CancelRequestForCustomerRequest();
@@ -534,7 +535,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    public void test_cancel_APPROVED_request_success() {
+    public void test_cancel_APPROVED_request_success() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         approvalRequest(requestCode);
@@ -552,7 +553,7 @@ class CustomerServiceImplTest {
     }
 
     @Test
-    public void test_cancel_FIXING_request_fail() {
+    public void test_cancel_FIXING_request_fail() throws IOException {
         // given
         String requestCode = createFixingRequest(36L, "0865390037");
         approvalRequest(requestCode);
@@ -571,22 +572,21 @@ class CustomerServiceImplTest {
         Assertions.assertEquals(ONLY_CAN_CANCEL_REQUEST_PENDING_OR_APPROVED, exception.getMessage());
     }
 
-    private void approvalRequest(String requestCode) {
+    private void approvalRequest(String requestCode) throws IOException {
         setUserContext(56L, "0865390056");
         RepairerApproveRequest request = new RepairerApproveRequest();
         request.setRequestCode(requestCode);
         repairerService.approveRequest(request);
     }
 
-    private void confirmFixing(String requestCode) {
+    private void confirmFixing(String requestCode) throws IOException {
         setUserContext(56L, "0865390056");
         ConfirmFixingRequest request = new ConfirmFixingRequest();
         request.setRequestCode(requestCode);
         repairerService.confirmFixing(request);
     }
 
-
-    private String createFixingRequest(Long userId, String phone) {
+    private String createFixingRequest(Long userId, String phone) throws IOException {
         setUserContext(userId, phone);
         Long serviceId = 1L;
         Long addressId = 7L;

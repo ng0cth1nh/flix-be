@@ -9,6 +9,7 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
+import com.fu.flix.service.AccountService;
 import com.fu.flix.service.AddressService;
 import com.fu.flix.service.CommonRepairerService;
 import com.fu.flix.service.ValidatorService;
@@ -45,7 +46,9 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
     private final SubServiceDAO subServiceDAO;
     private final AccessoryDAO accessoryDAO;
     private final UserDAO userDAO;
+    private final ServiceDAO serviceDAO;
     private final ValidatorService validatorService;
+    private final AccountService accountService;
     private final CommuneDAO communeDAO;
     private final String DATE_PATTERN = "dd-MM-yyyy";
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -56,7 +59,9 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
                                      RepairerDAO repairerDAO,
                                      RepairRequestDAO repairRequestDAO,
                                      AddressService addressService,
+                                     ServiceDAO serviceDAO,
                                      ValidatorService validatorService,
+                                     AccountService accountService,
                                      AppConf appConf,
                                      SubServiceDAO subServiceDAO,
                                      AccessoryDAO accessoryDAO,
@@ -66,7 +71,9 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.addressService = addressService;
+        this.serviceDAO = serviceDAO;
         this.validatorService = validatorService;
+        this.accountService = accountService;
         this.subServiceDAO = subServiceDAO;
         this.accessoryDAO = accessoryDAO;
         this.userDAO = userDAO;
@@ -244,7 +251,8 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
 
     @Override
     public ResponseEntity<RepairerProfileResponse> getRepairerProfile(RepairerProfileRequest request) {
-        Optional<IRepairerProfileDTO> optionalProfile = userDAO.findRepairerProfile(request.getUserId());
+        Long repairerId = request.getUserId();
+        Optional<IRepairerProfileDTO> optionalProfile = userDAO.findRepairerProfile(repairerId);
         RepairerProfileResponse response = new RepairerProfileResponse();
 
         if (optionalProfile.isPresent()) {
@@ -253,6 +261,8 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
             String dob = profile.getDateOfBirth() != null
                     ? DateFormatUtil.toString(profile.getDateOfBirth(), DATE_PATTERN)
                     : null;
+
+            List<IRegisterServiceProfileDTO> registerServices = repairerDAO.findRegisterServicesProfile(repairerId);
 
             response.setFullName(profile.getFullName());
             response.setAvatar(profile.getAvatar());
@@ -265,6 +275,10 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
             response.setIdentityCardNumber(profile.getIdentityCardNumber());
             response.setAddress(addressService.getAddressFormatted(profile.getAddressId()));
             response.setBalance(profile.getBalance());
+            response.setCommuneId(profile.getCommuneId());
+            response.setDistrictId(profile.getDistrictId());
+            response.setCityId(profile.getCityId());
+            response.setRegisterServices(registerServices);
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -280,6 +294,11 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
 
         Repairer repairer = repairerDAO.findByUserId(userId).get();
         repairer.setExperienceDescription(request.getExperienceDescription());
+
+        List<com.fu.flix.entity.Service> services = request.getRegisterServices().stream()
+                .map(id -> serviceDAO.findById(id).get())
+                .collect(Collectors.toList());
+        accountService.updateServicesToRepairer(services, repairer);
 
         String communeId = request.getCommuneId();
         String streetAddress = request.getStreetAddress();
@@ -308,6 +327,8 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
             throw new GeneralException(HttpStatus.GONE, INVALID_EXPERIENCE_DESCRIPTION);
         } else if (isInvalidCommune(request.getCommuneId())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_COMMUNE);
+        } else if (accountService.isInvalidRegisterServices(request.getRegisterServices())) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REGISTER_SERVICE_IDS);
         }
     }
 

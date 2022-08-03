@@ -21,6 +21,8 @@ public class TransactionHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String transactionCode;
+
     private String requestCode;
 
     private Long amount;
@@ -30,6 +32,12 @@ public class TransactionHistory {
     private Long userId;
 
     private Long vnpayTransactionId;
+
+    private String status;
+
+    private String failReason;
+
+    private Long withdrawRequestId;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

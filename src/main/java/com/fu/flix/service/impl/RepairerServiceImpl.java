@@ -12,6 +12,7 @@ import com.fu.flix.entity.*;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
+import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,7 +32,9 @@ import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.RequestStatus.*;
+import static com.fu.flix.constant.enums.TransactionStatus.PENDING;
 import static com.fu.flix.constant.enums.TransactionType.*;
+import static com.fu.flix.constant.enums.TransactionStatus.SUCCESS;
 
 @Service
 @Slf4j
@@ -45,9 +49,14 @@ public class RepairerServiceImpl implements RepairerService {
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final CustomerService customerService;
     private final AddressService addressService;
+
+    private final ValidatorService validatorService;
     private final VoucherService voucherService;
     private final SubServiceDAO subServiceDAO;
     private final RequestService requestService;
+    private final FCMService fcmService;
+    private final WithdrawRequestDAO withdrawRequestDAO;
+    private final BankInfoDAO bankInfoDAO;
     private final AccessoryDAO accessoryDAO;
     private final ExtraServiceDAO extraServiceDAO;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -62,11 +71,14 @@ public class RepairerServiceImpl implements RepairerService {
                                TransactionHistoryDAO transactionHistoryDAO,
                                CustomerService customerService,
                                AddressService addressService,
+                               ValidatorService validatorService,
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
                                RequestService requestService,
-                               AccessoryDAO accessoryDAO,
-                               ExtraServiceDAO extraServiceDAO) {
+                               FCMService fcmService, AccessoryDAO accessoryDAO,
+                               ExtraServiceDAO extraServiceDAO,
+                               WithdrawRequestDAO withdrawRequestDAO,
+                               BankInfoDAO bankInfoDAO) {
         this.repairerDAO = repairerDAO;
         this.repairRequestDAO = repairRequestDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -77,20 +89,24 @@ public class RepairerServiceImpl implements RepairerService {
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.customerService = customerService;
         this.addressService = addressService;
+        this.validatorService = validatorService;
         this.voucherService = voucherService;
         this.subServiceDAO = subServiceDAO;
         this.requestService = requestService;
+        this.fcmService = fcmService;
+        this.withdrawRequestDAO = withdrawRequestDAO;
+        this.bankInfoDAO = bankInfoDAO;
         this.accessoryDAO = accessoryDAO;
         this.extraServiceDAO = extraServiceDAO;
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
     }
 
     @Override
-    public ResponseEntity<RepairerApproveResponse> approveRequest(RepairerApproveRequest request) {
+    public ResponseEntity<RepairerApproveResponse> approveRequest(RepairerApproveRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
-        if (!PENDING.getId().equals(repairRequest.getStatusId())) {
+        if (!RequestStatus.PENDING.getId().equals(repairRequest.getStatusId())) {
             throw new GeneralException(HttpStatus.CONFLICT, JUST_CAN_ACCEPT_PENDING_REQUEST);
         }
 
@@ -111,6 +127,9 @@ public class RepairerServiceImpl implements RepairerService {
 
         RepairRequestMatching repairRequestMatching = buildRepairRequestMatching(requestCode, repairerId);
         repairRequestMatchingDAO.save(repairRequestMatching);
+
+        fcmService.sendNotification("request", NotificationType.REQUEST_APPROVED.name(), repairRequest.getUserId(), requestCode);
+        fcmService.sendNotification("request", NotificationType.REQUEST_APPROVED.name(), repairerId, requestCode);
 
         RepairerApproveResponse response = new RepairerApproveResponse();
         response.setMessage(APPROVAL_REQUEST_SUCCESS);
@@ -168,7 +187,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) {
+    public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
@@ -197,6 +216,8 @@ public class RepairerServiceImpl implements RepairerService {
         customerService.refundVoucher(repairRequest);
         updateRepairRequest(request, repairRequest);
 
+        fcmService.sendNotification("request", NotificationType.REQUEST_CANCELED.name(), repairRequest.getUserId(), requestCode);
+
         CancelRequestForRepairerResponse response = new CancelRequestForRepairerResponse();
         response.setMessage(CANCEL_REPAIR_REQUEST_SUCCESSFUL);
 
@@ -215,6 +236,8 @@ public class RepairerServiceImpl implements RepairerService {
         finedTransaction.setAmount(fineMoney);
         finedTransaction.setType(FINED.name());
         finedTransaction.setRequestCode(requestCode);
+        finedTransaction.setStatus(SUCCESS.name());
+        finedTransaction.setTransactionCode(RandomUtil.generateCode());
         transactionHistoryDAO.save(finedTransaction);
     }
 
@@ -271,7 +294,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request) {
+    public ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -289,6 +312,9 @@ public class RepairerServiceImpl implements RepairerService {
         if (isCanNotApplyVoucherToInvoice(invoice)) {
             customerService.refundVoucher(repairRequest);
         }
+
+        fcmService.sendNotification("request", NotificationType.CREATE_INVOICE.name(), repairRequest.getUserId(), requestCode);
+        fcmService.sendNotification("request", NotificationType.CREATE_INVOICE.name(), repairerId, requestCode);
 
         Balance balance = balanceDAO.findByUserId(repairerId).get();
         Long commission = getCommission(invoice);
@@ -315,6 +341,8 @@ public class RepairerServiceImpl implements RepairerService {
         transactionHistory.setAmount(commission);
         transactionHistory.setType(PAY_COMMISSIONS.name());
         transactionHistory.setRequestCode(requestCode);
+        transactionHistory.setStatus(SUCCESS.name());
+        transactionHistory.setTransactionCode(RandomUtil.generateCode());
         transactionHistoryDAO.save(transactionHistory);
     }
 
@@ -324,7 +352,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(ConfirmInvoicePaidRequest request) {
+    public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(ConfirmInvoicePaidRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -346,6 +374,10 @@ public class RepairerServiceImpl implements RepairerService {
 
         repairer.setRepairing(false);
         repairRequest.setStatusId(DONE.getId());
+
+        fcmService.sendNotification("request", NotificationType.REQUEST_DONE.name(), repairRequest.getUserId(), requestCode);
+        fcmService.sendNotification("request", NotificationType.REQUEST_DONE.name(), repairerId, requestCode);
+
         ConfirmInvoicePaidResponse response = new ConfirmInvoicePaidResponse();
         response.setMessage(CONFIRM_INVOICE_PAID_SUCCESS);
 
@@ -353,7 +385,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<ConfirmFixingResponse> confirmFixing(ConfirmFixingRequest request) {
+    public ResponseEntity<ConfirmFixingResponse> confirmFixing(ConfirmFixingRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -374,6 +406,9 @@ public class RepairerServiceImpl implements RepairerService {
 
         repairRequest.setStatusId(FIXING.getId());
         repairer.setRepairing(true);
+
+        fcmService.sendNotification("request", NotificationType.REQUEST_CONFIRM_FIXING.name(), repairRequest.getUserId(), requestCode);
+        fcmService.sendNotification("request", NotificationType.REQUEST_CONFIRM_FIXING.name(), repairerId, requestCode);
 
         ConfirmFixingResponse response = new ConfirmFixingResponse();
         response.setMessage(CONFIRM_FIXING_SUCCESS);
@@ -561,5 +596,104 @@ public class RepairerServiceImpl implements RepairerService {
         invoice.setTotalDiscount(newTotalDiscount);
         invoice.setVatPrice(newVatPrice);
         invoice.setActualProceeds(beforeVat + newVatPrice);
+    }
+
+    @Override
+    public ResponseEntity<RepairerWithdrawResponse> requestWithdraw(RepairerWithdrawRequest request) {
+        Long amount = request.getAmount();
+        if (amount == null || amount < appConf.getMinVnPay()) {
+            throw new GeneralException(HttpStatus.GONE, AMOUNT_MUST_BE_GREATER_OR_EQUAL_ + appConf.getMinVnPay());
+        }
+
+        Long repairerId = request.getUserId();
+        Balance balance = balanceDAO.findByUserId(repairerId).get();
+        if (balance.getBalance() < amount) {
+            throw new GeneralException(HttpStatus.GONE, BALANCE_NOT_ENOUGH);
+        }
+
+        String withdrawType = getWithdrawTypeValidated(request.getWithdrawType());
+        boolean isNullable = WithdrawType.CASH.name().equals(withdrawType);
+        validatedBankInfo(request, isNullable);
+
+        WithdrawRequest withdrawRequest = new WithdrawRequest();
+        withdrawRequest.setType(withdrawType);
+        withdrawRequest.setBankCode(request.getBankCode());
+        withdrawRequest.setBankAccountNumber(request.getBankAccountNumber());
+        withdrawRequest.setBankAccountName(request.getBankAccountName());
+        WithdrawRequest savedWithdrawRequest = withdrawRequestDAO.save(withdrawRequest);
+
+        TransactionHistory transactionHistory = new TransactionHistory();
+        transactionHistory.setTransactionCode(RandomUtil.generateCode());
+        transactionHistory.setAmount(amount);
+        transactionHistory.setType(WITHDRAW.name());
+        transactionHistory.setUserId(repairerId);
+        transactionHistory.setStatus(PENDING.name());
+        transactionHistory.setWithdrawRequestId(savedWithdrawRequest.getId());
+        transactionHistoryDAO.save(transactionHistory);
+
+        RepairerWithdrawResponse response = new RepairerWithdrawResponse();
+        response.setMessage(CREATE_REQUEST_WITHDRAW_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getWithdrawTypeValidated(String type) {
+        for (WithdrawType wt : WithdrawType.values()) {
+            if (wt.name().equals(type)) {
+                return type;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_WITHDRAW_TYPE);
+    }
+
+    private void validatedBankInfo(RepairerWithdrawRequest request, boolean isNullable) {
+        if (!InputValidation.isBankNameValid(request.getBankAccountName(), isNullable)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_BANK_ACCOUNT_NAME);
+        } else if (!InputValidation.isBankNumberValid(request.getBankAccountNumber(), isNullable)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_BANK_ACCOUNT_NUMBER);
+        } else if (isInvalidBankCode(request.getBankCode(), isNullable)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_BANK_CODE);
+        }
+    }
+
+    private boolean isInvalidBankCode(String bankCode, boolean isNullable) {
+        if (bankCode == null && isNullable) {
+            return false;
+        } else if (bankCode == null) {
+            return true;
+        }
+        return bankInfoDAO.findById(bankCode).isEmpty();
+    }
+
+    @Override
+    public ResponseEntity<RepairerTransactionsResponse> getTransactionHistories(RepairerTransactionsRequest request) {
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int offset = pageNumber * pageSize;
+
+        Long repairerId = request.getUserId();
+        List<TransactionHistory> transactionDTOs = transactionHistoryDAO
+                .findTransactionsForRepairer(repairerId, pageSize, offset);
+        long totalRecord = transactionHistoryDAO.countByUserId(repairerId);
+
+        List<RepairerTransactionDTO> transactions = transactionDTOs.stream()
+                .map(transaction -> {
+                    RepairerTransactionDTO dto = new RepairerTransactionDTO();
+                    dto.setId(transaction.getId());
+                    dto.setAmount(transaction.getAmount());
+                    dto.setTransactionCode(transaction.getTransactionCode());
+                    dto.setType(transaction.getType());
+                    dto.setStatus(transaction.getStatus());
+                    dto.setCreatedAt(DateFormatUtil.toString(transaction.getCreatedAt(), DATE_TIME_PATTERN));
+                    dto.setTransactionId(transaction.getId());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        RepairerTransactionsResponse response = new RepairerTransactionsResponse();
+        response.setTransactions(transactions);
+        response.setTotalRecord(totalRecord);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

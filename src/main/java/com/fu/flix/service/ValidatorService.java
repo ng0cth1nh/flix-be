@@ -23,4 +23,6 @@ public interface ValidatorService {
     Accessory getAccessoryValidated(Long accessoryId);
 
     Feedback getFeedbackValidated(Long feedbackId);
+
+    TransactionHistory getPendingWithdrawTransactionValidated(Long transactionId);
 }

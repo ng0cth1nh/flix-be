@@ -55,7 +55,6 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "AND (rr.status_id = 'DO' OR rr.status_id = 'PW') " +
             "AND rr.request_code = :requestCode " +
             "AND customer.id = :customerId " +
-            "AND c_ua.deleted_at IS NULL " +
             "AND r_ua.deleted_at IS NULL " +
             "AND customer.is_active", nativeQuery = true)
     Optional<IInvoiceDTO> findCustomerInvoice(String requestCode, Long customerId);
@@ -103,7 +102,6 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "AND (rr.status_id = 'DO' OR rr.status_id = 'PW') " +
             "AND rr.request_code = :requestCode " +
             "AND repairer.id = :repairerId " +
-            "AND c_ua.deleted_at IS NULL " +
             "AND r_ua.deleted_at IS NULL " +
             "AND repairer.is_active", nativeQuery = true)
     Optional<IInvoiceDTO> findRepairerInvoice(String requestCode, Long repairerId);

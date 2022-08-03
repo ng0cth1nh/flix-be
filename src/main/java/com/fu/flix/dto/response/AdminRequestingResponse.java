@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class AdminRequestingResponse {
     private List<AdminRequestingDTO> requestList;
+    private long totalRecord;
 }

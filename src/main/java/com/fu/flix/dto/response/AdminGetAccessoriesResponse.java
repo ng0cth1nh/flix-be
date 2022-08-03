@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class AdminGetAccessoriesResponse {
     private List<AccessoryOutputDTO> accessoryList;
+    private long totalRecord;
 }

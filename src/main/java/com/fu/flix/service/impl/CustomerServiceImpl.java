@@ -1,6 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.NotificationType;
 import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.*;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
@@ -51,6 +53,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final AddressService addressService;
     private final VoucherService voucherService;
     private final RequestService requestService;
+    private final FCMService fcmService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
     private final Long NAME_MAX_LENGTH;
@@ -71,7 +74,8 @@ public class CustomerServiceImpl implements CustomerService {
                                ValidatorService validatorService,
                                AddressService addressService,
                                VoucherService voucherService,
-                               RequestService requestService) {
+                               RequestService requestService,
+                               FCMService fcmService) {
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
         this.serviceDAO = serviceDAO;
@@ -90,10 +94,11 @@ public class CustomerServiceImpl implements CustomerService {
         this.requestService = requestService;
         this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
+        this.fcmService = fcmService;
     }
 
     @Override
-    public ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) {
+    public ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) throws IOException {
         Long userId = request.getUserId();
         if (isHaveAnyPaymentWaitingRequest(userId)) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CREATE_NEW_REQUEST_WHEN_HAVE_OTHER_PAYMENT_WAITING_REQUEST);
@@ -127,10 +132,12 @@ public class CustomerServiceImpl implements CustomerService {
         repairRequest.setVoucherId(voucherId);
         repairRequest.setAddressId(getAddressIdValidated(request.getAddressId(), userId));
         repairRequest.setVat(this.appConf.getVat());
-        repairRequestDAO.save(repairRequest);
+        RepairRequest savedRepairRequest = repairRequestDAO.save(repairRequest);
 
         Invoice invoice = buildInvoice(repairRequest);
         invoiceDAO.save(invoice);
+
+        fcmService.sendNotification("request", NotificationType.REQUEST_CREATE_SUCCESS.name(), userId, savedRepairRequest.getRequestCode());
 
         RequestingRepairResponse response = new RequestingRepairResponse();
         response.setRequestCode(repairRequest.getRequestCode());
@@ -251,7 +258,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request) {
+    public ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request) throws IOException {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -269,6 +276,12 @@ public class CustomerServiceImpl implements CustomerService {
 
         refundVoucher(repairRequest);
         updateRepairRequest(request, repairRequest);
+
+        Optional<RepairRequestMatching> optionalRepairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode);
+        if (optionalRepairRequestMatching.isPresent()) {
+            Long repairerId = optionalRepairRequestMatching.get().getRepairerId();
+            fcmService.sendNotification("request", NotificationType.REQUEST_CANCELED.name(), repairerId, requestCode);
+        }
 
         CancelRequestForCustomerResponse response = new CancelRequestForCustomerResponse();
         response.setMessage(CANCEL_REPAIR_REQUEST_SUCCESSFUL);
@@ -308,6 +321,8 @@ public class CustomerServiceImpl implements CustomerService {
 //        refundsTransaction.setAmount(refunds);
 //        refundsTransaction.setType(REFUNDS.name());
 //        refundsTransaction.setRequestCode(requestCode);
+//        refundsTransaction.setStatus(SUCCESS.name());
+//        refundsTransaction.setTransactionCode(RandomUtil.generateCode());
 //        transactionHistoryDAO.save(refundsTransaction);
 //    }
 

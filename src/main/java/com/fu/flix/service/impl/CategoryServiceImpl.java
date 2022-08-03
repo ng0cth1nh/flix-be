@@ -1,17 +1,19 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.constant.Constant;
+import com.fu.flix.dao.AccessoryDAO;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.ServiceDAO;
-import com.fu.flix.dto.ISearchActiveServiceDTO;
-import com.fu.flix.dto.SearchServiceDTO;
-import com.fu.flix.dto.ServiceDTO;
+import com.fu.flix.dao.SubServiceDAO;
+import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
-import com.fu.flix.dto.request.SearchActiveServicesRequest;
-import com.fu.flix.dto.request.ServiceRequest;
-import com.fu.flix.dto.request.ServiceResponse;
+import com.fu.flix.dto.request.*;
+import com.fu.flix.dto.response.AccessoriesResponse;
 import com.fu.flix.dto.response.SearchActiveServicesResponse;
+import com.fu.flix.dto.response.SubServiceResponse;
+import com.fu.flix.entity.Accessory;
 import com.fu.flix.entity.Image;
+import com.fu.flix.entity.SubService;
 import com.fu.flix.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,19 +25,26 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.INVALID_KEY_WORD;
-import static com.fu.flix.constant.enums.ActiveState.ACTIVE;
-import static com.fu.flix.constant.enums.ActiveState.INACTIVE;
+import static com.fu.flix.constant.Constant.INVALID_SERVICE;
+import static com.fu.flix.constant.enums.ServiceState.ACTIVE;
+import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
 
 @Service
 @Slf4j
 public class CategoryServiceImpl implements CategoryService {
     private final ServiceDAO serviceDAO;
     private final ImageDAO imageDAO;
+    private final SubServiceDAO subServiceDAO;
+    private final AccessoryDAO accessoryDAO;
 
     public CategoryServiceImpl(ServiceDAO serviceDAO,
-                               ImageDAO imageDAO) {
+                               ImageDAO imageDAO,
+                               SubServiceDAO subServiceDAO,
+                               AccessoryDAO accessoryDAO) {
         this.serviceDAO = serviceDAO;
         this.imageDAO = imageDAO;
+        this.subServiceDAO = subServiceDAO;
+        this.accessoryDAO = accessoryDAO;
     }
 
     @Override
@@ -99,6 +108,53 @@ public class CategoryServiceImpl implements CategoryService {
 
         SearchActiveServicesResponse response = new SearchActiveServicesResponse();
         response.setServices(searchServiceDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<SubServiceResponse> getSubServicesByServiceId(SubServiceRequest request) {
+        Long serviceId = request.getServiceId();
+        if (serviceId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
+        }
+
+        List<SubService> subServices = subServiceDAO.findByServiceIdAndIsActive(serviceId, true);
+        List<SubServiceOutputDTO> subServiceDTOS = subServices.stream()
+                .map(subService -> {
+                    SubServiceOutputDTO dto = new SubServiceOutputDTO();
+                    dto.setId(subService.getId());
+                    dto.setName(subService.getName());
+                    dto.setPrice(subService.getPrice());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        SubServiceResponse response = new SubServiceResponse();
+        response.setSubServices(subServiceDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<AccessoriesResponse> getAccessoriesByServiceId(AccessoriesRequest request) {
+        Long serviceId = request.getServiceId();
+        if (serviceId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
+        }
+
+        List<Accessory> accessories = accessoryDAO.findByServiceId(serviceId);
+        List<AccessoryOutputDTO> accessoryDTOS = accessories.stream()
+                .map(accessory -> {
+                    AccessoryOutputDTO dto = new AccessoryOutputDTO();
+                    dto.setId(accessory.getId());
+                    dto.setName(accessory.getName());
+                    dto.setPrice(accessory.getPrice());
+                    dto.setInsuranceTime(accessory.getInsuranceTime());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        AccessoriesResponse response = new AccessoriesResponse();
+        response.setAccessories(accessoryDTOS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

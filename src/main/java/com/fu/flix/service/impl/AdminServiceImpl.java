@@ -1,8 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
-import com.fu.flix.constant.enums.FeedbackStatus;
-import com.fu.flix.constant.enums.RoleType;
+import com.fu.flix.constant.enums.*;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
@@ -24,14 +23,15 @@ import javax.transaction.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.ActiveState.ACTIVE;
-import static com.fu.flix.constant.enums.ActiveState.INACTIVE;
+import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
+import static com.fu.flix.constant.enums.TransactionStatus.FAIL;
+import static com.fu.flix.constant.enums.AccountState.ACTIVE;
+import static com.fu.flix.constant.enums.TransactionStatus.PENDING;
+import static com.fu.flix.constant.enums.TransactionType.WITHDRAW;
 
 @Service
 @Transactional
@@ -50,10 +50,16 @@ public class AdminServiceImpl implements AdminService {
     private final RoleDAO roleDAO;
     private final AddressService addressService;
     private final FeedbackService feedbackService;
+    private final FCMService fcmService;
     private final StatusDAO statusDAO;
     private final CertificateDAO certificateDAO;
     private final AccessoryDAO accessoryDAO;
     private final RepairerDAO repairerDAO;
+    private final ExtraServiceDAO extraServiceDAO;
+    private final TransactionHistoryDAO transactionHistoryDAO;
+    private final VoucherService voucherService;
+    private final InvoiceDAO invoiceDAO;
+    private final BalanceDAO balanceDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -72,10 +78,15 @@ public class AdminServiceImpl implements AdminService {
                             FeedbackDAO feedbackDAO,
                             RoleDAO roleDAO, AddressService addressService,
                             FeedbackService feedbackService,
-                            StatusDAO statusDAO,
+                            FCMService fcmService, StatusDAO statusDAO,
                             CertificateDAO certificateDAO,
                             AccessoryDAO accessoryDAO,
-                            RepairerDAO repairerDAO) {
+                            RepairerDAO repairerDAO,
+                            ExtraServiceDAO extraServiceDAO,
+                            TransactionHistoryDAO transactionHistoryDAO,
+                            VoucherService voucherService,
+                            InvoiceDAO invoiceDAO,
+                            BalanceDAO balanceDAO) {
         this.validatorService = validatorService;
         this.categoryDAO = categoryDAO;
         this.imageDAO = imageDAO;
@@ -92,10 +103,16 @@ public class AdminServiceImpl implements AdminService {
         this.roleDAO = roleDAO;
         this.addressService = addressService;
         this.feedbackService = feedbackService;
+        this.fcmService = fcmService;
         this.statusDAO = statusDAO;
         this.certificateDAO = certificateDAO;
         this.accessoryDAO = accessoryDAO;
         this.repairerDAO = repairerDAO;
+        this.extraServiceDAO = extraServiceDAO;
+        this.transactionHistoryDAO = transactionHistoryDAO;
+        this.voucherService = voucherService;
+        this.invoiceDAO = invoiceDAO;
+        this.balanceDAO = balanceDAO;
     }
 
     @Override
@@ -136,6 +153,8 @@ public class AdminServiceImpl implements AdminService {
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
         Page<Category> categoryPage = categoryDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        long totalRecord = categoryDAO.count();
+
         List<CategoryDTO> categories = categoryPage.stream()
                 .map(category -> {
                     Optional<Image> optionalIcon = imageDAO.findById(category.getIconId());
@@ -143,7 +162,7 @@ public class AdminServiceImpl implements AdminService {
 
                     CategoryDTO dto = new CategoryDTO();
                     dto.setCategoryName(category.getName());
-                    dto.setStatus(category.isActive() ? ACTIVE.name() : INACTIVE.name());
+                    dto.setStatus(category.isActive() ? ServiceState.ACTIVE.name() : INACTIVE.name());
                     dto.setId(category.getId());
                     dto.setIcon(optionalIcon.map(Image::getUrl).orElse(null));
                     dto.setImage(optionalImage.map(Image::getUrl).orElse(null));
@@ -153,6 +172,7 @@ public class AdminServiceImpl implements AdminService {
 
         GetCategoriesResponse response = new GetCategoriesResponse();
         response.setCategories(categories);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -221,23 +241,19 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private void postCategoryIcon(Category category, MultipartFile icon) throws IOException {
-        if (icon != null) {
-            String url = cloudStorageService.uploadImage(icon);
-            Image savedImage = saveImage(category.getName(), url);
-            category.setIconId(savedImage.getId());
-        } else {
-            category.setIconId(appConf.getDefaultAvatar());
-        }
+        String url = icon != null
+                ? cloudStorageService.uploadImage(icon)
+                : appConf.getDefaultIcon();
+        Image savedImage = saveImage(category.getName(), url);
+        category.setIconId(savedImage.getId());
     }
 
     private void postCategoryImage(Category category, MultipartFile image) throws IOException {
-        if (image != null) {
-            String url = cloudStorageService.uploadImage(image);
-            Image savedImage = saveImage(category.getName(), url);
-            category.setImageId(savedImage.getId());
-        } else {
-            category.setImageId(appConf.getDefaultAvatar());
-        }
+        String url = image != null
+                ? cloudStorageService.uploadImage(image)
+                : appConf.getDefaultImage();
+        Image savedImage = saveImage(category.getName(), url);
+        category.setImageId(savedImage.getId());
     }
 
     @Override
@@ -246,12 +262,15 @@ public class AdminServiceImpl implements AdminService {
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
         Page<com.fu.flix.entity.Service> servicePage = serviceDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        long totalRecord = serviceDAO.count();
+
         List<ServiceDTO> serviceDTOS = servicePage.stream()
                 .map(categoryService::mapToServiceDTO)
                 .collect(Collectors.toList());
 
         GetServicesResponse response = new GetServicesResponse();
         response.setServices(serviceDTOS);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -338,23 +357,19 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private void postServiceIcon(com.fu.flix.entity.Service service, MultipartFile icon) throws IOException {
-        if (icon != null) {
-            String url = cloudStorageService.uploadImage(icon);
-            Image savedImage = saveImage(service.getName(), url);
-            service.setIconId(savedImage.getId());
-        } else {
-            service.setIconId(appConf.getDefaultAvatar());
-        }
+        String url = icon != null
+                ? cloudStorageService.uploadImage(icon)
+                : appConf.getDefaultIcon();
+        Image savedImage = saveImage(service.getName(), url);
+        service.setIconId(savedImage.getId());
     }
 
     private void postServiceImage(com.fu.flix.entity.Service service, MultipartFile image) throws IOException {
-        if (image != null) {
-            String url = cloudStorageService.uploadImage(image);
-            Image savedImage = saveImage(service.getName(), url);
-            service.setImageId(savedImage.getId());
-        } else {
-            service.setImageId(appConf.getDefaultAvatar());
-        }
+        String url = image != null
+                ? cloudStorageService.uploadImage(image)
+                : appConf.getDefaultImage();
+        Image savedImage = saveImage(service.getName(), url);
+        service.setImageId(savedImage.getId());
     }
 
     private Image saveImage(String name, String url) {
@@ -396,19 +411,22 @@ public class AdminServiceImpl implements AdminService {
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
         Page<SubService> subServicePage = subServiceDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        long totalRecord = subServiceDAO.count();
+
         List<AdminSubServiceDTO> subServices = subServicePage.stream()
                 .map(subService -> {
                     AdminSubServiceDTO dto = new AdminSubServiceDTO();
                     dto.setId(subService.getId());
                     dto.setSubServiceName(subService.getName());
                     dto.setPrice(subService.getPrice());
-                    dto.setStatus(subService.getIsActive() ? ACTIVE.name() : INACTIVE.name());
+                    dto.setStatus(subService.getIsActive() ? ServiceState.ACTIVE.name() : INACTIVE.name());
                     dto.setDescription(subService.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
 
         GetSubServicesResponse response = new GetSubServicesResponse();
         response.setSubServices(subServices);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -485,6 +503,8 @@ public class AdminServiceImpl implements AdminService {
         int start = end - (pageSize - 1);
 
         List<IRequestInfoDTO> requestDTOs = repairRequestDAO.findAllRequestForAdmin(start, end);
+        long totalRecord = repairRequestDAO.count();
+
         List<AdminRequestingDTO> requestList = requestDTOs.stream()
                 .map(rq -> {
                     AdminRequestingDTO dto = new AdminRequestingDTO();
@@ -502,6 +522,7 @@ public class AdminServiceImpl implements AdminService {
 
         AdminRequestingResponse response = new AdminRequestingResponse();
         response.setRequestList(requestList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -513,8 +534,11 @@ public class AdminServiceImpl implements AdminService {
 
         int offset = pageNumber * pageSize;
         List<ICustomerDTO> customerDTOs = userDAO.findCustomersForAdmin(pageSize, offset);
+        long totalRecord = userDAO.countCustomers();
+
         GetCustomersResponse response = new GetCustomersResponse();
         response.setCustomerList(customerDTOs);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -526,8 +550,11 @@ public class AdminServiceImpl implements AdminService {
 
         int offset = pageNumber * pageSize;
         List<IRepairerDTO> repairerDTOS = userDAO.findRepairersForAdmin(pageSize, offset);
+        long totalRecord = userDAO.countRepairers();
+
         GetRepairersResponse response = new GetRepairersResponse();
         response.setRepairerList(repairerDTOS);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -566,6 +593,8 @@ public class AdminServiceImpl implements AdminService {
         int offset = pageNumber * pageSize;
 
         List<IBanUserDTO> banUserDTOs = userDAO.findBanUsers(pageSize, offset);
+        long totalRecord = userDAO.countBanUsers();
+
         List<BanUserDTO> userList = banUserDTOs.stream()
                 .map(banUser -> {
                     BanUserDTO dto = new BanUserDTO();
@@ -581,6 +610,7 @@ public class AdminServiceImpl implements AdminService {
 
         GetBanUsersResponse response = new GetBanUsersResponse();
         response.setUserList(userList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -702,6 +732,8 @@ public class AdminServiceImpl implements AdminService {
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
         Page<Accessory> accessoryPage = accessoryDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        long totalRecord = accessoryDAO.count();
+
         List<AccessoryOutputDTO> accessoryList = accessoryPage.stream()
                 .map(accessory -> {
                     AccessoryOutputDTO dto = new AccessoryOutputDTO();
@@ -717,6 +749,7 @@ public class AdminServiceImpl implements AdminService {
 
         AdminGetAccessoriesResponse response = new AdminGetAccessoriesResponse();
         response.setAccessoryList(accessoryList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -728,6 +761,8 @@ public class AdminServiceImpl implements AdminService {
 
         int offset = pageNumber * pageSize;
         List<IPendingRepairerDTO> pendingRepairerDTOs = userDAO.findPendingRepairers(pageSize, offset);
+        long totalRecord = userDAO.countPendingRepairers();
+
         List<PendingRepairerDTO> repairerList = pendingRepairerDTOs.stream()
                 .map(pr -> {
                     PendingRepairerDTO dto = new PendingRepairerDTO();
@@ -740,6 +775,7 @@ public class AdminServiceImpl implements AdminService {
 
         PendingRepairersResponse response = new PendingRepairersResponse();
         response.setRepairerList(repairerList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -814,7 +850,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request) {
+    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request) throws IOException {
         String status = getFeedbackStatusValidated(request.getStatus());
         String adminResponse = request.getResponse();
         if (Strings.isEmpty(adminResponse) || adminResponse.length() > DESCRIPTION_MAX_LENGTH) {
@@ -826,10 +862,19 @@ public class AdminServiceImpl implements AdminService {
         feedback.setResponse(adminResponse);
         feedback.setHandleByAdminId(request.getUserId());
 
+        fcmService.sendNotification("feedback", getFeedbackNotificationKey(status), feedback.getUserId(), request.getResponse());
+
         ResponseFeedbackResponse response = new ResponseFeedbackResponse();
         response.setMessage(RESPONSE_FEEDBACK_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getFeedbackNotificationKey(String status) {
+        if (FeedbackStatus.PENDING.name().equals(status)) return NotificationType.FEEDBACK_PENDING.name();
+        else if (FeedbackStatus.PROCESSING.name().equals(status)) return NotificationType.FEEDBACK_PROCESSING.name();
+        else if (FeedbackStatus.REJECTED.name().equals(status)) return NotificationType.FEEDBACK_REJECTED.name();
+        else return NotificationType.FEEDBACK_DONE.name();
     }
 
     private String getFeedbackStatusValidated(String status) {
@@ -847,6 +892,8 @@ public class AdminServiceImpl implements AdminService {
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
         List<Feedback> feedbackQueries = feedbackDAO.findAllByOrderByCreatedAtDesc(PageRequest.of(pageNumber, pageSize));
+        long totalRecord = feedbackDAO.count();
+
         List<FeedbackDTO> feedbackList = feedbackQueries.stream()
                 .map(feedback -> {
                     Optional<User> optionalUser = userDAO.findById(feedback.getUserId());
@@ -864,12 +911,13 @@ public class AdminServiceImpl implements AdminService {
 
         FeedbacksResponse response = new FeedbacksResponse();
         response.setFeedbackList(feedbackList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) {
+    public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) throws IOException {
         User user = validatorService.getUserValidated(request.getRepairerId());
         Collection<Role> roles = user.getRoles();
         if (!isPendingRepairer(roles)) {
@@ -879,6 +927,8 @@ public class AdminServiceImpl implements AdminService {
         Repairer repairer = repairerDAO.findByUserId(user.getId()).get();
         repairer.setAcceptedAccountAt(LocalDateTime.now());
         updateToRepairerRole(roles);
+
+        fcmService.sendNotification("register", NotificationType.REGISTER_SUCCESS.name(), user.getId());
 
         AcceptCVResponse response = new AcceptCVResponse();
         response.setMessage(ACCEPT_CV_SUCCESS);
@@ -924,6 +974,8 @@ public class AdminServiceImpl implements AdminService {
                 ? DateFormatUtil.toString(dto.getAcceptedAccountAt(), DATE_TIME_PATTERN)
                 : null;
 
+        List<IAdminCheckRegisterServiceDTO> registerServiceDTOs = repairerDAO.findRegisterServicesForAdmin(repairerId);
+
         GetRepairerDetailResponse response = new GetRepairerDetailResponse();
         response.setId(dto.getId());
         response.setAvatar(dto.getAvatar());
@@ -944,6 +996,7 @@ public class AdminServiceImpl implements AdminService {
         response.setAcceptedAccountAt(acceptedAccountAt);
         response.setCertificates(certificates.stream().map(Certificate::getUrl).collect(Collectors.toList()));
         response.setRole(dto.getRole());
+        response.setRegisterServices(registerServiceDTOs);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -958,6 +1011,401 @@ public class AdminServiceImpl implements AdminService {
         List<ICategoryDTO> categories = categoryDAO.searchCategories(keyword);
         SearchCategoriesResponse response = new SearchCategoriesResponse();
         response.setCategories(categories);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<SearchFeedbackResponse> searchFeedbacks(SearchFeedbackRequest request) {
+        String phone = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
+
+        List<String> feedbackStatusIds = getQueryFeedbackStatusIds(request.getStatus());
+        List<String> feedbackTypes = getQueryFeedbackTypes(request.getFeedbackType());
+
+        List<ISearchFeedbackDTO> feedbacks = feedbackDAO
+                .searchFeedbackForAdmin(phone, feedbackStatusIds, feedbackTypes);
+
+        SearchFeedbackResponse response = new SearchFeedbackResponse();
+        response.setFeedbackList(feedbacks);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private List<String> getQueryFeedbackStatusIds(String status) {
+        if (Strings.isEmpty(status)) {
+            return Arrays.stream(FeedbackStatus.values())
+                    .map(FeedbackStatus::getId)
+                    .collect(Collectors.toList());
+        }
+
+        List<String> result = new ArrayList<>();
+        result.add(FeedbackStatus.valueOf(getFeedbackStatusValidated(status)).getId());
+        return result;
+    }
+
+
+    private List<String> getQueryFeedbackTypes(String type) {
+        if (Strings.isEmpty(type)) {
+            return Arrays.stream(FeedbackType.values())
+                    .map(FeedbackType::name)
+                    .collect(Collectors.toList());
+        }
+
+        List<String> result = new ArrayList<>();
+        result.add(getFeedbackTypeValidated(type));
+        return result;
+    }
+
+    private String getFeedbackTypeValidated(String type) {
+        for (FeedbackType ft : FeedbackType.values()) {
+            if (ft.name().equals(type)) {
+                return type;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_FEEDBACK_TYPE);
+    }
+
+    @Override
+    public ResponseEntity<SearchCustomersResponse> searchCustomers(SearchCustomersRequest request) {
+        String phone = request.getKeyword();
+        if (Strings.isEmpty(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        String accountState = getAccountStateValidated(request.getStatus());
+        Boolean isActiveState = ACTIVE.name().equals(accountState);
+
+        List<ISearchCustomerDTO> customers = userDAO.searchCustomersForAdmin(phone, isActiveState);
+        SearchCustomersResponse response = new SearchCustomersResponse();
+        response.setCustomers(customers);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<SearchRepairersResponse> searchRepairers(SearchRepairersRequest request) {
+        String phone = request.getKeyword();
+        if (Strings.isEmpty(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        String accountState = getAccountStateValidated(request.getStatus());
+        Boolean isActiveState = ACTIVE.name().equals(accountState);
+
+        Boolean isVerified = request.getIsVerified();
+        if (isVerified == null) {
+            throw new GeneralException(HttpStatus.GONE, ACCOUNT_VERIFY_PARAM_IS_REQUIRED);
+        }
+
+        List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone, isActiveState, isVerified);
+        SearchRepairersResponse response = new SearchRepairersResponse();
+        response.setRepairers(repairers);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getAccountStateValidated(String state) {
+        for (AccountState us : AccountState.values()) {
+            if (us.name().equals(state)) {
+                return state;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
+    }
+
+    @Override
+    public ResponseEntity<AdminSearchAccessoriesResponse> searchAccessories(AdminSearchAccessoriesRequest request) {
+        String keyword = request.getKeyword();
+        if (Strings.isEmpty(keyword)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        List<Accessory> accessories = accessoryDAO.searchAccessories(keyword);
+        List<AccessoryOutputDTO> accessoryOutputDTOS = accessories.stream()
+                .map(accessory -> {
+                    AccessoryOutputDTO dto = new AccessoryOutputDTO();
+                    dto.setId(accessory.getId());
+                    dto.setName(accessory.getName());
+                    dto.setPrice(accessory.getPrice());
+                    dto.setInsuranceTime(accessory.getInsuranceTime());
+                    dto.setManufacture(accessory.getManufacture());
+                    dto.setCountry(accessory.getCountry());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        AdminSearchAccessoriesResponse response = new AdminSearchAccessoriesResponse();
+        response.setAccessories(accessoryOutputDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<TransactionsResponse> getTransactions(TransactionsRequest request) {
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+
+        int offset = pageNumber * pageSize;
+
+        List<ITransactionDTO> transactions = transactionHistoryDAO.findTransactionsForAdmin(pageSize, offset);
+        long totalRecord = transactionHistoryDAO.count();
+
+        TransactionsResponse response = new TransactionsResponse();
+        response.setTransactions(transactions);
+        response.setTotalRecord(totalRecord);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<AdminGetRequestDetailResponse> getRequestDetail(AdminGetRequestDetailRequest request) {
+        String requestCode = request.getRequestCode();
+        if (Strings.isEmpty(requestCode)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
+        }
+
+        AdminGetRequestDetailResponse response = new AdminGetRequestDetailResponse();
+        Optional<IDetailRequestDTO> requestDetail = repairRequestDAO.findRequestDetailForAdmin(requestCode);
+        requestDetail.ifPresent(rd -> {
+            VoucherDTO voucherInfo = voucherService.getVoucherInfo(rd.getVoucherId());
+            Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+
+            response.setRequestCode(requestCode);
+            response.setCustomerName(rd.getCustomerName());
+            response.setCustomerPhone(rd.getCustomerPhone());
+            response.setRepairerName(rd.getRepairerName());
+            response.setRepairerPhone(rd.getRepairerPhone());
+            response.setStatus(rd.getStatus());
+            response.setCustomerAddress(addressService.getAddressFormatted(rd.getCustomerAddressId()));
+            response.setDescription(rd.getDescription());
+            response.setServiceName(rd.getServiceName());
+            response.setVoucherCode(voucherInfo.getVoucherCode());
+            response.setVoucherDiscount(voucherInfo.getVoucherDiscount());
+            response.setVoucherDescription(voucherInfo.getVoucherDescription());
+            response.setExpectedFixingTime(DateFormatUtil.toString(rd.getExpectedFixingTime(), DATE_TIME_PATTERN));
+            response.setPaymentMethod(rd.getPaymentMethod());
+            response.setCancelReason(rd.getCancelReason());
+            response.setCreatedAt(DateFormatUtil.toString(rd.getCreatedAt(), DATE_TIME_PATTERN));
+            response.setTotalPrice(rd.getTotalPrice());
+            response.setVatPrice(rd.getVatPrice());
+            response.setActualPrice(rd.getActualPrice());
+            response.setTotalDiscount(rd.getTotalDiscount());
+            response.setInspectionPrice(rd.getInspectionPrice());
+            response.setTotalSubServicePrice(rd.getTotalSubServicePrice());
+            response.setTotalAccessoryPrice(rd.getTotalAccessoryPrice());
+            response.setTotalExtraServicePrice(rd.getTotalExtraServicePrice());
+            response.setSubServices(getSubServiceDTOs(invoice));
+            response.setAccessories(getAccessoryDTOs(invoice));
+            response.setExtraServices(getExtraServiceDTOs(requestCode));
+        });
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private List<SubServiceOutputDTO> getSubServiceDTOs(Invoice invoice) {
+        return invoice.getSubServices().stream()
+                .map(subService -> {
+                    SubServiceOutputDTO dto = new SubServiceOutputDTO();
+                    dto.setName(subService.getName());
+                    dto.setPrice(subService.getPrice());
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+    private List<AccessoryOutputDTO> getAccessoryDTOs(Invoice invoice) {
+        return invoice.getAccessories().stream()
+                .map(accessory -> {
+                    AccessoryOutputDTO dto = new AccessoryOutputDTO();
+                    dto.setName(accessory.getName());
+                    dto.setPrice(accessory.getPrice());
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+    private List<ExtraServiceOutputDTO> getExtraServiceDTOs(String requestCode) {
+        return extraServiceDAO.findByRequestCode(requestCode).stream()
+                .map(extraService -> {
+                    ExtraServiceOutputDTO dto = new ExtraServiceOutputDTO();
+                    dto.setName(extraService.getName());
+                    dto.setPrice(extraService.getPrice());
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+    @Override
+    public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request) {
+        String keyword = request.getKeyword();
+        if (Strings.isEmpty(keyword)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
+        }
+
+        List<SubService> subServiceDTOs = subServiceDAO.searchSubServicesForAdmin(keyword);
+        List<SubServiceOutputDTO> subServices = subServiceDTOs.stream()
+                .map(subService -> {
+                    SubServiceOutputDTO dto = new SubServiceOutputDTO();
+                    dto.setId(subService.getId());
+                    dto.setName(subService.getName());
+                    dto.setPrice(subService.getPrice());
+                    dto.setStatus(subService.getIsActive() ? "ACTIVE" : "INACTIVE");
+                    return dto;
+                }).collect(Collectors.toList());
+
+        AdminSearchSubServicesResponse response = new AdminSearchSubServicesResponse();
+        response.setSubServices(subServices);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<TransactionDetailResponse> getTransactionDetail(TransactionDetailRequest request) {
+        Long transactionId = request.getId();
+        if (transactionId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_ID);
+        }
+
+        TransactionDetailResponse response = new TransactionDetailResponse();
+        Optional<ITransactionDetailDTO> optionalTransaction = transactionHistoryDAO.findTransactionDetail(transactionId);
+        optionalTransaction.ifPresent(transaction -> {
+            response.setId(transaction.getId());
+            response.setTransactionCode(transaction.getTransactionCode());
+            response.setVnpTransactionNo(transaction.getVnpTransactionNo());
+            response.setAmount(transaction.getAmount());
+            response.setTransactionType(transaction.getTransactionType());
+            response.setFullName(transaction.getFullName());
+            response.setPhone(transaction.getPhone());
+            response.setPayDate(transaction.getPayDate());
+            response.setBankCode(transaction.getBankCode());
+            response.setCardType(transaction.getCardType());
+            response.setOrderInfo(transaction.getOrderInfo());
+            response.setVnpBankTranNo(transaction.getVnpBankTranNo());
+            response.setStatus(transaction.getStatus());
+            response.setFailReason(transaction.getFailReason());
+        });
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<SearchTransactionsResponse> searchTransactions(SearchTransactionsRequest request) {
+        String requestCode = request.getKeyword() == null
+                ? Strings.EMPTY
+                : request.getKeyword();
+
+        List<String> transactionTypes = getTransactionTypeQueries(request.getTransactionType());
+        List<String> transactionStatus = getTransactionStatusQueries(request.getStatus());
+
+        List<ITransactionDTO> transactions = transactionHistoryDAO
+                .searchTransactionsForAdmin(requestCode, transactionTypes, transactionStatus);
+
+        SearchTransactionsResponse response = new SearchTransactionsResponse();
+        response.setTransactions(transactions);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private List<String> getTransactionTypeQueries(String transactionType) {
+        if (Strings.isEmpty(transactionType)) {
+            return Arrays.stream(TransactionType.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
+        }
+
+        List<String> result = new ArrayList<>();
+        result.add(getTransactionTypeValidated(transactionType));
+        return result;
+    }
+
+    private String getTransactionTypeValidated(String transactionType) {
+        for (TransactionType tt : TransactionType.values()) {
+            if (tt.name().equals(transactionType)) {
+                return transactionType;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_TYPE);
+    }
+
+    private List<String> getTransactionStatusQueries(String transactionStatus) {
+        if (Strings.isEmpty(transactionStatus)) {
+            return Arrays.stream(TransactionStatus.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
+        }
+
+        List<String> result = new ArrayList<>();
+        result.add(getTransactionStatusValidated(transactionStatus));
+        return result;
+    }
+
+    private String getTransactionStatusValidated(String transactionStatus) {
+        for (TransactionStatus ts : TransactionStatus.values()) {
+            if (ts.name().equals(transactionStatus)) {
+                return transactionStatus;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_STATUS);
+    }
+
+    @Override
+    public ResponseEntity<AcceptWithdrawResponse> acceptWithdraw(AcceptWithdrawRequest request) {
+        Long transactionId = request.getTransactionId();
+        TransactionHistory transactionHistory = validatorService
+                .getPendingWithdrawTransactionValidated(transactionId);
+
+        Long repairerId = transactionHistory.getUserId();
+        Long amount = transactionHistory.getAmount();
+
+        Balance balance = balanceDAO.findByUserId(repairerId).get();
+        Long oldBalance = balance.getBalance();
+
+        if (oldBalance < amount) {
+            throw new GeneralException(HttpStatus.GONE, BALANCE_NOT_ENOUGH);
+        }
+
+        balance.setBalance(oldBalance - amount);
+
+        transactionHistory.setStatus(TransactionStatus.SUCCESS.name());
+
+        AcceptWithdrawResponse response = new AcceptWithdrawResponse();
+        response.setMessage(ACCEPT_WITHDRAW_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<WithdrawHistoriesResponse> getRepairerWithdrawHistories(WithdrawHistoriesRequest request) {
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+
+        int offset = pageNumber * pageSize;
+
+        List<IWithdrawHistoryDTO> repairerWithdrawHistories = transactionHistoryDAO
+                .findRepairerWithdrawHistoriesForAdmin(pageSize, offset);
+        long totalRecord = transactionHistoryDAO.countByTypeAndStatus(WITHDRAW.name(), PENDING.name());
+
+        WithdrawHistoriesResponse response = new WithdrawHistoriesResponse();
+        response.setWithdrawList(repairerWithdrawHistories);
+        response.setTotalRecord(totalRecord);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<RejectWithdrawResponse> rejectWithdraw(RejectWithdrawRequest request) {
+        String reason = request.getReason();
+        if (Strings.isEmpty(reason) || reason.length() > DESCRIPTION_MAX_LENGTH) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REASON);
+        }
+
+        Long transactionId = request.getTransactionId();
+        TransactionHistory transactionHistory = validatorService
+                .getPendingWithdrawTransactionValidated(transactionId);
+
+        transactionHistory.setStatus(FAIL.name());
+        transactionHistory.setFailReason(reason);
+
+        RejectWithdrawResponse response = new RejectWithdrawResponse();
+        response.setMessage(REJECT_WITHDRAW_REQUEST_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

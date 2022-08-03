@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 import static com.fu.flix.constant.Constant.*;
+import static com.fu.flix.constant.enums.TransactionStatus.PENDING;
+import static com.fu.flix.constant.enums.TransactionType.WITHDRAW;
 
 @Service
 public class ValidatorServiceImpl implements ValidatorService {
@@ -26,6 +28,7 @@ public class ValidatorServiceImpl implements ValidatorService {
     private final RepairRequestDAO repairRequestDAO;
     private final AccessoryDAO accessoryDAO;
     private final FeedbackDAO feedbackDAO;
+    private final TransactionHistoryDAO transactionHistoryDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
 
@@ -36,7 +39,8 @@ public class ValidatorServiceImpl implements ValidatorService {
                                 SubServiceDAO subServiceDAO,
                                 RepairRequestDAO repairRequestDAO,
                                 AccessoryDAO accessoryDAO,
-                                FeedbackDAO feedbackDAO) {
+                                FeedbackDAO feedbackDAO,
+                                TransactionHistoryDAO transactionHistoryDAO) {
         this.userDAO = userDAO;
         this.appConf = appConf;
         this.serviceDAO = serviceDAO;
@@ -47,6 +51,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
         this.accessoryDAO = accessoryDAO;
         this.feedbackDAO = feedbackDAO;
+        this.transactionHistoryDAO = transactionHistoryDAO;
     }
 
     @Override
@@ -188,5 +193,20 @@ public class ValidatorServiceImpl implements ValidatorService {
         }
 
         return optionalFeedback.get();
+    }
+
+    @Override
+    public TransactionHistory getPendingWithdrawTransactionValidated(Long transactionId) {
+        if (transactionId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_ID);
+        }
+
+        Optional<TransactionHistory> optionalTransactionHistory = transactionHistoryDAO
+                .findByIdAndTypeAndStatus(transactionId, WITHDRAW.name(), PENDING.name());
+        if (optionalTransactionHistory.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, TRANSACTION_NOT_FOUND);
+        }
+
+        return optionalTransactionHistory.get();
     }
 }

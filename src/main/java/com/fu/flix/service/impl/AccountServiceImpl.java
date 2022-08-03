@@ -56,6 +56,7 @@ public class AccountServiceImpl implements AccountService {
     private final RepairerDAO repairerDAO;
     private final BalanceDAO balanceDAO;
     private final ValidatorService validatorService;
+    private final ServiceDAO serviceDAO;
     private final Long NAME_MAX_LENGTH;
     private final Long DESCRIPTION_MAX_LENGTH;
     private final IdentityCardDAO identityCardDAO;
@@ -76,6 +77,7 @@ public class AccountServiceImpl implements AccountService {
                               RepairerDAO repairerDAO,
                               BalanceDAO balanceDAO,
                               ValidatorService validatorService,
+                              ServiceDAO serviceD,
                               IdentityCardDAO identityCardDAO,
                               ImageDAO imageDAO,
                               CertificateDAO certificateDAO,
@@ -94,6 +96,7 @@ public class AccountServiceImpl implements AccountService {
         this.validatorService = validatorService;
         this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
+        this.serviceDAO = serviceD;
         this.identityCardDAO = identityCardDAO;
         this.imageDAO = imageDAO;
         this.certificateDAO = certificateDAO;
@@ -358,6 +361,8 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, IDENTITY_CARD_NUMBER_EXISTED);
         } else if (isNotValidOTP(request.getOtp())) {
             throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
+        } else if (isInvalidRegisterServices(request.getRegisterServices())) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REGISTER_SERVICE_IDS);
         }
 //        else if (isNotValidOTP(request, OTPType.REGISTER)) {
 //            throw new GeneralException(HttpStatus.GONE, INVALID_OTP);
@@ -413,6 +418,15 @@ public class AccountServiceImpl implements AccountService {
         return identityCardDAO.findByIdentityCardNumber(card).isPresent();
     }
 
+    @Override
+    public boolean isInvalidRegisterServices(List<Long> registerServices) {
+        if (CollectionUtils.isEmpty(registerServices)) {
+            return true;
+        }
+        return registerServices.stream()
+                .anyMatch(id -> serviceDAO.findById(id).isEmpty());
+    }
+
     private User buildRepairerUser(CFRegisterRepairerRequest registerAccount, MultipartFile avatar) throws IOException {
         User user = new User();
         user.setFullName(registerAccount.getFullName());
@@ -453,7 +467,19 @@ public class AccountServiceImpl implements AccountService {
         repairer.setUserId(user.getId());
         repairer.setExperienceDescription(request.getExperienceDescription());
         repairer.setExperienceYear(request.getExperienceYear());
-        repairerDAO.save(repairer);
+
+        Repairer savedRepairer = repairerDAO.save(repairer);
+
+        List<com.fu.flix.entity.Service> services = request.getRegisterServices().stream()
+                .map(id -> serviceDAO.findById(id).get())
+                .collect(Collectors.toList());
+        updateServicesToRepairer(services, savedRepairer);
+    }
+
+    @Override
+    public void updateServicesToRepairer(List<com.fu.flix.entity.Service> services, Repairer repairer) {
+        repairer.getServices().clear();
+        repairer.getServices().addAll(services);
     }
 
     private void createBalance(User user) {
@@ -516,13 +542,10 @@ public class AccountServiceImpl implements AccountService {
 
 
     private User postUserAvatar(User user, MultipartFile avatar) throws IOException {
-        if (avatar != null) {
-            String url = cloudStorageService.uploadImage(avatar);
-            user = userService.addNewAvatarToUser(user, url);
-        } else {
-            user.setAvatar(appConf.getDefaultAvatar());
-        }
-        return user;
+        String url = avatar != null
+                ? cloudStorageService.uploadImage(avatar)
+                : appConf.getDefaultIcon();
+        return userService.addNewAvatarToUser(user, url);
     }
 
     public IdentityCard postFrontIdentityImage(IdentityCard identityCard, MultipartFile imageFile) throws IOException {

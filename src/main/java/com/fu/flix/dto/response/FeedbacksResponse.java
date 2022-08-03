@@ -10,4 +10,5 @@ import java.util.List;
 @Setter
 public class FeedbacksResponse {
     private List<FeedbackDTO> feedbackList;
+    private long totalRecord;
 }

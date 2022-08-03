@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PushNotificationRequest extends DataRequest {
+    private Long userId;
     private String token;
     private String title;
     private String body;

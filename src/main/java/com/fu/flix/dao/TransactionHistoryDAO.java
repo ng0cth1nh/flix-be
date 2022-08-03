@@ -73,9 +73,10 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "ON repairer.id = th.user_id " +
             "JOIN withdraw_requests wr " +
             "ON wr.id = th.withdraw_request_id " +
+            "WHERE th.status = 'PENDING' " +
             "ORDER BY th.created_at DESC " +
             "limit :limit offset :offset", nativeQuery = true)
-    List<IWithdrawHistoryDTO> findRepairerWithdrawHistories(Integer limit, Integer offset);
+    List<IWithdrawHistoryDTO> findRepairerWithdrawHistoriesForAdmin(Integer limit, Integer offset);
 
-    long countByType(String type);
+    long countByTypeAndStatus(String type, String status);
 }

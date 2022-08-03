@@ -892,6 +892,8 @@ public class AdminServiceImpl implements AdminService {
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
         List<Feedback> feedbackQueries = feedbackDAO.findAllByOrderByCreatedAtDesc(PageRequest.of(pageNumber, pageSize));
+        long totalRecord = feedbackDAO.count();
+
         List<FeedbackDTO> feedbackList = feedbackQueries.stream()
                 .map(feedback -> {
                     Optional<User> optionalUser = userDAO.findById(feedback.getUserId());
@@ -909,6 +911,7 @@ public class AdminServiceImpl implements AdminService {
 
         FeedbacksResponse response = new FeedbacksResponse();
         response.setFeedbackList(feedbackList);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

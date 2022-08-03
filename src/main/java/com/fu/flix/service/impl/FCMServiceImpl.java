@@ -2,10 +2,10 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.Constant;
-import com.fu.flix.constant.enums.NotificationType;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.NotificationDAO;
 import com.fu.flix.dao.UserDAO;
+import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.PushNotificationRequest;
 import com.fu.flix.dto.request.SaveFCMTokenRequest;
 import com.fu.flix.dto.response.PushNotificationResponse;
@@ -25,6 +25,8 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
+
+import static com.fu.flix.constant.Constant.PUSH_NOTIFICATION_FAIL;
 
 @Service
 @Slf4j
@@ -89,8 +91,7 @@ public class FCMServiceImpl implements FCMService {
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (FirebaseMessagingException e) {
             log.error("Fail to send firebase notification", e);
-            response.setMessage(Constant.PUSH_NOTIFICATION_FAIL);
-            return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
+            throw new GeneralException(HttpStatus.METHOD_NOT_ALLOWED, PUSH_NOTIFICATION_FAIL);
         }
     }
 

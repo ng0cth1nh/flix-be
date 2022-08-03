@@ -51,7 +51,7 @@ public class UserController {
     }
 
     @PostMapping("pushNotification")
-    public ResponseEntity<PushNotificationResponse> pushNotification(@RequestBody PushNotificationRequest request) throws IOException {
+    public ResponseEntity<PushNotificationResponse> pushNotification(PushNotificationRequest request) throws IOException {
         return fcmService.sendPnsToDevice(request);
     }
 

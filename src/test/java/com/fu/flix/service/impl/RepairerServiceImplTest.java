@@ -2,6 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.BalanceDAO;
+import com.fu.flix.dao.InvoiceDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.RepairerDAO;
 import com.fu.flix.dto.ExtraServiceInputDTO;
@@ -10,6 +11,7 @@ import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.entity.Balance;
+import com.fu.flix.entity.Invoice;
 import com.fu.flix.entity.RepairRequest;
 import com.fu.flix.entity.Repairer;
 import com.fu.flix.service.CustomerService;
@@ -55,6 +57,9 @@ class RepairerServiceImplTest {
     BalanceDAO balanceDAO;
     @Autowired
     AppConf appConf;
+
+    @Autowired
+    InvoiceDAO invoiceDAO;
 
     @Test
     public void test_approval_request_success() throws IOException {
@@ -631,12 +636,21 @@ class RepairerServiceImplTest {
         Balance balance = balanceDAO.findByUserId(56L).get();
         balance.setBalance(0L);
 
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        Long commission = getCommission(invoice);
+        long requiredMoney = commission + appConf.getMilestoneMoney();
+
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
 
         // then
-        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + "3900", exception.getMessage());
+        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + requiredMoney, exception.getMessage());
     }
+
+    private Long getCommission(Invoice invoice) {
+        return (long) (invoice.getActualProceeds() * this.appConf.getProfitRate()) + invoice.getVatPrice();
+    }
+
 
     @Test
     public void test_confirm_invoice_paid_success() throws IOException {
@@ -1106,6 +1120,179 @@ class RepairerServiceImplTest {
 
         // then
         Assertions.assertEquals(REPAIRER_DOES_NOT_HAVE_PERMISSION_TO_ADD_EXTRA_SERVICE_FOR_THIS_INVOICE, exception.getMessage());
+    }
+
+    @Test
+    void test_requestWithdraw_success() {
+        // given
+        RepairerWithdrawRequest request = new RepairerWithdrawRequest();
+        request.setAmount(35000L);
+        request.setWithdrawType("BANKING");
+        request.setBankCode("TPBANK");
+        request.setBankAccountNumber("12345678");
+        request.setBankAccountName("CHI DUNG");
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        RepairerWithdrawResponse response = underTest.requestWithdraw(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_REQUEST_WITHDRAW_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_requestWithdraw_fail_when_invalid_withdraw_type() {
+        // given
+        RepairerWithdrawRequest request = new RepairerWithdrawRequest();
+        request.setAmount(35000L);
+        request.setWithdrawType(null);
+        request.setBankCode("TPBANK");
+        request.setBankAccountNumber("12345678");
+        request.setBankAccountName("CHI DUNG");
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.requestWithdraw(request));
+
+        // then
+        Assertions.assertEquals(INVALID_WITHDRAW_TYPE, exception.getMessage());
+    }
+
+    @Test
+    void test_requestWithdraw_fail_when_amount_less_than_5000() {
+        // given
+        RepairerWithdrawRequest request = new RepairerWithdrawRequest();
+        request.setAmount(4500L);
+        request.setWithdrawType("BANKING");
+        request.setBankCode("TPBANK");
+        request.setBankAccountNumber("12345678");
+        request.setBankAccountName("CHI DUNG");
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.requestWithdraw(request));
+
+        // then
+        Assertions.assertEquals(AMOUNT_MUST_BE_GREATER_OR_EQUAL_ + appConf.getMinVnPay(), exception.getMessage());
+    }
+
+    @Test
+    void test_requestWithdraw_fail_when_balance_is_0() {
+        // given
+        RepairerWithdrawRequest request = new RepairerWithdrawRequest();
+        request.setAmount(35000L);
+        request.setWithdrawType("BANKING");
+        request.setBankCode("TPBANK");
+        request.setBankAccountNumber("12345678");
+        request.setBankAccountName("CHI DUNG");
+
+        balanceDAO.findByUserId(56L).get().setBalance(0L);
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.requestWithdraw(request));
+
+        // then
+        Assertions.assertEquals(BALANCE_NOT_ENOUGH, exception.getMessage());
+    }
+
+    @Test
+    void test_requestWithdraw_fail_when_repairer_have_a_request_and_balance_not_enough() throws IOException {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+
+        RepairerWithdrawRequest request = new RepairerWithdrawRequest();
+        request.setAmount(35000L);
+        request.setWithdrawType("BANKING");
+        request.setBankCode("TPBANK");
+        request.setBankAccountNumber("12345678");
+        request.setBankAccountName("CHI DUNG");
+
+        balanceDAO.findByUserId(56L).get().setBalance(0L);
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.requestWithdraw(request));
+
+        // then
+        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + appConf.getMilestoneMoney(), exception.getMessage());
+    }
+
+    @Test
+    void test_requestWithdraw_fail_when_bank_account_name_is_null() {
+        // given
+        RepairerWithdrawRequest request = new RepairerWithdrawRequest();
+        request.setAmount(35000L);
+        request.setWithdrawType("BANKING");
+        request.setBankCode("TPBANK");
+        request.setBankAccountNumber("12345678");
+        request.setBankAccountName(null);
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.requestWithdraw(request));
+
+        // then
+        Assertions.assertEquals(INVALID_BANK_ACCOUNT_NAME, exception.getMessage());
+    }
+
+    @Test
+    void test_requestWithdraw_fail_when_bank_account_number_is_null() {
+        // given
+        RepairerWithdrawRequest request = new RepairerWithdrawRequest();
+        request.setAmount(35000L);
+        request.setWithdrawType("BANKING");
+        request.setBankCode("TPBANK");
+        request.setBankAccountNumber(null);
+        request.setBankAccountName("CHI DUNG");
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.requestWithdraw(request));
+
+        // then
+        Assertions.assertEquals(INVALID_BANK_ACCOUNT_NUMBER, exception.getMessage());
+    }
+
+    @Test
+    void test_requestWithdraw_fail_when_bank_code_is_null() {
+        // given
+        RepairerWithdrawRequest request = new RepairerWithdrawRequest();
+        request.setAmount(35000L);
+        request.setWithdrawType("BANKING");
+        request.setBankCode(null);
+        request.setBankAccountNumber("12345678");
+        request.setBankAccountName("CHI DUNG");
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.requestWithdraw(request));
+
+        // then
+        Assertions.assertEquals(INVALID_BANK_CODE, exception.getMessage());
+    }
+
+    @Test
+    void test_requestWithdraw_success_when_withdraw_type_is_CASH() {
+        // given
+        RepairerWithdrawRequest request = new RepairerWithdrawRequest();
+        request.setAmount(35000L);
+        request.setWithdrawType("CASH");
+
+        setRepairerContext(56L, "0865390056");
+
+        // when
+        RepairerWithdrawResponse response = underTest.requestWithdraw(request).getBody();
+
+        // then
+        Assertions.assertEquals(CREATE_REQUEST_WITHDRAW_SUCCESS, response.getMessage());
     }
 
     private void createInvoiceByRepairerId56(String requestCode) throws IOException {

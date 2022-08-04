@@ -313,16 +313,17 @@ public class RepairerServiceImpl implements RepairerService {
             customerService.refundVoucher(repairRequest);
         }
 
-        fcmService.sendNotification("request", NotificationType.CREATE_INVOICE.name(), repairRequest.getUserId(), requestCode);
-        fcmService.sendNotification("request", NotificationType.CREATE_INVOICE.name(), repairerId, requestCode);
-
         Balance balance = balanceDAO.findByUserId(repairerId).get();
         Long commission = getCommission(invoice);
-        if (balance.getBalance() < commission) {
-            throw new GeneralException(HttpStatus.CONFLICT, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + commission);
+        long requiredMoney = commission + appConf.getMilestoneMoney();
+        if (balance.getBalance() < requiredMoney) {
+            throw new GeneralException(HttpStatus.CONFLICT, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + requiredMoney);
         }
 
         minusCommissions(balance, commission, invoice.getRequestCode());
+
+        fcmService.sendNotification("request", NotificationType.CREATE_INVOICE.name(), repairRequest.getUserId(), requestCode);
+        fcmService.sendNotification("request", NotificationType.CREATE_INVOICE.name(), repairerId, requestCode);
 
         CreateInvoiceResponse response = new CreateInvoiceResponse();
         response.setMessage(CREATE_INVOICE_SUCCESS);
@@ -607,7 +608,10 @@ public class RepairerServiceImpl implements RepairerService {
 
         Long repairerId = request.getUserId();
         Balance balance = balanceDAO.findByUserId(repairerId).get();
-        if (balance.getBalance() < amount) {
+
+        if (repairRequestMatchingDAO.isRepairerHavingAnyRequest(repairerId) && balance.getBalance() - amount < appConf.getMilestoneMoney()) {
+            throw new GeneralException(HttpStatus.GONE, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + appConf.getMilestoneMoney());
+        } else if (balance.getBalance() < amount) {
             throw new GeneralException(HttpStatus.GONE, BALANCE_NOT_ENOUGH);
         }
 

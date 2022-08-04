@@ -35,7 +35,7 @@ app:
       DEPOSIT_FAILED: 'Nạp tiền không thành công! Vui lòng thử lại sau, hoặc gửi phản hồi để nhận được hỗ trợ từ FLIX'
       REGISTER_SUCCESS: 'Tài khoản của bạn đã được đăng kí thành công!'
       REGISTER_FAIL: 'Đăng kí tài khoản thất bại do %s'
-  milestoneMoney: 20000
+  milestoneMoney: 200000
   minVnPay: 5000
   twilioInfo:
     accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'
@@ -58,7 +58,8 @@ app:
                    '/api/v1/address/district',
                    '/api/v1/address/commune',
                    '/api/v1/payment/response',
-                   '/api/v1/deposit/response' ]
+                   '/api/v1/deposit/response',
+                   '/api/v1/category/services/search']
   vnPayInfo:
     version: '2.1.0'
     command: 'pay'

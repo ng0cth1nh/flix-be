@@ -10,4 +10,5 @@ public class RepairerResponse {
     private Long experienceYear;
     private String jointAt;
     private Long successfulRepair;
+    private Long totalComment;
 }

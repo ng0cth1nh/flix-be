@@ -8,4 +8,5 @@ import java.util.List;
 @Data
 public class NotificationResponse {
     private List<NotificationDTO> notifications;
+    private long totalRecord;
 }

@@ -7,4 +7,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SendForgotPassOTPRequest extends PhoneDTO {
+    private String roleType;
 }

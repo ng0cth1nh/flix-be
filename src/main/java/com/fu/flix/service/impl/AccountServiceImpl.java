@@ -35,8 +35,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.LoginType.ADMIN;
-import static com.fu.flix.constant.enums.LoginType.REPAIRER;
+import static com.fu.flix.constant.enums.CVStatus.PENDING;
+import static com.fu.flix.constant.enums.ApplicationType.ADMIN;
+import static com.fu.flix.constant.enums.ApplicationType.REPAIRER;
 import static com.fu.flix.constant.enums.RoleType.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
@@ -120,7 +121,7 @@ public class AccountServiceImpl implements AccountService {
     private User getUserLogin(LoginRequest request) {
         String password = request.getPassword();
         String username = request.getUsername();
-        String loginType = getLoginTypeValidated(request.getRoleType());
+        String applicationType = getApplicationTypeValidated(request.getRoleType());
 
         if (!InputValidation.isPasswordValid(password) || !InputValidation.isPhoneValid(username)) {
             throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
@@ -134,7 +135,7 @@ public class AccountServiceImpl implements AccountService {
         User user = optionalUser.get();
         Collection<Role> roles = user.getRoles();
 
-        if (!isLoginTypeMatched(roles, loginType)) {
+        if (!isApplicationTypeMatched(roles, applicationType)) {
             throw new GeneralException(HttpStatus.FORBIDDEN, LOGIN_FAILED);
         }
 
@@ -147,24 +148,6 @@ public class AccountServiceImpl implements AccountService {
         }
 
         return user;
-    }
-
-    private String getLoginTypeValidated(String loginType) {
-        for (LoginType type : LoginType.values()) {
-            if (type.name().equals(loginType)) {
-                return loginType;
-            }
-        }
-        throw new GeneralException(HttpStatus.GONE, INVALID_TYPE);
-    }
-
-    private boolean isLoginTypeMatched(Collection<Role> roles, String loginType) {
-        if (ADMIN.name().equals(loginType)) {
-            return isAdmin(roles);
-        } else if (REPAIRER.name().equals(loginType)) {
-            return isRepairer(roles);
-        }
-        return roles.stream().anyMatch(role -> ROLE_CUSTOMER.name().equals(role.getName()));
     }
 
     private boolean isAdmin(Collection<Role> roles) {
@@ -467,6 +450,7 @@ public class AccountServiceImpl implements AccountService {
         repairer.setUserId(user.getId());
         repairer.setExperienceDescription(request.getExperienceDescription());
         repairer.setExperienceYear(request.getExperienceYear());
+        repairer.setCvStatus(PENDING.name());
 
         Repairer savedRepairer = repairerDAO.save(repairer);
 
@@ -578,7 +562,13 @@ public class AccountServiceImpl implements AccountService {
             throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
         }
 
-        validatorService.getUserValidated(phone);
+        User user = validatorService.getUserValidated(phone);
+        Collection<Role> roles = user.getRoles();
+        String applicationType = getApplicationTypeValidated(request.getRoleType());
+
+        if (!isApplicationTypeMatched(roles, applicationType)) {
+            throw new GeneralException(HttpStatus.FORBIDDEN, ACCOUNT_NOT_FOUND);
+        }
 
 //        SmsRequest sms = getSmsRequest(request, OTPType.FORGOT_PASSWORD);
 //        smsService.sendAndSaveOTP(sms);
@@ -586,6 +576,24 @@ public class AccountServiceImpl implements AccountService {
         SendForgotPassOTPResponse response = new SendForgotPassOTPResponse();
         response.setMessage(SEND_FORGOT_PASSWORD_OTP_SUCCESS);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getApplicationTypeValidated(String loginType) {
+        for (ApplicationType type : ApplicationType.values()) {
+            if (type.name().equals(loginType)) {
+                return loginType;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_TYPE);
+    }
+
+    private boolean isApplicationTypeMatched(Collection<Role> roles, String loginType) {
+        if (ADMIN.name().equals(loginType)) {
+            return isAdmin(roles);
+        } else if (REPAIRER.name().equals(loginType)) {
+            return isRepairer(roles);
+        }
+        return roles.stream().anyMatch(role -> ROLE_CUSTOMER.name().equals(role.getName()));
     }
 
 //    private SmsRequest getSmsRequest(PhoneDTO phoneDTO, OTPType otpType) {

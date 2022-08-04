@@ -6,4 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class NotificationRequest extends DataRequest {
+    private Integer pageNumber;
+    private Integer pageSize;
 }

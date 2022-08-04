@@ -8,4 +8,6 @@ public class RepairerCommentDTO {
     private String customerName;
     private Integer rating;
     private String comment;
+    private String createdAt;
+    private String customerAvatar;
 }

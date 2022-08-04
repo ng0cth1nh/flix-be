@@ -35,6 +35,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
+import static com.fu.flix.constant.enums.CVStatus.PENDING;
 import static com.fu.flix.constant.enums.LoginType.ADMIN;
 import static com.fu.flix.constant.enums.LoginType.REPAIRER;
 import static com.fu.flix.constant.enums.RoleType.*;
@@ -467,6 +468,7 @@ public class AccountServiceImpl implements AccountService {
         repairer.setUserId(user.getId());
         repairer.setExperienceDescription(request.getExperienceDescription());
         repairer.setExperienceYear(request.getExperienceYear());
+        repairer.setCvStatus(PENDING.name());
 
         Repairer savedRepairer = repairerDAO.save(repairer);
 

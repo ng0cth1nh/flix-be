@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
+import static com.fu.flix.constant.enums.CVStatus.ACCEPTED;
 import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
 import static com.fu.flix.constant.enums.TransactionStatus.FAIL;
 import static com.fu.flix.constant.enums.AccountState.ACTIVE;
@@ -926,6 +927,7 @@ public class AdminServiceImpl implements AdminService {
 
         Repairer repairer = repairerDAO.findByUserId(user.getId()).get();
         repairer.setAcceptedAccountAt(LocalDateTime.now());
+        repairer.setCvStatus(ACCEPTED.name());
         updateToRepairerRole(roles);
 
         fcmService.sendNotification("register", NotificationType.REGISTER_SUCCESS.name(), user.getId());

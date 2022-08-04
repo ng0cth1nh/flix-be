@@ -174,7 +174,7 @@ public class CustomerServiceImpl implements CustomerService {
         Long inspectionPrice = service.getInspectionPrice();
         Long discount = voucherService.getVoucherDiscount(inspectionPrice, voucherId);
         Long beforeVat = inspectionPrice - discount;
-        Long vatPrice = (long) (beforeVat * repairRequest.getVat());
+        Long vatPrice = (long) (inspectionPrice * repairRequest.getVat());
 
         Invoice invoice = new Invoice();
         invoice.setRequestCode(repairRequest.getRequestCode());

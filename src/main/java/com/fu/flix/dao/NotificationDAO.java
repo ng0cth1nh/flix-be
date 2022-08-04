@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 public interface NotificationDAO extends JpaRepository<Notification, Long> {
-    List<Notification> findByUserIdAndDeletedAtIsNull(Long userId, Pageable pageable);
+    List<Notification> findByUserIdAndDeletedAtIsNullOrderByDateDesc(Long userId, Pageable pageable);
 
     long countByUserIdAndDeletedAtIsNull(Long userId);
 }

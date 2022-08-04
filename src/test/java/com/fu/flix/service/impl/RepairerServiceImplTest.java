@@ -2,6 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.BalanceDAO;
+import com.fu.flix.dao.InvoiceDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.RepairerDAO;
 import com.fu.flix.dto.ExtraServiceInputDTO;
@@ -10,6 +11,7 @@ import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.entity.Balance;
+import com.fu.flix.entity.Invoice;
 import com.fu.flix.entity.RepairRequest;
 import com.fu.flix.entity.Repairer;
 import com.fu.flix.service.CustomerService;
@@ -55,6 +57,9 @@ class RepairerServiceImplTest {
     BalanceDAO balanceDAO;
     @Autowired
     AppConf appConf;
+
+    @Autowired
+    InvoiceDAO invoiceDAO;
 
     @Test
     public void test_approval_request_success() throws IOException {
@@ -631,12 +636,21 @@ class RepairerServiceImplTest {
         Balance balance = balanceDAO.findByUserId(56L).get();
         balance.setBalance(0L);
 
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        Long commission = getCommission(invoice);
+        long requiredMoney = commission + appConf.getMilestoneMoney();
+
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createInvoice(request));
 
         // then
-        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + "3900", exception.getMessage());
+        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + requiredMoney, exception.getMessage());
     }
+
+    private Long getCommission(Invoice invoice) {
+        return (long) (invoice.getActualProceeds() * this.appConf.getProfitRate()) + invoice.getVatPrice();
+    }
+
 
     @Test
     public void test_confirm_invoice_paid_success() throws IOException {
@@ -1205,7 +1219,7 @@ class RepairerServiceImplTest {
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.requestWithdraw(request));
 
         // then
-        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + appConf.getFine(), exception.getMessage());
+        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + appConf.getMilestoneMoney(), exception.getMessage());
     }
 
     @Test

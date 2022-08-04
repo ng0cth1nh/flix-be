@@ -28,6 +28,8 @@ public class Repairer {
 
     private LocalDateTime acceptedAccountAt;
 
+    private String cvStatus;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "repairer_services",

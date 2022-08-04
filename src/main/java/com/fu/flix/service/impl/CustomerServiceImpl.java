@@ -685,6 +685,7 @@ public class CustomerServiceImpl implements CustomerService {
             response.setRating(repairerProfile.getRating());
             response.setExperienceDescription(repairerProfile.getExperienceDescription());
             response.setExperienceYear(repairerProfile.getExperienceYear());
+            response.setTotalComment(repairerProfile.getTotalComment());
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -715,6 +716,8 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         List<IRepairerCommentDTO> repairComments = commentDAO.findRepairComments(repairerId, limit, offset);
+        long totalRecord = commentDAO.countRepairerComments(repairerId);
+
         List<RepairerCommentDTO> repairerCommentDTOs = repairComments.stream()
                 .map(rc -> {
                     RepairerCommentDTO dto = new RepairerCommentDTO();
@@ -722,9 +725,12 @@ public class CustomerServiceImpl implements CustomerService {
                     dto.setCustomerId(rc.getCustomerId());
                     dto.setRating(rc.getRating());
                     dto.setCustomerName(rc.getCustomerName());
+                    dto.setCreatedAt(DateFormatUtil.toString(rc.getCreatedAt(), DATE_TIME_PATTERN));
+                    dto.setCustomerAvatar(rc.getCustomerAvatar());
                     return dto;
                 }).collect(Collectors.toList());
         response.setRepairerComments(repairerCommentDTOs);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

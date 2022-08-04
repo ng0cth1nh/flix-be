@@ -116,6 +116,9 @@ public class UserServiceImpl implements UserService {
                     dto.setRead(notification.isRead());
                     dto.setDate(DateFormatUtil.toString(notification.getDate(), DATE_TIME_PATTERN));
                     dto.setType(notification.getType());
+                    dto.setId(notification.getId());
+                    dto.setRequestCode(notification.getRequestCode());
+                    dto.setFeedbackId(notification.getFeedbackId());
 
                     return dto;
                 }).collect(Collectors.toList());

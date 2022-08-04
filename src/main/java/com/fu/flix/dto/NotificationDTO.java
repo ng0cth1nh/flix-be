@@ -10,4 +10,7 @@ public class NotificationDTO {
     private boolean isRead;
     private String date;
     private String type;
+    private Long id;
+    private String requestCode;
+    private Long feedbackId;
 }

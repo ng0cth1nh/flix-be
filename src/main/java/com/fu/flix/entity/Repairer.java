@@ -30,6 +30,8 @@ public class Repairer {
 
     private String cvStatus;
 
+    private String commentCv;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "repairer_services",

@@ -607,7 +607,10 @@ public class RepairerServiceImpl implements RepairerService {
 
         Long repairerId = request.getUserId();
         Balance balance = balanceDAO.findByUserId(repairerId).get();
-        if (balance.getBalance() < amount) {
+
+        if (repairRequestMatchingDAO.isRepairerHavingAnyRequest(repairerId) && balance.getBalance() - amount < appConf.getFine()) {
+            throw new GeneralException(HttpStatus.GONE, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + appConf.getFine());
+        } else if (balance.getBalance() < amount) {
             throw new GeneralException(HttpStatus.GONE, BALANCE_NOT_ENOUGH);
         }
 

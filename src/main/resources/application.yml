@@ -6,7 +6,7 @@ app:
   defaultOffset: 0
   vat: 0.05
   profitRate: 0.2
-  fine: 20000
+  fine: 200000
   minTimeFined: 3600 #milliseconds
   descriptionMaxLength: 2500
   nameMaxLength: 150

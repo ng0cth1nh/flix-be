@@ -29,4 +29,12 @@ public interface RepairRequestMatchingDAO extends JpaRepository<RepairRequestMat
             "AND rr.status_id = :statusId " +
             "ORDER BY rr.created_at DESC", nativeQuery = true)
     List<IHistoryRequestForRepairerDTO> findRequestHistoriesForRepairerByStatus(Long repairerId, String statusId);
+
+    @Query(value = "SELECT CASE WHEN count(*) > 0 THEN 'true' ELSE 'false' END " +
+            "FROM repair_requests_matching rrm " +
+            "JOIN repair_requests rr " +
+            "ON rr.request_code = rrm.request_code " +
+            "WHERE rrm.repairer_id = :repairerId " +
+            "AND rr.status_id NOT IN ('DO', 'CC')", nativeQuery = true)
+    boolean isRepairerHavingAnyRequest(Long repairerId);
 }

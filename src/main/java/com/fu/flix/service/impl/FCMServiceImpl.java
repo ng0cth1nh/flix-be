@@ -5,7 +5,6 @@ import com.fu.flix.constant.Constant;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.NotificationDAO;
 import com.fu.flix.dao.UserDAO;
-import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.PushNotificationRequest;
 import com.fu.flix.dto.request.SaveFCMTokenRequest;
 import com.fu.flix.dto.response.PushNotificationResponse;
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.io.IOException;
 
-import static com.fu.flix.constant.Constant.PUSH_NOTIFICATION_FAIL;
 
 @Service
 @Slf4j
@@ -52,20 +50,19 @@ public class FCMServiceImpl implements FCMService {
 
     @Override
     public ResponseEntity<PushNotificationResponse> sendPnsToDevice(PushNotificationRequest notificationRequest) throws IOException {
-        Image savedImage = null;
-        if (notificationRequest.getImage() != null) {
-            Image image = new Image();
-            image.setName(appConf.getNotification().getDefaultImageName());
-            String imageUrl = cloudStorageService.uploadImage(notificationRequest.getImage());
-            image.setUrl(imageUrl);
-            savedImage = imageDAO.save(image);
-        }
+        Image image = new Image();
+        image.setName(appConf.getNotification().getDefaultImageName());
+        String imageUrl = notificationRequest.getImage() != null
+                ? cloudStorageService.uploadImage(notificationRequest.getImage())
+                : appConf.getNotification().getDefaultImage();
+        image.setUrl(imageUrl);
+        Image savedImage = imageDAO.save(image);
 
         Notification notification = Notification
                 .builder()
                 .setTitle(notificationRequest.getTitle())
                 .setBody(notificationRequest.getBody())
-                .setImage(savedImage == null ? appConf.getNotification().getDefaultImage() : savedImage.getUrl())
+                .setImage(savedImage.getUrl())
                 .build();
 
         Message message = Message.builder()
@@ -73,7 +70,7 @@ public class FCMServiceImpl implements FCMService {
                 .setNotification(notification)
                 .putData("content", notificationRequest.getTitle())
                 .putData("body", notificationRequest.getBody())
-                .putData("image", savedImage == null ? appConf.getNotification().getDefaultImage() : savedImage.getUrl())
+                .putData("image", savedImage.getUrl())
                 .build();
 
         PushNotificationResponse response = new PushNotificationResponse();
@@ -86,7 +83,7 @@ public class FCMServiceImpl implements FCMService {
             notificationData.setTitle(notificationRequest.getTitle());
             notificationData.setContent(notificationRequest.getBody());
             notificationData.setRead(false);
-            if (savedImage != null) notificationData.setImageId(savedImage.getId());
+            notificationData.setImageId(savedImage.getId());
             notificationDAO.save(notificationData);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (FirebaseMessagingException e) {

@@ -31,6 +31,10 @@ public class Notification {
 
     private Long imageId;
 
+    private Long feedbackId;
+
+    private String requestCode;
+
     @CreationTimestamp
     private LocalDateTime date;
 

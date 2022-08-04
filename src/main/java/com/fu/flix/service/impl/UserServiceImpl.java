@@ -98,7 +98,7 @@ public class UserServiceImpl implements UserService {
 
         Long userId = request.getUserId();
         List<Notification> notifications = notificationDAO
-                .findByUserIdAndDeletedAtIsNull(userId, PageRequest.of(pageNumber, pageSize));
+                .findByUserIdAndDeletedAtIsNullOrderByDateDesc(userId, PageRequest.of(pageNumber, pageSize));
         long totalRecord = notificationDAO.countByUserIdAndDeletedAtIsNull(userId);
 
         List<NotificationDTO> notificationDTOS = notifications.stream()

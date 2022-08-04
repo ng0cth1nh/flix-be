@@ -332,7 +332,8 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     private Long getCommission(Invoice invoice) {
-        return (long) (invoice.getActualProceeds() * this.appConf.getProfitRate()) + invoice.getVatPrice();
+        return (long) ((invoice.getTotalSubServicePrice() + invoice.getTotalExtraServicePrice())
+                * this.appConf.getProfitRate()) + invoice.getVatPrice();
     }
 
     private void minusCommissions(Balance balance, Long commission, String requestCode) {
@@ -591,7 +592,7 @@ public class RepairerServiceImpl implements RepairerService {
     private void updateCommonInvoiceMoney(Invoice invoice, Double vat, long newTotalPrice) {
         long newTotalDiscount = voucherService.getVoucherDiscount(newTotalPrice, invoice.getVoucherId());
         long beforeVat = newTotalPrice - newTotalDiscount;
-        long newVatPrice = (long) (beforeVat * vat);
+        long newVatPrice = (long) (newTotalPrice * vat);
 
         invoice.setTotalPrice(newTotalPrice);
         invoice.setTotalDiscount(newTotalDiscount);

@@ -331,7 +331,8 @@ public class RepairerServiceImpl implements RepairerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private Long getCommission(Invoice invoice) {
+    @Override
+    public Long getCommission(Invoice invoice) {
         return (long) ((invoice.getTotalSubServicePrice() + invoice.getTotalExtraServicePrice())
                 * this.appConf.getProfitRate()) + invoice.getVatPrice();
     }

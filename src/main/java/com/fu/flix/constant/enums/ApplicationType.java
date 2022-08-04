@@ -1,5 +1,5 @@
 package com.fu.flix.constant.enums;
 
-public enum LoginType {
+public enum ApplicationType {
     CUSTOMER, ADMIN, REPAIRER
 }

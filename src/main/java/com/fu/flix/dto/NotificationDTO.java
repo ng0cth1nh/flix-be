@@ -9,4 +9,5 @@ public class NotificationDTO {
     private String imageUrl;
     private boolean isRead;
     private String date;
+    private String type;
 }

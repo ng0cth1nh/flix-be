@@ -8,4 +8,5 @@ import java.util.List;
 @Data
 public class RepairerCommentResponse {
     private List<RepairerCommentDTO> repairerComments;
+    private long totalRecord;
 }

@@ -22,7 +22,7 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
     Optional<Comment> findComment(String requestCode, String type);
 
     @Query(value = "SELECT u.full_name as repairerName, avg(c.rating) as rating, r.experience_description as experienceDescription," +
-            " DATE_FORMAT(r.accepted_account_at,'%d/%m/%Y') as joinAt, r.experience_year as experienceYear " +
+            " DATE_FORMAT(r.accepted_account_at,'%d/%m/%Y') as joinAt, r.experience_year as experienceYear, count(c.id) as totalComment " +
             "FROM comments c " +
             "JOIN repair_requests_matching rrm " +
             "ON c.request_code = rrm.request_code " +
@@ -42,7 +42,22 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
             "AND rr.status_id = 'DO'", nativeQuery = true)
     ISuccessfulRepairDTO findSuccessfulRepair(Long repairerId);
 
-    @Query(value = "SELECT rr.user_id as customerId, u.full_name as customerName, c.rating, c.comment " +
+    @Query(value = "SELECT rr.user_id as customerId, u.full_name as customerName, c.rating, c.comment, c.created_at as createdAt, avatar.url as customerAvatar " +
+            "FROM comments c " +
+            "JOIN repair_requests_matching rrm " +
+            "ON c.request_code = rrm.request_code " +
+            "JOIN repair_requests rr " +
+            "ON c.request_code = rr.request_code " +
+            "JOIN users u " +
+            "ON u.id = rr.user_id " +
+            "JOIN images avatar " +
+            "ON avatar.id = u.avatar " +
+            "WHERE rrm.repairer_id = :repairerId " +
+            "AND c.type = 'CUSTOMER_COMMENT' " +
+            "limit :limit offset :offset", nativeQuery = true)
+    List<IRepairerCommentDTO> findRepairComments(Long repairerId, Integer limit, Integer offset);
+
+    @Query(value = "SELECT count(*) " +
             "FROM comments c " +
             "JOIN repair_requests_matching rrm " +
             "ON c.request_code = rrm.request_code " +
@@ -51,7 +66,6 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
             "JOIN users u " +
             "ON u.id = rr.user_id " +
             "WHERE rrm.repairer_id = :repairerId " +
-            "AND c.type = 'CUSTOMER_COMMENT' " +
-            "limit :limit offset :offset", nativeQuery = true)
-    List<IRepairerCommentDTO> findRepairComments(Long repairerId, Integer limit, Integer offset);
+            "AND c.type = 'CUSTOMER_COMMENT'", nativeQuery = true)
+    long countRepairerComments(Long repairerId);
 }

@@ -13,6 +13,7 @@ import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -92,8 +93,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<NotificationResponse> getNotifications(NotificationRequest request) {
-        User user = validatorService.getUserValidated(request.getUsername());
-        List<Notification> notifications = notificationDAO.findByUserIdAndDeletedAtIsNull(user.getId());
+        int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
+
+        Long userId = request.getUserId();
+        List<Notification> notifications = notificationDAO
+                .findByUserIdAndDeletedAtIsNull(userId, PageRequest.of(pageNumber, pageSize));
+        long totalRecord = notificationDAO.countByUserIdAndDeletedAtIsNull(userId);
 
         List<NotificationDTO> notificationDTOS = notifications.stream()
                 .map(notification -> {
@@ -109,12 +115,14 @@ public class UserServiceImpl implements UserService {
                     dto.setContent(notification.getContent());
                     dto.setRead(notification.isRead());
                     dto.setDate(DateFormatUtil.toString(notification.getDate(), DATE_TIME_PATTERN));
+                    dto.setType(notification.getType());
 
                     return dto;
                 }).collect(Collectors.toList());
 
         NotificationResponse response = new NotificationResponse();
         response.setNotifications(notificationDTOS);
+        response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

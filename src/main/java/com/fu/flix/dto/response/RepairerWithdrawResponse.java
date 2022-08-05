@@ -7,4 +7,5 @@ import lombok.Setter;
 @Setter
 public class RepairerWithdrawResponse {
     private String message;
+    private Long transactionId;
 }

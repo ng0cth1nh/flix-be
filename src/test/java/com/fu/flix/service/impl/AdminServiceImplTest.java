@@ -1,11 +1,14 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.configuration.AppConf;
+import com.fu.flix.dao.BalanceDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.ExtraServiceInputDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
+import com.fu.flix.entity.Balance;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.AdminService;
 import com.fu.flix.service.CustomerService;
@@ -42,7 +45,12 @@ class AdminServiceImplTest {
     AdminService underTest;
 
     @Autowired
+    BalanceDAO balanceDAO;
+    @Autowired
     UserDAO userDAO;
+
+    @Autowired
+    AppConf appConf;
 
     @Autowired
     CustomerService customerService;
@@ -2079,6 +2087,142 @@ class AdminServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_TRANSACTION_STATUS, exception.getMessage());
+    }
+
+    @Test
+    void test_acceptWithdraw_success() {
+        // given
+        Long transactionId = requestWithdrawForRepairer56();
+        AcceptWithdrawRequest request = new AcceptWithdrawRequest();
+        request.setTransactionId(transactionId);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AcceptWithdrawResponse response = underTest.acceptWithdraw(request).getBody();
+
+        // then
+        Assertions.assertEquals(ACCEPT_WITHDRAW_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_acceptWithdraw_fail_when_balance_not_enough() {
+        // given
+        Long transactionId = requestWithdrawForRepairer56();
+        AcceptWithdrawRequest request = new AcceptWithdrawRequest();
+        request.setTransactionId(transactionId);
+
+        balanceDAO.findByUserId(56L).get().setBalance(0L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.acceptWithdraw(request));
+
+        // then
+        Assertions.assertEquals(BALANCE_NOT_ENOUGH, exception.getMessage());
+    }
+
+    @Test
+    void test_acceptWithdraw_fail_when_repairer_have_a_request_and_balance_not_enough() throws IOException {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+
+        Long transactionId = requestWithdrawForRepairer56();
+        AcceptWithdrawRequest request = new AcceptWithdrawRequest();
+        request.setTransactionId(transactionId);
+
+        balanceDAO.findByUserId(56L).get().setBalance(0L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.acceptWithdraw(request));
+
+        // then
+        Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + appConf.getMilestoneMoney(), exception.getMessage());
+    }
+
+    @Test
+    void test_acceptWithdraw_fail_when_transaction_id_is_null() {
+        // given
+        AcceptWithdrawRequest request = new AcceptWithdrawRequest();
+        request.setTransactionId(null);
+
+        balanceDAO.findByUserId(56L).get().setBalance(0L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.acceptWithdraw(request));
+
+        // then
+        Assertions.assertEquals(INVALID_TRANSACTION_ID, exception.getMessage());
+    }
+
+    @Test
+    void test_acceptWithdraw_fail_when_transaction_id_is_not_found() {
+        // given
+        AcceptWithdrawRequest request = new AcceptWithdrawRequest();
+        request.setTransactionId(1000000L);
+
+        balanceDAO.findByUserId(56L).get().setBalance(0L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.acceptWithdraw(request));
+
+        // then
+        Assertions.assertEquals(TRANSACTION_NOT_FOUND, exception.getMessage());
+    }
+
+
+    private String createFixingRequestByCustomerId36ForService1() throws IOException {
+        Long serviceId = 1L;
+        Long addressId = 7L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setCustomerContext(36L, "0865390037");
+
+        RequestingRepairResponse response = customerService.createFixingRequest(request).getBody();
+        return response.getRequestCode();
+    }
+
+    void setCustomerContext(Long id, String phone) {
+        String[] roles = {"ROLE_CUSTOMER"};
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (String role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        UsernamePasswordAuthenticationToken authenticationToken
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
+
+    private Long requestWithdrawForRepairer56() {
+        RepairerWithdrawRequest request = new RepairerWithdrawRequest();
+        request.setAmount(35000L);
+        request.setWithdrawType("BANKING");
+        request.setBankCode("TPBANK");
+        request.setBankAccountNumber("12345678");
+        request.setBankAccountName("CHI DUNG");
+
+        setRepairerContext(56L, "0865390056");
+
+        return repairerService.requestWithdraw(request).getBody().getTransactionId();
     }
 
     private void putAccessoriesToInvoiceByRepairerId56(String requestCode) {

@@ -10,6 +10,7 @@ public class HistoryRequestForRepairerDTO {
     private String status;
     private String image;
     private String serviceName;
+    private Long serviceId;
     private String description;
     private Double price;
     private Double actualPrice;

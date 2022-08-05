@@ -5,13 +5,12 @@ import com.fu.flix.constant.Constant;
 import com.fu.flix.dao.ImageDAO;
 import com.fu.flix.dao.NotificationDAO;
 import com.fu.flix.dao.UserDAO;
-import com.fu.flix.dto.request.PushNotificationRequest;
+import com.fu.flix.dto.UserNotificationDTO;
+import com.fu.flix.dto.SendNotificationDTO;
 import com.fu.flix.dto.request.SaveFCMTokenRequest;
-import com.fu.flix.dto.response.PushNotificationResponse;
 import com.fu.flix.dto.response.SaveFCMTokenResponse;
 import com.fu.flix.entity.Image;
 import com.fu.flix.entity.User;
-import com.fu.flix.service.CloudStorageService;
 import com.fu.flix.service.FCMService;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
@@ -23,8 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.io.IOException;
-
 
 @Service
 @Slf4j
@@ -33,64 +30,74 @@ public class FCMServiceImpl implements FCMService {
     private final UserDAO userDAO;
     private final NotificationDAO notificationDAO;
     private final ImageDAO imageDAO;
-    private final CloudStorageService cloudStorageService;
     private final AppConf appConf;
 
     public FCMServiceImpl(UserDAO userDAO,
                           NotificationDAO notificationDAO,
                           ImageDAO imageDAO,
-                          CloudStorageService cloudStorageService,
                           AppConf appConf) {
         this.userDAO = userDAO;
         this.notificationDAO = notificationDAO;
         this.imageDAO = imageDAO;
-        this.cloudStorageService = cloudStorageService;
         this.appConf = appConf;
     }
 
     @Override
-    public ResponseEntity<PushNotificationResponse> sendPnsToDevice(PushNotificationRequest notificationRequest) throws IOException {
-        Image image = new Image();
-        image.setName(appConf.getNotification().getDefaultImageName());
-        String imageUrl = notificationRequest.getImage() != null
-                ? cloudStorageService.uploadImage(notificationRequest.getImage())
-                : appConf.getNotification().getDefaultImage();
-        image.setUrl(imageUrl);
-        Image savedImage = imageDAO.save(image);
+    public void sendAndSaveNotification(UserNotificationDTO userNotificationDTO, String... formatParams) {
+        String title = appConf.getNotification().getTitle().get(userNotificationDTO.getTitleType());
+        String message = String.format(appConf.getNotification()
+                        .getContent()
+                        .get(userNotificationDTO.getMessageStatus()),
+                formatParams);
 
+        Image savedImage = saveNotificationImage();
+        SendNotificationDTO sendNotificationDTO = new SendNotificationDTO();
+        sendNotificationDTO.setToken(getFCMToken(userNotificationDTO.getUserId()));
+        sendNotificationDTO.setTitle(title);
+        sendNotificationDTO.setBody(message);
+        sendNotificationDTO.setImageUrl(savedImage.getUrl());
+        sendNotification(sendNotificationDTO);
+
+        com.fu.flix.entity.Notification notificationData = new com.fu.flix.entity.Notification();
+        notificationData.setUserId(userNotificationDTO.getUserId());
+        notificationData.setTitle(title);
+        notificationData.setContent(message);
+        notificationData.setRead(false);
+        notificationData.setImageId(savedImage.getId());
+        notificationData.setRequestCode(userNotificationDTO.getRequestCode());
+        notificationData.setFeedbackId(userNotificationDTO.getFeedbackId());
+        notificationData.setType(userNotificationDTO.getNotificationType());
+        notificationDAO.save(notificationData);
+    }
+
+    private void sendNotification(SendNotificationDTO dto) {
         Notification notification = Notification
                 .builder()
-                .setTitle(notificationRequest.getTitle())
-                .setBody(notificationRequest.getBody())
-                .setImage(savedImage.getUrl())
+                .setTitle(dto.getTitle())
+                .setBody(dto.getBody())
+                .setImage(dto.getImageUrl())
                 .build();
 
         Message message = Message.builder()
-                .setToken(notificationRequest.getToken())
+                .setToken(dto.getToken())
                 .setNotification(notification)
-                .putData("content", notificationRequest.getTitle())
-                .putData("body", notificationRequest.getBody())
-                .putData("image", savedImage.getUrl())
+                .putData("content", dto.getTitle())
+                .putData("body", dto.getBody())
+                .putData("image", dto.getImageUrl())
                 .build();
 
-        PushNotificationResponse response = new PushNotificationResponse();
         try {
             FirebaseMessaging.getInstance().send(message);
-            response.setMessage(Constant.PUSH_NOTIFICATION_SUCCESS);
-
-            com.fu.flix.entity.Notification notificationData = new com.fu.flix.entity.Notification();
-            notificationData.setUserId(notificationRequest.getUserId());
-            notificationData.setTitle(notificationRequest.getTitle());
-            notificationData.setContent(notificationRequest.getBody());
-            notificationData.setRead(false);
-            notificationData.setImageId(savedImage.getId());
-            notificationDAO.save(notificationData);
-            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (FirebaseMessagingException e) {
             log.error("Fail to send firebase notification", e);
-            response.setMessage(Constant.PUSH_NOTIFICATION_FAIL);
-            return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED);
         }
+    }
+
+    private Image saveNotificationImage() {
+        Image image = new Image();
+        image.setName(appConf.getNotification().getDefaultImageName());
+        image.setUrl(appConf.getNotification().getDefaultImage());
+        return imageDAO.save(image);
     }
 
     @Override
@@ -105,18 +112,5 @@ public class FCMServiceImpl implements FCMService {
         SaveFCMTokenResponse response = new SaveFCMTokenResponse();
         response.setMessage(Constant.SAVE_FCM_TOKEN_SUCCESS);
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @Override
-    public void sendNotification(String titleType, String messageType, Long userId, String... formatParams) throws IOException {
-        String title = appConf.getNotification().getTitle().get(titleType);
-        String message = String.format(appConf.getNotification().getContent().get(messageType), formatParams);
-
-        PushNotificationRequest notification = new PushNotificationRequest();
-        notification.setToken(getFCMToken(userId));
-        notification.setTitle(title);
-        notification.setBody(message);
-        notification.setUserId(userId);
-        sendPnsToDevice(notification);
     }
 }

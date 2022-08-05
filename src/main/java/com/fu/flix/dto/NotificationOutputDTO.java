@@ -3,7 +3,7 @@ package com.fu.flix.dto;
 import lombok.Data;
 
 @Data
-public class NotificationDTO {
+public class NotificationOutputDTO {
     private String title;
     private String content;
     private String imageUrl;

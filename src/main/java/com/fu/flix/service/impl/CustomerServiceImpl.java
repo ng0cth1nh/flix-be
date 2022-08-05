@@ -1,6 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.NotificationStatus;
 import com.fu.flix.constant.enums.NotificationType;
 import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.constant.enums.RoleType;
@@ -21,7 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
@@ -98,7 +98,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) throws IOException {
+    public ResponseEntity<RequestingRepairResponse> createFixingRequest(RequestingRepairRequest request) {
         Long userId = request.getUserId();
         if (isHaveAnyPaymentWaitingRequest(userId)) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CREATE_NEW_REQUEST_WHEN_HAVE_OTHER_PAYMENT_WAITING_REQUEST);
@@ -137,7 +137,14 @@ public class CustomerServiceImpl implements CustomerService {
         Invoice invoice = buildInvoice(repairRequest);
         invoiceDAO.save(invoice);
 
-        fcmService.sendNotification("request", NotificationType.REQUEST_CREATE_SUCCESS.name(), userId, savedRepairRequest.getRequestCode());
+        UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.REQUEST_CREATE_SUCCESS.name(),
+                userId,
+                NotificationType.REQUEST_CREATE_SUCCESS.name(),
+                null,
+                savedRepairRequest.getRequestCode());
+        fcmService.sendAndSaveNotification(userNotificationDTO, savedRepairRequest.getRequestCode());
 
         RequestingRepairResponse response = new RequestingRepairResponse();
         response.setRequestCode(repairRequest.getRequestCode());
@@ -258,7 +265,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request) throws IOException {
+    public ResponseEntity<CancelRequestForCustomerResponse> cancelFixingRequest(CancelRequestForCustomerRequest request) {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -280,7 +287,15 @@ public class CustomerServiceImpl implements CustomerService {
         Optional<RepairRequestMatching> optionalRepairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode);
         if (optionalRepairRequestMatching.isPresent()) {
             Long repairerId = optionalRepairRequestMatching.get().getRepairerId();
-            fcmService.sendNotification("request", NotificationType.REQUEST_CANCELED.name(), repairerId, requestCode);
+
+            UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
+                    "request",
+                    NotificationStatus.REQUEST_CANCELED.name(),
+                    repairerId,
+                    NotificationType.REQUEST_CANCELED.name(),
+                    null,
+                    requestCode);
+            fcmService.sendAndSaveNotification(userNotificationDTO, requestCode);
         }
 
         CancelRequestForCustomerResponse response = new CancelRequestForCustomerResponse();

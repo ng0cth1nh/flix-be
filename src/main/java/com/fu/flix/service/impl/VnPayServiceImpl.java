@@ -1,10 +1,12 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.NotificationStatus;
 import com.fu.flix.constant.enums.NotificationType;
 import com.fu.flix.constant.enums.PaymentMethod;
 import com.fu.flix.constant.enums.RequestStatus;
 import com.fu.flix.dao.*;
+import com.fu.flix.dto.UserNotificationDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CustomerPaymentUrlRequest;
 import com.fu.flix.dto.request.RepairerDepositUrlRequest;
@@ -29,7 +31,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -266,7 +267,7 @@ public class VnPayServiceImpl implements VNPayService {
 
 
     @Override
-    public ResponseEntity<CustomerPaymentResponse> responseCustomerPayment(Map<String, String> requestParams) throws IOException {
+    public ResponseEntity<CustomerPaymentResponse> responseCustomerPayment(Map<String, String> requestParams) {
         CustomerPaymentResponse response = new CustomerPaymentResponse();
         String vnp_SecureHash = requestParams.get(VNP_SECURE_HASH);
         requestParams.remove(VNP_SECURE_HASH_TYPE);
@@ -342,8 +343,25 @@ public class VnPayServiceImpl implements VNPayService {
         repairer.setRepairing(false);
         repairRequest.setStatusId(RequestStatus.DONE.getId());
 
-        fcmService.sendNotification("request", NotificationType.REQUEST_DONE.name(), customerId, requestCode);
-        fcmService.sendNotification("request", NotificationType.REQUEST_DONE.name(), repairerId, requestCode);
+        UserNotificationDTO customerNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.REQUEST_DONE.name(),
+                customerId,
+                NotificationType.REQUEST_DONE.name(),
+                null,
+                requestCode
+        );
+        UserNotificationDTO repairerNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.REQUEST_DONE.name(),
+                repairerId,
+                NotificationType.REQUEST_DONE.name(),
+                null,
+                requestCode
+        );
+
+        fcmService.sendAndSaveNotification(customerNotificationDTO, requestCode);
+        fcmService.sendAndSaveNotification(repairerNotificationDTO, requestCode);
 
         log.info("user id: " + repairRequest.getUserId() + "payment success for request " + requestCode + " success");
         log.info("user id: " + customerId + "payment success for request " + requestCode + " success");
@@ -392,7 +410,7 @@ public class VnPayServiceImpl implements VNPayService {
     }
 
     @Override
-    public ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(Map<String, String> requestParams) throws IOException {
+    public ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(Map<String, String> requestParams) {
         RepairerDepositResponse response = new RepairerDepositResponse();
         String vnp_SecureHash = requestParams.get(VNP_SECURE_HASH);
         requestParams.remove(VNP_SECURE_HASH_TYPE);
@@ -429,8 +447,16 @@ public class VnPayServiceImpl implements VNPayService {
         }
 
         String responseCode = requestParams.get(VNP_RESPONSE_CODE);
+        UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
+                "transaction",
+                NotificationStatus.DEPOSIT_FAILED.name(),
+                repairerId,
+                NotificationType.DEPOSIT_FAILED.name(),
+                null,
+                null
+        );
         if (!VN_PAY_SUCCESS_CODE.equals(responseCode)) {
-            fcmService.sendNotification("transaction", NotificationType.DEPOSIT_FAILED.name(), repairerId);
+            fcmService.sendAndSaveNotification(userNotificationDTO);
             saveRepairerDepositTransactions(requestParams, repairerId, PAYMENT_FAILED);
             response.setMessage(PAYMENT_FAILED);
             response.setRspCode(VN_PAY_RESPONSE.get(PAYMENT_FAILED));
@@ -438,7 +464,7 @@ public class VnPayServiceImpl implements VNPayService {
         }
 
         if (vnPayTransactionDAO.findByVnpTxnRefAndResponseCode(txnRef, VN_PAY_SUCCESS_CODE).isPresent()) {
-            fcmService.sendNotification("transaction", NotificationType.DEPOSIT_FAILED.name(), repairerId);
+            fcmService.sendAndSaveNotification(userNotificationDTO);
             saveRepairerDepositTransactions(requestParams, repairerId, VNP_TXN_REF_EXISTED_IN_DATABASE);
             response.setMessage(VNP_TXN_REF_EXISTED_IN_DATABASE);
             response.setRspCode(VN_PAY_RESPONSE.get(VNP_TXN_REF_EXISTED_IN_DATABASE));
@@ -451,9 +477,10 @@ public class VnPayServiceImpl implements VNPayService {
         plusBalanceForRepairer(amount, balance);
         saveRepairerDepositTransactions(requestParams, repairerId, null);
 
-        fcmService.sendNotification("transaction",
-                NotificationType.DEPOSIT_SUCCESS.name(),
-                repairerId,
+        userNotificationDTO.setMessageStatus(NotificationStatus.DEPOSIT_SUCCESS.name());
+        userNotificationDTO.setNotificationType(NotificationType.DEPOSIT_SUCCESS.name());
+        fcmService.sendAndSaveNotification(
+                userNotificationDTO,
                 DataFormatter.getVietnamMoneyFormatted(amount),
                 DataFormatter.getVietnamMoneyFormatted(balance.getBalance()));
 

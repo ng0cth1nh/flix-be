@@ -2178,6 +2178,57 @@ class AdminServiceImplTest {
         Assertions.assertEquals(TRANSACTION_NOT_FOUND, exception.getMessage());
     }
 
+    @Test
+    void test_getRepairerWithdrawHistories_success() {
+        // given
+        WithdrawHistoriesRequest request = new WithdrawHistoriesRequest();
+        request.setPageNumber(0);
+        request.setPageSize(5);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        WithdrawHistoriesResponse response = underTest.getRepairerWithdrawHistories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getWithdrawList());
+    }
+
+    @Test
+    void test_rejectWithdraw_success() {
+        // given
+        Long transactionId = requestWithdrawForRepairer56();
+
+        RejectWithdrawRequest request = new RejectWithdrawRequest();
+        request.setReason("Thẻ sai");
+        request.setTransactionId(transactionId);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        RejectWithdrawResponse response = underTest.rejectWithdraw(request).getBody();
+
+        // then
+        Assertions.assertEquals(REJECT_WITHDRAW_REQUEST_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_rejectWithdraw_fail_when_reason_is_null() {
+        // given
+        Long transactionId = requestWithdrawForRepairer56();
+
+        RejectWithdrawRequest request = new RejectWithdrawRequest();
+        request.setReason(null);
+        request.setTransactionId(transactionId);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.rejectWithdraw(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REASON, exception.getMessage());
+    }
 
     private String createFixingRequestByCustomerId36ForService1() throws IOException {
         Long serviceId = 1L;

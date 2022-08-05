@@ -13,7 +13,8 @@ import java.util.Optional;
 public interface RepairRequestMatchingDAO extends JpaRepository<RepairRequestMatching, String> {
     Optional<RepairRequestMatching> findByRequestCode(String requestCode);
 
-    @Query(value = "SELECT rrm.request_code as requestCode, s.name as status, i.url as image, sv.name as serviceName, rr.description, iv.total_price as price, iv.actual_proceeds as actualPrice, rr.created_at as createdAt " +
+    @Query(value = "SELECT rrm.request_code as requestCode, s.name as status, i.url as image, sv.name as serviceName, rr.description, iv.total_price as price, " +
+            "iv.actual_proceeds as actualPrice, rr.created_at as createdAt, sv.id as serviceId " +
             "FROM repair_requests_matching rrm " +
             "JOIN repair_requests rr " +
             "ON rrm.request_code = rr.request_code " +

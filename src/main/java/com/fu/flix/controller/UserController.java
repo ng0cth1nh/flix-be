@@ -54,4 +54,9 @@ public class UserController {
     public ResponseEntity<UserInfoResponse> getUserInfo(UserInfoRequest request) {
         return userService.getUserInfo(request);
     }
+
+    @DeleteMapping("notification")
+    public ResponseEntity<DeleteNotificationResponse> deleteNotification(DeleteNotificationRequest request) {
+        return userService.deleteNotification(request);
+    }
 }

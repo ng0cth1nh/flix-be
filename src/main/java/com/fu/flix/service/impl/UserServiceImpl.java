@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -198,6 +199,28 @@ public class UserServiceImpl implements UserService {
         response.setFullName(user.getFullName());
         response.setPhone(user.getPhone());
         response.setAvatar(optionalAvatar.map(Image::getUrl).orElse(null));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<DeleteNotificationResponse> deleteNotification(DeleteNotificationRequest request) {
+        Long notificationId = request.getId();
+        if (notificationId == null) {
+            throw new GeneralException(HttpStatus.GONE, NOTIFICATION_ID_IS_REQUIRED);
+        }
+
+        Optional<Notification> optionalNotification = notificationDAO
+                .findByIdAndUserIdAndDeletedAtIsNull(notificationId, request.getUserId());
+        if (optionalNotification.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, NOTIFICATION_NOT_FOUND);
+        }
+
+        Notification notification = optionalNotification.get();
+        notification.setDeletedAt(LocalDateTime.now());
+
+        DeleteNotificationResponse response = new DeleteNotificationResponse();
+        response.setMessage(DELETE_NOTIFICATION_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

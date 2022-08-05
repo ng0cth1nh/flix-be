@@ -295,6 +295,7 @@ public class RepairerServiceImpl implements RepairerService {
                     dto.setPrice(h.getPrice());
                     dto.setActualPrice(h.getActualPrice());
                     dto.setDate(DateFormatUtil.toString(h.getCreatedAt(), DATE_TIME_PATTERN));
+                    dto.setServiceId(h.getServiceId());
 
                     return dto;
                 }).collect(Collectors.toList());

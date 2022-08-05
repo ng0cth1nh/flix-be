@@ -21,4 +21,5 @@ public interface UserService {
     ResponseEntity<UserInfoResponse> getUserInfo(UserInfoRequest request);
 
     ResponseEntity<DeleteNotificationResponse> deleteNotification(DeleteNotificationRequest request);
+    ResponseEntity<PutNotificationResponse> markReadNotification(PutNotificationRequest request);
 }

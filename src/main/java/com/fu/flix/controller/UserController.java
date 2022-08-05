@@ -59,4 +59,9 @@ public class UserController {
     public ResponseEntity<DeleteNotificationResponse> deleteNotification(DeleteNotificationRequest request) {
         return userService.deleteNotification(request);
     }
+
+    @PutMapping("notification")
+    public ResponseEntity<PutNotificationResponse> markReadNotification(@RequestBody PutNotificationRequest request) {
+        return userService.markReadNotification(request);
+    }
 }

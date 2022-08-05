@@ -637,7 +637,7 @@ class RepairerServiceImplTest {
         balance.setBalance(0L);
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
-        Long commission = getCommission(invoice);
+        Long commission = underTest.getCommission(invoice);
         long requiredMoney = commission + appConf.getMilestoneMoney();
 
         // when
@@ -646,11 +646,6 @@ class RepairerServiceImplTest {
         // then
         Assertions.assertEquals(BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + requiredMoney, exception.getMessage());
     }
-
-    private Long getCommission(Invoice invoice) {
-        return (long) (invoice.getActualProceeds() * this.appConf.getProfitRate()) + invoice.getVatPrice();
-    }
-
 
     @Test
     public void test_confirm_invoice_paid_success() throws IOException {

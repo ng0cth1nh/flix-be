@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.transaction.Transactional;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -102,7 +101,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<RepairerApproveResponse> approveRequest(RepairerApproveRequest request) throws IOException {
+    public ResponseEntity<RepairerApproveResponse> approveRequest(RepairerApproveRequest request) {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -128,8 +127,23 @@ public class RepairerServiceImpl implements RepairerService {
         RepairRequestMatching repairRequestMatching = buildRepairRequestMatching(requestCode, repairerId);
         repairRequestMatchingDAO.save(repairRequestMatching);
 
-        fcmService.sendNotification("request", NotificationType.REQUEST_APPROVED.name(), repairRequest.getUserId(), requestCode);
-        fcmService.sendNotification("request", NotificationType.REQUEST_APPROVED.name(), repairerId, requestCode);
+        UserNotificationDTO customerNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.REQUEST_APPROVED.name(),
+                repairRequest.getUserId(),
+                NotificationType.REQUEST_APPROVED.name(),
+                null,
+                requestCode);
+        UserNotificationDTO repairerNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.REQUEST_APPROVED.name(),
+                repairerId,
+                NotificationType.REQUEST_APPROVED.name(),
+                null,
+                requestCode);
+
+        fcmService.sendAndSaveNotification(customerNotificationDTO, requestCode);
+        fcmService.sendAndSaveNotification(repairerNotificationDTO, requestCode);
 
         RepairerApproveResponse response = new RepairerApproveResponse();
         response.setMessage(APPROVAL_REQUEST_SUCCESS);
@@ -187,7 +201,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) throws IOException {
+    public ResponseEntity<CancelRequestForRepairerResponse> cancelFixingRequest(CancelRequestForRepairerRequest request) {
         String requestCode = request.getRequestCode();
         if (Strings.isEmpty(requestCode)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_REQUEST_CODE);
@@ -216,7 +230,15 @@ public class RepairerServiceImpl implements RepairerService {
         customerService.refundVoucher(repairRequest);
         updateRepairRequest(request, repairRequest);
 
-        fcmService.sendNotification("request", NotificationType.REQUEST_CANCELED.name(), repairRequest.getUserId(), requestCode);
+        UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.REQUEST_CANCELED.name(),
+                repairRequest.getUserId(),
+                NotificationType.REQUEST_CANCELED.name(),
+                null,
+                requestCode
+        );
+        fcmService.sendAndSaveNotification(userNotificationDTO, requestCode);
 
         CancelRequestForRepairerResponse response = new CancelRequestForRepairerResponse();
         response.setMessage(CANCEL_REPAIR_REQUEST_SUCCESSFUL);
@@ -294,7 +316,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request) throws IOException {
+    public ResponseEntity<CreateInvoiceResponse> createInvoice(CreateInvoiceRequest request) {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -322,8 +344,25 @@ public class RepairerServiceImpl implements RepairerService {
 
         minusCommissions(balance, commission, invoice.getRequestCode());
 
-        fcmService.sendNotification("request", NotificationType.CREATE_INVOICE.name(), repairRequest.getUserId(), requestCode);
-        fcmService.sendNotification("request", NotificationType.CREATE_INVOICE.name(), repairerId, requestCode);
+        UserNotificationDTO customerNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.CREATE_INVOICE.name(),
+                repairRequest.getUserId(),
+                NotificationType.CREATE_INVOICE.name(),
+                null,
+                requestCode
+        );
+        UserNotificationDTO repairerNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.CREATE_INVOICE.name(),
+                repairerId,
+                NotificationType.CREATE_INVOICE.name(),
+                null,
+                requestCode
+        );
+
+        fcmService.sendAndSaveNotification(customerNotificationDTO, requestCode);
+        fcmService.sendAndSaveNotification(repairerNotificationDTO, requestCode);
 
         CreateInvoiceResponse response = new CreateInvoiceResponse();
         response.setMessage(CREATE_INVOICE_SUCCESS);
@@ -331,7 +370,8 @@ public class RepairerServiceImpl implements RepairerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private Long getCommission(Invoice invoice) {
+    @Override
+    public Long getCommission(Invoice invoice) {
         return (long) ((invoice.getTotalSubServicePrice() + invoice.getTotalExtraServicePrice())
                 * this.appConf.getProfitRate()) + invoice.getVatPrice();
     }
@@ -354,7 +394,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(ConfirmInvoicePaidRequest request) throws IOException {
+    public ResponseEntity<ConfirmInvoicePaidResponse> confirmInvoicePaid(ConfirmInvoicePaidRequest request) {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -377,8 +417,25 @@ public class RepairerServiceImpl implements RepairerService {
         repairer.setRepairing(false);
         repairRequest.setStatusId(DONE.getId());
 
-        fcmService.sendNotification("request", NotificationType.REQUEST_DONE.name(), repairRequest.getUserId(), requestCode);
-        fcmService.sendNotification("request", NotificationType.REQUEST_DONE.name(), repairerId, requestCode);
+        UserNotificationDTO customerNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.REQUEST_DONE.name(),
+                repairRequest.getUserId(),
+                NotificationType.REQUEST_DONE.name(),
+                null,
+                requestCode
+        );
+        UserNotificationDTO repairerNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.REQUEST_DONE.name(),
+                repairerId,
+                NotificationType.REQUEST_DONE.name(),
+                null,
+                requestCode
+        );
+
+        fcmService.sendAndSaveNotification(customerNotificationDTO, requestCode);
+        fcmService.sendAndSaveNotification(repairerNotificationDTO, requestCode);
 
         ConfirmInvoicePaidResponse response = new ConfirmInvoicePaidResponse();
         response.setMessage(CONFIRM_INVOICE_PAID_SUCCESS);
@@ -387,7 +444,7 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     @Override
-    public ResponseEntity<ConfirmFixingResponse> confirmFixing(ConfirmFixingRequest request) throws IOException {
+    public ResponseEntity<ConfirmFixingResponse> confirmFixing(ConfirmFixingRequest request) {
         String requestCode = request.getRequestCode();
         RepairRequest repairRequest = requestService.getRepairRequest(requestCode);
 
@@ -409,8 +466,25 @@ public class RepairerServiceImpl implements RepairerService {
         repairRequest.setStatusId(FIXING.getId());
         repairer.setRepairing(true);
 
-        fcmService.sendNotification("request", NotificationType.REQUEST_CONFIRM_FIXING.name(), repairRequest.getUserId(), requestCode);
-        fcmService.sendNotification("request", NotificationType.REQUEST_CONFIRM_FIXING.name(), repairerId, requestCode);
+        UserNotificationDTO customerNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.REQUEST_CONFIRM_FIXING.name(),
+                repairRequest.getUserId(),
+                NotificationType.REQUEST_CONFIRM_FIXING.name(),
+                null,
+                requestCode
+        );
+        UserNotificationDTO repairerNotificationDTO = new UserNotificationDTO(
+                "request",
+                NotificationStatus.REQUEST_CONFIRM_FIXING.name(),
+                repairerId,
+                NotificationType.REQUEST_CONFIRM_FIXING.name(),
+                null,
+                requestCode
+        );
+
+        fcmService.sendAndSaveNotification(customerNotificationDTO, requestCode);
+        fcmService.sendAndSaveNotification(repairerNotificationDTO, requestCode);
 
         ConfirmFixingResponse response = new ConfirmFixingResponse();
         response.setMessage(CONFIRM_FIXING_SUCCESS);

@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.CVStatus.ACCEPTED;
+import static com.fu.flix.constant.enums.NotificationType.REGISTER_SUCCESS;
+import static com.fu.flix.constant.enums.NotificationType.RESPONSE_FEEDBACK;
 import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
 import static com.fu.flix.constant.enums.TransactionStatus.FAIL;
 import static com.fu.flix.constant.enums.AccountState.ACTIVE;
@@ -851,7 +853,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request) throws IOException {
+    public ResponseEntity<ResponseFeedbackResponse> responseFeedback(ResponseFeedbackRequest request) {
         String status = getFeedbackStatusValidated(request.getStatus());
         String adminResponse = request.getResponse();
         if (Strings.isEmpty(adminResponse) || adminResponse.length() > DESCRIPTION_MAX_LENGTH) {
@@ -863,7 +865,14 @@ public class AdminServiceImpl implements AdminService {
         feedback.setResponse(adminResponse);
         feedback.setHandleByAdminId(request.getUserId());
 
-        fcmService.sendNotification("feedback", getFeedbackNotificationKey(status), feedback.getUserId(), request.getResponse());
+        UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
+                "feedback",
+                getFeedbackNotificationKey(status),
+                feedback.getUserId(),
+                RESPONSE_FEEDBACK.name(),
+                feedback.getId(),
+                null);
+        fcmService.sendAndSaveNotification(userNotificationDTO, request.getResponse());
 
         ResponseFeedbackResponse response = new ResponseFeedbackResponse();
         response.setMessage(RESPONSE_FEEDBACK_SUCCESS);
@@ -872,10 +881,10 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private String getFeedbackNotificationKey(String status) {
-        if (FeedbackStatus.PENDING.name().equals(status)) return NotificationType.FEEDBACK_PENDING.name();
-        else if (FeedbackStatus.PROCESSING.name().equals(status)) return NotificationType.FEEDBACK_PROCESSING.name();
-        else if (FeedbackStatus.REJECTED.name().equals(status)) return NotificationType.FEEDBACK_REJECTED.name();
-        else return NotificationType.FEEDBACK_DONE.name();
+        if (FeedbackStatus.PENDING.name().equals(status)) return NotificationStatus.FEEDBACK_PENDING.name();
+        else if (FeedbackStatus.PROCESSING.name().equals(status)) return NotificationStatus.FEEDBACK_PROCESSING.name();
+        else if (FeedbackStatus.REJECTED.name().equals(status)) return NotificationStatus.FEEDBACK_REJECTED.name();
+        else return NotificationStatus.FEEDBACK_DONE.name();
     }
 
     private String getFeedbackStatusValidated(String status) {
@@ -918,7 +927,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) throws IOException {
+    public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) {
         User user = validatorService.getUserValidated(request.getRepairerId());
         Collection<Role> roles = user.getRoles();
         if (!isPendingRepairer(roles)) {
@@ -930,7 +939,14 @@ public class AdminServiceImpl implements AdminService {
         repairer.setCvStatus(ACCEPTED.name());
         updateToRepairerRole(roles);
 
-        fcmService.sendNotification("register", NotificationType.REGISTER_SUCCESS.name(), user.getId());
+        UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
+                "register",
+                NotificationStatus.REGISTER_SUCCESS.name(),
+                user.getId(),
+                REGISTER_SUCCESS.name(),
+                null,
+                null);
+        fcmService.sendAndSaveNotification(userNotificationDTO);
 
         AcceptCVResponse response = new AcceptCVResponse();
         response.setMessage(ACCEPT_CV_SUCCESS);

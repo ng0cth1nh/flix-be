@@ -3,6 +3,7 @@ package com.fu.flix.service;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.Balance;
+import com.fu.flix.entity.Invoice;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
@@ -31,4 +32,5 @@ public interface RepairerService {
     ResponseEntity<RepairerWithdrawResponse> requestWithdraw(RepairerWithdrawRequest request);
 
     ResponseEntity<RepairerTransactionsResponse> getTransactionHistories(RepairerTransactionsRequest request);
+    Long getCommission(Invoice invoice);
 }

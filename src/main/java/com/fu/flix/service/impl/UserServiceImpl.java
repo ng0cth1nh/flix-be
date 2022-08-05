@@ -224,4 +224,26 @@ public class UserServiceImpl implements UserService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<PutNotificationResponse> markReadNotification(PutNotificationRequest request) {
+        Long notificationId = request.getId();
+        if (notificationId == null) {
+            throw new GeneralException(HttpStatus.GONE, NOTIFICATION_ID_IS_REQUIRED);
+        }
+
+        Optional<Notification> optionalNotification = notificationDAO
+                .findByIdAndUserIdAndDeletedAtIsNull(notificationId, request.getUserId());
+        if (optionalNotification.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, NOTIFICATION_NOT_FOUND);
+        }
+
+        Notification notification = optionalNotification.get();
+        notification.setRead(true);
+
+        PutNotificationResponse response = new PutNotificationResponse();
+        response.setMessage(MARK_READ_NOTIFICATION_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

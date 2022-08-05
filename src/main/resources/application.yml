@@ -1,7 +1,7 @@
 app:
   secretKey: 'secret'
-  lifeTimeToke: 86400000 #milliseconds
-  lifeTimeRefreshToken: 172800000 #milliseconds
+  lifeTimeToke: 8640000000 #milliseconds
+  lifeTimeRefreshToken: 17280000000 #milliseconds
   defaultLimitQuery: 20
   defaultOffset: 0
   vat: 0.05
@@ -24,14 +24,14 @@ app:
       REQUEST_CREATE_SUCCESS: 'Yêu cầu #%s đã được tạo thành công'
       REQUEST_APPROVED: 'Yêu cầu #%s đã được chấp nhận'
       REQUEST_CONFIRM_FIXING: 'Yêu cầu #%s đang được sửa'
-      CREATE_INVOICE: 'Tạo hóa đơn thành công.Mã hóa đơn #%s'
+      CREATE_INVOICE: 'Tạo hóa đơn thành công. Mã hóa đơn #%s'
       REQUEST_CANCELED: 'Mã yêu cầu #%s đã được hủy thành công'
       REQUEST_DONE: 'Yêu cầu #%s đã được hoàn thành'
       FEEDBACK_PROCESSING: 'Phản hồi : "%s" đang được xử lí'
       FEEDBACK_REJECTED: 'Phản hồi : "%s" đã bị hủy bỏ'
       FEEDBACK_DONE: 'Phản hồi : "%s" đã được chấp nhận'
       FEEDBACK_PENDING: 'Phản hồi : "%s" đã được gửi lên hệ thống'
-      DEPOSIT_SUCCESS: 'Bạn đã nạp %s thành công vào tài khoản.Số dư hiện tại là %s'
+      DEPOSIT_SUCCESS: 'Bạn đã nạp %s thành công vào tài khoản. Số dư hiện tại là %s'
       DEPOSIT_FAILED: 'Nạp tiền không thành công! Vui lòng thử lại sau, hoặc gửi phản hồi để nhận được hỗ trợ từ FLIX'
       REGISTER_SUCCESS: 'Tài khoản của bạn đã được đăng kí thành công!'
       REGISTER_FAIL: 'Đăng kí tài khoản thất bại do %s'

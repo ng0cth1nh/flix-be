@@ -4,7 +4,7 @@ package com.fu.flix.service.impl;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.Constant;
 import com.fu.flix.dao.*;
-import com.fu.flix.dto.NotificationDTO;
+import com.fu.flix.dto.NotificationOutputDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
@@ -101,9 +101,9 @@ public class UserServiceImpl implements UserService {
                 .findByUserIdAndDeletedAtIsNullOrderByDateDesc(userId, PageRequest.of(pageNumber, pageSize));
         long totalRecord = notificationDAO.countByUserIdAndDeletedAtIsNull(userId);
 
-        List<NotificationDTO> notificationDTOS = notifications.stream()
+        List<NotificationOutputDTO> notificationOutputDTOS = notifications.stream()
                 .map(notification -> {
-                    NotificationDTO dto = new NotificationDTO();
+                    NotificationOutputDTO dto = new NotificationOutputDTO();
                     Long imageId = notification.getImageId();
 
                     if (imageId != null) {
@@ -124,7 +124,7 @@ public class UserServiceImpl implements UserService {
                 }).collect(Collectors.toList());
 
         NotificationResponse response = new NotificationResponse();
-        response.setNotifications(notificationDTOS);
+        response.setNotifications(notificationOutputDTOS);
         response.setTotalRecord(totalRecord);
 
         return new ResponseEntity<>(response, HttpStatus.OK);

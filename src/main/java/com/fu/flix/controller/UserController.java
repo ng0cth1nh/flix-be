@@ -50,12 +50,6 @@ public class UserController {
         return fcmService.saveFCMToken(request);
     }
 
-    @PostMapping("pushNotification")
-    public ResponseEntity<PushNotificationResponse> pushNotification(PushNotificationRequest request) throws IOException {
-        return fcmService.sendPnsToDevice(request);
-    }
-
-
     @GetMapping("information")
     public ResponseEntity<UserInfoResponse> getUserInfo(UserInfoRequest request) {
         return userService.getUserInfo(request);

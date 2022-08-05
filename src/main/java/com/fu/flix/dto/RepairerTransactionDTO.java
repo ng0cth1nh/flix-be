@@ -13,4 +13,5 @@ public class RepairerTransactionDTO {
     private String type;
     private String status;
     private String createdAt;
+    private String requestCode;
 }

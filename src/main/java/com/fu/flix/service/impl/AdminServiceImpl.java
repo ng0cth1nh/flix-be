@@ -50,6 +50,7 @@ public class AdminServiceImpl implements AdminService {
     private final RepairRequestDAO repairRequestDAO;
     private final UserDAO userDAO;
     private final FeedbackDAO feedbackDAO;
+    private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final RoleDAO roleDAO;
     private final AddressService addressService;
     private final FeedbackService feedbackService;
@@ -79,7 +80,9 @@ public class AdminServiceImpl implements AdminService {
                             RepairRequestDAO repairRequestDAO,
                             UserDAO userDAO,
                             FeedbackDAO feedbackDAO,
-                            RoleDAO roleDAO, AddressService addressService,
+                            RepairRequestMatchingDAO repairRequestMatchingDAO,
+                            RoleDAO roleDAO,
+                            AddressService addressService,
                             FeedbackService feedbackService,
                             FCMService fcmService, StatusDAO statusDAO,
                             CertificateDAO certificateDAO,
@@ -103,6 +106,7 @@ public class AdminServiceImpl implements AdminService {
         this.repairRequestDAO = repairRequestDAO;
         this.userDAO = userDAO;
         this.feedbackDAO = feedbackDAO;
+        this.repairRequestMatchingDAO = repairRequestMatchingDAO;
         this.roleDAO = roleDAO;
         this.addressService = addressService;
         this.feedbackService = feedbackService;
@@ -1376,7 +1380,9 @@ public class AdminServiceImpl implements AdminService {
         Balance balance = balanceDAO.findByUserId(repairerId).get();
         Long oldBalance = balance.getBalance();
 
-        if (oldBalance < amount) {
+        if (repairRequestMatchingDAO.isRepairerHavingAnyRequest(repairerId) && balance.getBalance() - amount < appConf.getMilestoneMoney()) {
+            throw new GeneralException(HttpStatus.GONE, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + appConf.getMilestoneMoney());
+        } else if (balance.getBalance() < amount) {
             throw new GeneralException(HttpStatus.GONE, BALANCE_NOT_ENOUGH);
         }
 

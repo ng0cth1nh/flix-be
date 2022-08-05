@@ -709,10 +709,11 @@ public class RepairerServiceImpl implements RepairerService {
         transactionHistory.setUserId(repairerId);
         transactionHistory.setStatus(PENDING.name());
         transactionHistory.setWithdrawRequestId(savedWithdrawRequest.getId());
-        transactionHistoryDAO.save(transactionHistory);
+        TransactionHistory savedTransactionHistory = transactionHistoryDAO.save(transactionHistory);
 
         RepairerWithdrawResponse response = new RepairerWithdrawResponse();
         response.setMessage(CREATE_REQUEST_WITHDRAW_SUCCESS);
+        response.setTransactionId(savedTransactionHistory.getId());
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -766,6 +767,7 @@ public class RepairerServiceImpl implements RepairerService {
                     dto.setStatus(transaction.getStatus());
                     dto.setCreatedAt(DateFormatUtil.toString(transaction.getCreatedAt(), DATE_TIME_PATTERN));
                     dto.setTransactionId(transaction.getId());
+                    dto.setRequestCode(transaction.getRequestCode());
                     return dto;
                 })
                 .collect(Collectors.toList());

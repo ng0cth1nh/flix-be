@@ -1290,6 +1290,22 @@ class RepairerServiceImplTest {
         Assertions.assertEquals(CREATE_REQUEST_WITHDRAW_SUCCESS, response.getMessage());
     }
 
+    @Test
+    void test_getTransactionHistories_success() {
+        // given
+        RepairerTransactionsRequest request = new RepairerTransactionsRequest();
+        request.setPageNumber(0);
+        request.setPageSize(5);
+
+        setRepairerContext(55L, "0865390056");
+
+        // when
+        RepairerTransactionsResponse response = underTest.getTransactionHistories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getTransactions());
+    }
+
     private void createInvoiceByRepairerId56(String requestCode) throws IOException {
         CreateInvoiceRequest request = new CreateInvoiceRequest();
         request.setRequestCode(requestCode);

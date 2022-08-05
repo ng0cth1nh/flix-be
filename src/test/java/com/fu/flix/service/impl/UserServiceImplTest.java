@@ -1,11 +1,13 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.dao.NotificationDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
+import com.fu.flix.entity.Notification;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.UserService;
 import org.junit.jupiter.api.Assertions;
@@ -41,6 +43,9 @@ class UserServiceImplTest {
 
     @Autowired
     AppConf appConf;
+
+    @Autowired
+    NotificationDAO notificationDAO;
 
     @Test
     public void test_update_avatar_success() throws IOException {
@@ -437,6 +442,63 @@ class UserServiceImplTest {
 
         // then
         Assertions.assertEquals(USER_NOT_FOUND, exception.getMessage());
+    }
+
+    @Test
+    void test_deleteNotification_success() {
+        // given
+        Long notificationId = createNotificationForUserId36();
+        DeleteNotificationRequest request = new DeleteNotificationRequest();
+        request.setId(notificationId);
+
+        setCustomerContext(36L, "0865390037");
+
+        // when
+        DeleteNotificationResponse response = underTest.deleteNotification(request).getBody();
+
+        // then
+        Assertions.assertEquals(DELETE_NOTIFICATION_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_deleteNotification_fail_when_id_is_null() {
+        // given
+        DeleteNotificationRequest request = new DeleteNotificationRequest();
+        request.setId(null);
+
+        setCustomerContext(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.deleteNotification(request));
+
+        // then
+        Assertions.assertEquals(NOTIFICATION_ID_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_deleteNotification_fail_when_id_is_not_found() {
+        // given
+        DeleteNotificationRequest request = new DeleteNotificationRequest();
+        request.setId(100000000L);
+
+        setCustomerContext(36L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.deleteNotification(request));
+
+        // then
+        Assertions.assertEquals(NOTIFICATION_NOT_FOUND, exception.getMessage());
+    }
+
+    private Long createNotificationForUserId36() {
+        com.fu.flix.entity.Notification notificationData = new com.fu.flix.entity.Notification();
+        notificationData.setUserId(36L);
+        notificationData.setTitle("Thông tin đơn hàng");
+        notificationData.setContent("Yêu cầu #040822672F47 đã được tạo thành công");
+        notificationData.setRead(false);
+        notificationData.setImageId(1L);
+        Notification savedNotification = notificationDAO.save(notificationData);
+        return savedNotification.getId();
     }
 
     private List<MultipartFile> getListImages() {

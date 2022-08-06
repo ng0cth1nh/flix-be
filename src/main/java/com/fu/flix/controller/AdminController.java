@@ -149,7 +149,7 @@ public class AdminController {
         return adminService.getFeedbacks(request);
     }
 
-    @PutMapping("cv")
+    @PutMapping("cv/accept")
     public ResponseEntity<AcceptCVResponse> acceptCV(@RequestBody AcceptCVRequest request) throws IOException {
         return adminService.acceptCV(request);
     }
@@ -222,5 +222,10 @@ public class AdminController {
     @PutMapping("withdraw/reject")
     public ResponseEntity<RejectWithdrawResponse> rejectWithdraw(@RequestBody RejectWithdrawRequest request) {
         return adminService.rejectWithdraw(request);
+    }
+
+    @PutMapping("cv/reject")
+    public ResponseEntity<RejectCVResponse> rejectCV(@RequestBody RejectCVRequest request) {
+        return adminService.rejectCV(request);
     }
 }

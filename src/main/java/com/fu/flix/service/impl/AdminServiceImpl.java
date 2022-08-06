@@ -27,9 +27,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.CVStatus.ACCEPTED;
-import static com.fu.flix.constant.enums.NotificationType.REGISTER_SUCCESS;
-import static com.fu.flix.constant.enums.NotificationType.RESPONSE_FEEDBACK;
+import static com.fu.flix.constant.enums.CVStatus.*;
+import static com.fu.flix.constant.enums.NotificationType.*;
 import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
 import static com.fu.flix.constant.enums.TransactionStatus.FAIL;
 import static com.fu.flix.constant.enums.AccountState.ACTIVE;
@@ -958,15 +957,6 @@ public class AdminServiceImpl implements AdminService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private boolean isPendingRepairer(Collection<Role> roles) {
-        for (Role role : roles) {
-            if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void updateToRepairerRole(Collection<Role> roles) {
         for (Role role : roles) {
             if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
@@ -1432,5 +1422,61 @@ public class AdminServiceImpl implements AdminService {
         response.setMessage(REJECT_WITHDRAW_REQUEST_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<RejectCVResponse> rejectCV(RejectCVRequest request) {
+        String rejectType = getRejectCVStatusValidated(request.getRejectStatus());
+        String reason = request.getReason();
+        if (Strings.isEmpty(reason)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REASON);
+        }
+
+        User user = validatorService.getUserValidated(request.getRepairerId());
+        Collection<Role> roles = user.getRoles();
+        if (!isPendingRepairer(roles)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PENDING_REPAIRER);
+        }
+
+        Repairer repairer = repairerDAO.findByUserId(user.getId()).get();
+        if (REJECTED.name().equals(rejectType)) {
+            user.setIsActive(false);
+            user.setBanReason(reason);
+            user.setBanAt(LocalDateTime.now());
+            repairer.setCvStatus(REJECTED.name());
+        } else {
+            repairer.setCvStatus(UPDATING.name());
+        }
+        repairer.setCommentCv(reason);
+
+        UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
+                "register",
+                NotificationStatus.REGISTER_FAIL.name(),
+                user.getId(),
+                REGISTER_FAIL.name(),
+                null,
+                null);
+        fcmService.sendAndSaveNotification(userNotificationDTO, reason);
+
+        RejectCVResponse response = new RejectCVResponse();
+        response.setMessage(REJECT_CV_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getRejectCVStatusValidated(String status) {
+        if (REJECTED.name().equals(status) || UPDATING.name().equals(status)) {
+            return status;
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_REJECT_CV_STATUS);
+    }
+
+    private boolean isPendingRepairer(Collection<Role> roles) {
+        for (Role role : roles) {
+            if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

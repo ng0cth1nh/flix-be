@@ -1007,7 +1007,7 @@ public class AdminServiceImpl implements AdminService {
         response.setBackSideImage(dto.getBackSideImage());
         response.setAcceptedAccountAt(acceptedAccountAt);
         response.setCertificates(certificates.stream().map(Certificate::getUrl).collect(Collectors.toList()));
-        response.setRole(dto.getRole());
+        response.setCvStatus(dto.getCvStatus());
         response.setRegisterServices(registerServiceDTOs);
 
         return new ResponseEntity<>(response, HttpStatus.OK);

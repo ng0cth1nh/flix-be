@@ -1823,40 +1823,6 @@ class AdminServiceImplTest {
     }
 
     @Test
-    void test_search_repairer_fail_when_keyword_is_null() {
-        // given
-        SearchRepairersRequest request = new SearchRepairersRequest();
-        request.setStatus("ACTIVE");
-        request.setKeyword(null);
-        request.setIsVerified(true);
-
-        setManagerContext(438L, "0865390063");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchRepairers(request));
-
-        // then
-        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
-    }
-
-    @Test
-    void test_search_repairer_fail_when_verify_is_null() {
-        // given
-        SearchRepairersRequest request = new SearchRepairersRequest();
-        request.setStatus("ACTIVE");
-        request.setKeyword("0");
-        request.setIsVerified(null);
-
-        setManagerContext(438L, "0865390063");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchRepairers(request));
-
-        // then
-        Assertions.assertEquals(ACCOUNT_VERIFY_PARAM_IS_REQUIRED, exception.getMessage());
-    }
-
-    @Test
     void test_search_repairer_fail_when_invalid_status() {
         // given
         SearchRepairersRequest request = new SearchRepairersRequest();

@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
+import static com.fu.flix.constant.enums.AccountState.BAN;
 import static com.fu.flix.constant.enums.CVStatus.*;
 import static com.fu.flix.constant.enums.NotificationType.*;
 import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
@@ -1081,13 +1082,17 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<SearchCustomersResponse> searchCustomers(SearchCustomersRequest request) {
-        String phone = request.getKeyword();
-        if (Strings.isEmpty(phone)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String phone = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
-        String accountState = getAccountStateValidated(request.getStatus());
-        Boolean isActiveState = ACTIVE.name().equals(accountState);
+        String accountState = getAccountStateForSearching(request.getStatus());
+        Boolean isActiveState = null;
+        if (ACTIVE.name().equals(accountState)) {
+            isActiveState = true;
+        } else if (BAN.name().equals(accountState)) {
+            isActiveState = false;
+        }
 
         List<ISearchCustomerDTO> customers = userDAO.searchCustomersForAdmin(phone, isActiveState);
         SearchCustomersResponse response = new SearchCustomersResponse();
@@ -1098,18 +1103,19 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<SearchRepairersResponse> searchRepairers(SearchRepairersRequest request) {
-        String phone = request.getKeyword();
-        if (Strings.isEmpty(phone)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String phone = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                :request.getKeyword();
 
-        String accountState = getAccountStateValidated(request.getStatus());
-        Boolean isActiveState = ACTIVE.name().equals(accountState);
+        String accountState = getAccountStateForSearching(request.getStatus());
+        Boolean isActiveState = null;
+        if (ACTIVE.name().equals(accountState)) {
+            isActiveState = true;
+        } else if (BAN.name().equals(accountState)) {
+            isActiveState = false;
+        }
 
         Boolean isVerified = request.getIsVerified();
-        if (isVerified == null) {
-            throw new GeneralException(HttpStatus.GONE, ACCOUNT_VERIFY_PARAM_IS_REQUIRED);
-        }
 
         List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone, isActiveState, isVerified);
         SearchRepairersResponse response = new SearchRepairersResponse();
@@ -1118,7 +1124,10 @@ public class AdminServiceImpl implements AdminService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private String getAccountStateValidated(String state) {
+    private String getAccountStateForSearching(String state) {
+        if (Strings.isEmpty(state)) {
+            return null;
+        }
         for (AccountState us : AccountState.values()) {
             if (us.name().equals(state)) {
                 return state;

@@ -11,5 +11,5 @@ public interface ISearchRepairersDTO {
 
     String getStatus();
 
-    String getRole();
+    String getCvStatus();
 }

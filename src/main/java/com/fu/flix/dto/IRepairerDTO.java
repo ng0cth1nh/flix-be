@@ -11,5 +11,5 @@ public interface IRepairerDTO {
 
     String getStatus();
 
-    String getRole();
+    String getCvStatus();
 }

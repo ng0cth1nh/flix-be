@@ -33,19 +33,21 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "WHERE ur.role_id = 'C'", nativeQuery = true)
     long countCustomers();
 
-    @Query(value = "SELECT repairer.id as id, avatar.url as avatar, repairer.full_name as repairerName, repairer.phone as repairerPhone, " +
+    @Query(value = "SELECT u.id as id, avatar.url as avatar, u.full_name as repairerName, u.phone as repairerPhone, " +
             "CASE " +
-            "   WHEN repairer.is_active THEN 'ACTIVE' " +
+            "   WHEN u.is_active THEN 'ACTIVE' " +
             "   ELSE 'BAN' " +
             "END as status, " +
-            "roles.name as role " +
-            "FROM users repairer " +
+            "repairer.cv_status as cvStatus " +
+            "FROM users u " +
             "JOIN images avatar " +
-            "ON repairer.avatar = avatar.id " +
+            "ON u.avatar = avatar.id " +
             "JOIN user_roles ur " +
-            "ON ur.user_id = repairer.id " +
+            "ON ur.user_id = u.id " +
             "JOIN roles " +
             "ON roles.id = ur.role_id " +
+            "JOIN repairers repairer " +
+            "ON repairer.user_id = u.id " +
             "WHERE (ur.role_id = 'R' or ur.role_id = 'PR') limit :limit offset :offset", nativeQuery = true)
     List<IRepairerDTO> findRepairersForAdmin(Integer limit, Integer offset);
 
@@ -190,7 +192,7 @@ public interface UserDAO extends JpaRepository<User, Long> {
     List<ISearchCustomerDTO> searchCustomersForAdmin(String phone, Boolean isActiveState);
 
     @Query(value = "SELECT repairer.id, avatar.url as avatar, repairer.full_name as repairerName, repairer.phone as repairerPhone, " +
-            "CASE WHEN repairer.is_active THEN 'ACTIVE' ELSE 'BAN' END as status, role.name as role " +
+            "CASE WHEN repairer.is_active THEN 'ACTIVE' ELSE 'BAN' END as status, repairer_info.cv_status as cvStatus " +
             "FROM users repairer " +
             "JOIN user_roles ur " +
             "ON ur.user_id = repairer.id " +

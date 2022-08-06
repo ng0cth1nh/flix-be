@@ -233,4 +233,9 @@ public class AdminController {
     public ResponseEntity<UnbanUserResponse> unbanUser(UnbanUserRequest request) {
         return adminService.unbanUser(request);
     }
+
+    @GetMapping("withdraw/detail")
+    public ResponseEntity<WithdrawDetailResponse> getRepairerWithdrawDetail(WithdrawDetailRequest request) {
+        return adminService.getRepairerWithdrawDetail(request);
+    }
 }

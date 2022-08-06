@@ -2,6 +2,7 @@ package com.fu.flix.dao;
 
 import com.fu.flix.dto.ITransactionDTO;
 import com.fu.flix.dto.ITransactionDetailDTO;
+import com.fu.flix.dto.IWithdrawDetail;
 import com.fu.flix.dto.IWithdrawHistoryDTO;
 import com.fu.flix.entity.TransactionHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -79,4 +80,16 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
     List<IWithdrawHistoryDTO> findRepairerWithdrawHistoriesForAdmin(Integer limit, Integer offset);
 
     long countByTypeAndStatus(String type, String status);
+
+    @Query(value = "SELECT th.id as transactionId, u.full_name as repairerName, u.phone as repairerPhone, wr.type as withdrawType, " +
+            "th.transaction_code as transactionCode, th.amount, wr.bank_code as bankCode, wr.bank_account_number as bankAccountNumber, " +
+            "wr.bank_account_name as bankAccountName " +
+            "FROM transaction_histories th " +
+            "JOIN users u " +
+            "ON u.id = th.user_id " +
+            "JOIN withdraw_requests wr " +
+            "ON wr.id = th.withdraw_request_id " +
+            "WHERE th.type = 'WITHDRAW' " +
+            "AND th.id = :transactionId", nativeQuery = true)
+    Optional<IWithdrawDetail> findRepairerWithdrawDetailForAdmin(Long transactionId);
 }

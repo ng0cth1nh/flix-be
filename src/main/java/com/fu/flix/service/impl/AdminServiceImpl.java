@@ -933,7 +933,7 @@ public class AdminServiceImpl implements AdminService {
     public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) {
         User user = validatorService.getUserValidated(request.getRepairerId());
         Collection<Role> roles = user.getRoles();
-        if (!isPendingRepairer(roles)) {
+        if (isNotPendingRepairer(roles)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PENDING_REPAIRER);
         }
 
@@ -1434,7 +1434,7 @@ public class AdminServiceImpl implements AdminService {
 
         User user = validatorService.getUserValidated(request.getRepairerId());
         Collection<Role> roles = user.getRoles();
-        if (!isPendingRepairer(roles)) {
+        if (isNotPendingRepairer(roles)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PENDING_REPAIRER);
         }
 
@@ -1471,12 +1471,12 @@ public class AdminServiceImpl implements AdminService {
         throw new GeneralException(HttpStatus.GONE, INVALID_REJECT_CV_STATUS);
     }
 
-    private boolean isPendingRepairer(Collection<Role> roles) {
+    private boolean isNotPendingRepairer(Collection<Role> roles) {
         for (Role role : roles) {
             if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 }

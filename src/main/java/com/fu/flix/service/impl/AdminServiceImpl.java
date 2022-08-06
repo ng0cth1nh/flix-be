@@ -1103,7 +1103,7 @@ public class AdminServiceImpl implements AdminService {
     public ResponseEntity<SearchRepairersResponse> searchRepairers(SearchRepairersRequest request) {
         String phone = Strings.isEmpty(request.getKeyword())
                 ? Strings.EMPTY
-                :request.getKeyword();
+                : request.getKeyword();
 
         String accountState = getAccountStateForSearching(request.getStatus());
         Boolean isActiveState = null;
@@ -1515,5 +1515,59 @@ public class AdminServiceImpl implements AdminService {
         response.setMessage(UNBAN_USER_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<WithdrawDetailResponse> getRepairerWithdrawDetail(WithdrawDetailRequest request) {
+        Long transactionId = request.getTransactionId();
+        if (transactionId == null) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_TRANSACTION_ID);
+        }
+
+        Optional<IWithdrawDetail> optionalIWithdrawDetail = transactionHistoryDAO
+                .findRepairerWithdrawDetailForAdmin(transactionId);
+
+        WithdrawDetailResponse response = new WithdrawDetailResponse();
+        optionalIWithdrawDetail.ifPresent(detail -> {
+            response.setTransactionId(detail.getTransactionId());
+            response.setRepairerName(detail.getRepairerName());
+            response.setRepairerPhone(detail.getRepairerPhone());
+            response.setWithdrawType(detail.getWithdrawType());
+            response.setTransactionCode(detail.getTransactionCode());
+            response.setAmount(detail.getAmount());
+            response.setBankCode(detail.getBankCode());
+            response.setBankAccountNumber(detail.getBankAccountNumber());
+            response.setBankAccountName(detail.getBankAccountName());
+        });
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<SearchWithdrawResponse> searchRepairerWithdrawHistories(SearchWithdrawRequest request) {
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
+
+        String withdrawType = getWithdrawTypeValidatedForSearching(request.getWithdrawType());
+
+        List<ISearchWithdrawDTO> withdrawList = transactionHistoryDAO.searchRepairWithdrawHistoriesForAdmin(keyword, withdrawType);
+
+        SearchWithdrawResponse response = new SearchWithdrawResponse();
+        response.setWithdrawList(withdrawList);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getWithdrawTypeValidatedForSearching(String type) {
+        if (Strings.isEmpty(type)) {
+            return null;
+        }
+        for (WithdrawType wt : WithdrawType.values()) {
+            if (wt.name().equals(type)) {
+                return type;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_WITHDRAW_TYPE);
     }
 }

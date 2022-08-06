@@ -24,4 +24,7 @@ public interface FeedbackDAO extends JpaRepository<Feedback, Long> {
             "AND fb.status_id IN (:statusIds) " +
             "AND fb.type IN (:feedbackTypes)", nativeQuery = true)
     List<ISearchFeedbackDTO> searchFeedbackForAdmin(String phone, List<String> statusIds, List<String> feedbackTypes);
+
+    @Query(value = "SELECT count(*) FROM feedbacks WHERE status_id = 'PE'", nativeQuery = true)
+    long countPendingFeedbacks();
 }

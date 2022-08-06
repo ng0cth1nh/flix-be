@@ -1542,4 +1542,32 @@ public class AdminServiceImpl implements AdminService {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<SearchWithdrawResponse> searchRepairerWithdrawHistories(SearchWithdrawRequest request) {
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
+
+        String withdrawType = getWithdrawTypeValidatedForSearching(request.getWithdrawType());
+
+        List<ISearchWithdrawDTO> withdrawList = transactionHistoryDAO.searchRepairWithdrawHistoriesForAdmin(keyword, withdrawType);
+
+        SearchWithdrawResponse response = new SearchWithdrawResponse();
+        response.setWithdrawList(withdrawList);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getWithdrawTypeValidatedForSearching(String type) {
+        if (Strings.isEmpty(type)) {
+            return null;
+        }
+        for (WithdrawType wt : WithdrawType.values()) {
+            if (wt.name().equals(type)) {
+                return type;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_WITHDRAW_TYPE);
+    }
 }

@@ -94,4 +94,6 @@ public interface AdminService {
     ResponseEntity<UnbanUserResponse> unbanUser(UnbanUserRequest request);
 
     ResponseEntity<WithdrawDetailResponse> getRepairerWithdrawDetail(WithdrawDetailRequest request);
+
+    ResponseEntity<SearchWithdrawResponse> searchRepairerWithdrawHistories(SearchWithdrawRequest request);
 }

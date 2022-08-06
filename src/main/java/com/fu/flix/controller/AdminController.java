@@ -238,4 +238,9 @@ public class AdminController {
     public ResponseEntity<WithdrawDetailResponse> getRepairerWithdrawDetail(WithdrawDetailRequest request) {
         return adminService.getRepairerWithdrawDetail(request);
     }
+
+    @GetMapping("repairer/withdraw/search")
+    public ResponseEntity<SearchWithdrawResponse> searchRepairerWithdrawHistories(SearchWithdrawRequest request) {
+        return adminService.searchRepairerWithdrawHistories(request);
+    }
 }

@@ -354,22 +354,6 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
-    public void test_search_sub_services_by_service_fail_when_keyword_is_null() {
-        // given
-        SearchSubServicesRequest request = new SearchSubServicesRequest();
-        request.setKeyword(null);
-        request.setServiceId(1L);
-
-        setRepairerContext(52L, "0865390057");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchSubServicesByService(request));
-
-        // then
-        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
-    }
-
-    @Test
     public void test_search_sub_services_by_service_fail_when_service_id_is_null() {
         // given
         SearchSubServicesRequest request = new SearchSubServicesRequest();
@@ -399,22 +383,6 @@ class CommonRepairerServiceImplTest {
 
         // then
         Assertions.assertNotNull(response.getAccessories());
-    }
-
-    @Test
-    public void test_search_accessory_by_service_fail_when_keyword_is_null() {
-        // given
-        SearchAccessoriesRequest request = new SearchAccessoriesRequest();
-        request.setKeyword(null);
-        request.setServiceId(1L);
-
-        setRepairerContext(52L, "0865390057");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchAccessoriesByService(request));
-
-        // then
-        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
     }
 
     @Test

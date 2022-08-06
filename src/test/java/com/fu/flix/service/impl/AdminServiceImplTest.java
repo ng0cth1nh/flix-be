@@ -588,21 +588,6 @@ class AdminServiceImplTest {
     }
 
     @Test
-    void test_search_services_fail_when_keyword_is_null() {
-        // given
-        AdminSearchServicesRequest request = new AdminSearchServicesRequest();
-        request.setKeyword(null);
-
-        setManagerContext(438L, "0865390063");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchServices(request));
-
-        // then
-        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
-    }
-
-    @Test
     void test_get_sub_services_success() {
         // given
         GetSubServicesRequest request = new GetSubServicesRequest();
@@ -1657,21 +1642,6 @@ class AdminServiceImplTest {
     }
 
     @Test
-    void test_search_categories_fail_when_keyword_is_null() {
-        // given
-        SearchCategoriesRequest request = new SearchCategoriesRequest();
-        request.setKeyword(null);
-
-        setManagerContext(438L, "0865390063");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchCategories(request));
-
-        // then
-        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
-    }
-
-    @Test
     void test_search_feedback_success() {
         // given
         SearchFeedbackRequest request = new SearchFeedbackRequest();
@@ -1790,22 +1760,6 @@ class AdminServiceImplTest {
     }
 
     @Test
-    void test_search_customer_fail_when_key_word_is_empty() {
-        // given
-        SearchCustomersRequest request = new SearchCustomersRequest();
-        request.setKeyword("");
-        request.setStatus("BAN");
-
-        setManagerContext(438L, "0865390063");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchCustomers(request));
-
-        // then
-        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
-    }
-
-    @Test
     void test_search_repairer_success() {
         // given
         SearchRepairersRequest request = new SearchRepairersRequest();
@@ -1906,21 +1860,6 @@ class AdminServiceImplTest {
 
         // then
         Assertions.assertNotNull(response.getSubServices());
-    }
-
-    @Test
-    void test_searchSubServices_fail_when_keyword_is_null() {
-        // given
-        AdminSearchServicesRequest request = new AdminSearchServicesRequest();
-        request.setKeyword(null);
-
-        setManagerContext(438L, "0865390063");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchSubServices(request));
-
-        // then
-        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
     }
 
     @Test

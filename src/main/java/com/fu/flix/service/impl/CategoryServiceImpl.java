@@ -16,6 +16,7 @@ import com.fu.flix.entity.Image;
 import com.fu.flix.entity.SubService;
 import com.fu.flix.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.fu.flix.constant.Constant.INVALID_KEY_WORD;
 import static com.fu.flix.constant.Constant.INVALID_SERVICE;
 import static com.fu.flix.constant.enums.ServiceState.ACTIVE;
 import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
@@ -87,10 +87,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public ResponseEntity<SearchActiveServicesResponse> searchServices(SearchActiveServicesRequest request) {
-        String keyword = request.getKeyword();
-        if (keyword == null || keyword.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
         List<ISearchActiveServiceDTO> services = serviceDAO.searchActiveServices(keyword);
 

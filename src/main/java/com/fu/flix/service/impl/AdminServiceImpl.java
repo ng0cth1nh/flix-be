@@ -388,10 +388,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<AdminSearchServicesResponse> searchServices(AdminSearchServicesRequest request) {
-        String keyword = request.getKeyword();
-        if (keyword == null || keyword.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
         List<IAdminSearchServiceDTO> services = serviceDAO.searchServicesForAdmin(keyword);
         List<AdminSearchServiceDTO> searchServiceDTOS = services.stream()
@@ -1016,10 +1015,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<SearchCategoriesResponse> searchCategories(SearchCategoriesRequest request) {
-        String keyword = request.getKeyword();
-        if (keyword == null || keyword.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
         List<ICategoryDTO> categories = categoryDAO.searchCategories(keyword);
         SearchCategoriesResponse response = new SearchCategoriesResponse();
@@ -1138,10 +1136,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<AdminSearchAccessoriesResponse> searchAccessories(AdminSearchAccessoriesRequest request) {
-        String keyword = request.getKeyword();
-        if (Strings.isEmpty(keyword)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
         List<Accessory> accessories = accessoryDAO.searchAccessories(keyword);
         List<AccessoryOutputDTO> accessoryOutputDTOS = accessories.stream()
@@ -1256,10 +1253,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request) {
-        String keyword = request.getKeyword();
-        if (Strings.isEmpty(keyword)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
         List<SubService> subServiceDTOs = subServiceDAO.searchSubServicesForAdmin(keyword);
         List<SubServiceOutputDTO> subServices = subServiceDTOs.stream()

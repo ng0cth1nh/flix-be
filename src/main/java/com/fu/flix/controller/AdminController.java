@@ -228,4 +228,9 @@ public class AdminController {
     public ResponseEntity<RejectCVResponse> rejectCV(@RequestBody RejectCVRequest request) {
         return adminService.rejectCV(request);
     }
+
+    @DeleteMapping("blackList")
+    public ResponseEntity<UnbanUserResponse> unbanUser(UnbanUserRequest request) {
+        return adminService.unbanUser(request);
+    }
 }

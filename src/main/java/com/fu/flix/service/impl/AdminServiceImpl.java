@@ -1484,4 +1484,36 @@ public class AdminServiceImpl implements AdminService {
         }
         return true;
     }
+
+
+    @Override
+    public ResponseEntity<UnbanUserResponse> unbanUser(UnbanUserRequest request) {
+        String phone = request.getPhone();
+        if (!InputValidation.isPhoneValid(phone)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PHONE_NUMBER);
+        }
+
+        Optional<User> optionalUser = userDAO.findByUsername(phone);
+        if (optionalUser.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, USER_NOT_FOUND);
+        }
+
+        User user = optionalUser.get();
+        if (user.getIsActive()) {
+            throw new GeneralException(HttpStatus.GONE, THIS_ACCOUNT_IS_ACTIVE);
+        }
+
+        if (!isUser(user.getRoles())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_BAN_USER_ROLE_ARE_CUSTOMER_OR_REPAIRER_OR_PENDING_REPAIRER);
+        }
+
+        user.setIsActive(true);
+        user.setBanReason(null);
+        user.setBanAt(null);
+
+        UnbanUserResponse response = new UnbanUserResponse();
+        response.setMessage(UNBAN_USER_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

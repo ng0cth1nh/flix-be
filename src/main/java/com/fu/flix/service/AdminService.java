@@ -90,4 +90,6 @@ public interface AdminService {
     ResponseEntity<RejectWithdrawResponse> rejectWithdraw(RejectWithdrawRequest request);
 
     ResponseEntity<RejectCVResponse> rejectCV(RejectCVRequest request);
+
+    ResponseEntity<UnbanUserResponse> unbanUser(UnbanUserRequest request);
 }

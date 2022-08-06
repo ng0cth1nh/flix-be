@@ -970,7 +970,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<GetRepairerDetailResponse> getRepairerDetail(GetRepairerDetailRequest request) {
         Long repairerId = request.getRepairerId();
-        Optional<IRepairerDetailDTO> optionalRepairer = userDAO.findRepairerDetail(repairerId);
+        Optional<IRepairerDetailDTO> optionalRepairer = userDAO.findRepairerDetailForAdmin(repairerId);
         if (optionalRepairer.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, REPAIRER_NOT_FOUND);
         }

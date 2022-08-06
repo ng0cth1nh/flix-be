@@ -103,7 +103,7 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "AND ua.is_main_address " +
             "AND ua.deleted_at IS NULL " +
             "AND r.user_id = :repairerId", nativeQuery = true)
-    Optional<IRepairerDetailDTO> findRepairerDetail(Long repairerId);
+    Optional<IRepairerDetailDTO> findRepairerDetailForAdmin(Long repairerId);
 
     @Query(value = "SELECT u.id as id, avatar.url as avatar, u.full_name as name, u.phone, roles.name as role, " +
             "u.ban_reason as banReason, u.ban_at as banAt " +

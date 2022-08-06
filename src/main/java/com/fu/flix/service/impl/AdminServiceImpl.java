@@ -27,9 +27,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
-import static com.fu.flix.constant.enums.CVStatus.ACCEPTED;
-import static com.fu.flix.constant.enums.NotificationType.REGISTER_SUCCESS;
-import static com.fu.flix.constant.enums.NotificationType.RESPONSE_FEEDBACK;
+import static com.fu.flix.constant.enums.AccountState.BAN;
+import static com.fu.flix.constant.enums.CVStatus.*;
+import static com.fu.flix.constant.enums.NotificationType.*;
 import static com.fu.flix.constant.enums.ServiceState.INACTIVE;
 import static com.fu.flix.constant.enums.TransactionStatus.FAIL;
 import static com.fu.flix.constant.enums.AccountState.ACTIVE;
@@ -388,10 +388,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<AdminSearchServicesResponse> searchServices(AdminSearchServicesRequest request) {
-        String keyword = request.getKeyword();
-        if (keyword == null || keyword.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
         List<IAdminSearchServiceDTO> services = serviceDAO.searchServicesForAdmin(keyword);
         List<AdminSearchServiceDTO> searchServiceDTOS = services.stream()
@@ -934,7 +933,7 @@ public class AdminServiceImpl implements AdminService {
     public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) {
         User user = validatorService.getUserValidated(request.getRepairerId());
         Collection<Role> roles = user.getRoles();
-        if (!isPendingRepairer(roles)) {
+        if (isNotPendingRepairer(roles)) {
             throw new GeneralException(HttpStatus.GONE, INVALID_PENDING_REPAIRER);
         }
 
@@ -956,15 +955,6 @@ public class AdminServiceImpl implements AdminService {
         response.setMessage(ACCEPT_CV_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private boolean isPendingRepairer(Collection<Role> roles) {
-        for (Role role : roles) {
-            if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void updateToRepairerRole(Collection<Role> roles) {
@@ -1025,10 +1015,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<SearchCategoriesResponse> searchCategories(SearchCategoriesRequest request) {
-        String keyword = request.getKeyword();
-        if (keyword == null || keyword.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
         List<ICategoryDTO> categories = categoryDAO.searchCategories(keyword);
         SearchCategoriesResponse response = new SearchCategoriesResponse();
@@ -1091,13 +1080,17 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<SearchCustomersResponse> searchCustomers(SearchCustomersRequest request) {
-        String phone = request.getKeyword();
-        if (Strings.isEmpty(phone)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String phone = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
-        String accountState = getAccountStateValidated(request.getStatus());
-        Boolean isActiveState = ACTIVE.name().equals(accountState);
+        String accountState = getAccountStateForSearching(request.getStatus());
+        Boolean isActiveState = null;
+        if (ACTIVE.name().equals(accountState)) {
+            isActiveState = true;
+        } else if (BAN.name().equals(accountState)) {
+            isActiveState = false;
+        }
 
         List<ISearchCustomerDTO> customers = userDAO.searchCustomersForAdmin(phone, isActiveState);
         SearchCustomersResponse response = new SearchCustomersResponse();
@@ -1108,18 +1101,19 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<SearchRepairersResponse> searchRepairers(SearchRepairersRequest request) {
-        String phone = request.getKeyword();
-        if (Strings.isEmpty(phone)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String phone = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                :request.getKeyword();
 
-        String accountState = getAccountStateValidated(request.getStatus());
-        Boolean isActiveState = ACTIVE.name().equals(accountState);
+        String accountState = getAccountStateForSearching(request.getStatus());
+        Boolean isActiveState = null;
+        if (ACTIVE.name().equals(accountState)) {
+            isActiveState = true;
+        } else if (BAN.name().equals(accountState)) {
+            isActiveState = false;
+        }
 
         Boolean isVerified = request.getIsVerified();
-        if (isVerified == null) {
-            throw new GeneralException(HttpStatus.GONE, ACCOUNT_VERIFY_PARAM_IS_REQUIRED);
-        }
 
         List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone, isActiveState, isVerified);
         SearchRepairersResponse response = new SearchRepairersResponse();
@@ -1128,7 +1122,10 @@ public class AdminServiceImpl implements AdminService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private String getAccountStateValidated(String state) {
+    private String getAccountStateForSearching(String state) {
+        if (Strings.isEmpty(state)) {
+            return null;
+        }
         for (AccountState us : AccountState.values()) {
             if (us.name().equals(state)) {
                 return state;
@@ -1139,10 +1136,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<AdminSearchAccessoriesResponse> searchAccessories(AdminSearchAccessoriesRequest request) {
-        String keyword = request.getKeyword();
-        if (Strings.isEmpty(keyword)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
         List<Accessory> accessories = accessoryDAO.searchAccessories(keyword);
         List<AccessoryOutputDTO> accessoryOutputDTOS = accessories.stream()
@@ -1257,10 +1253,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request) {
-        String keyword = request.getKeyword();
-        if (Strings.isEmpty(keyword)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
         List<SubService> subServiceDTOs = subServiceDAO.searchSubServicesForAdmin(keyword);
         List<SubServiceOutputDTO> subServices = subServiceDTOs.stream()
@@ -1432,5 +1427,61 @@ public class AdminServiceImpl implements AdminService {
         response.setMessage(REJECT_WITHDRAW_REQUEST_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<RejectCVResponse> rejectCV(RejectCVRequest request) {
+        String rejectType = getRejectCVStatusValidated(request.getRejectStatus());
+        String reason = request.getReason();
+        if (Strings.isEmpty(reason)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REASON);
+        }
+
+        User user = validatorService.getUserValidated(request.getRepairerId());
+        Collection<Role> roles = user.getRoles();
+        if (isNotPendingRepairer(roles)) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_PENDING_REPAIRER);
+        }
+
+        Repairer repairer = repairerDAO.findByUserId(user.getId()).get();
+        if (REJECTED.name().equals(rejectType)) {
+            user.setIsActive(false);
+            user.setBanReason(reason);
+            user.setBanAt(LocalDateTime.now());
+            repairer.setCvStatus(REJECTED.name());
+        } else {
+            repairer.setCvStatus(UPDATING.name());
+        }
+        repairer.setCommentCv(reason);
+
+        UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
+                "register",
+                NotificationStatus.REGISTER_FAIL.name(),
+                user.getId(),
+                REGISTER_FAIL.name(),
+                null,
+                null);
+        fcmService.sendAndSaveNotification(userNotificationDTO, reason);
+
+        RejectCVResponse response = new RejectCVResponse();
+        response.setMessage(REJECT_CV_SUCCESS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private String getRejectCVStatusValidated(String status) {
+        if (REJECTED.name().equals(status) || UPDATING.name().equals(status)) {
+            return status;
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_REJECT_CV_STATUS);
+    }
+
+    private boolean isNotPendingRepairer(Collection<Role> roles) {
+        for (Role role : roles) {
+            if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -195,10 +195,9 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
 
     @Override
     public ResponseEntity<SearchSubServicesResponse> searchSubServicesByService(SearchSubServicesRequest request) {
-        String keyword = request.getKeyword();
-        if (Strings.isEmpty(keyword)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
 
         Long serviceId = request.getServiceId();
         if (serviceId == null) {
@@ -223,10 +222,10 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
 
     @Override
     public ResponseEntity<SearchAccessoriesResponse> searchAccessoriesByService(SearchAccessoriesRequest request) {
-        String keyword = request.getKeyword();
-        if (keyword == null || keyword.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_KEY_WORD);
-        }
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
+
         Long serviceId = request.getServiceId();
         if (serviceId == null) {
             throw new GeneralException(HttpStatus.GONE, SERVICE_ID_IS_REQUIRED);

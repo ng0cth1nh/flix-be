@@ -71,32 +71,6 @@ class CategoryServiceImplTest {
     }
 
     @Test
-    void test_search_service_fail_when_key_word_is_empty() {
-        // given
-        SearchActiveServicesRequest request = new SearchActiveServicesRequest();
-        request.setKeyword("");
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchServices(request));
-
-        // then
-        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
-    }
-
-    @Test
-    void test_search_service_fail_when_key_word_is_null() {
-        // given
-        SearchActiveServicesRequest request = new SearchActiveServicesRequest();
-        request.setKeyword(null);
-
-        // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchServices(request));
-
-        // then
-        Assertions.assertEquals(INVALID_KEY_WORD, exception.getMessage());
-    }
-
-    @Test
     void test_search_service_success_when_key_word_is_nh() {
         // given
         SearchActiveServicesRequest request = new SearchActiveServicesRequest();

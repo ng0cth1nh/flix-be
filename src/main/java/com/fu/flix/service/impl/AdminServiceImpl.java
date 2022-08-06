@@ -717,13 +717,13 @@ public class AdminServiceImpl implements AdminService {
         Optional<User> optionalUser = userDAO.findById(feedback.getUserId());
         Optional<Status> optionalStatus = statusDAO.findById(feedback.getStatusId());
 
-        List<FeedbackResponse> feedbackResponses = feedbackResponseDAO.findByFeedbackIdOrderByCreatedAtDesc(feedback.getId());
-        List<FeedbackResponseDTO> responseDTOS = feedbackResponses.stream()
+        List<FeedbackResponse> adminResponses = feedbackResponseDAO.findByFeedbackIdOrderByCreatedAtDesc(feedback.getId());
+        List<AdminResponseFeedbackDTO> adminResponseDTOS = adminResponses.stream()
                 .map(feedbackResponse -> {
-                    FeedbackResponseDTO feedbackResponseDTO = new FeedbackResponseDTO();
-                    feedbackResponseDTO.setContent(feedbackResponse.getContent());
-                    feedbackResponseDTO.setCreatedAt(DateFormatUtil.toString(feedbackResponse.getCreatedAt(), DATE_TIME_PATTERN));
-                    return feedbackResponseDTO;
+                    AdminResponseFeedbackDTO adminResponseFeedbackDTO = new AdminResponseFeedbackDTO();
+                    adminResponseFeedbackDTO.setContent(feedbackResponse.getContent());
+                    adminResponseFeedbackDTO.setCreatedAt(DateFormatUtil.toString(feedbackResponse.getCreatedAt(), DATE_TIME_PATTERN));
+                    return adminResponseFeedbackDTO;
                 }).collect(Collectors.toList());
 
         FeedbackDetailResponse response = new FeedbackDetailResponse();
@@ -734,7 +734,7 @@ public class AdminServiceImpl implements AdminService {
         response.setDescription(feedback.getDescription());
         response.setImages(images);
         response.setStatus(optionalStatus.map(Status::getName).orElse(null));
-        response.setResponses(responseDTOS);
+        response.setResponses(adminResponseDTOS);
         response.setHandleByAdminId(feedback.getHandleByAdminId());
         response.setCreatedById(feedback.getCreatedById());
         response.setUserId(feedback.getUserId());

@@ -38,5 +38,5 @@ public interface IRepairerDetailDTO {
 
     LocalDateTime getAcceptedAccountAt();
 
-    String getRole();
+    String getCvStatus();
 }

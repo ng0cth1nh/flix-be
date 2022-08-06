@@ -970,7 +970,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<GetRepairerDetailResponse> getRepairerDetail(GetRepairerDetailRequest request) {
         Long repairerId = request.getRepairerId();
-        Optional<IRepairerDetailDTO> optionalRepairer = userDAO.findRepairerDetail(repairerId);
+        Optional<IRepairerDetailDTO> optionalRepairer = userDAO.findRepairerDetailForAdmin(repairerId);
         if (optionalRepairer.isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, REPAIRER_NOT_FOUND);
         }
@@ -1007,7 +1007,7 @@ public class AdminServiceImpl implements AdminService {
         response.setBackSideImage(dto.getBackSideImage());
         response.setAcceptedAccountAt(acceptedAccountAt);
         response.setCertificates(certificates.stream().map(Certificate::getUrl).collect(Collectors.toList()));
-        response.setRole(dto.getRole());
+        response.setCvStatus(dto.getCvStatus());
         response.setRegisterServices(registerServiceDTOs);
 
         return new ResponseEntity<>(response, HttpStatus.OK);

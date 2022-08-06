@@ -81,7 +81,7 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "END as status, " +
             "u.date_of_birth as dateOfBirth, u.gender, u.email, ua.id as addressId, u.created_at as createdAt, r.experience_year as experienceYear, " +
             "r.experience_description as experienceDescription, ic.identity_card_number as identityCardNumber, ic.type as identityCardType, " +
-            "front_img.url as frontImage, back_img.url as backSideImage, r.accepted_account_at as acceptedAccountAt, roles.name as role " +
+            "front_img.url as frontImage, back_img.url as backSideImage, r.accepted_account_at as acceptedAccountAt, r.cv_status as cvStatus " +
             "FROM users u " +
             "JOIN images avatar " +
             "ON avatar.id = u.avatar " +
@@ -103,7 +103,7 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "AND ua.is_main_address " +
             "AND ua.deleted_at IS NULL " +
             "AND r.user_id = :repairerId", nativeQuery = true)
-    Optional<IRepairerDetailDTO> findRepairerDetail(Long repairerId);
+    Optional<IRepairerDetailDTO> findRepairerDetailForAdmin(Long repairerId);
 
     @Query(value = "SELECT u.id as id, avatar.url as avatar, u.full_name as name, u.phone, roles.name as role, " +
             "u.ban_reason as banReason, u.ban_at as banAt " +

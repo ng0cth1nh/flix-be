@@ -27,6 +27,6 @@ public class GetRepairerDetailResponse {
     private String backSideImage;
     private String acceptedAccountAt;
     private List<String> certificates;
-    private String role;
+    private String cvStatus;
     private List<IAdminCheckRegisterServiceDTO> registerServices;
 }

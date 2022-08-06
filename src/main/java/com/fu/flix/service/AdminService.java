@@ -96,4 +96,8 @@ public interface AdminService {
     ResponseEntity<WithdrawDetailResponse> getRepairerWithdrawDetail(WithdrawDetailRequest request);
 
     ResponseEntity<SearchWithdrawResponse> searchRepairerWithdrawHistories(SearchWithdrawRequest request);
+
+    ResponseEntity<CountPendingWithdrawsResponse> countPendingWithdraws();
+
+    ResponseEntity<CountPendingFeedbacksResponse> countPendingFeedbacks();
 }

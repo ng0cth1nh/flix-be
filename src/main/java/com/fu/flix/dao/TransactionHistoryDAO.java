@@ -106,4 +106,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "AND th.transaction_code " +
             "LIKE %:keyword%", nativeQuery = true)
     List<ISearchWithdrawDTO> searchRepairWithdrawHistoriesForAdmin(String keyword, String withdrawType);
+
+    @Query(value = "SELECT count(*) FROM transaction_histories WHERE type = 'WITHDRAW' AND status = 'PENDING'", nativeQuery = true)
+    long countPendingWithdraws();
 }

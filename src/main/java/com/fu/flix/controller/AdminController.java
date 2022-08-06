@@ -243,4 +243,14 @@ public class AdminController {
     public ResponseEntity<SearchWithdrawResponse> searchRepairerWithdrawHistories(SearchWithdrawRequest request) {
         return adminService.searchRepairerWithdrawHistories(request);
     }
+
+    @GetMapping("withdraw/pending/count")
+    public ResponseEntity<CountPendingWithdrawsResponse> countPendingWithdraws() {
+        return adminService.countPendingWithdraws();
+    }
+
+    @GetMapping("feedback/pending/count")
+    public ResponseEntity<CountPendingFeedbacksResponse> countPendingFeedbacks() {
+        return adminService.countPendingFeedbacks();
+    }
 }

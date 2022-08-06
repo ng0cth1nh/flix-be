@@ -1570,4 +1570,18 @@ public class AdminServiceImpl implements AdminService {
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_WITHDRAW_TYPE);
     }
+
+    @Override
+    public ResponseEntity<CountPendingWithdrawsResponse> countPendingWithdraws() {
+        CountPendingWithdrawsResponse response = new CountPendingWithdrawsResponse();
+        response.setCount(transactionHistoryDAO.countPendingWithdraws());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<CountPendingFeedbacksResponse> countPendingFeedbacks() {
+        CountPendingFeedbacksResponse response = new CountPendingFeedbacksResponse();
+        response.setCount(feedbackDAO.countPendingFeedbacks());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

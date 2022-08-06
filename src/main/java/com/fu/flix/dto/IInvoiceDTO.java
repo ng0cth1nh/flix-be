@@ -56,4 +56,6 @@ public interface IInvoiceDTO {
     String getStatus();
 
     Boolean getIsCustomerCommented();
+
+    Boolean getIsRepairerCommented();
 }

@@ -34,4 +34,5 @@ public class GetInvoiceResponse {
     private Long serviceId;
     private String status;
     private Boolean isCustomerCommented;
+    private Boolean isRepairerCommented;
 }

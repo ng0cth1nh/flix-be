@@ -21,7 +21,11 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "CASE " +
             "   WHEN cus_cmt.id IS NOT NULL THEN 'true' " +
             "   ELSE 'false' " +
-            "END as isCustomerCommented " +
+            "END as isCustomerCommented, " +
+            "CASE " +
+            "   WHEN re_cmt.id IS NOT NULL THEN 'true' " +
+            "   ELSE 'false' " +
+            "END as isRepairerCommented " +
             "FROM repair_requests rr " +
             "JOIN users customer " +
             "ON rr.user_id = customer.id " +
@@ -50,7 +54,9 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "JOIN status stt " +
             "ON stt.id = rr.status_id " +
             "LEFT JOIN comments cus_cmt " +
-            "ON (cus_cmt.request_code = rr.request_code AND cus_cmt.type = 'CUSTOMER_COMMENT' )" +
+            "ON (cus_cmt.request_code = rr.request_code AND cus_cmt.type = 'CUSTOMER_COMMENT') " +
+            "LEFT JOIN comments re_cmt " +
+            "ON (re_cmt.request_code = rr.request_code AND re_cmt.type = 'REPAIRER_COMMENT') " +
             "WHERE r_ua.is_main_address " +
             "AND (rr.status_id = 'DO' OR rr.status_id = 'PW') " +
             "AND rr.request_code = :requestCode " +
@@ -68,7 +74,11 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "CASE " +
             "   WHEN cus_cmt.id IS NOT NULL THEN 'true' " +
             "   ELSE 'false' " +
-            "END as isCustomerCommented " +
+            "END as isCustomerCommented, " +
+            "CASE " +
+            "   WHEN re_cmt.id IS NOT NULL THEN 'true' " +
+            "   ELSE 'false' " +
+            "END as isRepairerCommented " +
             "FROM repair_requests rr " +
             "JOIN users customer " +
             "ON rr.user_id = customer.id " +
@@ -97,7 +107,9 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "JOIN status stt " +
             "ON stt.id = rr.status_id " +
             "LEFT JOIN comments cus_cmt " +
-            "ON (cus_cmt.request_code = rr.request_code AND cus_cmt.type = 'CUSTOMER_COMMENT' )" +
+            "ON (cus_cmt.request_code = rr.request_code AND cus_cmt.type = 'CUSTOMER_COMMENT') " +
+            "LEFT JOIN comments re_cmt " +
+            "ON (re_cmt.request_code = rr.request_code AND re_cmt.type = 'REPAIRER_COMMENT') " +
             "WHERE r_ua.is_main_address " +
             "AND (rr.status_id = 'DO' OR rr.status_id = 'PW') " +
             "AND rr.request_code = :requestCode " +

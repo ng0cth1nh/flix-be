@@ -48,6 +48,7 @@ public class AdminServiceImpl implements AdminService {
     private final CategoryService categoryService;
     private final SubServiceDAO subServiceDAO;
     private final RepairRequestDAO repairRequestDAO;
+    private final FeedbackResponseDAO feedbackResponseDAO;
     private final UserDAO userDAO;
     private final FeedbackDAO feedbackDAO;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
@@ -78,6 +79,7 @@ public class AdminServiceImpl implements AdminService {
                             CategoryService categoryService,
                             SubServiceDAO subServiceDAO,
                             RepairRequestDAO repairRequestDAO,
+                            FeedbackResponseDAO feedbackResponseDAO,
                             UserDAO userDAO,
                             FeedbackDAO feedbackDAO,
                             RepairRequestMatchingDAO repairRequestMatchingDAO,
@@ -104,6 +106,7 @@ public class AdminServiceImpl implements AdminService {
         this.categoryService = categoryService;
         this.subServiceDAO = subServiceDAO;
         this.repairRequestDAO = repairRequestDAO;
+        this.feedbackResponseDAO = feedbackResponseDAO;
         this.userDAO = userDAO;
         this.feedbackDAO = feedbackDAO;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
@@ -714,6 +717,15 @@ public class AdminServiceImpl implements AdminService {
         Optional<User> optionalUser = userDAO.findById(feedback.getUserId());
         Optional<Status> optionalStatus = statusDAO.findById(feedback.getStatusId());
 
+        List<FeedbackResponse> feedbackResponses = feedbackResponseDAO.findByFeedbackIdOrderByCreatedAtDesc(feedback.getId());
+        List<FeedbackResponseDTO> responseDTOS = feedbackResponses.stream()
+                .map(feedbackResponse -> {
+                    FeedbackResponseDTO feedbackResponseDTO = new FeedbackResponseDTO();
+                    feedbackResponseDTO.setContent(feedbackResponse.getContent());
+                    feedbackResponseDTO.setCreatedAt(DateFormatUtil.toString(feedbackResponse.getCreatedAt(), DATE_TIME_PATTERN));
+                    return feedbackResponseDTO;
+                }).collect(Collectors.toList());
+
         FeedbackDetailResponse response = new FeedbackDetailResponse();
         response.setPhone(optionalUser.map(User::getPhone).orElse(null));
         response.setFeedbackType(feedback.getType());
@@ -722,7 +734,7 @@ public class AdminServiceImpl implements AdminService {
         response.setDescription(feedback.getDescription());
         response.setImages(images);
         response.setStatus(optionalStatus.map(Status::getName).orElse(null));
-        response.setResponse(feedback.getResponse());
+        response.setResponses(responseDTOS);
         response.setHandleByAdminId(feedback.getHandleByAdminId());
         response.setCreatedById(feedback.getCreatedById());
         response.setUserId(feedback.getUserId());
@@ -865,7 +877,12 @@ public class AdminServiceImpl implements AdminService {
 
         Feedback feedback = validatorService.getFeedbackValidated(request.getId());
         feedback.setStatusId(FeedbackStatus.valueOf(status).getId());
-        feedback.setResponse(adminResponse);
+
+        FeedbackResponse feedbackResponse = new FeedbackResponse();
+        feedbackResponse.setFeedbackId(feedback.getId());
+        feedbackResponse.setContent(adminResponse);
+        feedbackResponseDAO.save(feedbackResponse);
+
         feedback.setHandleByAdminId(request.getUserId());
 
         UserNotificationDTO userNotificationDTO = new UserNotificationDTO(

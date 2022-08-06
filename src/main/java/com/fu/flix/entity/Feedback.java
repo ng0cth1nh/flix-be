@@ -39,8 +39,6 @@ public class Feedback {
 
     private String requestCode;
 
-    private String response;
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "feedback_images",

@@ -1,5 +1,6 @@
 package com.fu.flix.dto.response;
 
+import com.fu.flix.dto.FeedbackResponseDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,7 +19,7 @@ public class FeedbackDetailResponse {
     private String description;
     private List<String> images;
     private String status;
-    private String response;
+    private List<FeedbackResponseDTO> responses;
     private String createdAt;
     private String updatedAt;
 }

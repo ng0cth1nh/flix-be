@@ -12,11 +12,12 @@ public class ErrorInfo {
     private HttpStatus status;
     private Integer code;
     private String message;
+    protected List<String> messageParams;
 
     public ErrorInfo() {
     }
 
-    public ErrorInfo(LocalDateTime timestamp, HttpStatus status, Integer code,String message) {
+    public ErrorInfo(LocalDateTime timestamp, HttpStatus status, Integer code, String message) {
         this.timestamp = timestamp;
         this.status = status;
         this.code = code;
@@ -53,5 +54,13 @@ public class ErrorInfo {
 
     public void setCode(Integer code) {
         this.code = code;
+    }
+
+    public List<String> getMessageParams() {
+        return messageParams;
+    }
+
+    public void setMessageParams(List<String> messageParams) {
+        this.messageParams = messageParams;
     }
 }

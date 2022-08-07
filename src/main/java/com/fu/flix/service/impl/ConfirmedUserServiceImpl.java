@@ -171,11 +171,11 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
             response.setCustomerName(dto.getCustomerName());
             response.setCustomerAvatar(dto.getCustomerAvatar());
             response.setCustomerPhone(dto.getCustomerPhone());
-            response.setCustomerAddress(addressService.getAddressFormatted(dto.getCustomerAddressId()));
+            response.setCustomerAddress(dto.getCustomerAddress());
             response.setRepairerName(dto.getRepairerName());
             response.setRepairerAvatar(dto.getRepairerAvatar());
             response.setRepairerPhone(dto.getRepairerPhone());
-            response.setRepairerAddress(addressService.getAddressFormatted(dto.getRepairerAddressId()));
+            response.setRepairerAddress(dto.getRepairerAddress());
             response.setTotalExtraServicePrice(dto.getTotalExtraServicePrice());
             response.setTotalAccessoryPrice(dto.getTotalAccessoryPrice());
             response.setTotalSubServicePrice(dto.getTotalSubServicePrice());

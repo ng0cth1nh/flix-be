@@ -1138,7 +1138,7 @@ public class AdminServiceImpl implements AdminService {
                 return state;
             }
         }
-        throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
+        throw new GeneralException(HttpStatus.GONE, INVALID_ACCOUNT_STATE);
     }
 
     private String getCvStatusValidatedForSearching(String status) {

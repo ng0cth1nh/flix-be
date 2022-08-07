@@ -98,6 +98,7 @@ public interface TransactionHistoryDAO extends JpaRepository<TransactionHistory,
             "JOIN withdraw_requests wr " +
             "ON wr.id = th.withdraw_request_id " +
             "WHERE th.type = 'WITHDRAW' " +
+            "AND th.status = 'PENDING' " +
             "AND (CASE " +
             "       WHEN :withdrawType IS NOT NULL " +
             "       THEN wr.type = :withdrawType " +

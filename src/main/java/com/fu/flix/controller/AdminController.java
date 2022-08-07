@@ -253,4 +253,9 @@ public class AdminController {
     public ResponseEntity<CountPendingFeedbacksResponse> countPendingFeedbacks() {
         return adminService.countPendingFeedbacks();
     }
+
+    @GetMapping("search/request")
+    public ResponseEntity<AdminSearchRequestResponse> searchRequests(AdminSearchRequestRequest request) {
+        return adminService.searchRequests(request);
+    }
 }

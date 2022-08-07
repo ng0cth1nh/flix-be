@@ -1764,7 +1764,7 @@ class AdminServiceImplTest {
         SearchRepairersRequest request = new SearchRepairersRequest();
         request.setAccountState("ACTIVE");
         request.setKeyword("0");
-        request.setIsVerified(true);
+        request.setCvStatus("PENDING");
 
         setManagerContext(438L, "0865390063");
 
@@ -1776,12 +1776,12 @@ class AdminServiceImplTest {
     }
 
     @Test
-    void test_search_repairer_fail_when_invalid_status() {
+    void test_search_repairer_fail_when_invalid_account_state() {
         // given
         SearchRepairersRequest request = new SearchRepairersRequest();
         request.setAccountState("AC");
         request.setKeyword("0");
-        request.setIsVerified(true);
+        request.setCvStatus("PENDING");
 
         setManagerContext(438L, "0865390063");
 
@@ -1789,7 +1789,7 @@ class AdminServiceImplTest {
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchRepairers(request));
 
         // then
-        Assertions.assertEquals(INVALID_STATUS, exception.getMessage());
+        Assertions.assertEquals(INVALID_ACCOUNT_STATE, exception.getMessage());
     }
 
     @Test

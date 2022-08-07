@@ -1202,7 +1202,7 @@ public class AdminServiceImpl implements AdminService {
             response.setRepairerName(rd.getRepairerName());
             response.setRepairerPhone(rd.getRepairerPhone());
             response.setStatus(rd.getStatus());
-            response.setCustomerAddress(addressService.getAddressFormatted(rd.getCustomerAddressId()));
+            response.setCustomerAddress(rd.getCustomerAddress());
             response.setDescription(rd.getDescription());
             response.setServiceName(rd.getServiceName());
             response.setVoucherCode(voucherInfo.getVoucherCode());

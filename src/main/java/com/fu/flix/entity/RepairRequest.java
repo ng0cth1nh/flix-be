@@ -35,8 +35,6 @@ public class RepairRequest {
 
     private Long voucherId;
 
-    private Long addressId;
-
     private Double vat;
 
     private String cancelledByRoleId;

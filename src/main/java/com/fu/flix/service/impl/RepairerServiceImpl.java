@@ -49,6 +49,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final CustomerService customerService;
     private final AddressService addressService;
 
+    private final UserAddressDAO userAddressDAO;
     private final ValidatorService validatorService;
     private final VoucherService voucherService;
     private final SubServiceDAO subServiceDAO;
@@ -70,6 +71,7 @@ public class RepairerServiceImpl implements RepairerService {
                                TransactionHistoryDAO transactionHistoryDAO,
                                CustomerService customerService,
                                AddressService addressService,
+                               UserAddressDAO userAddressDAO,
                                ValidatorService validatorService,
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
@@ -88,6 +90,7 @@ public class RepairerServiceImpl implements RepairerService {
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.customerService = customerService;
         this.addressService = addressService;
+        this.userAddressDAO = userAddressDAO;
         this.validatorService = validatorService;
         this.voucherService = voucherService;
         this.subServiceDAO = subServiceDAO;
@@ -126,6 +129,12 @@ public class RepairerServiceImpl implements RepairerService {
 
         RepairRequestMatching repairRequestMatching = buildRepairRequestMatching(requestCode, repairerId);
         repairRequestMatchingDAO.save(repairRequestMatching);
+
+        UserAddress userAddress = userAddressDAO.findByUserIdAndIsMainAddressAndDeletedAtIsNull(repairerId, true).get();
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        invoice.setRepairerAddress(addressService.getAddressFormatted(userAddress.getId()));
+        invoice.setRepairerPhone(userAddress.getPhone());
+        invoice.setRepairerName(userAddress.getName());
 
         UserNotificationDTO customerNotificationDTO = new UserNotificationDTO(
                 "request",
@@ -176,7 +185,7 @@ public class RepairerServiceImpl implements RepairerService {
             response.setServiceName(dto.getServiceName());
             response.setCustomerId(dto.getCustomerId());
             response.setAvatar(dto.getAvatar());
-            response.setCustomerAddress(addressService.getAddressFormatted(dto.getAddressId()));
+            response.setCustomerAddress(dto.getAddress());
             response.setCustomerPhone(dto.getCustomerPhone());
             response.setCustomerName(dto.getCustomerName());
             response.setExpectFixingTime(DateFormatUtil.toString(dto.getExpectFixingTime(), DATE_TIME_PATTERN));

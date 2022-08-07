@@ -175,7 +175,7 @@ public class CommonRepairerServiceImpl implements CommonRepairerService {
                     dto.setAvatar(iRequestingDTO.getAvatar());
                     dto.setServiceName(iRequestingDTO.getServiceName());
                     dto.setExpectFixingTime(DateFormatUtil.toString(iRequestingDTO.getExpectFixingTime(), DATE_TIME_PATTERN));
-                    dto.setAddress(addressService.getAddressFormatted(iRequestingDTO.getAddressId()));
+                    dto.setAddress(iRequestingDTO.getAddress());
                     dto.setDescription(iRequestingDTO.getDescription());
                     dto.setRequestCode(iRequestingDTO.getRequestCode());
                     dto.setIconImage(iRequestingDTO.getIconImage());

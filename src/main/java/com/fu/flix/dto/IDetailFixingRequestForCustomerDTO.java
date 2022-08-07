@@ -11,7 +11,7 @@ public interface IDetailFixingRequestForCustomerDTO {
 
     String getServiceName();
 
-    Long getCustomerAddressId();
+    String getCustomerAddress();
 
     String getCustomerPhone();
 
@@ -35,7 +35,7 @@ public interface IDetailFixingRequestForCustomerDTO {
 
     String getRequestCode();
 
-    Long getRepairerAddressId();
+    String getRepairerAddress();
 
     String getRepairerPhone();
 

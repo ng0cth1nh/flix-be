@@ -15,7 +15,7 @@ public interface IDetailFixingRequestForRepairerDTO {
 
     String getAvatar();
 
-    Long getAddressId();
+    String getAddress();
 
     String getCustomerPhone();
 

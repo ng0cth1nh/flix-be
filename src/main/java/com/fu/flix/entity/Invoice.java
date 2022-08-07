@@ -55,6 +55,20 @@ public class Invoice {
             inverseJoinColumns = @JoinColumn(name = "accessory_id"))
     private Collection<Accessory> accessories = new ArrayList<>();
 
+    private String customerAddress;
+
+    private String repairerAddress;
+
+    private String customerName;
+
+    private String repairerName;
+
+    private String customerPhone;
+
+    private String repairerPhone;
+
+    private String communeId;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

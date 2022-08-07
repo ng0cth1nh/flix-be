@@ -1112,7 +1112,7 @@ public class AdminServiceImpl implements AdminService {
                 ? Strings.EMPTY
                 : request.getKeyword();
 
-        String accountState = getAccountStateForSearching(request.getStatus());
+        String accountState = getAccountStateForSearching(request.getAccountState());
         Boolean isActiveState = null;
         if (ACTIVE.name().equals(accountState)) {
             isActiveState = true;
@@ -1120,9 +1120,9 @@ public class AdminServiceImpl implements AdminService {
             isActiveState = false;
         }
 
-        Boolean isVerified = request.getIsVerified();
+        String cvStatus = getCvStatusValidatedForSearching(request.getCvStatus());
 
-        List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone, isActiveState, isVerified);
+        List<ISearchRepairersDTO> repairers = userDAO.searchRepairersForAdmin(phone, isActiveState, cvStatus);
         SearchRepairersResponse response = new SearchRepairersResponse();
         response.setRepairers(repairers);
 
@@ -1139,6 +1139,18 @@ public class AdminServiceImpl implements AdminService {
             }
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
+    }
+
+    private String getCvStatusValidatedForSearching(String status) {
+        if (Strings.isEmpty(status)) {
+            return null;
+        }
+        for (CVStatus cvs : CVStatus.values()) {
+            if(cvs.name().equals(status)) {
+                return status;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_CV_STATUS);
     }
 
     @Override
@@ -1202,7 +1214,7 @@ public class AdminServiceImpl implements AdminService {
             response.setRepairerName(rd.getRepairerName());
             response.setRepairerPhone(rd.getRepairerPhone());
             response.setStatus(rd.getStatus());
-            response.setCustomerAddress(addressService.getAddressFormatted(rd.getCustomerAddressId()));
+            response.setCustomerAddress(rd.getCustomerAddress());
             response.setDescription(rd.getDescription());
             response.setServiceName(rd.getServiceName());
             response.setVoucherCode(voucherInfo.getVoucherCode());

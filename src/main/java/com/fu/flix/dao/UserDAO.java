@@ -210,13 +210,10 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "   THEN repairer.is_active = :isActiveState " +
             "   ELSE TRUE " +
             "END) " +
-            "AND (CASE WHEN :isVerified IS NOT NULL " +
-            "   THEN (CASE " +
-            "           WHEN :isVerified " +
-            "           THEN repairer_info.accepted_account_at IS NOT NULL " +
-            "           ELSE repairer_info.accepted_account_at IS NULL " +
-            "         END) " +
+            "AND (CASE " +
+            "   WHEN :cvStatus IS NOT NULL " +
+            "   THEN repairer_info.cv_status = :cvStatus" +
             "   ELSE TRUE " +
             "END)", nativeQuery = true)
-    List<ISearchRepairersDTO> searchRepairersForAdmin(String phone, Boolean isActiveState, Boolean isVerified);
+    List<ISearchRepairersDTO> searchRepairersForAdmin(String phone, Boolean isActiveState, String cvStatus);
 }

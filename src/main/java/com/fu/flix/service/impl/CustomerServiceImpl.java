@@ -130,11 +130,10 @@ public class CustomerServiceImpl implements CustomerService {
         repairRequest.setExpectStartFixingAt(expectFixingDay);
         repairRequest.setDescription(description);
         repairRequest.setVoucherId(voucherId);
-        repairRequest.setAddressId(getAddressIdValidated(request.getAddressId(), userId));
         repairRequest.setVat(this.appConf.getVat());
         RepairRequest savedRepairRequest = repairRequestDAO.save(repairRequest);
 
-        Invoice invoice = buildInvoice(repairRequest);
+        Invoice invoice = buildInvoice(request, repairRequest.getRequestCode());
         invoiceDAO.save(invoice);
 
         UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
@@ -175,16 +174,18 @@ public class CustomerServiceImpl implements CustomerService {
         return addressId;
     }
 
-    private Invoice buildInvoice(RepairRequest repairRequest) {
-        Long voucherId = repairRequest.getVoucherId();
-        com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
+    private Invoice buildInvoice(RequestingRepairRequest request, String requestCode) {
+        Long voucherId = request.getVoucherId();
+        com.fu.flix.entity.Service service = serviceDAO.findById(request.getServiceId()).get();
         Long inspectionPrice = service.getInspectionPrice();
         Long discount = voucherService.getVoucherDiscount(inspectionPrice, voucherId);
         Long beforeVat = inspectionPrice - discount;
-        Long vatPrice = (long) (inspectionPrice * repairRequest.getVat());
+        Long vatPrice = (long) (inspectionPrice * this.appConf.getVat());
+        Long addressId = getAddressIdValidated(request.getAddressId(), request.getUserId());
+        UserAddress userAddress = userAddressDAO.findById(addressId).get();
 
         Invoice invoice = new Invoice();
-        invoice.setRequestCode(repairRequest.getRequestCode());
+        invoice.setRequestCode(requestCode);
         invoice.setInspectionPrice(inspectionPrice);
         invoice.setTotalPrice(inspectionPrice);
         invoice.setActualProceeds(beforeVat + vatPrice);
@@ -194,6 +195,10 @@ public class CustomerServiceImpl implements CustomerService {
         invoice.setTotalAccessoryPrice(0L);
         invoice.setTotalExtraServicePrice(0L);
         invoice.setTotalSubServicePrice(0L);
+        invoice.setCustomerAddress(addressService.getAddressFormatted(addressId));
+        invoice.setCustomerPhone(userAddress.getPhone());
+        invoice.setCustomerName(userAddress.getName());
+        invoice.setCommuneId(userAddress.getCommuneId());
 
         return invoice;
     }
@@ -427,7 +432,7 @@ public class CustomerServiceImpl implements CustomerService {
             response.setServiceImage(dto.getServiceImage());
             response.setServiceId(dto.getServiceId());
             response.setServiceName(dto.getServiceName());
-            response.setCustomerAddress(addressService.getAddressFormatted(dto.getCustomerAddressId()));
+            response.setCustomerAddress(dto.getCustomerAddress());
             response.setCustomerPhone(dto.getCustomerPhone());
             response.setCustomerName(dto.getCustomerName());
             response.setExpectFixingDay(DateFormatUtil.toString(dto.getExpectFixingDay(), DATE_TIME_PATTERN));
@@ -440,7 +445,7 @@ public class CustomerServiceImpl implements CustomerService {
             response.setActualPrice(dto.getActualPrice());
             response.setVatPrice(dto.getVatPrice());
             response.setRequestCode(requestCode);
-            response.setRepairerAddress(addressService.getAddressFormatted(dto.getRepairerAddressId()));
+            response.setRepairerAddress(dto.getRepairerAddress());
             response.setRepairerPhone(dto.getRepairerPhone());
             response.setRepairerName(dto.getRepairerName());
             response.setRepairerId(dto.getRepairerId());

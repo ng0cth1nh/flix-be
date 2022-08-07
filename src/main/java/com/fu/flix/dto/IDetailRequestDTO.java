@@ -15,7 +15,7 @@ public interface IDetailRequestDTO {
 
     String getStatus();
 
-    Long getCustomerAddressId();
+    String getCustomerAddress();
 
     String getDescription();
 

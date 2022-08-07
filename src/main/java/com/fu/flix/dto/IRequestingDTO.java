@@ -11,7 +11,7 @@ public interface IRequestingDTO {
 
     LocalDateTime getExpectFixingTime();
 
-    Long getAddressId();
+    String getAddress();
 
     String getDescription();
 

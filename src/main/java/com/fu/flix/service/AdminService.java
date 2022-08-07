@@ -100,4 +100,6 @@ public interface AdminService {
     ResponseEntity<CountPendingWithdrawsResponse> countPendingWithdraws();
 
     ResponseEntity<CountPendingFeedbacksResponse> countPendingFeedbacks();
+
+    ResponseEntity<AdminSearchRequestResponse> searchRequests(AdminSearchRequestRequest request);
 }

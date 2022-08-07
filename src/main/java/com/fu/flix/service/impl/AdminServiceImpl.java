@@ -511,23 +511,10 @@ public class AdminServiceImpl implements AdminService {
         int end = (pageNumber + 1) * pageSize;
         int start = end - (pageSize - 1);
 
-        List<IRequestInfoDTO> requestDTOs = repairRequestDAO.findAllRequestForAdmin(start, end);
+        List<IRequestInfoDTO> requestDTOs = repairRequestDAO.findRequestForAdmin(start, end);
         long totalRecord = repairRequestDAO.count();
 
-        List<AdminRequestingDTO> requestList = requestDTOs.stream()
-                .map(rq -> {
-                    AdminRequestingDTO dto = new AdminRequestingDTO();
-                    dto.setRequestCode(rq.getRequestCode());
-                    dto.setCustomerId(rq.getCustomerId());
-                    dto.setCustomerName(rq.getCustomerName());
-                    dto.setCustomerPhone(rq.getCustomerPhone());
-                    dto.setRepairerId(rq.getRepairerId());
-                    dto.setRepairerName(rq.getRepairerName());
-                    dto.setRepairerPhone(rq.getRepairerPhone());
-                    dto.setStatus(rq.getStatus());
-                    dto.setCreatedAt(DateFormatUtil.toString(rq.getCreatedAt(), DATE_TIME_PATTERN));
-                    return dto;
-                }).collect(Collectors.toList());
+        List<AdminRequestingDTO> requestList = mapToAdminRequestingDTOs(requestDTOs);
 
         AdminRequestingResponse response = new AdminRequestingResponse();
         response.setRequestList(requestList);
@@ -646,7 +633,7 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, THIS_ACCOUNT_HAS_BEEN_BANNED);
         }
 
-        if (!isUser(user.getRoles())) {
+        if (isNotUser(user.getRoles())) {
             throw new GeneralException(HttpStatus.GONE, JUST_CAN_BAN_USER_ROLE_ARE_CUSTOMER_OR_REPAIRER_OR_PENDING_REPAIRER);
         }
 
@@ -660,13 +647,13 @@ public class AdminServiceImpl implements AdminService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private boolean isUser(Collection<Role> roles) {
+    private boolean isNotUser(Collection<Role> roles) {
         for (Role r : roles) {
             if (isUser(r)) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     private boolean isUser(Role r) {
@@ -1520,7 +1507,7 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, THIS_ACCOUNT_IS_ACTIVE);
         }
 
-        if (!isUser(user.getRoles())) {
+        if (isNotUser(user.getRoles())) {
             throw new GeneralException(HttpStatus.GONE, JUST_CAN_BAN_USER_ROLE_ARE_CUSTOMER_OR_REPAIRER_OR_PENDING_REPAIRER);
         }
 
@@ -1600,5 +1587,51 @@ public class AdminServiceImpl implements AdminService {
         CountPendingFeedbacksResponse response = new CountPendingFeedbacksResponse();
         response.setCount(feedbackDAO.countPendingFeedbacks());
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<AdminSearchRequestResponse> searchRequests(AdminSearchRequestRequest request) {
+        String keyword = Strings.isEmpty(request.getKeyword())
+                ? Strings.EMPTY
+                : request.getKeyword();
+
+        String requestStatus = getRequestStatusValidatedForSearching(request.getStatus());
+
+        List<IRequestInfoDTO> requestDTOs = repairRequestDAO.searchRequestForAdmin(keyword, requestStatus);
+        List<AdminRequestingDTO> requestList = mapToAdminRequestingDTOs(requestDTOs);
+
+        AdminSearchRequestResponse response = new AdminSearchRequestResponse();
+        response.setRequestList(requestList);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private List<AdminRequestingDTO> mapToAdminRequestingDTOs(List<IRequestInfoDTO> requestDTOs) {
+        return requestDTOs.stream()
+                .map(rq -> {
+                    AdminRequestingDTO dto = new AdminRequestingDTO();
+                    dto.setRequestCode(rq.getRequestCode());
+                    dto.setCustomerId(rq.getCustomerId());
+                    dto.setCustomerName(rq.getCustomerName());
+                    dto.setCustomerPhone(rq.getCustomerPhone());
+                    dto.setRepairerId(rq.getRepairerId());
+                    dto.setRepairerName(rq.getRepairerName());
+                    dto.setRepairerPhone(rq.getRepairerPhone());
+                    dto.setStatus(rq.getStatus());
+                    dto.setCreatedAt(DateFormatUtil.toString(rq.getCreatedAt(), DATE_TIME_PATTERN));
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+    private String getRequestStatusValidatedForSearching(String status) {
+        if (Strings.isEmpty(status)) {
+            return null;
+        }
+        for (RequestStatus rs : RequestStatus.values()) {
+            if (rs.name().equals(status)) {
+                return status;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
     }
 }

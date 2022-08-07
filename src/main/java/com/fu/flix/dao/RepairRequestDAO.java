@@ -35,7 +35,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON rr.voucher_id = v.id " +
             "JOIN payment_methods pm " +
             "ON rr.payment_method_id = pm.id " +
-            "JOIN invoices iv " +
+            "LEFT JOIN invoices iv " +
             "ON rr.request_code = iv.request_code " +
             "LEFT JOIN repair_requests_matching rrm " +
             "ON rr.request_code = rrm.request_code " +
@@ -88,7 +88,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
     @Query(value = "SELECT iv.customer_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime, " +
             "iv.customer_address as address, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
             "FROM repair_requests rr " +
-            "JOIN invoices iv " +
+            "LEFT JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
             "JOIN communes c " +
             "ON iv.commune_id = c.id " +
@@ -110,7 +110,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
     @Query(value = "SELECT iv.customer_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime," +
             " iv.customer_address as address, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
             "FROM repair_requests rr " +
-            "JOIN invoices iv " +
+            "LEFT JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
             "JOIN communes c " +
             "ON iv.commune_id = c.id " +
@@ -134,7 +134,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
     @Query(value = "SELECT iv.customer_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime," +
             " iv.customer_address as address, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
             "FROM repair_requests rr " +
-            "JOIN invoices iv " +
+            "LEFT JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
             "JOIN communes c " +
             "ON iv.commune_id = c.id " +
@@ -154,7 +154,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
     @Query(value = "SELECT iv.customer_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime, " +
             "iv.customer_address as address, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
             "FROM repair_requests rr " +
-            "JOIN invoices iv " +
+            "LEFT JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
             "JOIN communes c " +
             "ON iv.commune_id = c.id " +
@@ -175,7 +175,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
     @Query(value = "SELECT iv.customer_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime, " +
             "iv.customer_address as address, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
             "FROM repair_requests rr " +
-            "JOIN invoices iv " +
+            "LEFT JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
             "JOIN communes c " +
             "ON iv.commune_id = c.id " +
@@ -200,7 +200,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
     @Query(value = "SELECT iv.customer_name as customerName, avatar.url as avatar, sv.name as serviceName, rr.expect_start_fixing_at as expectFixingTime, " +
             "iv.customer_address as address, rr.description, rr.request_code as requestCode, icon.url as iconImage, rr.created_at as createdAt " +
             "FROM repair_requests rr " +
-            "JOIN invoices iv " +
+            "LEFT JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
             "JOIN communes c " +
             "ON iv.commune_id = c.id " +
@@ -279,7 +279,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON sv.id = rr.service_id " +
             "LEFT JOIN vouchers voucher " +
             "ON rr.voucher_id = voucher.id " +
-            "JOIN invoices iv  " +
+            "LEFT JOIN invoices iv  " +
             "ON iv.request_code = rr.request_code " +
             "JOIN payment_methods pm " +
             "ON pm.id = rr.payment_method_id " +

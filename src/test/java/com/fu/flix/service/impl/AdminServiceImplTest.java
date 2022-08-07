@@ -8,7 +8,6 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
-import com.fu.flix.entity.Balance;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.AdminService;
 import com.fu.flix.service.CustomerService;
@@ -1763,7 +1762,7 @@ class AdminServiceImplTest {
     void test_search_repairer_success() {
         // given
         SearchRepairersRequest request = new SearchRepairersRequest();
-        request.setStatus("ACTIVE");
+        request.setAccountState("ACTIVE");
         request.setKeyword("0");
         request.setIsVerified(true);
 
@@ -1780,7 +1779,7 @@ class AdminServiceImplTest {
     void test_search_repairer_fail_when_invalid_status() {
         // given
         SearchRepairersRequest request = new SearchRepairersRequest();
-        request.setStatus("AC");
+        request.setAccountState("AC");
         request.setKeyword("0");
         request.setIsVerified(true);
 

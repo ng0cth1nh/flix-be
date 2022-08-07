@@ -30,6 +30,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         err.setStatus(e.getStatus());
         err.setCode(e.getRawStatusCode());
         err.setMessage(e.getMessage());
+        err.setMessageParams(e.getMessageParams());
         return ResponseEntityBuilder.build(err);
     }
 

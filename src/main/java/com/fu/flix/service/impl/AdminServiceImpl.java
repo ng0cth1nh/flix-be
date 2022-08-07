@@ -128,10 +128,13 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<GetAdminProfileResponse> getAdminProfile(GetAdminProfileRequest request) {
         User admin = validatorService.getUserValidated(request.getUserId());
+        Image avatar = imageDAO.findById(admin.getAvatar()).get();
+
         GetAdminProfileResponse response = new GetAdminProfileResponse();
         response.setFullName(admin.getFullName());
         response.setPhone(admin.getPhone());
         response.setEmail(admin.getEmail());
+        response.setAvatarUrl(avatar.getUrl());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

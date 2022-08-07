@@ -9,7 +9,7 @@ public interface IInvoiceDTO {
 
     String getCustomerPhone();
 
-    Long getCustomerAddressId();
+    String getCustomerAddress();
 
     String getRepairerName();
 
@@ -17,7 +17,7 @@ public interface IInvoiceDTO {
 
     String getRepairerPhone();
 
-    Long getRepairerAddressId();
+    String getRepairerAddress();
 
     Long getTotalExtraServicePrice();
 

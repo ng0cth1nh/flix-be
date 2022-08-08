@@ -9,7 +9,6 @@ app:
   fine: 20000
   cancelablePendingRequestInterval: 3600 #seconds
   cancelableApprovalRequestInterval: 3600 #seconds
-  cancelableFixingRequestInterval: 259200 #seconds
   descriptionMaxLength: 2500
   nameMaxLength: 150
   defaultPageSize: 10

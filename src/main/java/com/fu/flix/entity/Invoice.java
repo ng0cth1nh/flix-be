@@ -37,6 +37,8 @@ public class Invoice {
 
     private Long actualProceeds;
 
+    private LocalDateTime confirmFixingAt;
+
     private LocalDateTime confirmedByRepairerAt;
 
     private Long vatPrice;

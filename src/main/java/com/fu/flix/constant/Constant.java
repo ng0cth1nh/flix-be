@@ -212,6 +212,9 @@ public interface Constant {
     String INVALID_BANK_ACCOUNT_NAME = "INVALID_BANK_ACCOUNT_NAME";
     String INVALID_BANK_ACCOUNT_NUMBER = "INVALID_BANK_ACCOUNT_NUMBER";
     String INVALID_BANK_CODE = "INVALID_BANK_CODE";
+    String SYSTEM_CANCEL_PENDING_REQUEST = "The request is canceled automatically within 1 hour before the desired repair time";
+    String SYSTEM_CANCEL_APPROVAL_REQUEST = "The request is canceled automatically within 1 hour before the desired repair time";
+    String SYSTEM_CANCEL_FIXING_REQUEST = "The request is canceled automatically after 3 days from repairer confirm fixing";
     Map<String, String> VN_PAY_RESPONSE = new HashMap() {{
         put(INVALID_CHECKSUM, "97");
         put(PAYMENT_FAILED, "00");

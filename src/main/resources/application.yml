@@ -7,7 +7,9 @@ app:
   vat: 0.05
   profitRate: 0.2
   fine: 20000
-  minTimeFined: 3600 #milliseconds
+  cancelablePendingRequestInterval: 3600 #seconds
+  cancelableApprovalRequestInterval: 3600 #seconds
+  cancelableFixingRequestInterval: 259200 #seconds
   descriptionMaxLength: 2500
   nameMaxLength: 150
   defaultPageSize: 10
@@ -21,6 +23,8 @@ app:
       feedback: 'Thông tin phản hồi'
       transaction: 'Thông tin giao dịch'
     content:
+      REMIND_FIXING_TIME: 'Quý khách có yêu cầu sửa chữa đơn hàng #%s vào lúc %s.'
+      REQUEST_CANCELED_AUTOMATICALLY: 'Mã yêu cầu #%s đã được hủy tự động.'
       REQUEST_CREATE_SUCCESS: 'Yêu cầu #%s đã được tạo thành công'
       REQUEST_APPROVED: 'Yêu cầu #%s đã được chấp nhận'
       REQUEST_CONFIRM_FIXING: 'Yêu cầu #%s đang được sửa'
@@ -59,7 +63,7 @@ app:
                    '/api/v1/address/commune',
                    '/api/v1/payment/response',
                    '/api/v1/deposit/response',
-                   '/api/v1/category/services/search']
+                   '/api/v1/category/services/search' ]
   vnPayInfo:
     version: '2.1.0'
     command: 'pay'

@@ -9,6 +9,7 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
+import com.fu.flix.job.CronJob;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
@@ -21,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.transaction.Transactional;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,9 +46,8 @@ public class RepairerServiceImpl implements RepairerService {
     private final BalanceDAO balanceDAO;
     private final AppConf appConf;
     private final TransactionHistoryDAO transactionHistoryDAO;
-    private final CustomerService customerService;
     private final AddressService addressService;
-
+    private final CronJob cronJob;
     private final UserAddressDAO userAddressDAO;
     private final ValidatorService validatorService;
     private final VoucherService voucherService;
@@ -69,9 +68,8 @@ public class RepairerServiceImpl implements RepairerService {
                                BalanceDAO balanceDAO,
                                AppConf appConf,
                                TransactionHistoryDAO transactionHistoryDAO,
-                               CustomerService customerService,
                                AddressService addressService,
-                               UserAddressDAO userAddressDAO,
+                               CronJob cronJob, UserAddressDAO userAddressDAO,
                                ValidatorService validatorService,
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
@@ -88,8 +86,8 @@ public class RepairerServiceImpl implements RepairerService {
         this.balanceDAO = balanceDAO;
         this.appConf = appConf;
         this.transactionHistoryDAO = transactionHistoryDAO;
-        this.customerService = customerService;
         this.addressService = addressService;
+        this.cronJob = cronJob;
         this.userAddressDAO = userAddressDAO;
         this.validatorService = validatorService;
         this.voucherService = voucherService;
@@ -231,13 +229,16 @@ public class RepairerServiceImpl implements RepairerService {
             throw new GeneralException(HttpStatus.GONE, ONLY_CAN_CANCEL_REQUEST_FIXING_OR_APPROVED);
         }
 
-        customerService.updateRepairerAfterCancelRequest(requestCode);
-        if (isFined(repairRequest)) {
-            monetaryFine(request.getUserId(), requestCode);
+        if (FIXING.getId().equals(repairRequest.getStatusId())) {
+            cronJob.updateRepairerAfterCancelRequest(requestCode);
         }
 
-        customerService.refundVoucher(repairRequest);
-        updateRepairRequest(request, repairRequest);
+        if (isFined(repairRequest)) {
+            cronJob.monetaryFine(request.getUserId(), requestCode);
+        }
+
+        cronJob.refundVoucher(repairRequest);
+        cronJob.updateRequestAfterCancel(request.getReason(), RoleType.ROLE_REPAIRER.getId(), repairRequest);
 
         UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
                 "request",
@@ -255,37 +256,14 @@ public class RepairerServiceImpl implements RepairerService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private void monetaryFine(Long repairerId, String requestCode) {
-        Long fineMoney = this.appConf.getFine();
-        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
-        Balance balance = balanceDAO.findByUserId(repairer.getUserId()).get();
-
-        balance.setBalance(balance.getBalance() - fineMoney);
-
-        TransactionHistory finedTransaction = new TransactionHistory();
-        finedTransaction.setUserId(repairerId);
-        finedTransaction.setAmount(fineMoney);
-        finedTransaction.setType(FINED.name());
-        finedTransaction.setRequestCode(requestCode);
-        finedTransaction.setStatus(SUCCESS.name());
-        finedTransaction.setTransactionCode(RandomUtil.generateCode());
-        transactionHistoryDAO.save(finedTransaction);
-    }
 
     private boolean isCancelable(RepairRequest repairRequest) {
         String statusId = repairRequest.getStatusId();
         return APPROVED.getId().equals(statusId) || FIXING.getId().equals(statusId);
     }
 
-    private void updateRepairRequest(CancelRequestForRepairerRequest request, RepairRequest repairRequest) {
-        repairRequest.setStatusId(CANCELLED.getId());
-        repairRequest.setCancelledByRoleId(RoleType.ROLE_REPAIRER.getId());
-        repairRequest.setReasonCancel(request.getReason());
-    }
-
     private boolean isFined(RepairRequest repairRequest) {
-        Duration duration = Duration.between(LocalDateTime.now(), repairRequest.getExpectStartFixingAt());
-        return duration.getSeconds() < this.appConf.getMinTimeFined() || FIXING.getId().equals(repairRequest.getStatusId());
+        return cronJob.isOnRequestCancelTime(repairRequest.getExpectStartFixingAt());
     }
 
     @Override
@@ -342,7 +320,7 @@ public class RepairerServiceImpl implements RepairerService {
         invoice.setConfirmedByRepairerAt(LocalDateTime.now());
 
         if (isCanNotApplyVoucherToInvoice(invoice)) {
-            customerService.refundVoucher(repairRequest);
+            cronJob.refundVoucher(repairRequest);
         }
 
         Balance balance = balanceDAO.findByUserId(repairerId).get();
@@ -382,7 +360,7 @@ public class RepairerServiceImpl implements RepairerService {
 
     @Override
     public Long getCommission(Invoice invoice) {
-        return (long) ((invoice.getTotalSubServicePrice() + invoice.getTotalExtraServicePrice())
+        return (long) ((invoice.getInspectionPrice() + invoice.getTotalSubServicePrice() + invoice.getTotalExtraServicePrice())
                 * this.appConf.getProfitRate()) + invoice.getVatPrice();
     }
 
@@ -472,6 +450,9 @@ public class RepairerServiceImpl implements RepairerService {
         if (repairer.isRepairing()) {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_CONFIRM_FIXING_WHEN_ON_ANOTHER_FIXING);
         }
+
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        invoice.setConfirmFixingAt(LocalDateTime.now());
 
         repairRequest.setStatusId(FIXING.getId());
         repairer.setRepairing(true);

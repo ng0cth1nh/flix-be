@@ -230,7 +230,7 @@ public class RepairerServiceImpl implements RepairerService {
         }
 
         if (FIXING.getId().equals(repairRequest.getStatusId())) {
-            cronJob.updateRepairerAfterCancelRequest(requestCode);
+            cronJob.updateRepairerAfterCancelFixingRequest(requestCode);
         }
 
         if (isFined(repairRequest)) {

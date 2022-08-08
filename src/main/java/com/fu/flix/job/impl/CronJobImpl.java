@@ -41,10 +41,6 @@ public class CronJobImpl implements CronJob {
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final InvoiceDAO invoiceDAO;
     private final String NOTIFICATION_DATE_TIME_PATTERN = "HH:mm - DD/MM/yyyy";
-    private final long PENDING_INTERVAL;
-    private final long APPROVAL_INTERVAL;
-    private final long FIXING_INTERVAL;
-
     public CronJobImpl(AppConf appConf,
                        RepairRequestDAO repairRequestDAO,
                        FCMService fcmService,
@@ -56,9 +52,6 @@ public class CronJobImpl implements CronJob {
                        InvoiceDAO invoiceDAO) {
         this.appConf = appConf;
         this.repairRequestDAO = repairRequestDAO;
-        PENDING_INTERVAL = appConf.getCancelablePendingRequestInterval();
-        APPROVAL_INTERVAL = appConf.getCancelableApprovalRequestInterval();
-        FIXING_INTERVAL = appConf.getCancelableFixingRequestInterval();
         this.fcmService = fcmService;
         this.repairerDAO = repairerDAO;
         this.balanceDAO = balanceDAO;
@@ -71,7 +64,7 @@ public class CronJobImpl implements CronJob {
     @Override
     @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelPendingRequestAutomatically() {
-        List<RepairRequest> repairRequests = repairRequestDAO.findCancelablePendingRequest(PENDING_INTERVAL);
+        List<RepairRequest> repairRequests = repairRequestDAO.findCancelablePendingRequest();
         repairRequests.parallelStream()
                 .forEach(repairRequest -> {
                     refundVoucher(repairRequest);
@@ -93,7 +86,7 @@ public class CronJobImpl implements CronJob {
     @Override
     @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelApprovalRequestAutomatically() {
-        List<RepairRequest> repairRequests = repairRequestDAO.findCancelableApprovalRequest(APPROVAL_INTERVAL);
+        List<RepairRequest> repairRequests = repairRequestDAO.findCancelableApprovalRequest();
         repairRequests.parallelStream()
                 .forEach(repairRequest -> {
                     String requestCode = repairRequest.getRequestCode();
@@ -130,7 +123,7 @@ public class CronJobImpl implements CronJob {
     @Override
     @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelFixingRequestAutomatically() {
-        List<RepairRequest> repairRequests = repairRequestDAO.findCancelableFixingRequest(FIXING_INTERVAL);
+        List<RepairRequest> repairRequests = repairRequestDAO.findCancelableFixingRequest();
         repairRequests.parallelStream()
                 .forEach(repairRequest -> {
                     String requestCode = repairRequest.getRequestCode();
@@ -140,7 +133,7 @@ public class CronJobImpl implements CronJob {
                     monetaryFine(repairerId, requestCode);
                     refundVoucher(repairRequest);
                     updateRequestAfterCancel(SYSTEM_CANCEL_FIXING_REQUEST, ROLE_MANAGER.getId(), repairRequest);
-                    updateRepairerAfterCancelRequest(requestCode);
+                    updateRepairerAfterCancelFixingRequest(requestCode);
 
                     UserNotificationDTO customerNotificationDTO = new UserNotificationDTO(
                             "request",
@@ -163,25 +156,6 @@ public class CronJobImpl implements CronJob {
                     fcmService.sendAndSaveNotification(customerNotificationDTO, requestCode);
                     fcmService.sendAndSaveNotification(repairerNotificationDTO, requestCode);
                 });
-    }
-
-    @Override
-    public void refundVoucher(RepairRequest repairRequest) {
-        Long voucherId = repairRequest.getVoucherId();
-        if (voucherId != null) {
-            User user = validatorService.getUserValidated(repairRequest.getUserId());
-            Collection<UserVoucher> userVouchers = user.getUserVouchers();
-            UserVoucher userVoucher = getUserVoucher(userVouchers, voucherId);
-            userVoucher.setQuantity(userVoucher.getQuantity() + 1);
-        }
-    }
-
-    @Override
-    public UserVoucher getUserVoucher(Collection<UserVoucher> userVouchers, Long voucherId) {
-        return userVouchers.stream()
-                .filter(uv -> uv.getUserVoucherId().getVoucherId().equals(voucherId))
-                .findFirst()
-                .orElse(null);
     }
 
     @Override
@@ -212,7 +186,7 @@ public class CronJobImpl implements CronJob {
     @Scheduled(cron = "0 0 7 * * *")
     public void sendNotificationRemindFixingAutomatically() {
         log.info("Start end notification remind at: " + LocalDateTime.now());
-        List<RepairRequest> repairRequests = repairRequestDAO.findRequestToRemindFixingTask(FIXING_INTERVAL);
+        List<RepairRequest> repairRequests = repairRequestDAO.findRequestToRemindFixingTask();
         repairRequests.parallelStream()
                 .forEach(repairRequest -> {
                     String requestCode = repairRequest.getRequestCode();
@@ -232,6 +206,25 @@ public class CronJobImpl implements CronJob {
                             DateFormatUtil.toString(invoice.getConfirmFixingAt().plusSeconds(appConf.getCancelableFixingRequestInterval()),
                                     NOTIFICATION_DATE_TIME_PATTERN));
                 });
+    }
+
+    @Override
+    public void refundVoucher(RepairRequest repairRequest) {
+        Long voucherId = repairRequest.getVoucherId();
+        if (voucherId != null) {
+            User user = validatorService.getUserValidated(repairRequest.getUserId());
+            Collection<UserVoucher> userVouchers = user.getUserVouchers();
+            UserVoucher userVoucher = getUserVoucher(userVouchers, voucherId);
+            userVoucher.setQuantity(userVoucher.getQuantity() + 1);
+        }
+    }
+
+    @Override
+    public UserVoucher getUserVoucher(Collection<UserVoucher> userVouchers, Long voucherId) {
+        return userVouchers.stream()
+                .filter(uv -> uv.getUserVoucherId().getVoucherId().equals(voucherId))
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
@@ -266,7 +259,7 @@ public class CronJobImpl implements CronJob {
     }
 
     @Override
-    public void updateRepairerAfterCancelRequest(String requestCode) {
+    public void updateRepairerAfterCancelFixingRequest(String requestCode) {
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
         Repairer repairer = repairerDAO.findByUserId(repairRequestMatching.getRepairerId()).get();
         updateRepairerStatus(repairer);

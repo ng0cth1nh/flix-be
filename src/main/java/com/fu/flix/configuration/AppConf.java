@@ -28,7 +28,6 @@ public class AppConf {
     private Double profitRate;
     private Long cancelablePendingRequestInterval;
     private Long cancelableFixingRequestInterval;
-    private Long cancelableApprovalRequestInterval;
     private Long fine;
     private VnPayInfo vnPayInfo;
     private Notification notification;

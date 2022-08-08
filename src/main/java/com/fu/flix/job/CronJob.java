@@ -17,7 +17,7 @@ public interface CronJob {
 
     void monetaryFine(Long repairerId, String requestCode);
 
-    void updateRepairerAfterCancelRequest(String requestCode);
+    void updateRepairerAfterCancelFixingRequest(String requestCode);
 
     void updateRequestAfterCancel(String reason, String roleId, RepairRequest repairRequest);
 

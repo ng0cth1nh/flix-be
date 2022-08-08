@@ -288,25 +288,25 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
 
     @Query(value = "SELECT * " +
             "FROM repair_requests " +
-            "WHERE TIMESTAMPDIFF(SECOND, CONVERT_TZ(NOW(),'+00:00','+07:00'), expect_start_fixing_at) <= :cancelablePendingRequestInterval " +
+            "WHERE TIMESTAMPDIFF(SECOND, CONVERT_TZ(NOW(),'+00:00','+07:00'), expect_start_fixing_at) <= 3600 " +
             "AND TIMESTAMPDIFF(SECOND, CONVERT_TZ(NOW(),'+00:00','+07:00'), expect_start_fixing_at) >= 0 " +
             "AND status_id IN ('PE');", nativeQuery = true)
-    List<RepairRequest> findCancelablePendingRequest(long cancelablePendingRequestInterval);
+    List<RepairRequest> findCancelablePendingRequest();
 
     @Query(value = "SELECT * " +
             "FROM repair_requests " +
-            "WHERE TIMESTAMPDIFF(MINUTE, expect_start_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) <= 5 " +
+            "WHERE TIMESTAMPDIFF(MINUTE, expect_start_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) < 5 " +
             "AND TIMESTAMPDIFF(MINUTE, expect_start_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) >= 0 " +
             "AND status_id IN ('AP');", nativeQuery = true)
-    List<RepairRequest> findCancelableApprovalRequest(long cancelableApprovalRequestInterval);
+    List<RepairRequest> findCancelableApprovalRequest();
 
     @Query(value = "SELECT * " +
             "FROM repair_requests rr " +
             "JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
             "WHERE rr.status_id IN ('FX') " +
-            "AND TIMESTAMPDIFF(SECOND,iv.confirm_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) >= :cancelableFixingRequestInterval", nativeQuery = true)
-    List<RepairRequest> findCancelableFixingRequest(long cancelableFixingRequestInterval);
+            "AND TIMESTAMPDIFF(SECOND,iv.confirm_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) >= 259200", nativeQuery = true)
+    List<RepairRequest> findCancelableFixingRequest();
 
     @Query(value = "SELECT * FROM repair_requests rr " +
             "WHERE rr.status_id IN ('AP') " +
@@ -319,7 +319,7 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "JOIN invoices iv " +
             "ON iv.request_code = rr.request_code " +
             "WHERE rr.status_id IN ('FX') " +
-            "AND TIMESTAMPDIFF(SECOND,iv.confirm_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) < :cancelableFixingRequestInterval " +
+            "AND TIMESTAMPDIFF(SECOND,iv.confirm_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) < 259200 " +
             "AND TIMESTAMPDIFF(SECOND,iv.confirm_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) >= 0;", nativeQuery = true)
-    List<RepairRequest> findRequestToRemindFixingTask(long cancelableFixingRequestInterval);
+    List<RepairRequest> findRequestToRemindFixingTask();
 }

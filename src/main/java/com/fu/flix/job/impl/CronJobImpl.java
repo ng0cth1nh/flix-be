@@ -159,25 +159,6 @@ public class CronJobImpl implements CronJob {
     }
 
     @Override
-    public void refundVoucher(RepairRequest repairRequest) {
-        Long voucherId = repairRequest.getVoucherId();
-        if (voucherId != null) {
-            User user = validatorService.getUserValidated(repairRequest.getUserId());
-            Collection<UserVoucher> userVouchers = user.getUserVouchers();
-            UserVoucher userVoucher = getUserVoucher(userVouchers, voucherId);
-            userVoucher.setQuantity(userVoucher.getQuantity() + 1);
-        }
-    }
-
-    @Override
-    public UserVoucher getUserVoucher(Collection<UserVoucher> userVouchers, Long voucherId) {
-        return userVouchers.stream()
-                .filter(uv -> uv.getUserVoucherId().getVoucherId().equals(voucherId))
-                .findFirst()
-                .orElse(null);
-    }
-
-    @Override
     @Scheduled(cron = "0 0 */1 * * *")
     public void sendNotificationDeadlineFixingAutomatically() {
         log.info("Start end notification remind at: " + LocalDateTime.now());
@@ -225,6 +206,25 @@ public class CronJobImpl implements CronJob {
                             DateFormatUtil.toString(invoice.getConfirmFixingAt().plusSeconds(appConf.getCancelableFixingRequestInterval()),
                                     NOTIFICATION_DATE_TIME_PATTERN));
                 });
+    }
+
+    @Override
+    public void refundVoucher(RepairRequest repairRequest) {
+        Long voucherId = repairRequest.getVoucherId();
+        if (voucherId != null) {
+            User user = validatorService.getUserValidated(repairRequest.getUserId());
+            Collection<UserVoucher> userVouchers = user.getUserVouchers();
+            UserVoucher userVoucher = getUserVoucher(userVouchers, voucherId);
+            userVoucher.setQuantity(userVoucher.getQuantity() + 1);
+        }
+    }
+
+    @Override
+    public UserVoucher getUserVoucher(Collection<UserVoucher> userVouchers, Long voucherId) {
+        return userVouchers.stream()
+                .filter(uv -> uv.getUserVoucherId().getVoucherId().equals(voucherId))
+                .findFirst()
+                .orElse(null);
     }
 
     @Override

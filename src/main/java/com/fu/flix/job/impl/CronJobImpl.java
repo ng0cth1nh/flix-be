@@ -3,7 +3,6 @@ package com.fu.flix.job.impl;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.NotificationStatus;
 import com.fu.flix.constant.enums.NotificationType;
-import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.UserNotificationDTO;
 import com.fu.flix.entity.*;
@@ -40,8 +39,8 @@ public class CronJobImpl implements CronJob {
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final ValidatorService validatorService;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
-
-    private final String NOTIFICATION_DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private final InvoiceDAO invoiceDAO;
+    private final String NOTIFICATION_DATE_TIME_PATTERN = "HH:mm - DD/MM/yyyy";
     private final long PENDING_INTERVAL;
     private final long APPROVAL_INTERVAL;
     private final long FIXING_INTERVAL;
@@ -53,7 +52,8 @@ public class CronJobImpl implements CronJob {
                        BalanceDAO balanceDAO,
                        TransactionHistoryDAO transactionHistoryDAO,
                        ValidatorService validatorService,
-                       RepairRequestMatchingDAO repairRequestMatchingDAO) {
+                       RepairRequestMatchingDAO repairRequestMatchingDAO,
+                       InvoiceDAO invoiceDAO) {
         this.appConf = appConf;
         this.repairRequestDAO = repairRequestDAO;
         PENDING_INTERVAL = appConf.getCancelablePendingRequestInterval();
@@ -65,6 +65,7 @@ public class CronJobImpl implements CronJob {
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.validatorService = validatorService;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
+        this.invoiceDAO = invoiceDAO;
     }
 
     @Override
@@ -187,7 +188,7 @@ public class CronJobImpl implements CronJob {
     @Scheduled(cron = "0 0 */1 * * *")
     public void sendNotificationDeadlineFixingAutomatically() {
         log.info("Start end notification remind at: " + LocalDateTime.now());
-        List<RepairRequest> repairRequests = repairRequestDAO.findRequestToRemindFixingTime();
+        List<RepairRequest> repairRequests = repairRequestDAO.findRequestToRemindExpectedFixingTimeDeadline();
         repairRequests.parallelStream()
                 .forEach(repairRequest -> {
                     String requestCode = repairRequest.getRequestCode();
@@ -195,7 +196,7 @@ public class CronJobImpl implements CronJob {
 
                     UserNotificationDTO repairerNotificationDTO = new UserNotificationDTO(
                             "request",
-                            NotificationStatus.REMIND_FIXING_TIME.name(),
+                            NotificationStatus.REMIND_EXPECT_FIXING_TIME_DEADLINE.name(),
                             repairRequestMatching.getRepairerId(),
                             NotificationType.REMIND.name(),
                             null,
@@ -208,8 +209,29 @@ public class CronJobImpl implements CronJob {
     }
 
     @Override
+    @Scheduled(cron = "0 0 7 * * *")
     public void sendNotificationRemindFixingAutomatically() {
+        log.info("Start end notification remind at: " + LocalDateTime.now());
+        List<RepairRequest> repairRequests = repairRequestDAO.findRequestToRemindFixingTask(FIXING_INTERVAL);
+        repairRequests.parallelStream()
+                .forEach(repairRequest -> {
+                    String requestCode = repairRequest.getRequestCode();
+                    RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+                    Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
 
+                    UserNotificationDTO repairerNotificationDTO = new UserNotificationDTO(
+                            "request",
+                            NotificationStatus.REMIND_FIXING_TASK.name(),
+                            repairRequestMatching.getRepairerId(),
+                            NotificationType.REMIND.name(),
+                            null,
+                            requestCode);
+
+                    fcmService.sendAndSaveNotification(repairerNotificationDTO,
+                            requestCode,
+                            DateFormatUtil.toString(invoice.getConfirmFixingAt().plusSeconds(appConf.getCancelableFixingRequestInterval()),
+                                    NOTIFICATION_DATE_TIME_PATTERN));
+                });
     }
 
     @Override

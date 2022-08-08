@@ -34,7 +34,5 @@ public interface CustomerService {
 
     ResponseEntity<RepairerCommentResponse> getRepairerComments(RepairerCommentRequest request);
 
-    void updateRepairerAfterCancelRequest(String requestCode);
-    void refundVoucher(RepairRequest repairRequest);
     ResponseEntity<ChooseMainAddressResponse> chooseMainAddress(ChooseMainAddressRequest request);
 }

@@ -26,7 +26,9 @@ public class AppConf {
     private Integer defaultOffset;
     private Double vat;
     private Double profitRate;
-    private Long minTimeFined;
+    private Long cancelablePendingRequestInterval;
+    private Long cancelableFixingRequestInterval;
+    private Long cancelableApprovalRequestInterval;
     private Long fine;
     private VnPayInfo vnPayInfo;
     private Notification notification;

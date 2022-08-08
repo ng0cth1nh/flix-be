@@ -285,4 +285,23 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "ON pm.id = rr.payment_method_id " +
             "WHERE rr.request_code = :requestCode", nativeQuery = true)
     Optional<IDetailRequestDTO> findRequestDetailForAdmin(String requestCode);
+
+    @Query(value = "SELECT * " +
+            "FROM repair_requests " +
+            "WHERE TIMESTAMPDIFF(SECOND,expect_start_fixing_at, NOW()) >= :cancelablePendingRequestInterval " +
+            "AND status_id IN ('PE');", nativeQuery = true)
+    List<RepairRequest> findCancelablePendingRequest(long cancelablePendingRequestInterval);
+
+    @Query(value = "SELECT * " +
+            "FROM repair_requests " +
+            "WHERE TIMESTAMPDIFF(SECOND,expect_start_fixing_at, NOW()) >= :cancelableApprovalRequestInterval " +
+            "AND status_id IN ('AP');", nativeQuery = true)
+    List<RepairRequest> findCancelableApprovalRequest(long cancelableApprovalRequestInterval);
+    @Query(value = "SELECT * " +
+            "FROM repair_requests rr " +
+            "JOIN invoices iv " +
+            "ON iv.request_code = rr.request_code " +
+            "WHERE rr.status_id IN ('FX') " +
+            "AND TIMESTAMPDIFF(SECOND,iv.confirm_fixing_at, NOW()) >= :cancelableFixingRequestInterval", nativeQuery = true)
+    List<RepairRequest> findCancelableFixingRequest(long cancelableFixingRequestInterval);
 }

@@ -11,6 +11,7 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
+import com.fu.flix.job.CronJob;
 import com.fu.flix.service.*;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
@@ -47,12 +48,12 @@ public class CustomerServiceImpl implements CustomerService {
     private final CommentDAO commentDAO;
     private final AppConf appConf;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
-    private final RepairerDAO repairerDAO;
     private final StatusDAO statusDAO;
     private final ValidatorService validatorService;
     private final AddressService addressService;
     private final VoucherService voucherService;
     private final RequestService requestService;
+    private final CronJob cronJob;
     private final FCMService fcmService;
     private final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final String DATE_PATTERN = "dd-MM-yyyy";
@@ -69,13 +70,12 @@ public class CustomerServiceImpl implements CustomerService {
                                CommentDAO commentDAO,
                                AppConf appConf,
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
-                               RepairerDAO repairerDAO,
                                StatusDAO statusDAO,
                                ValidatorService validatorService,
                                AddressService addressService,
                                VoucherService voucherService,
                                RequestService requestService,
-                               FCMService fcmService) {
+                               CronJob cronJob, FCMService fcmService) {
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
         this.serviceDAO = serviceDAO;
@@ -86,7 +86,6 @@ public class CustomerServiceImpl implements CustomerService {
         this.commentDAO = commentDAO;
         this.appConf = appConf;
         this.repairRequestMatchingDAO = repairRequestMatchingDAO;
-        this.repairerDAO = repairerDAO;
         this.statusDAO = statusDAO;
         this.validatorService = validatorService;
         this.addressService = addressService;
@@ -94,6 +93,7 @@ public class CustomerServiceImpl implements CustomerService {
         this.requestService = requestService;
         this.NAME_MAX_LENGTH = appConf.getNameMaxLength();
         this.DESCRIPTION_MAX_LENGTH = appConf.getDescriptionMaxLength();
+        this.cronJob = cronJob;
         this.fcmService = fcmService;
     }
 
@@ -217,7 +217,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         validatorService.getServiceValidated(usingVoucherDTO.getServiceId());
 
-        UserVoucher userVoucher = getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
+        UserVoucher userVoucher = cronJob.getUserVoucher(usingVoucherDTO.getUserVouchers(), voucherId);
         if (userVoucher == null) {
             throw new GeneralException(HttpStatus.GONE, USER_NOT_HOLD_VOUCHER);
         }
@@ -282,12 +282,8 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, ONLY_CAN_CANCEL_REQUEST_PENDING_OR_APPROVED);
         }
 
-        if (APPROVED.getId().equals(repairRequest.getStatusId())) {
-            updateRepairerAfterCancelRequest(requestCode);
-        }
-
-        refundVoucher(repairRequest);
-        updateRepairRequest(request, repairRequest);
+        cronJob.refundVoucher(repairRequest);
+        cronJob.updateRequestAfterCancel(request.getReason(), RoleType.ROLE_CUSTOMER.getId(), repairRequest);
 
         Optional<RepairRequestMatching> optionalRepairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode);
         if (optionalRepairRequestMatching.isPresent()) {
@@ -312,62 +308,6 @@ public class CustomerServiceImpl implements CustomerService {
     private boolean isCancelable(RepairRequest repairRequest) {
         String statusId = repairRequest.getStatusId();
         return PENDING.getId().equals(statusId) || APPROVED.getId().equals(statusId);
-    }
-
-    @Override
-    public void updateRepairerAfterCancelRequest(String requestCode) {
-        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-        Repairer repairer = repairerDAO.findByUserId(repairRequestMatching.getRepairerId()).get();
-
-        updateRepairerStatus(repairer);
-//        returnMoneyForRepairer(repairer, requestCode);
-    }
-
-    private void updateRepairerStatus(Repairer repairer) {
-        repairer.setRepairing(false);
-    }
-
-//    private void returnMoneyForRepairer(Repairer repairer, String requestCode) {
-//        TransactionHistory commissionsTransaction = transactionHistoryDAO
-//                .findByRequestCodeAndType(requestCode, PAY_COMMISSIONS.name()).get();
-//        Long userId = repairer.getUserId();
-//        Balance balance = balanceDAO.findByUserId(userId).get();
-//        Long refunds = commissionsTransaction.getAmount();
-//
-//        balance.setBalance(balance.getBalance() + refunds);
-//
-//        TransactionHistory refundsTransaction = new TransactionHistory();
-//        refundsTransaction.setUserId(userId);
-//        refundsTransaction.setAmount(refunds);
-//        refundsTransaction.setType(REFUNDS.name());
-//        refundsTransaction.setRequestCode(requestCode);
-//        refundsTransaction.setStatus(SUCCESS.name());
-//        refundsTransaction.setTransactionCode(RandomUtil.generateCode());
-//        transactionHistoryDAO.save(refundsTransaction);
-//    }
-
-    private void updateRepairRequest(CancelRequestForCustomerRequest request, RepairRequest repairRequest) {
-        repairRequest.setStatusId(CANCELLED.getId());
-        repairRequest.setCancelledByRoleId(RoleType.ROLE_CUSTOMER.getId());
-        repairRequest.setReasonCancel(request.getReason());
-    }
-
-    @Override
-    public void refundVoucher(RepairRequest repairRequest) {
-        Long voucherId = repairRequest.getVoucherId();
-        if (voucherId != null) {
-            User user = validatorService.getUserValidated(repairRequest.getUserId());
-            Collection<UserVoucher> userVouchers = user.getUserVouchers();
-            UserVoucher userVoucher = getUserVoucher(userVouchers, voucherId);
-            userVoucher.setQuantity(userVoucher.getQuantity() + 1);
-        }
-    }
-
-    private UserVoucher getUserVoucher(Collection<UserVoucher> userVouchers, Long voucherId) {
-        return userVouchers.stream()
-                .filter(uv -> uv.getUserVoucherId().getVoucherId().equals(voucherId))
-                .findFirst()
-                .orElse(null);
     }
 
     @Override

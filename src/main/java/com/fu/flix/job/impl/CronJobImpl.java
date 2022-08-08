@@ -40,7 +40,7 @@ public class CronJobImpl implements CronJob {
     private final ValidatorService validatorService;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final InvoiceDAO invoiceDAO;
-    private final String NOTIFICATION_DATE_TIME_PATTERN = "HH:mm - DD/MM/yyyy";
+    private final String NOTIFICATION_DATE_TIME_PATTERN = "HH:mm - dd/MM/yyyy";
     public CronJobImpl(AppConf appConf,
                        RepairRequestDAO repairRequestDAO,
                        FCMService fcmService,
@@ -61,6 +61,7 @@ public class CronJobImpl implements CronJob {
         this.invoiceDAO = invoiceDAO;
     }
 
+    // job run every 5 minutes
     @Override
     @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelPendingRequestAutomatically() {
@@ -83,6 +84,7 @@ public class CronJobImpl implements CronJob {
                 });
     }
 
+    // job run every 5 minutes
     @Override
     @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelApprovalRequestAutomatically() {
@@ -120,6 +122,7 @@ public class CronJobImpl implements CronJob {
                 });
     }
 
+    // job run every 5 minutes
     @Override
     @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelFixingRequestAutomatically() {
@@ -158,6 +161,7 @@ public class CronJobImpl implements CronJob {
                 });
     }
 
+    // job run every 1 hour
     @Override
     @Scheduled(cron = "0 0 */1 * * *")
     public void sendNotificationDeadlineFixingAutomatically() {
@@ -182,6 +186,7 @@ public class CronJobImpl implements CronJob {
                 });
     }
 
+    // job run every 7AM
     @Override
     @Scheduled(cron = "0 0 7 * * *")
     public void sendNotificationRemindFixingAutomatically() {
@@ -262,10 +267,6 @@ public class CronJobImpl implements CronJob {
     public void updateRepairerAfterCancelFixingRequest(String requestCode) {
         RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
         Repairer repairer = repairerDAO.findByUserId(repairRequestMatching.getRepairerId()).get();
-        updateRepairerStatus(repairer);
-    }
-
-    private void updateRepairerStatus(Repairer repairer) {
         repairer.setRepairing(false);
     }
 }

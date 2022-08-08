@@ -263,7 +263,8 @@ public class RepairerServiceImpl implements RepairerService {
     }
 
     private boolean isFined(RepairRequest repairRequest) {
-        return cronJob.isOnRequestCancelTime(repairRequest.getExpectStartFixingAt());
+        return cronJob.isOnRequestCancelTime(repairRequest.getExpectStartFixingAt())
+                && APPROVED.getId().equals(repairRequest.getStatusId());
     }
 
     @Override

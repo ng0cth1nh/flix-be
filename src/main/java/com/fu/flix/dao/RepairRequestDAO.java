@@ -295,8 +295,8 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
 
     @Query(value = "SELECT * " +
             "FROM repair_requests " +
-            "WHERE TIMESTAMPDIFF(SECOND, CONVERT_TZ(NOW(),'+00:00','+07:00'), expect_start_fixing_at) <= :cancelableApprovalRequestInterval " +
-            "AND TIMESTAMPDIFF(SECOND, CONVERT_TZ(NOW(),'+00:00','+07:00'), expect_start_fixing_at) >= 0 " +
+            "WHERE TIMESTAMPDIFF(MINUTE, expect_start_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) <= 5 " +
+            "AND TIMESTAMPDIFF(MINUTE, expect_start_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) >= 0 " +
             "AND status_id IN ('AP');", nativeQuery = true)
     List<RepairRequest> findCancelableApprovalRequest(long cancelableApprovalRequestInterval);
 

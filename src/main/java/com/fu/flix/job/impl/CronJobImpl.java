@@ -69,7 +69,7 @@ public class CronJobImpl implements CronJob {
     }
 
     @Override
-    @Scheduled(cron = "*/10 * * * * *")
+    @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelPendingRequestAutomatically() {
         List<RepairRequest> repairRequests = repairRequestDAO.findCancelablePendingRequest(PENDING_INTERVAL);
         repairRequests.parallelStream()
@@ -91,7 +91,7 @@ public class CronJobImpl implements CronJob {
     }
 
     @Override
-    @Scheduled(cron = "*/10 * * * * *")
+    @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelApprovalRequestAutomatically() {
         List<RepairRequest> repairRequests = repairRequestDAO.findCancelableApprovalRequest(APPROVAL_INTERVAL);
         repairRequests.parallelStream()
@@ -128,7 +128,7 @@ public class CronJobImpl implements CronJob {
     }
 
     @Override
-    @Scheduled(cron = "*/10 * * * * *")
+    @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelFixingRequestAutomatically() {
         List<RepairRequest> repairRequests = repairRequestDAO.findCancelableFixingRequest(FIXING_INTERVAL);
         repairRequests.parallelStream()
@@ -244,7 +244,7 @@ public class CronJobImpl implements CronJob {
     @Override
     public boolean isOnRequestCancelTime(LocalDateTime expectStartFixingAt) {
         Duration duration = Duration.between(LocalDateTime.now(), expectStartFixingAt);
-        return duration.getSeconds() < this.appConf.getCancelablePendingRequestInterval();
+        return duration.getSeconds() >= 0 && duration.getSeconds() < this.appConf.getCancelablePendingRequestInterval();
     }
 
     @Override

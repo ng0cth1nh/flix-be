@@ -11,5 +11,6 @@ public enum NotificationType {
     REQUEST_CONFIRM_FIXING,
     DEPOSIT_FAILED,
     DEPOSIT_SUCCESS,
-    REGISTER_FAIL
+    REGISTER_FAIL,
+    REMIND
 }

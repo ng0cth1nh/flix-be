@@ -10,6 +10,7 @@ import com.fu.flix.entity.*;
 import com.fu.flix.job.CronJob;
 import com.fu.flix.service.FCMService;
 import com.fu.flix.service.ValidatorService;
+import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -39,6 +40,8 @@ public class CronJobImpl implements CronJob {
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final ValidatorService validatorService;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
+
+    private final String NOTIFICATION_DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final long PENDING_INTERVAL;
     private final long APPROVAL_INTERVAL;
     private final long FIXING_INTERVAL;
@@ -178,6 +181,35 @@ public class CronJobImpl implements CronJob {
                 .filter(uv -> uv.getUserVoucherId().getVoucherId().equals(voucherId))
                 .findFirst()
                 .orElse(null);
+    }
+
+    @Override
+    @Scheduled(cron = "0 0 */1 * * *")
+    public void sendNotificationDeadlineFixingAutomatically() {
+        log.info("Start end notification remind at: " + LocalDateTime.now());
+        List<RepairRequest> repairRequests = repairRequestDAO.findRequestToRemindFixingTime();
+        repairRequests.parallelStream()
+                .forEach(repairRequest -> {
+                    String requestCode = repairRequest.getRequestCode();
+                    RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
+
+                    UserNotificationDTO repairerNotificationDTO = new UserNotificationDTO(
+                            "request",
+                            NotificationStatus.REMIND_FIXING_TIME.name(),
+                            repairRequestMatching.getRepairerId(),
+                            NotificationType.REMIND.name(),
+                            null,
+                            requestCode);
+
+                    fcmService.sendAndSaveNotification(repairerNotificationDTO,
+                            requestCode,
+                            DateFormatUtil.toString(repairRequest.getExpectStartFixingAt(), NOTIFICATION_DATE_TIME_PATTERN));
+                });
+    }
+
+    @Override
+    public void sendNotificationRemindFixingAutomatically() {
+
     }
 
     @Override

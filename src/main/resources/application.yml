@@ -9,7 +9,7 @@ app:
   fine: 20000
   cancelablePendingRequestInterval: 3600 #seconds
   cancelableApprovalRequestInterval: 3600 #seconds
-  cancelableFixingRequestInterval: 10800 #seconds
+  cancelableFixingRequestInterval: 259200 #seconds
   descriptionMaxLength: 2500
   nameMaxLength: 150
   defaultPageSize: 10
@@ -23,7 +23,8 @@ app:
       feedback: 'Thông tin phản hồi'
       transaction: 'Thông tin giao dịch'
     content:
-      REQUEST_CANCELED_AUTOMATICALLY: 'Mã yêu cầu #%s đã được hủy tự động'
+      REMIND_FIXING_TIME: 'Quý khách có yêu cầu sửa chữa đơn hàng #%s vào lúc %s.'
+      REQUEST_CANCELED_AUTOMATICALLY: 'Mã yêu cầu #%s đã được hủy tự động.'
       REQUEST_CREATE_SUCCESS: 'Yêu cầu #%s đã được tạo thành công'
       REQUEST_APPROVED: 'Yêu cầu #%s đã được chấp nhận'
       REQUEST_CONFIRM_FIXING: 'Yêu cầu #%s đang được sửa'

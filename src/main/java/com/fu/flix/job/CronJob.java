@@ -24,4 +24,8 @@ public interface CronJob {
     void refundVoucher(RepairRequest repairRequest);
 
     UserVoucher getUserVoucher(Collection<UserVoucher> userVouchers, Long voucherId);
+
+    void sendNotificationDeadlineFixingAutomatically();
+
+    void sendNotificationRemindFixingAutomatically();
 }

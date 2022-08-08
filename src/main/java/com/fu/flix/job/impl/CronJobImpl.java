@@ -40,7 +40,7 @@ public class CronJobImpl implements CronJob {
     private final ValidatorService validatorService;
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final InvoiceDAO invoiceDAO;
-    private final String NOTIFICATION_DATE_TIME_PATTERN = "HH:mm - DD/MM/yyyy";
+    private final String NOTIFICATION_DATE_TIME_PATTERN = "HH:mm - dd/MM/yyyy";
     public CronJobImpl(AppConf appConf,
                        RepairRequestDAO repairRequestDAO,
                        FCMService fcmService,

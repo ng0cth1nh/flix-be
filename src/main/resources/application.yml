@@ -23,7 +23,8 @@ app:
       feedback: 'Thông tin phản hồi'
       transaction: 'Thông tin giao dịch'
     content:
-      REMIND_FIXING_TIME: 'Quý khách có yêu cầu sửa chữa đơn hàng #%s vào lúc %s.'
+      REMIND_EXPECT_FIXING_TIME_DEADLINE: 'Quý khách có yêu cầu sửa chữa đơn hàng #%s vào lúc %s.'
+      REMIND_FIXING_TASK: 'Đơn hàng #%s đang được thực hiện, vui lòng hoàn thành trước %s.'
       REQUEST_CANCELED_AUTOMATICALLY: 'Mã yêu cầu #%s đã được hủy tự động.'
       REQUEST_CREATE_SUCCESS: 'Yêu cầu #%s đã được tạo thành công'
       REQUEST_APPROVED: 'Yêu cầu #%s đã được chấp nhận'

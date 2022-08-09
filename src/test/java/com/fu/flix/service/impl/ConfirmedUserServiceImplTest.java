@@ -48,14 +48,14 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_comment_success_with_rating_is_5() {
         // given
-        String requestCode = "030722WGR4WV";
+        String requestCode = "0908224D3DCA";
         Integer rating = 5;
         String comment = "Thợ xấu trai";
         CommentRequest request = new CommentRequest();
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(comment);
-        setCustomerContext(48L, "0962706248");
+        setCustomerContext(40L, "0962706248");
 
         // when
         ResponseEntity<CommentResponse> responseEntity = underTest.createComment(request);
@@ -68,14 +68,14 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_comment_success_with_rating_is_1() {
         // given
-        String requestCode = "030722WGR4WV";
+        String requestCode = "0908224D3DCA";
         Integer rating = 1;
         String comment = "Thợ xấu trai";
         CommentRequest request = new CommentRequest();
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(comment);
-        setCustomerContext(48L, "0962706248");
+        setCustomerContext(40L, "0962706248");
 
         // when
         ResponseEntity<CommentResponse> responseEntity = underTest.createComment(request);
@@ -88,14 +88,14 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_comment_success_with_rating_is_4() {
         // given
-        String requestCode = "030722WGR4WV";
+        String requestCode = "0908224D3DCA";
         Integer rating = 4;
         String comment = "Thợ xấu trai";
         CommentRequest request = new CommentRequest();
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(comment);
-        setCustomerContext(48L, "0962706248");
+        setCustomerContext(40L, "0962706248");
 
         // when
         ResponseEntity<CommentResponse> responseEntity = underTest.createComment(request);
@@ -108,14 +108,14 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_comment_fail_when_rating_is_6() {
         // given
-        String requestCode = "030722WGR4WV";
+        String requestCode = "0908224D3DCA";
         Integer rating = 6;
         String comment = "Thợ xấu trai";
         CommentRequest request = new CommentRequest();
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(comment);
-        setCustomerContext(48L, "0962706248");
+        setCustomerContext(40L, "0962706248");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createComment(request));
@@ -127,14 +127,14 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_comment_fail_when_rating_is_0() {
         // given
-        String requestCode = "030722WGR4WV";
+        String requestCode = "0908224D3DCA";
         Integer rating = 0;
         String comment = "Thợ xấu trai";
         CommentRequest request = new CommentRequest();
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(comment);
-        setCustomerContext(48L, "0962706248");
+        setCustomerContext(40L, "0962706248");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createComment(request));
@@ -146,13 +146,13 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_comment_fail_when_rating_is_null() {
         // given
-        String requestCode = "030722WGR4WV";
+        String requestCode = "0908224D3DCA";
         String comment = "Thợ xấu trai";
         CommentRequest request = new CommentRequest();
         request.setRequestCode(requestCode);
         request.setRating(null);
         request.setComment(comment);
-        setCustomerContext(48L, "0962706248");
+        setCustomerContext(40L, "0962706248");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createComment(request));
@@ -164,13 +164,13 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_comment_success_when_comment_is_null() {
         // given
-        String requestCode = "030722WGR4WV";
+        String requestCode = "0908224D3DCA";
         Integer rating = 4;
         CommentRequest request = new CommentRequest();
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment(null);
-        setCustomerContext(48L, "0962706248");
+        setCustomerContext(40L, "0962706248");
 
         // when
         ResponseEntity<CommentResponse> responseEntity = underTest.createComment(request);
@@ -183,13 +183,13 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_comment_success_when_comment_is_empty() {
         // given
-        String requestCode = "030722WGR4WV";
+        String requestCode = "0908224D3DCA";
         Integer rating = 4;
         CommentRequest request = new CommentRequest();
         request.setRequestCode(requestCode);
         request.setRating(rating);
         request.setComment("");
-        setCustomerContext(48L, "0962706248");
+        setCustomerContext(40L, "0962706248");
 
         // when
         ResponseEntity<CommentResponse> responseEntity = underTest.createComment(request);
@@ -274,7 +274,7 @@ class ConfirmedUserServiceImplTest {
         // given
         String comment = "Thợ xấu trai";
         CommentRequest request = new CommentRequest();
-        request.setRequestCode("030722WGR4WV");
+        request.setRequestCode("0908224D3DCA");
         request.setRating(4);
         request.setComment(comment);
         setCustomerContext(36L, "0865390037");
@@ -291,10 +291,10 @@ class ConfirmedUserServiceImplTest {
         // given
         String comment = "Thợ xấu trai";
         CommentRequest request = new CommentRequest();
-        request.setRequestCode("08AEFEMWQGWQ");
+        request.setRequestCode("0908222283BF");
         request.setRating(4);
         request.setComment(comment);
-        setCustomerContext(36L, "0865390037");
+        setCustomerContext(40L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createComment(request));
@@ -304,14 +304,15 @@ class ConfirmedUserServiceImplTest {
     }
 
     @Test
-    public void test_comment_fail_when_request_status_is_not_done() {
+    public void test_comment_fail_when_request_status_is_not_done() throws IOException {
         // given
         String comment = "Thợ xấu trai";
         CommentRequest request = new CommentRequest();
-        request.setRequestCode("030722NCUGTU");
+        String requestCode = createFixingRequestForCustomerId40();
+        request.setRequestCode(requestCode);
         request.setRating(4);
         request.setComment(comment);
-        setCustomerContext(48L, "0865390037");
+        setCustomerContext(40L, "0865390037");
 
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createComment(request));
@@ -323,7 +324,7 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_get_invoice_success_for_repairer() throws IOException {
         // given
-        String requestCode = createFixingRequest(36L, "0865390037");
+        String requestCode = createFixingRequestFoCustomerId36();
         approvalRequestByRepairerId56(requestCode);
         confirmFixingByRepairerId56(requestCode);
         createInvoiceByRepairerId56(requestCode);
@@ -343,7 +344,7 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_get_invoice_success_for_customer() throws IOException {
         // given
-        String requestCode = createFixingRequest(36L, "0865390037");
+        String requestCode = createFixingRequestFoCustomerId36();
         approvalRequestByRepairerId56(requestCode);
         confirmFixingByRepairerId56(requestCode);
         createInvoiceByRepairerId56(requestCode);
@@ -378,7 +379,7 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_get_fixed_services_success_by_repairer() throws IOException {
         // given
-        String requestCode = createFixingRequest(36L, "0865390037");
+        String requestCode = createFixingRequestFoCustomerId36();
         approvalRequestByRepairerId56(requestCode);
         confirmFixingByRepairerId56(requestCode);
         putExtraServiceToInvoiceByRepairerId56(requestCode);
@@ -401,7 +402,7 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_get_fixed_services_fail_when_status_is_not_valid() throws IOException {
         // given
-        String requestCode = createFixingRequest(36L, "0865390037");
+        String requestCode = createFixingRequestFoCustomerId36();
         approvalRequestByRepairerId56(requestCode);
 
         GetFixedServiceRequest request = new GetFixedServiceRequest();
@@ -419,7 +420,7 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_get_fixed_services_fail_when_customer_does_not_have_permission() throws IOException {
         // given
-        String requestCode = createFixingRequest(36L, "0865390037");
+        String requestCode = createFixingRequestFoCustomerId36();
         approvalRequestByRepairerId56(requestCode);
         confirmFixingByRepairerId56(requestCode);
         putExtraServiceToInvoiceByRepairerId56(requestCode);
@@ -442,7 +443,7 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_get_fixed_services_fail_when_repairer_does_not_have_permission() throws IOException {
         // given
-        String requestCode = createFixingRequest(36L, "0865390037");
+        String requestCode = createFixingRequestFoCustomerId36();
         approvalRequestByRepairerId56(requestCode);
         confirmFixingByRepairerId56(requestCode);
         putExtraServiceToInvoiceByRepairerId56(requestCode);
@@ -465,7 +466,7 @@ class ConfirmedUserServiceImplTest {
     @Test
     public void test_get_fixed_services_success_by_customer() throws IOException {
         // given
-        String requestCode = createFixingRequest(36L, "0865390037");
+        String requestCode = createFixingRequestFoCustomerId36();
         approvalRequestByRepairerId56(requestCode);
         confirmFixingByRepairerId56(requestCode);
         putExtraServiceToInvoiceByRepairerId56(requestCode);
@@ -535,18 +536,35 @@ class ConfirmedUserServiceImplTest {
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 
-    private String createFixingRequest(Long userId, String phone) throws IOException {
-        setCustomerContext(userId, phone);
+    private String createFixingRequestFoCustomerId36() throws IOException {
+        setCustomerContext(36L, "0865390037");
         Long serviceId = 1L;
         Long addressId = 7L;
         String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
         String description = "Thợ phải đẹp trai nha";
-        Long voucherId = 1L;
         String paymentMethodId = "C";
 
         RequestingRepairRequest request = new RequestingRepairRequest();
         request.setServiceId(serviceId);
-        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        RequestingRepairResponse response = customerService.createFixingRequest(request).getBody();
+        return response.getRequestCode();
+    }
+
+    private String createFixingRequestForCustomerId40() throws IOException {
+        setCustomerContext(40L, "0865390037");
+        Long serviceId = 1L;
+        Long addressId = 11L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai nha";
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
         request.setDescription(description);
         request.setExpectFixingDay(expectFixingDay);
         request.setAddressId(addressId);

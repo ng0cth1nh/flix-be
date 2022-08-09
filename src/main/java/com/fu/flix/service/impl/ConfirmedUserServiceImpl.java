@@ -96,7 +96,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
             throw new GeneralException(HttpStatus.CONFLICT, CAN_NOT_COMMENT_WHEN_STATUS_NOT_DONE);
         }
 
-        User user = validatorService.getUserValidated(request.getUsername());
+        User user = validatorService.getUserValidated(request.getUserId());
         String commentType = getCommentType(user.getRoles());
         Optional<Comment> optionalComment = commentDAO.findComment(requestCode, commentType);
         if (optionalComment.isPresent()) {

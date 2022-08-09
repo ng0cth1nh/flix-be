@@ -1159,7 +1159,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private static List<AccessoryOutputDTO> mapToAccessoryOutputDTOs(Stream<Accessory> accessories) {
-        List<AccessoryOutputDTO> accessoryOutputDTOS = accessories
+        return accessories
                 .map(accessory -> {
                     AccessoryOutputDTO dto = new AccessoryOutputDTO();
                     dto.setId(accessory.getId());
@@ -1171,7 +1171,6 @@ public class AdminServiceImpl implements AdminService {
                     dto.setDescription(accessory.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
-        return accessoryOutputDTOS;
     }
 
     @Override

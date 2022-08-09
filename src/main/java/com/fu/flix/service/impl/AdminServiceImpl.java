@@ -1279,6 +1279,7 @@ public class AdminServiceImpl implements AdminService {
                     dto.setName(subService.getName());
                     dto.setPrice(subService.getPrice());
                     dto.setStatus(subService.getIsActive() ? "ACTIVE" : "INACTIVE");
+                    dto.setDescription(subService.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
 

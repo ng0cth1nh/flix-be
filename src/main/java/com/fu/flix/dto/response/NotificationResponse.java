@@ -9,4 +9,5 @@ import java.util.List;
 public class NotificationResponse {
     private List<NotificationOutputDTO> notifications;
     private long totalRecord;
+    private long numberOfUnread;
 }

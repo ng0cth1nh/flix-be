@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.fu.flix.constant.Constant.*;
 import static com.fu.flix.constant.enums.AccountState.BAN;
@@ -742,18 +743,7 @@ public class AdminServiceImpl implements AdminService {
         Page<Accessory> accessoryPage = accessoryDAO.findAll(PageRequest.of(pageNumber, pageSize));
         long totalRecord = accessoryDAO.count();
 
-        List<AccessoryOutputDTO> accessoryList = accessoryPage.stream()
-                .map(accessory -> {
-                    AccessoryOutputDTO dto = new AccessoryOutputDTO();
-                    dto.setId(accessory.getId());
-                    dto.setName(accessory.getName());
-                    dto.setPrice(accessory.getPrice());
-                    dto.setInsuranceTime(accessory.getInsuranceTime());
-                    dto.setManufacture(accessory.getManufacture());
-                    dto.setCountry(accessory.getCountry());
-                    dto.setDescription(accessory.getDescription());
-                    return dto;
-                }).collect(Collectors.toList());
+        List<AccessoryOutputDTO> accessoryList = mapToAccessoryOutputDTOs(accessoryPage.stream());
 
         AdminGetAccessoriesResponse response = new AdminGetAccessoriesResponse();
         response.setAccessoryList(accessoryList);
@@ -1160,7 +1150,16 @@ public class AdminServiceImpl implements AdminService {
                 : request.getKeyword();
 
         List<Accessory> accessories = accessoryDAO.searchAccessories(keyword);
-        List<AccessoryOutputDTO> accessoryOutputDTOS = accessories.stream()
+        List<AccessoryOutputDTO> accessoryOutputDTOS = mapToAccessoryOutputDTOs(accessories.stream());
+
+        AdminSearchAccessoriesResponse response = new AdminSearchAccessoriesResponse();
+        response.setAccessories(accessoryOutputDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private static List<AccessoryOutputDTO> mapToAccessoryOutputDTOs(Stream<Accessory> accessories) {
+        List<AccessoryOutputDTO> accessoryOutputDTOS = accessories
                 .map(accessory -> {
                     AccessoryOutputDTO dto = new AccessoryOutputDTO();
                     dto.setId(accessory.getId());
@@ -1169,13 +1168,10 @@ public class AdminServiceImpl implements AdminService {
                     dto.setInsuranceTime(accessory.getInsuranceTime());
                     dto.setManufacture(accessory.getManufacture());
                     dto.setCountry(accessory.getCountry());
+                    dto.setDescription(accessory.getDescription());
                     return dto;
                 }).collect(Collectors.toList());
-
-        AdminSearchAccessoriesResponse response = new AdminSearchAccessoriesResponse();
-        response.setAccessories(accessoryOutputDTOS);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return accessoryOutputDTOS;
     }
 
     @Override

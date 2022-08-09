@@ -101,6 +101,7 @@ public class UserServiceImpl implements UserService {
         List<Notification> notifications = notificationDAO
                 .findByUserIdAndDeletedAtIsNullOrderByDateDesc(userId, PageRequest.of(pageNumber, pageSize));
         long totalRecord = notificationDAO.countByUserIdAndDeletedAtIsNull(userId);
+        long numberOfUnread = notificationDAO.countByUserIdAndDeletedAtIsNullAndIsRead(userId, false);
 
         List<NotificationOutputDTO> notificationOutputDTOS = notifications.stream()
                 .map(notification -> {
@@ -127,6 +128,7 @@ public class UserServiceImpl implements UserService {
         NotificationResponse response = new NotificationResponse();
         response.setNotifications(notificationOutputDTOS);
         response.setTotalRecord(totalRecord);
+        response.setNumberOfUnread(numberOfUnread);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

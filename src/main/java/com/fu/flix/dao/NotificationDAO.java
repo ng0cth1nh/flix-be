@@ -14,4 +14,6 @@ public interface NotificationDAO extends JpaRepository<Notification, Long> {
 
     long countByUserIdAndDeletedAtIsNull(Long userId);
     Optional<Notification> findByIdAndUserIdAndDeletedAtIsNull(Long id, Long userId);
+
+    long countByUserIdAndDeletedAtIsNullAndIsRead(Long userId, boolean isRead);
 }

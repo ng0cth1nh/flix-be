@@ -9,7 +9,9 @@ import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
 import com.fu.flix.entity.Notification;
 import com.fu.flix.entity.User;
+import com.fu.flix.service.CustomerService;
 import com.fu.flix.service.UserService;
+import com.fu.flix.util.DateFormatUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -25,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -46,6 +49,11 @@ class UserServiceImplTest {
 
     @Autowired
     NotificationDAO notificationDAO;
+
+    @Autowired
+    CustomerService customerService;
+
+    String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @Test
     public void test_update_avatar_success() throws IOException {
@@ -187,7 +195,8 @@ class UserServiceImplTest {
     public void test_create_feed_back_success_when_request_code_is_not_null() throws IOException {
         // given
         UserCreateFeedbackRequest request = new UserCreateFeedbackRequest();
-        request.setRequestCode("1107226GDG5F");
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        request.setRequestCode(requestCode);
         request.setFeedbackType("COMMENT");
         request.setTitle("Hủy đơn của tao");
         request.setDescription("Thợ làm ăn chán vãi");
@@ -241,7 +250,6 @@ class UserServiceImplTest {
     public void test_create_feed_back_fail_when_title_is_empty() {
         // given
         UserCreateFeedbackRequest request = new UserCreateFeedbackRequest();
-        request.setRequestCode("1107226GDG5F");
         request.setFeedbackType("COMMENT");
         request.setTitle("");
         request.setDescription("Thợ làm ăn chán vãi");
@@ -259,7 +267,6 @@ class UserServiceImplTest {
     public void test_create_feed_back_fail_when_title_is_null() {
         // given
         UserCreateFeedbackRequest request = new UserCreateFeedbackRequest();
-        request.setRequestCode("1107226GDG5F");
         request.setFeedbackType("COMMENT");
         request.setTitle(null);
         request.setDescription("Thợ làm ăn chán vãi");
@@ -277,7 +284,6 @@ class UserServiceImplTest {
     public void test_create_feed_back_fail_when_description_is_empty() {
         // given
         UserCreateFeedbackRequest request = new UserCreateFeedbackRequest();
-        request.setRequestCode("1107226GDG5F");
         request.setFeedbackType("COMMENT");
         request.setTitle("La la la");
         request.setDescription("");
@@ -295,7 +301,6 @@ class UserServiceImplTest {
     public void test_create_feed_back_fail_when_description_is_null() {
         // given
         UserCreateFeedbackRequest request = new UserCreateFeedbackRequest();
-        request.setRequestCode("1107226GDG5F");
         request.setFeedbackType("COMMENT");
         request.setTitle("La la la");
         request.setDescription(null);
@@ -313,7 +318,6 @@ class UserServiceImplTest {
     public void test_create_feed_back_success_when_images_is_null() throws IOException {
         // given
         UserCreateFeedbackRequest request = new UserCreateFeedbackRequest();
-        request.setRequestCode("1107226GDG5F");
         request.setFeedbackType("COMMENT");
         request.setTitle("Hủy đơn của tao");
         request.setDescription("Thợ làm ăn chán vãi");
@@ -331,7 +335,6 @@ class UserServiceImplTest {
     public void test_create_feed_back_fail_when_invalid_images() {
         // given
         UserCreateFeedbackRequest request = new UserCreateFeedbackRequest();
-        request.setRequestCode("1107226GDG5F");
         request.setFeedbackType("COMMENT");
         request.setTitle("La la la");
         request.setDescription("la la la");
@@ -349,7 +352,6 @@ class UserServiceImplTest {
     public void test_create_feed_back_fail_when_feedback_type_is_empty() {
         // given
         UserCreateFeedbackRequest request = new UserCreateFeedbackRequest();
-        request.setRequestCode("1107226GDG5F");
         request.setFeedbackType("");
         request.setTitle("La la la");
         request.setDescription("la la la");
@@ -367,7 +369,6 @@ class UserServiceImplTest {
     public void test_create_feed_back_fail_when_feedback_type_is_null() {
         // given
         UserCreateFeedbackRequest request = new UserCreateFeedbackRequest();
-        request.setRequestCode("1107226GDG5F");
         request.setFeedbackType(null);
         request.setTitle("La la la");
         request.setDescription("la la la");
@@ -385,7 +386,6 @@ class UserServiceImplTest {
     public void test_create_feed_back_fail_when_feedback_type_is_invalid() {
         // given
         UserCreateFeedbackRequest request = new UserCreateFeedbackRequest();
-        request.setRequestCode("1107226GDG5F");
         request.setFeedbackType("INVALID");
         request.setTitle("La la la");
         request.setDescription("la la la");
@@ -555,5 +555,27 @@ class UserServiceImplTest {
         UsernamePasswordAuthenticationToken authenticationToken
                 = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
+
+    private String createFixingRequestByCustomerId36ForService1() throws IOException {
+        Long serviceId = 1L;
+        Long addressId = 7L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+
+        setCustomerContext(36L, "0865390037");
+
+        RequestingRepairResponse response = customerService.createFixingRequest(request).getBody();
+        return response.getRequestCode();
     }
 }

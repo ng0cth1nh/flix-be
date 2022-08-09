@@ -123,7 +123,7 @@ class RepairerServiceImplTest {
     @Test
     public void test_approval_request_fail_when_request_does_not_pending() {
         // given
-        String requestCode = "110722UZB1V6";
+        String requestCode = "0908224D3DCA";
         RepairerApproveRequest request = new RepairerApproveRequest();
         request.setRequestCode(requestCode);
 
@@ -171,14 +171,14 @@ class RepairerServiceImplTest {
     public void test_get_repairer_request_detail_success() {
         // given
         RequestingDetailForRepairerRequest request = new RequestingDetailForRepairerRequest();
-        request.setRequestCode("1107226GDG5F");
+        request.setRequestCode("0908224D3DCA");
 
         // when
-        setRepairerContext(52L, "0865390056");
+        setRepairerContext(55L, "0865390056");
         RequestingDetailForRepairerResponse response = underTest.getRepairRequestDetail(request).getBody();
 
         // then
-        Assertions.assertEquals(36L, response.getCustomerId());
+        Assertions.assertEquals(40L, response.getCustomerId());
     }
 
     @Test
@@ -364,7 +364,7 @@ class RepairerServiceImplTest {
         HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
 
         // then
-        Assertions.assertTrue(response.getRequestHistories().size() > 0);
+        Assertions.assertNotNull(response.getRequestHistories());
 
     }
 
@@ -379,7 +379,7 @@ class RepairerServiceImplTest {
         HistoryRequestForRepairerResponse response = underTest.getFixingRequestHistories(request).getBody();
 
         // then
-        Assertions.assertTrue(response.getRequestHistories().size() > 0);
+        Assertions.assertNotNull(response.getRequestHistories());
     }
 
     @Test

@@ -8,4 +8,5 @@ import lombok.Setter;
 public class GetServicesRequest extends DataRequest{
     private Integer pageSize;
     private Integer pageNumber;
+    private Long categoryId;
 }

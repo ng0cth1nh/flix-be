@@ -275,8 +275,10 @@ public class AdminServiceImpl implements AdminService {
         int pageSize = validatorService.getPageSize(request.getPageSize());
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
-        Page<com.fu.flix.entity.Service> servicePage = serviceDAO.findAll(PageRequest.of(pageNumber, pageSize));
-        long totalRecord = serviceDAO.count();
+        Long categoryId = request.getCategoryId();
+        Page<com.fu.flix.entity.Service> servicePage = serviceDAO
+                .findByCategoryId(categoryId, PageRequest.of(pageNumber, pageSize));
+        long totalRecord = serviceDAO.countByCategoryId(categoryId);
 
         List<ServiceDTO> serviceDTOS = servicePage.stream()
                 .map(categoryService::mapToServiceDTO)
@@ -399,7 +401,7 @@ public class AdminServiceImpl implements AdminService {
                 ? Strings.EMPTY
                 : request.getKeyword();
 
-        List<IAdminSearchServiceDTO> services = serviceDAO.searchServicesForAdmin(keyword);
+        List<IAdminSearchServiceDTO> services = serviceDAO.searchServicesForAdmin(keyword, request.getCategoryId());
         List<AdminSearchServiceDTO> searchServiceDTOS = services.stream()
                 .map(service -> {
                     AdminSearchServiceDTO dto = new AdminSearchServiceDTO();
@@ -423,8 +425,10 @@ public class AdminServiceImpl implements AdminService {
         int pageSize = validatorService.getPageSize(request.getPageSize());
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
-        Page<SubService> subServicePage = subServiceDAO.findAll(PageRequest.of(pageNumber, pageSize));
-        long totalRecord = subServiceDAO.count();
+        Long serviceId = request.getServiceId();
+
+        Page<SubService> subServicePage = subServiceDAO.findByServiceId(serviceId, PageRequest.of(pageNumber, pageSize));
+        long totalRecord = subServiceDAO.countByServiceId(serviceId);
 
         List<AdminSubServiceDTO> subServices = subServicePage.stream()
                 .map(subService -> {
@@ -1136,7 +1140,7 @@ public class AdminServiceImpl implements AdminService {
             return null;
         }
         for (CVStatus cvs : CVStatus.values()) {
-            if(cvs.name().equals(status)) {
+            if (cvs.name().equals(status)) {
                 return status;
             }
         }
@@ -1266,12 +1270,12 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request) {
+    public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchSubServicesRequest request) {
         String keyword = Strings.isEmpty(request.getKeyword())
                 ? Strings.EMPTY
                 : request.getKeyword();
 
-        List<SubService> subServiceDTOs = subServiceDAO.searchSubServicesForAdmin(keyword);
+        List<SubService> subServiceDTOs = subServiceDAO.searchSubServicesForAdmin(keyword, request.getServiceId());
         List<SubServiceOutputDTO> subServices = subServiceDTOs.stream()
                 .map(subService -> {
                     SubServiceOutputDTO dto = new SubServiceOutputDTO();
@@ -1644,5 +1648,80 @@ public class AdminServiceImpl implements AdminService {
             }
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_STATUS);
+    }
+
+
+    @Override
+    public ResponseEntity<DetailCategoryResponse> getDetailCategory(DetailCategoryRequest request) {
+        Long categoryId = request.getCategoryId();
+        Category category = validatorService.getCategoryValidated(categoryId);
+
+        Image icon = imageDAO.findById(category.getIconId()).get();
+        Image image = imageDAO.findById(category.getImageId()).get();
+
+        DetailCategoryResponse response = new DetailCategoryResponse();
+        response.setCategoryId(categoryId);
+        response.setIcon(icon.getUrl());
+        response.setImage(image.getUrl());
+        response.setCategoryName(category.getName());
+        response.setDescription(category.getDescription());
+        response.setActive(category.isActive());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<DetailServiceResponse> getDetailService(DetailServiceRequest request) {
+        Long serviceId = request.getServiceId();
+        com.fu.flix.entity.Service service = validatorService.getServiceValidated(serviceId);
+
+        Image icon = imageDAO.findById(service.getIconId()).get();
+        Image image = imageDAO.findById(service.getImageId()).get();
+
+        DetailServiceResponse response = new DetailServiceResponse();
+        response.setServiceId(serviceId);
+        response.setIcon(icon.getUrl());
+        response.setServiceName(service.getName());
+        response.setCategoryId(service.getCategoryId());
+        response.setInspectionPrice(service.getInspectionPrice());
+        response.setDescription(service.getDescription());
+        response.setActive(service.isActive());
+        response.setImage(image.getUrl());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<DetailSubServiceResponse> getDetailSubService(DetailSubServiceRequest request) {
+        Long subServiceId = request.getSubServiceId();
+        SubService subService = validatorService.getSubServiceValidated(subServiceId);
+
+        DetailSubServiceResponse response = new DetailSubServiceResponse();
+        response.setSubServiceId(subServiceId);
+        response.setSubServiceName(subService.getName());
+        response.setPrice(subService.getPrice());
+        response.setServiceId(subService.getServiceId());
+        response.setDescription(subService.getDescription());
+        response.setActive(subService.getIsActive());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<DetailAccessoryResponse> getDetailAccessory(DetailAccessoryRequest request) {
+        Long accessoryId = request.getAccessoryId();
+        Accessory accessory = validatorService.getAccessoryValidated(accessoryId);
+
+        DetailAccessoryResponse response = new DetailAccessoryResponse();
+        response.setAccessoryId(accessoryId);
+        response.setAccessoryName(accessory.getName());
+        response.setPrice(accessory.getPrice());
+        response.setInsurance(accessory.getInsuranceTime());
+        response.setManufacturer(accessory.getManufacture());
+        response.setCountry(accessory.getCountry());
+        response.setDescription(accessory.getDescription());
+        response.setServiceId(accessory.getServiceId());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

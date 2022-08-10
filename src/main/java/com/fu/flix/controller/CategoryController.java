@@ -1,10 +1,7 @@
 package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.*;
-import com.fu.flix.dto.response.AccessoriesResponse;
-import com.fu.flix.dto.response.SearchActiveServicesResponse;
-import com.fu.flix.dto.response.SearchCategoriesResponse;
-import com.fu.flix.dto.response.SubServiceResponse;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -40,5 +37,15 @@ public class CategoryController {
     @GetMapping("services/accessories")
     public ResponseEntity<AccessoriesResponse> getAccessoriesByServiceId(AccessoriesRequest request) {
         return categoryService.getAccessoriesByServiceId(request);
+    }
+
+    @GetMapping("all")
+    public ResponseEntity<GetAllCategoriesResponse> getAllCategories(GetAllCategoriesRequest request) {
+        return categoryService.getAllCategories(request);
+    }
+
+    @GetMapping("service/all")
+    public ResponseEntity<GetAllServicesResponse> getAllServices(GetAllServicesRequest request) {
+        return categoryService.getAllServices(request);
     }
 }

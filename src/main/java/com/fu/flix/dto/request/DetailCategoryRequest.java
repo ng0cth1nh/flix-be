@@ -5,7 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AdminSearchServicesRequest extends DataRequest {
-    private String keyword;
+public class DetailCategoryRequest extends DataRequest {
     private Long categoryId;
 }

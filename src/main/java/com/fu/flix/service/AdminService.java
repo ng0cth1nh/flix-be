@@ -77,7 +77,7 @@ public interface AdminService {
 
     ResponseEntity<AdminGetRequestDetailResponse> getRequestDetail(AdminGetRequestDetailRequest request);
 
-    ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request);
+    ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchSubServicesRequest request);
 
     ResponseEntity<TransactionDetailResponse> getTransactionDetail(TransactionDetailRequest request);
 
@@ -102,4 +102,12 @@ public interface AdminService {
     ResponseEntity<CountPendingFeedbacksResponse> countPendingFeedbacks();
 
     ResponseEntity<AdminSearchRequestResponse> searchRequests(AdminSearchRequestRequest request);
+
+    ResponseEntity<DetailCategoryResponse> getDetailCategory(DetailCategoryRequest request);
+
+    ResponseEntity<DetailServiceResponse> getDetailService(DetailServiceRequest request);
+
+    ResponseEntity<DetailSubServiceResponse> getDetailSubService(DetailSubServiceRequest request);
+
+    ResponseEntity<DetailAccessoryResponse> getDetailAccessory(DetailAccessoryRequest request);
 }

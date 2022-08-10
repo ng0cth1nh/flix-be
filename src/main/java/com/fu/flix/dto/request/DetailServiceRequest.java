@@ -5,8 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class GetSubServicesRequest extends DataRequest {
-    private Integer pageSize;
-    private Integer pageNumber;
+public class DetailServiceRequest extends DataRequest {
     private Long serviceId;
 }

@@ -2,9 +2,7 @@ package com.fu.flix.service;
 
 import com.fu.flix.dto.ServiceDTO;
 import com.fu.flix.dto.request.*;
-import com.fu.flix.dto.response.AccessoriesResponse;
-import com.fu.flix.dto.response.SearchActiveServicesResponse;
-import com.fu.flix.dto.response.SubServiceResponse;
+import com.fu.flix.dto.response.*;
 import org.springframework.http.ResponseEntity;
 
 public interface CategoryService {
@@ -17,4 +15,8 @@ public interface CategoryService {
     ResponseEntity<SubServiceResponse> getSubServicesByServiceId(SubServiceRequest request);
 
     ResponseEntity<AccessoriesResponse> getAccessoriesByServiceId(AccessoriesRequest request);
+
+    ResponseEntity<GetAllCategoriesResponse> getAllCategories(GetAllCategoriesRequest request);
+
+    ResponseEntity<GetAllServicesResponse> getAllServices(GetAllServicesRequest request);
 }

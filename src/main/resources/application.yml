@@ -63,7 +63,9 @@ app:
                    '/api/v1/address/commune',
                    '/api/v1/payment/response',
                    '/api/v1/deposit/response',
-                   '/api/v1/category/services/search' ]
+                   '/api/v1/category/services/search',
+                   '/api/v1/category/all',
+                   '/api/v1/category/service/all' ]
   vnPayInfo:
     version: '2.1.0'
     command: 'pay'

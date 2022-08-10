@@ -1,17 +1,13 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.constant.Constant;
-import com.fu.flix.dao.AccessoryDAO;
-import com.fu.flix.dao.ImageDAO;
-import com.fu.flix.dao.ServiceDAO;
-import com.fu.flix.dao.SubServiceDAO;
+import com.fu.flix.dao.*;
 import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
-import com.fu.flix.dto.response.AccessoriesResponse;
-import com.fu.flix.dto.response.SearchActiveServicesResponse;
-import com.fu.flix.dto.response.SubServiceResponse;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.Accessory;
+import com.fu.flix.entity.Category;
 import com.fu.flix.entity.Image;
 import com.fu.flix.entity.SubService;
 import com.fu.flix.service.CategoryService;
@@ -37,14 +33,18 @@ public class CategoryServiceImpl implements CategoryService {
     private final SubServiceDAO subServiceDAO;
     private final AccessoryDAO accessoryDAO;
 
+    private final CategoryDAO categoryDAO;
+
     public CategoryServiceImpl(ServiceDAO serviceDAO,
                                ImageDAO imageDAO,
                                SubServiceDAO subServiceDAO,
-                               AccessoryDAO accessoryDAO) {
+                               AccessoryDAO accessoryDAO,
+                               CategoryDAO categoryDAO) {
         this.serviceDAO = serviceDAO;
         this.imageDAO = imageDAO;
         this.subServiceDAO = subServiceDAO;
         this.accessoryDAO = accessoryDAO;
+        this.categoryDAO = categoryDAO;
     }
 
     @Override
@@ -154,6 +154,40 @@ public class CategoryServiceImpl implements CategoryService {
 
         AccessoriesResponse response = new AccessoriesResponse();
         response.setAccessories(accessoryDTOS);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<GetAllCategoriesResponse> getAllCategories(GetAllCategoriesRequest request) {
+        List<Category> categories = categoryDAO.findAll();
+        List<CategoryInfoDTO> categoryDTOs = categories.stream()
+                .map(category -> {
+                    CategoryInfoDTO dto = new CategoryInfoDTO();
+                    dto.setCategoryName(category.getName());
+                    dto.setId(category.getId());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        GetAllCategoriesResponse response = new GetAllCategoriesResponse();
+        response.setCategories(categoryDTOs);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<GetAllServicesResponse> getAllServices(GetAllServicesRequest request) {
+        List<com.fu.flix.entity.Service> services = serviceDAO.findAll();
+        List<ServiceInfoDTO> serviceDTOs = services.stream()
+                .map(service -> {
+                    ServiceInfoDTO dto = new ServiceInfoDTO();
+                    dto.setId(service.getId());
+                    dto.setServiceName(service.getName());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        GetAllServicesResponse response = new GetAllServicesResponse();
+        response.setServices(serviceDTOs);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

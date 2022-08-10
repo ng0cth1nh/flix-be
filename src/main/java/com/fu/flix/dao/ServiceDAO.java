@@ -3,6 +3,8 @@ package com.fu.flix.dao;
 import com.fu.flix.dto.IAdminSearchServiceDTO;
 import com.fu.flix.dto.ISearchActiveServiceDTO;
 import com.fu.flix.entity.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -30,6 +32,11 @@ public interface ServiceDAO extends JpaRepository<Service, Long> {
             "ON sv.icon_id = icon.id " +
             "JOIN images image " +
             "ON sv.image_id = image.id " +
-            "WHERE sv.name LIKE %:keyword% ", nativeQuery = true)
-    List<IAdminSearchServiceDTO> searchServicesForAdmin(String keyword);
+            "WHERE sv.name LIKE %:keyword% " +
+            "AND sv.category_id = :categoryId ", nativeQuery = true)
+    List<IAdminSearchServiceDTO> searchServicesForAdmin(String keyword, Long categoryId);
+
+    Page<Service> findByCategoryId(Long categoryId, Pageable pageable);
+
+    long countByCategoryId(Long categoryId);
 }

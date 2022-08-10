@@ -1847,7 +1847,7 @@ class AdminServiceImplTest {
     @Test
     void test_searchSubServices_success() {
         // given
-        AdminSearchServicesRequest request = new AdminSearchServicesRequest();
+        AdminSearchSubServicesRequest request = new AdminSearchSubServicesRequest();
         request.setKeyword("Loi");
 
         setManagerContext(438L, "0865390063");

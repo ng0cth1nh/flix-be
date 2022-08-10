@@ -195,7 +195,7 @@ public class AdminController {
     }
 
     @GetMapping("search/subServices")
-    public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchServicesRequest request) {
+    public ResponseEntity<AdminSearchSubServicesResponse> searchSubServices(AdminSearchSubServicesRequest request) {
         return adminService.searchSubServices(request);
     }
 
@@ -257,5 +257,25 @@ public class AdminController {
     @GetMapping("search/request")
     public ResponseEntity<AdminSearchRequestResponse> searchRequests(AdminSearchRequestRequest request) {
         return adminService.searchRequests(request);
+    }
+
+    @GetMapping("category")
+    public ResponseEntity<DetailCategoryResponse> getDetailCategory(DetailCategoryRequest request) {
+        return adminService.getDetailCategory(request);
+    }
+
+    @GetMapping("service")
+    public ResponseEntity<DetailServiceResponse> getDetailService(DetailServiceRequest request) {
+        return adminService.getDetailService(request);
+    }
+
+    @GetMapping("subService")
+    public ResponseEntity<DetailSubServiceResponse> getDetailSubService(DetailSubServiceRequest request) {
+        return adminService.getDetailSubService(request);
+    }
+
+    @GetMapping("accessory")
+    public ResponseEntity<DetailAccessoryResponse> getDetailAccessory(DetailAccessoryRequest request) {
+        return adminService.getDetailAccessory(request);
     }
 }

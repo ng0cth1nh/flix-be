@@ -1,6 +1,8 @@
 package com.fu.flix.dao;
 
 import com.fu.flix.entity.SubService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -23,6 +25,13 @@ public interface SubServiceDAO extends JpaRepository<SubService, Long> {
 
     List<SubService> findByServiceIdAndIsActive(Long serviceId, Boolean isActive);
 
-    @Query(value = "SELECT * FROM sub_services WHERE name LIKE %:keyword%", nativeQuery = true)
-    List<SubService> searchSubServicesForAdmin(String keyword);
+    @Query(value = "SELECT * " +
+            "FROM sub_services " +
+            "WHERE name LIKE %:keyword% " +
+            "AND service_id = :serviceId", nativeQuery = true)
+    List<SubService> searchSubServicesForAdmin(String keyword, Long serviceId);
+
+    Page<SubService> findByServiceId(Long serviceId, Pageable pageable);
+
+    long countByServiceId(Long serviceId);
 }

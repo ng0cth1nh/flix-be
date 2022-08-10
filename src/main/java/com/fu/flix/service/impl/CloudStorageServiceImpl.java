@@ -84,7 +84,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
     private boolean isValidCertificateFileExtension(String fileName) {
         String[] allowedExt = {".jpg", ".jpeg", ".png", ".gif", ".pdf"};
         for (String ext : allowedExt) {
-            if (fileName.endsWith(ext)) {
+            if (fileName.toLowerCase().endsWith(ext)) {
                 return true;
             }
         }
@@ -105,7 +105,7 @@ public class CloudStorageServiceImpl implements CloudStorageService {
     private boolean isValidImageExtension(String fileName) {
         String[] allowedExt = {".jpg", ".jpeg", ".png", ".gif"};
         for (String ext : allowedExt) {
-            if (fileName.endsWith(ext)) {
+            if (fileName.toLowerCase().endsWith(ext)) {
                 return true;
             }
         }

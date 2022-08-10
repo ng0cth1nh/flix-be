@@ -1,0 +1,16 @@
+package com.fu.flix.constant.enums;
+
+public enum NotificationType {
+    RESPONSE_FEEDBACK,
+    REGISTER_SUCCESS,
+    REQUEST_CANCELED,
+    REQUEST_CREATE_SUCCESS,
+    REQUEST_DONE,
+    REQUEST_APPROVED,
+    CREATE_INVOICE,
+    REQUEST_CONFIRM_FIXING,
+    DEPOSIT_FAILED,
+    DEPOSIT_SUCCESS,
+    REGISTER_FAIL,
+    REMIND
+}

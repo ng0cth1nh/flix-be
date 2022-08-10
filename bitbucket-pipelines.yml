@@ -1,0 +1,60 @@
+#  Template maven-build
+
+#  This template allows you to test and build your Java project with Maven.
+#  The workflow allows running tests, code checkstyle and security scans on the default branch.
+
+# Prerequisites: pom.xml and appropriate project structure should exist in the repository.
+
+options:
+  docker: true
+definitions:
+  steps:
+    - step: &build-and-test
+        name: Build and test
+        image: maven:3.6.3
+        caches:
+          - maven
+        script:
+          - mvn -B verify --file pom.xml
+        artifacts:
+          - target/**  
+        after-script:
+              # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+          - pipe: atlassian/checkstyle-report:0.3.0
+    - step: &build-image
+        name: Build Docker image
+        image: openjdk:11
+        script:
+          - docker build -t flix .
+          - docker save --output tmp-image.docker flix
+        artifacts:
+          - tmp-image.docker
+    - step: &push-gcr-and-deploy
+        name: Push to GCR and deploy to Cloud Run
+        image: google/cloud-sdk:alpine
+        script:
+          - docker load --input ./tmp-image.docker
+          # Authenticating with the service account key file
+          - echo $GCLOUD_API_KEYFILE | base64 -d > ./gcloud-api-key.json
+          - gcloud auth activate-service-account --key-file gcloud-api-key.json
+          - gcloud config set project $GCLOUD_PROJECT
+          # Tag container & push
+          - export TAG=$(echo "$BITBUCKET_TAG" | sed -e "s/v//g")
+          - export SUFFIX=$([[ ! -z "$TAG" ]] && echo ":$TAG" || echo "")
+          - export IMAGE_NAME=gcr.io/authentic-reach-351916/flix${SUFFIX}
+          - docker tag flix ${IMAGE_NAME}
+          # Login to GCR
+          - cat ./gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
+          - docker push ${IMAGE_NAME}
+          # Deploy to Cloud Run
+          - gcloud run deploy flix --image gcr.io/authentic-reach-351916/flix${SUFFIX} --max-instances 30 --platform managed --region asia-southeast1 --allow-unauthenticated
+pipelines:
+  tags:
+    v*:
+      - step: *build-image
+      - step: *push-gcr-and-deploy
+  branches:
+    dev:
+      - step: *build-and-test
+      - step: *build-image
+      - step: *push-gcr-and-deploy

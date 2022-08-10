@@ -1,11 +1,107 @@
 app:
   secretKey: 'secret'
-  lifeTimeToke: 600000 #milliseconds
-  lifeTimeRefreshToken: 1800000 #milliseconds
+  lifeTimeToke: 8640000000 #milliseconds
+  lifeTimeRefreshToken: 17280000000 #milliseconds
+  defaultLimitQuery: 20
+  defaultOffset: 0
+  vat: 0.05
+  profitRate: 0.2
+  fine: 20000
+  cancelablePendingRequestInterval: 3600 #seconds
+  cancelableApprovalRequestInterval: 3600 #seconds
+  descriptionMaxLength: 2500
+  nameMaxLength: 150
+  defaultPageSize: 10
+  defaultPageNumber: 0
+  notification:
+    defaultImageName: 'Notification Image'
+    defaultImage: 'https://firebasestorage.googleapis.com/v0/b/flix-cb844.appspot.com/o/images%2Fic_notification.jpg?alt=media&token=b2e68977-8764-44ef-8ec2-c1b38dba417f'
+    title:
+      register: 'Đăng kí tài khoản'
+      request: 'Thông tin đơn hàng'
+      feedback: 'Thông tin phản hồi'
+      transaction: 'Thông tin giao dịch'
+    content:
+      REMIND_EXPECT_FIXING_TIME_DEADLINE: 'Quý khách có yêu cầu sửa chữa đơn hàng #%s vào lúc %s.'
+      REMIND_FIXING_TASK: 'Đơn hàng #%s đang được thực hiện, vui lòng hoàn thành trước %s.'
+      REQUEST_CANCELED_AUTOMATICALLY: 'Mã yêu cầu #%s đã được hủy tự động.'
+      REQUEST_CREATE_SUCCESS: 'Yêu cầu #%s đã được tạo thành công'
+      REQUEST_APPROVED: 'Yêu cầu #%s đã được chấp nhận'
+      REQUEST_CONFIRM_FIXING: 'Yêu cầu #%s đang được sửa'
+      CREATE_INVOICE: 'Tạo hóa đơn thành công. Mã hóa đơn #%s'
+      REQUEST_CANCELED: 'Mã yêu cầu #%s đã được hủy thành công'
+      REQUEST_DONE: 'Yêu cầu #%s đã được hoàn thành'
+      FEEDBACK_PROCESSING: 'Phản hồi : "%s" đang được xử lí'
+      FEEDBACK_REJECTED: 'Phản hồi : "%s" đã bị hủy bỏ'
+      FEEDBACK_DONE: 'Phản hồi : "%s" đã được chấp nhận'
+      FEEDBACK_PENDING: 'Phản hồi : "%s" đã được gửi lên hệ thống'
+      DEPOSIT_SUCCESS: 'Bạn đã nạp %s thành công vào tài khoản. Số dư hiện tại là %s'
+      DEPOSIT_FAILED: 'Nạp tiền không thành công! Vui lòng thử lại sau, hoặc gửi phản hồi để nhận được hỗ trợ từ FLIX'
+      REGISTER_SUCCESS: 'Tài khoản của bạn đã được đăng kí thành công!'
+      REGISTER_FAIL: 'Đăng kí tài khoản thất bại do %s'
+  milestoneMoney: 200000
+  minVnPay: 5000
+  twilioInfo:
+    accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'
+    authToken: 'b2bdec58830ce248a8e2d60bdfa6205c'
+    fromNumber: '+17579977028'
+  firebaseConfig: 'flix-cb844-firebase-adminsdk-297yq-b523f2743e.json'
+  defaultIcon: 'https://firebasestorage.googleapis.com/v0/b/flix-cb844.appspot.com/o/images%2Fic_notification.jpg?alt=media&token=b2e68977-8764-44ef-8ec2-c1b38dba417f'
+  defaultImage: 'https://firebasestorage.googleapis.com/v0/b/flix-cb844.appspot.com/o/images%2Fic_notification.jpg?alt=media&token=b2e68977-8764-44ef-8ec2-c1b38dba417f'
+  permitAllApis: [ '/api/v1/login',
+                   '/api/v1/token/refresh',
+                   '/api/v1/register/sendOTP',
+                   '/api/v1/register/customer/confirm',
+                   '/api/v1/register/repairer/confirm',
+                   '/swagger-ui/index.html',
+                   '/v2/api-docs',
+                   '/swagger-resources',
+                   '/api/v1/forgot/password/sendOTP',
+                   '/api/v1/forgot/password/confirm',
+                   '/api/v1/address/city',
+                   '/api/v1/address/district',
+                   '/api/v1/address/commune',
+                   '/api/v1/payment/response',
+                   '/api/v1/deposit/response',
+                   '/api/v1/category/services/search',
+                   '/api/v1/category/all',
+                   '/api/v1/category/service/all' ]
+  vnPayInfo:
+    version: '2.1.0'
+    command: 'pay'
+    locate: 'vn'
+    vnPayAmountRate: 100
+    datePattern: 'yyyyMMddHHmmss'
+    currCode: 'VND'
+    payUrl: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
+    paymentInfo:
+      returnUrl: 'flix://request/invoice'
+      secureHash: 'MPBTQAIUBXZUPPPWJEGMCTPCDZRNRLZV'
+      tmnCode: '1TZDUKO5'
+    depositInfo:
+      returnUrl: 'flix-repairer://profile/deposit'
+      secureHash: 'KNWFOELNUTYJDIBSGAJFGCIOIDLLUSXJ'
+      tmnCode: 'AF4ODYBY'
+server:
+  port: 8080
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/flix_db
+    url: jdbc:mysql://34.142.171.163:3306/flix_db
     username: root
-    password: password
+    password: S$s.(QQl6mXrG,eJ
     driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: 34.134.183.253
+    port: 6379
+    password: ''
+  jackson:
+    serialization:
+      FAIL_ON_EMPTY_BEANS: false
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 100MB

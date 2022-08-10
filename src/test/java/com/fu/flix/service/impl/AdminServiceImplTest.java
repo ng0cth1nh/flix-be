@@ -2,6 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dao.BalanceDAO;
+import com.fu.flix.dao.RepairerDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.ExtraServiceInputDTO;
 import com.fu.flix.dto.error.GeneralException;
@@ -34,6 +35,8 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.fu.flix.constant.Constant.*;
+import static com.fu.flix.constant.enums.CVStatus.REJECTED;
+import static com.fu.flix.constant.enums.CVStatus.UPDATING;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -42,21 +45,16 @@ class AdminServiceImplTest {
 
     @Autowired
     AdminService underTest;
-
     @Autowired
     BalanceDAO balanceDAO;
     @Autowired
     UserDAO userDAO;
-
     @Autowired
     AppConf appConf;
-
     @Autowired
     CustomerService customerService;
-
     @Autowired
     RepairerService repairerService;
-
     String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @Test
@@ -1551,6 +1549,21 @@ class AdminServiceImplTest {
     void test_accept_cv_fail_when_user_is_not_pending_repairer() {
         // given
         AcceptCVRequest request = new AcceptCVRequest();
+        request.setRepairerId(55L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.acceptCV(request));
+
+        // then
+        Assertions.assertEquals(JUST_CAN_ACCEPT_CV_WHEN_CV_STATUS_IS_PENDING_OR_UPDATING, exception.getMessage());
+    }
+
+    @Test
+    void test_accept_cv_fail_when_invalid_repairer() {
+        // given
+        AcceptCVRequest request = new AcceptCVRequest();
         request.setRepairerId(36L);
 
         setManagerContext(438L, "0865390063");
@@ -1559,8 +1572,9 @@ class AdminServiceImplTest {
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.acceptCV(request));
 
         // then
-        Assertions.assertEquals(INVALID_PENDING_REPAIRER, exception.getMessage());
+        Assertions.assertEquals(INVALID_REPAIRER, exception.getMessage());
     }
+
 
     @Test
     void test_get_repairer_detail_success() {
@@ -2133,6 +2147,193 @@ class AdminServiceImplTest {
         // then
         Assertions.assertEquals(INVALID_REASON, exception.getMessage());
     }
+
+    @Test
+    void test_rejectCV_success() {
+        // given
+        RejectCVRequest request = new RejectCVRequest();
+        request.setReason("Người dùng fake dữ liệu CMND");
+        request.setRejectStatus(REJECTED.name());
+        request.setRepairerId(571l);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        RejectCVResponse response = underTest.rejectCV(request).getBody();
+
+        // then
+        Assertions.assertEquals(REJECT_CV_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_rejectCV_success_when_status_is_updating() {
+        // given
+        RejectCVRequest request = new RejectCVRequest();
+        request.setReason("Người dùng fake dữ liệu CMND");
+        request.setRejectStatus(UPDATING.name());
+        request.setRepairerId(571l);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        RejectCVResponse response = underTest.rejectCV(request).getBody();
+
+        // then
+        Assertions.assertEquals(REJECT_CV_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_rejectCV_fail_when_reason_is_null() {
+        // given
+        RejectCVRequest request = new RejectCVRequest();
+        request.setReason(null);
+        request.setRejectStatus(REJECTED.name());
+        request.setRepairerId(571l);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.rejectCV(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REASON, exception.getMessage());
+    }
+
+    @Test
+    void test_rejectCV_fail_when_cv_status_is_not_pending_or_updating() {
+        // given
+        RejectCVRequest request = new RejectCVRequest();
+        request.setReason("aaaaa aa");
+        request.setRejectStatus(REJECTED.name());
+        request.setRepairerId(52L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.rejectCV(request));
+
+        // then
+        Assertions.assertEquals(JUST_CAN_REJECT_CV_WHEN_CV_STATUS_IS_PENDING_OR_UPDATING, exception.getMessage());
+    }
+
+    @Test
+    void test_rejectCV_fail_when_invalid_repairer() {
+        // given
+        RejectCVRequest request = new RejectCVRequest();
+        request.setReason("aaaaa aa");
+        request.setRejectStatus(REJECTED.name());
+        request.setRepairerId(36L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.rejectCV(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REPAIRER, exception.getMessage());
+    }
+
+    @Test
+    void test_rejectCV_fail_when_reject_status_is_null() {
+        // given
+        RejectCVRequest request = new RejectCVRequest();
+        request.setReason("aaaaa aa");
+        request.setRejectStatus(null);
+        request.setRepairerId(571L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.rejectCV(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REJECT_CV_STATUS, exception.getMessage());
+    }
+
+    @Test
+    void test_unbanUser_success() {
+        // given
+        UnbanUserRequest request = new UnbanUserRequest();
+        request.setPhone("0865390041");
+
+        setManagerContext(438L, "0865390063");
+
+        User user = userDAO.findById(39L).get();
+        user.setIsActive(false);
+
+        // when
+        UnbanUserResponse response = underTest.unbanUser(request).getBody();
+
+        // then
+        Assertions.assertEquals(UNBAN_USER_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_unbanUser_fail_when_phone_is_invalid() {
+        // given
+        UnbanUserRequest request = new UnbanUserRequest();
+        request.setPhone("08653900");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.unbanUser(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+    }
+
+    @Test
+    void test_unbanUser_fail_when_user_not_found() {
+        // given
+        UnbanUserRequest request = new UnbanUserRequest();
+        request.setPhone("0865390645");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.unbanUser(request));
+
+        // then
+        Assertions.assertEquals(USER_NOT_FOUND, exception.getMessage());
+    }
+
+    @Test
+    void test_unbanUser_fail_when_account_is_active() {
+        // given
+        UnbanUserRequest request = new UnbanUserRequest();
+        request.setPhone("0865390055");
+
+        setManagerContext(438L, "0865390063");
+
+        User user = userDAO.findById(55L).get();
+        user.setIsActive(true);
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.unbanUser(request));
+
+        // then
+        Assertions.assertEquals(THIS_ACCOUNT_IS_ACTIVE, exception.getMessage());
+    }
+
+    @Test
+    void test_unbanUser_fail_when_invalid_user_role() {
+        // given
+        UnbanUserRequest request = new UnbanUserRequest();
+        request.setPhone("0865390063");
+
+        setManagerContext(438L, "0865390063");
+
+        User user = userDAO.findById(438L).get();
+        user.setIsActive(false);
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.unbanUser(request));
+
+        // then
+        Assertions.assertEquals(JUST_CAN_BAN_USER_ROLE_ARE_CUSTOMER_OR_REPAIRER_OR_PENDING_REPAIRER, exception.getMessage());
+    }
+
 
     private String createFixingRequestByCustomerId36ForService1() throws IOException {
         Long serviceId = 1L;

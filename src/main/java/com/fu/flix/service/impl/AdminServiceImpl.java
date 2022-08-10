@@ -933,15 +933,20 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseEntity<AcceptCVResponse> acceptCV(AcceptCVRequest request) {
         User user = validatorService.getUserValidated(request.getRepairerId());
-        Collection<Role> roles = user.getRoles();
-        if (isNotPendingRepairer(roles)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_PENDING_REPAIRER);
+
+        Optional<Repairer> optionalRepairer = repairerDAO.findByUserId(user.getId());
+        if (optionalRepairer.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REPAIRER);
         }
 
-        Repairer repairer = repairerDAO.findByUserId(user.getId()).get();
+        Repairer repairer = optionalRepairer.get();
+        if (isRepairerCVNotPendingOrUpdating(repairer.getCvStatus())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_ACCEPT_CV_WHEN_CV_STATUS_IS_PENDING_OR_UPDATING);
+        }
+
         repairer.setAcceptedAccountAt(LocalDateTime.now());
         repairer.setCvStatus(ACCEPTED.name());
-        updateToRepairerRole(roles);
+        updateToRepairerRole(user.getRoles());
 
         UserNotificationDTO userNotificationDTO = new UserNotificationDTO(
                 "register",
@@ -1457,12 +1462,16 @@ public class AdminServiceImpl implements AdminService {
         }
 
         User user = validatorService.getUserValidated(request.getRepairerId());
-        Collection<Role> roles = user.getRoles();
-        if (isNotPendingRepairer(roles)) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_PENDING_REPAIRER);
+        Optional<Repairer> optionalRepairer = repairerDAO.findByUserId(user.getId());
+        if (optionalRepairer.isEmpty()) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_REPAIRER);
         }
 
-        Repairer repairer = repairerDAO.findByUserId(user.getId()).get();
+        Repairer repairer = optionalRepairer.get();
+        if (isRepairerCVNotPendingOrUpdating(repairer.getCvStatus())) {
+            throw new GeneralException(HttpStatus.GONE, JUST_CAN_REJECT_CV_WHEN_CV_STATUS_IS_PENDING_OR_UPDATING);
+        }
+
         if (REJECTED.name().equals(rejectType)) {
             user.setIsActive(false);
             user.setBanReason(reason);
@@ -1488,22 +1497,16 @@ public class AdminServiceImpl implements AdminService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    private boolean isRepairerCVNotPendingOrUpdating(String cvStatus) {
+        return !CVStatus.PENDING.name().equals(cvStatus) && !UPDATING.name().equals(cvStatus);
+    }
+
     private String getRejectCVStatusValidated(String status) {
         if (REJECTED.name().equals(status) || UPDATING.name().equals(status)) {
             return status;
         }
         throw new GeneralException(HttpStatus.GONE, INVALID_REJECT_CV_STATUS);
     }
-
-    private boolean isNotPendingRepairer(Collection<Role> roles) {
-        for (Role role : roles) {
-            if (RoleType.ROLE_PENDING_REPAIRER.name().equals(role.getName())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
 
     @Override
     public ResponseEntity<UnbanUserResponse> unbanUser(UnbanUserRequest request) {

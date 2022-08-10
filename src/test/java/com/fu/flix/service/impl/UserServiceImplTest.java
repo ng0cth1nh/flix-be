@@ -490,6 +490,51 @@ class UserServiceImplTest {
         Assertions.assertEquals(NOTIFICATION_NOT_FOUND, exception.getMessage());
     }
 
+    @Test
+    void test_markReadNotification_success() {
+        // given
+        PutNotificationRequest request = new PutNotificationRequest();
+        request.setId(7608L);
+
+        setCustomerContext(55L, "0865390037");
+
+        // when
+        PutNotificationResponse response = underTest.markReadNotification(request).getBody();
+
+        // then
+        Assertions.assertEquals(MARK_READ_NOTIFICATION_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_markReadNotification_fail_when_notification_id_is_null() {
+        // given
+        PutNotificationRequest request = new PutNotificationRequest();
+        request.setId(null);
+
+        setCustomerContext(55L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.markReadNotification(request));
+
+        // then
+        Assertions.assertEquals(NOTIFICATION_ID_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_markReadNotification_fail_when_notification_id_is_not_found() {
+        // given
+        PutNotificationRequest request = new PutNotificationRequest();
+        request.setId(10000000L);
+
+        setCustomerContext(55L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.markReadNotification(request));
+
+        // then
+        Assertions.assertEquals(NOTIFICATION_NOT_FOUND, exception.getMessage());
+    }
+
     private Long createNotificationForUserId36() {
         com.fu.flix.entity.Notification notificationData = new com.fu.flix.entity.Notification();
         notificationData.setUserId(36L);

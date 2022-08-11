@@ -15,6 +15,7 @@ import com.fu.flix.entity.Invoice;
 import com.fu.flix.entity.RepairRequest;
 import com.fu.flix.entity.Repairer;
 import com.fu.flix.service.CustomerService;
+import com.fu.flix.service.FinanceService;
 import com.fu.flix.service.RepairerService;
 import com.fu.flix.util.DateFormatUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,9 @@ class RepairerServiceImplTest {
     RepairerService underTest;
     @Autowired
     CustomerService customerService;
+
+    @Autowired
+    FinanceService financeService;
     @Autowired
     RepairerDAO repairerDAO;
     @Autowired
@@ -637,7 +641,7 @@ class RepairerServiceImplTest {
         balance.setBalance(0L);
 
         Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
-        Long commission = underTest.getCommission(invoice);
+        Long commission = financeService.getCommission(invoice);
         long requiredMoney = commission + appConf.getMilestoneMoney();
 
         // when

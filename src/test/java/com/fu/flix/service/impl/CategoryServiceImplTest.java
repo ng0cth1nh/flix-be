@@ -3,9 +3,7 @@ package com.fu.flix.service.impl;
 import com.fu.flix.dto.ServiceDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
-import com.fu.flix.dto.response.AccessoriesResponse;
-import com.fu.flix.dto.response.SearchActiveServicesResponse;
-import com.fu.flix.dto.response.SubServiceResponse;
+import com.fu.flix.dto.response.*;
 import com.fu.flix.service.CategoryService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -159,5 +157,29 @@ class CategoryServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_SERVICE, exception.getMessage());
+    }
+
+    @Test
+    void test_getAllCategories_success() {
+        // given
+        GetAllCategoriesRequest request = new GetAllCategoriesRequest();
+
+        // when
+        GetAllCategoriesResponse response = underTest.getAllCategories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getCategories());
+    }
+
+    @Test
+    void test_getAllServices_success() {
+        // given
+        GetAllServicesRequest request = new GetAllServicesRequest();
+
+        // when
+        GetAllServicesResponse response = underTest.getAllServices(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getServices());
     }
 }

@@ -32,5 +32,4 @@ public interface RepairerService {
     ResponseEntity<RepairerWithdrawResponse> requestWithdraw(RepairerWithdrawRequest request);
 
     ResponseEntity<RepairerTransactionsResponse> getTransactionHistories(RepairerTransactionsRequest request);
-    Long getCommission(Invoice invoice);
 }

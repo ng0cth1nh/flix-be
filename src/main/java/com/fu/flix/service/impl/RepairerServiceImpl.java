@@ -44,6 +44,7 @@ public class RepairerServiceImpl implements RepairerService {
     private final RepairRequestMatchingDAO repairRequestMatchingDAO;
     private final InvoiceDAO invoiceDAO;
     private final BalanceDAO balanceDAO;
+    private final FinanceService financeService;
     private final AppConf appConf;
     private final TransactionHistoryDAO transactionHistoryDAO;
     private final AddressService addressService;
@@ -66,15 +67,18 @@ public class RepairerServiceImpl implements RepairerService {
                                RepairRequestMatchingDAO repairRequestMatchingDAO,
                                InvoiceDAO invoiceDAO,
                                BalanceDAO balanceDAO,
+                               FinanceService financeService,
                                AppConf appConf,
                                TransactionHistoryDAO transactionHistoryDAO,
                                AddressService addressService,
-                               CronJob cronJob, UserAddressDAO userAddressDAO,
+                               CronJob cronJob,
+                               UserAddressDAO userAddressDAO,
                                ValidatorService validatorService,
                                VoucherService voucherService,
                                SubServiceDAO subServiceDAO,
                                RequestService requestService,
-                               FCMService fcmService, AccessoryDAO accessoryDAO,
+                               FCMService fcmService,
+                               AccessoryDAO accessoryDAO,
                                ExtraServiceDAO extraServiceDAO,
                                WithdrawRequestDAO withdrawRequestDAO,
                                BankInfoDAO bankInfoDAO) {
@@ -84,6 +88,7 @@ public class RepairerServiceImpl implements RepairerService {
 
         this.invoiceDAO = invoiceDAO;
         this.balanceDAO = balanceDAO;
+        this.financeService = financeService;
         this.appConf = appConf;
         this.transactionHistoryDAO = transactionHistoryDAO;
         this.addressService = addressService;
@@ -325,7 +330,7 @@ public class RepairerServiceImpl implements RepairerService {
         }
 
         Balance balance = balanceDAO.findByUserId(repairerId).get();
-        Long commission = getCommission(invoice);
+        Long commission = financeService.getCommission(invoice);
         long requiredMoney = commission + appConf.getMilestoneMoney();
         if (balance.getBalance() < requiredMoney) {
             throw new GeneralException(HttpStatus.CONFLICT, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + requiredMoney);
@@ -357,12 +362,6 @@ public class RepairerServiceImpl implements RepairerService {
         response.setMessage(CREATE_INVOICE_SUCCESS);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @Override
-    public Long getCommission(Invoice invoice) {
-        return (long) ((invoice.getInspectionPrice() + invoice.getTotalSubServicePrice() + invoice.getTotalExtraServicePrice())
-                * this.appConf.getProfitRate()) + invoice.getVatPrice();
     }
 
     private void minusCommissions(Balance balance, Long commission, String requestCode) {
@@ -664,6 +663,7 @@ public class RepairerServiceImpl implements RepairerService {
         invoice.setTotalDiscount(newTotalDiscount);
         invoice.setVatPrice(newVatPrice);
         invoice.setActualProceeds(beforeVat + newVatPrice);
+        invoice.setProfit(financeService.getProfit(invoice));
     }
 
     @Override

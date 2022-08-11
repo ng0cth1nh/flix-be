@@ -41,6 +41,8 @@ public class CustomerServiceImpl implements CustomerService {
     private final RepairRequestDAO repairRequestDAO;
     private final VoucherDAO voucherDAO;
     private final ServiceDAO serviceDAO;
+
+    private final FinanceService financeService;
     private final InvoiceDAO invoiceDAO;
     private final UserAddressDAO userAddressDAO;
     private final CommuneDAO communeDAO;
@@ -63,6 +65,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerServiceImpl(RepairRequestDAO repairRequestDAO,
                                VoucherDAO voucherDAO,
                                ServiceDAO serviceDAO,
+                               FinanceService financeService,
                                InvoiceDAO invoiceDAO,
                                UserAddressDAO userAddressDAO,
                                CommuneDAO communeDAO,
@@ -75,10 +78,12 @@ public class CustomerServiceImpl implements CustomerService {
                                AddressService addressService,
                                VoucherService voucherService,
                                RequestService requestService,
-                               CronJob cronJob, FCMService fcmService) {
+                               CronJob cronJob,
+                               FCMService fcmService) {
         this.repairRequestDAO = repairRequestDAO;
         this.voucherDAO = voucherDAO;
         this.serviceDAO = serviceDAO;
+        this.financeService = financeService;
         this.invoiceDAO = invoiceDAO;
         this.userAddressDAO = userAddressDAO;
         this.communeDAO = communeDAO;
@@ -199,6 +204,7 @@ public class CustomerServiceImpl implements CustomerService {
         invoice.setCustomerPhone(userAddress.getPhone());
         invoice.setCustomerName(userAddress.getName());
         invoice.setCommuneId(userAddress.getCommuneId());
+        invoice.setProfit(financeService.getProfit(invoice));
 
         return invoice;
     }

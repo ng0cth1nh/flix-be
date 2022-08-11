@@ -71,6 +71,8 @@ public class Invoice {
 
     private String communeId;
 
+    private Long profit;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -2334,6 +2335,247 @@ class AdminServiceImplTest {
         Assertions.assertEquals(JUST_CAN_BAN_USER_ROLE_ARE_CUSTOMER_OR_REPAIRER_OR_PENDING_REPAIRER, exception.getMessage());
     }
 
+    @Test
+    void test_getRepairerWithdrawDetail_success() {
+        // given
+        WithdrawDetailRequest request = new WithdrawDetailRequest();
+        request.setTransactionId(3029L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        WithdrawDetailResponse response = underTest.getRepairerWithdrawDetail(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_getRepairerWithdrawDetail_fail_when_transaction_id_is_null() {
+        // given
+        WithdrawDetailRequest request = new WithdrawDetailRequest();
+        request.setTransactionId(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.getRepairerWithdrawDetail(request));
+
+        // then
+        Assertions.assertEquals(INVALID_TRANSACTION_ID, exception.getMessage());
+    }
+
+    @Test
+    void test_searchRepairerWithdrawHistories_success() {
+        // given
+        SearchWithdrawRequest request = new SearchWithdrawRequest();
+        request.setKeyword("11");
+        request.setWithdrawType("BANKING");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchWithdrawResponse response = underTest.searchRepairerWithdrawHistories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getWithdrawList());
+    }
+
+    @Test
+    void test_searchRepairerWithdrawHistories_success_when_keyword_is_empty() {
+        // given
+        SearchWithdrawRequest request = new SearchWithdrawRequest();
+        request.setKeyword("");
+        request.setWithdrawType("BANKING");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchWithdrawResponse response = underTest.searchRepairerWithdrawHistories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getWithdrawList());
+    }
+
+    @Test
+    void test_searchRepairerWithdrawHistories_success_when_type_is_null() {
+        // given
+        SearchWithdrawRequest request = new SearchWithdrawRequest();
+        request.setKeyword("");
+        request.setWithdrawType(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchWithdrawResponse response = underTest.searchRepairerWithdrawHistories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getWithdrawList());
+    }
+
+    @Test
+    void test_searchRepairerWithdrawHistories_fail_when_invalid_withdraw_type() {
+        // given
+        SearchWithdrawRequest request = new SearchWithdrawRequest();
+        request.setKeyword("");
+        request.setWithdrawType("INVALID");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchRepairerWithdrawHistories(request));
+
+        // then
+        Assertions.assertEquals(INVALID_WITHDRAW_TYPE, exception.getMessage());
+    }
+
+    @Test
+    void test_countPendingWithdraws_success() {
+        // given
+        setManagerContext(438L, "0865390063");
+
+        // when
+        CountPendingWithdrawsResponse response = underTest.countPendingWithdraws().getBody();
+
+        // then
+        Assertions.assertTrue(response.getCount() >= 0);
+    }
+
+    @Test
+    void test_countPendingFeedbacks_success() {
+        // given
+        setManagerContext(438L, "0865390063");
+
+        // when
+        CountPendingFeedbacksResponse response = underTest.countPendingFeedbacks().getBody();
+
+        // then
+        Assertions.assertTrue(response.getCount() >= 0);
+    }
+
+    @Test
+    void test_searchRequests_success() {
+        // given
+        AdminSearchRequestRequest request = new AdminSearchRequestRequest();
+        request.setKeyword("10");
+        request.setStatus("DONE");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminSearchRequestResponse response = underTest.searchRequests(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRequestList());
+    }
+
+    @Test
+    void test_searchRequests_success_when_keyword_is_null() {
+        // given
+        AdminSearchRequestRequest request = new AdminSearchRequestRequest();
+        request.setKeyword(null);
+        request.setStatus("DONE");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminSearchRequestResponse response = underTest.searchRequests(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRequestList());
+    }
+
+    @Test
+    void test_searchRequests_success_when_status_is_null() {
+        // given
+        AdminSearchRequestRequest request = new AdminSearchRequestRequest();
+        request.setKeyword(null);
+        request.setStatus(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminSearchRequestResponse response = underTest.searchRequests(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRequestList());
+    }
+
+    @Test
+    void test_searchRequests_fail_when_status_is_invalid() {
+        // given
+        AdminSearchRequestRequest request = new AdminSearchRequestRequest();
+        request.setKeyword(null);
+        request.setStatus("INVALID");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchRequests(request));
+
+        // then
+        Assertions.assertEquals(INVALID_STATUS, exception.getMessage());
+    }
+
+    @Test
+    void test_getDetailCategory_success() {
+        // given
+        DetailCategoryRequest request = new DetailCategoryRequest();
+        request.setCategoryId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        DetailCategoryResponse response = underTest.getDetailCategory(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_getDetailService_success() {
+        // given
+        DetailServiceRequest request = new DetailServiceRequest();
+        request.setServiceId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        DetailServiceResponse response = underTest.getDetailService(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_getDetailSubService_success() {
+        // given
+        DetailSubServiceRequest request = new DetailSubServiceRequest();
+        request.setSubServiceId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        DetailSubServiceResponse response = underTest.getDetailSubService(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_getDetailAccessory_success() {
+        // given
+        DetailAccessoryRequest request = new DetailAccessoryRequest();
+        request.setAccessoryId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        DetailAccessoryResponse response = underTest.getDetailAccessory(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
 
     private String createFixingRequestByCustomerId36ForService1() throws IOException {
         Long serviceId = 1L;

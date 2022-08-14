@@ -22,7 +22,7 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
     Optional<Comment> findComment(String requestCode, String type);
 
     @Query(value = "SELECT u.full_name as repairerName, avg(c.rating) as rating, r.experience_description as experienceDescription," +
-            " DATE_FORMAT(r.accepted_account_at,'%d/%m/%Y') as joinAt, r.experience_year as experienceYear, count(c.id) as totalComment " +
+            " DATE_FORMAT(r.accepted_cv_at,'%d/%m/%Y') as joinAt, r.experience_year as experienceYear, count(c.id) as totalComment " +
             "FROM comments c " +
             "JOIN repair_requests_matching rrm " +
             "ON c.request_code = rrm.request_code " +

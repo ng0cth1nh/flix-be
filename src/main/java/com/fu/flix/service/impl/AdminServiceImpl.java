@@ -1472,12 +1472,13 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, JUST_CAN_REJECT_CV_WHEN_CV_STATUS_IS_PENDING_OR_UPDATING);
         }
 
+        LocalDateTime now = LocalDateTime.now();
         if (REJECTED.name().equals(rejectType)) {
             user.setIsActive(false);
             user.setBanReason(reason);
-            user.setBanAt(LocalDateTime.now());
+            user.setBanAt(now);
             repairer.setCvStatus(REJECTED.name());
-            repairer.setRejectedCvAt(LocalDateTime.now());
+            repairer.setRejectedCvAt(now);
         } else {
             repairer.setCvStatus(UPDATING.name());
         }
@@ -1533,6 +1534,15 @@ public class AdminServiceImpl implements AdminService {
         user.setIsActive(true);
         user.setBanReason(null);
         user.setBanAt(null);
+
+        Optional<Repairer> optionalRepairer = repairerDAO.findByUserId(user.getId());
+        if (optionalRepairer.isPresent()) {
+            Repairer repairer = optionalRepairer.get();
+            if (REJECTED.name().equals(repairer.getCvStatus())) {
+                repairer.setCvStatus(CVStatus.PENDING.name());
+                repairer.setRejectedCvAt(null);
+            }
+        }
 
         UnbanUserResponse response = new UnbanUserResponse();
         response.setMessage(UNBAN_USER_SUCCESS);

@@ -3,9 +3,12 @@ package com.fu.flix.service.impl;
 import com.fu.flix.constant.enums.StatisticalDateType;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dto.StatisticalCustomerAccountDTO;
+import com.fu.flix.dto.StatisticalRepairerAccountDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.StatisticalCustomerAccountsRequest;
+import com.fu.flix.dto.request.StatisticalRepairerAccountsRequest;
 import com.fu.flix.dto.response.StatisticalCustomerAccountsResponse;
+import com.fu.flix.dto.response.StatisticalRepairerAccountsResponse;
 import com.fu.flix.service.StatisticalService;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
@@ -19,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.fu.flix.constant.Constant.INVALID_DATE_TYPE;
-import static com.fu.flix.constant.enums.RoleType.ROLE_CUSTOMER;
+import static com.fu.flix.constant.enums.RoleType.*;
 
 @Service
 @Transactional
@@ -39,7 +42,7 @@ public class StatisticalServiceImpl implements StatisticalService {
         LocalDateTime fromDateValidated = InputValidation.getFromDateValidated(request.getFrom(), type);
         LocalDateTime toDateValidated = InputValidation.getToDateValidated(request.getTo(), fromDateValidated, type);
 
-        List<StatisticalCustomerAccountDTO> data = queryStatisticalCustomerAccount(fromDateValidated, toDateValidated, type);
+        List<StatisticalCustomerAccountDTO> data = queryStatisticalCustomerAccounts(fromDateValidated, toDateValidated, type);
 
         StatisticalCustomerAccountsResponse response = new StatisticalCustomerAccountsResponse();
         response.setData(data);
@@ -56,9 +59,9 @@ public class StatisticalServiceImpl implements StatisticalService {
         throw new GeneralException(HttpStatus.GONE, INVALID_DATE_TYPE);
     }
 
-    private List<StatisticalCustomerAccountDTO> queryStatisticalCustomerAccount(LocalDateTime fromDateValidated,
-                                                                                LocalDateTime toDateValidated,
-                                                                                StatisticalDateType type) {
+    private List<StatisticalCustomerAccountDTO> queryStatisticalCustomerAccounts(LocalDateTime fromDateValidated,
+                                                                                 LocalDateTime toDateValidated,
+                                                                                 StatisticalDateType type) {
         List<StatisticalCustomerAccountDTO> data = new ArrayList<>();
 
         while (fromDateValidated.isBefore(toDateValidated)) {
@@ -66,12 +69,56 @@ public class StatisticalServiceImpl implements StatisticalService {
             LocalDateTime flagDateTimeNext = getFromDateTimeNext(fromDateValidated, type);
 
             dto.setDate(getQueryDayFormatted(fromDateValidated, type));
-            dto.setTotalNewAccount(userDAO.countTotalAccountsCreated(fromDateValidated,
+            dto.setTotalNewAccount(userDAO.countTotalCreatedAccounts(fromDateValidated,
                     flagDateTimeNext,
                     ROLE_CUSTOMER.getId()));
-            dto.setTotalBanAccount(userDAO.countTotalAccountsBanned(fromDateValidated,
+            dto.setTotalBanAccount(userDAO.countTotalBannedAccounts(fromDateValidated,
                     flagDateTimeNext,
                     ROLE_CUSTOMER.getId()));
+            data.add(dto);
+            fromDateValidated = flagDateTimeNext;
+        }
+
+        return data;
+    }
+
+    @Override
+    public ResponseEntity<StatisticalRepairerAccountsResponse> getStatisticalRepairerAccounts(StatisticalRepairerAccountsRequest request) {
+        StatisticalDateType type = getStatisticalDateTypeValidated(request.getType());
+        LocalDateTime fromDateValidated = InputValidation.getFromDateValidated(request.getFrom(), type);
+        LocalDateTime toDateValidated = InputValidation.getToDateValidated(request.getTo(), fromDateValidated, type);
+
+        List<StatisticalRepairerAccountDTO> data = queryStatisticalRepairerAccounts(fromDateValidated, toDateValidated, type);
+
+        StatisticalRepairerAccountsResponse response = new StatisticalRepairerAccountsResponse();
+        response.setData(data);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private List<StatisticalRepairerAccountDTO> queryStatisticalRepairerAccounts(LocalDateTime fromDateValidated,
+                                                                                 LocalDateTime toDateValidated,
+                                                                                 StatisticalDateType type) {
+        List<StatisticalRepairerAccountDTO> data = new ArrayList<>();
+
+        while (fromDateValidated.isBefore(toDateValidated)) {
+            StatisticalRepairerAccountDTO dto = new StatisticalRepairerAccountDTO();
+            LocalDateTime flagDateTimeNext = getFromDateTimeNext(fromDateValidated, type);
+
+            dto.setDate(getQueryDayFormatted(fromDateValidated, type));
+            dto.setTotalNewAccount(userDAO.countTotalCreatedAccounts(fromDateValidated,
+                    flagDateTimeNext,
+                    ROLE_REPAIRER.getId(),
+                    ROLE_PENDING_REPAIRER.getId()));
+            dto.setTotalBanAccount(userDAO.countTotalBannedAccounts(fromDateValidated,
+                    flagDateTimeNext,
+                    ROLE_REPAIRER.getId(),
+                    ROLE_PENDING_REPAIRER.getId()));
+            dto.setTotalApprovedAccount(userDAO.countTotalApprovedAccounts(fromDateValidated,
+                    flagDateTimeNext));
+            dto.setTotalRejectedAccount(userDAO.countTotalRejectedAccounts(fromDateValidated,
+                    flagDateTimeNext));
+
             data.add(dto);
             fromDateValidated = flagDateTimeNext;
         }

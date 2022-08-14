@@ -222,17 +222,29 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "FROM users u " +
             "JOIN user_roles ur " +
             "ON u.id = ur.user_id " +
-            "WHERE ur.role_id = :roleId " +
+            "WHERE ur.role_id IN (:roleIds) " +
             "AND u.created_at >= :start " +
             "AND u.created_at < :end", nativeQuery = true)
-    long countTotalAccountsCreated(LocalDateTime start, LocalDateTime end, String roleId);
+    long countTotalCreatedAccounts(LocalDateTime start, LocalDateTime end, String... roleIds);
 
     @Query(value = "SELECT count(*) " +
             "FROM users u " +
             "JOIN user_roles ur " +
             "ON u.id = ur.user_id " +
-            "WHERE ur.role_id = :roleId " +
+            "WHERE ur.role_id IN (:roleIds) " +
             "AND u.ban_at >= :start " +
             "AND u.ban_at < :end", nativeQuery = true)
-    long countTotalAccountsBanned(LocalDateTime start, LocalDateTime end, String roleId);
+    long countTotalBannedAccounts(LocalDateTime start, LocalDateTime end, String... roleIds);
+
+    @Query(value = "SELECT count(*) " +
+            "FROM repairers " +
+            "WHERE rejected_cv_at >= :start " +
+            "AND rejected_cv_at <= :end", nativeQuery = true)
+    long countTotalRejectedAccounts(LocalDateTime start, LocalDateTime end);
+
+    @Query(value = "SELECT count(*) " +
+            "FROM repairers " +
+            "WHERE accepted_cv_at >= :start " +
+            "AND accepted_cv_at <= :end", nativeQuery = true)
+    long countTotalApprovedAccounts(LocalDateTime start, LocalDateTime end);
 }

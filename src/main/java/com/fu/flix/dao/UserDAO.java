@@ -226,4 +226,22 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "AND u.created_at >= :start " +
             "AND u.created_at < :end", nativeQuery = true)
     long countTotalCreatedAccounts(LocalDateTime start, LocalDateTime end, String... roleIds);
+
+    @Query(value = "SELECT " +
+            "(SELECT count(*) " +
+            "FROM users u " +
+            "JOIN user_roles ur " +
+            "ON u.id = ur.user_id " +
+            "WHERE ur.role_id = 'C' " +
+            "AND u.created_at >= :start " +
+            "AND u.created_at < :end) as totalNewAccount, " +
+            "(SELECT count(distinct uuh.user_id) " +
+            "FROM user_update_histories uuh " +
+            "JOIN user_roles ur " +
+            "ON ur.user_id = uuh.user_id " +
+            "WHERE type = 'BAN_ACCOUNT' " +
+            "AND ur.role_id = 'C' " +
+            "AND uuh.created_at >= :start " +
+            "AND uuh.created_at < :end) as totalBanAccount", nativeQuery = true)
+    IStatisticalCustomerAccountDTO findStatisticalCustomerAccount(LocalDateTime start, LocalDateTime end);
 }

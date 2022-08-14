@@ -66,15 +66,6 @@ public class StatisticalServiceImpl implements StatisticalService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private StatisticalDateType getStatisticalDateTypeValidated(String type) {
-        for (StatisticalDateType stt : StatisticalDateType.values()) {
-            if (stt.name().equals(type)) {
-                return stt;
-            }
-        }
-        throw new GeneralException(HttpStatus.GONE, INVALID_DATE_TYPE);
-    }
-
     private List<StatisticalCustomerAccountDTO> queryStatisticalCustomerAccounts(LocalDateTime fromValidated,
                                                                                  LocalDateTime toValidated,
                                                                                  StatisticalDateType type) {
@@ -84,13 +75,13 @@ public class StatisticalServiceImpl implements StatisticalService {
             StatisticalCustomerAccountDTO dto = new StatisticalCustomerAccountDTO();
             LocalDateTime fromNext = getFromNext(fromValidated, type);
 
+            IStatisticalCustomerAccountDTO statisticalCustomerAccount = userDAO
+                    .findStatisticalCustomerAccount(fromValidated, fromNext);
+
             dto.setDate(getQueryDayFormatted(fromValidated, type));
-            dto.setTotalNewAccount(userDAO.countTotalCreatedAccounts(fromValidated,
-                    fromNext,
-                    ROLE_CUSTOMER.getId()));
-            dto.setTotalBanAccount(userUpdateHistoryDAO.countTotalBannedAccountHistories(fromValidated,
-                    fromNext,
-                    ROLE_CUSTOMER.getId()));
+            dto.setTotalBanAccount(statisticalCustomerAccount.getTotalBanAccount());
+            dto.setTotalNewAccount(statisticalCustomerAccount.getTotalNewAccount());
+
             data.add(dto);
             fromValidated = fromNext;
         }
@@ -206,6 +197,15 @@ public class StatisticalServiceImpl implements StatisticalService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    private StatisticalDateType getStatisticalDateTypeValidated(String type) {
+        for (StatisticalDateType stt : StatisticalDateType.values()) {
+            if (stt.name().equals(type)) {
+                return stt;
+            }
+        }
+        throw new GeneralException(HttpStatus.GONE, INVALID_DATE_TYPE);
+    }
+
     private List<StatisticalTransactionDTO> queryStatisticalTransactions(LocalDateTime fromValidated,
                                                                          LocalDateTime toValidated,
                                                                          StatisticalDateType type) {
@@ -227,7 +227,6 @@ public class StatisticalServiceImpl implements StatisticalService {
 
         return data;
     }
-
 
     private String getQueryDayFormatted(LocalDateTime fromValidated, StatisticalDateType type) {
         switch (type) {

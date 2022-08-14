@@ -944,7 +944,7 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, JUST_CAN_ACCEPT_CV_WHEN_CV_STATUS_IS_PENDING_OR_UPDATING);
         }
 
-        repairer.setAcceptedAccountAt(LocalDateTime.now());
+        repairer.setAcceptedCvAt(LocalDateTime.now());
         repairer.setCvStatus(ACCEPTED.name());
         updateToRepairerRole(user.getRoles());
 
@@ -1477,6 +1477,7 @@ public class AdminServiceImpl implements AdminService {
             user.setBanReason(reason);
             user.setBanAt(LocalDateTime.now());
             repairer.setCvStatus(REJECTED.name());
+            repairer.setRejectedCvAt(LocalDateTime.now());
         } else {
             repairer.setCvStatus(UPDATING.name());
         }

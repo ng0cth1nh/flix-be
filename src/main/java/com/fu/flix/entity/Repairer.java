@@ -26,7 +26,9 @@ public class Repairer {
 
     private boolean isRepairing;
 
-    private LocalDateTime acceptedAccountAt;
+    private LocalDateTime acceptedCvAt;
+
+    private LocalDateTime rejectedCvAt;
 
     private String cvStatus;
 

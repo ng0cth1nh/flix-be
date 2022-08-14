@@ -1,5 +1,6 @@
 package com.fu.flix.util;
 
+import com.fu.flix.constant.enums.StatisticalDateType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -243,5 +244,83 @@ class InputValidationTest {
 
         // then
         Assertions.assertFalse(check);
+    }
+
+    @Test
+    void test_isMatchQueryDateType_when_type_is_day_success() {
+        // given
+        String dateStr = "20/03/2000";
+        StatisticalDateType type = StatisticalDateType.DAY;
+
+        // when
+        boolean matchQueryDateType = InputValidation.isMatchQueryDateType(dateStr, type);
+
+        // then
+        Assertions.assertTrue(matchQueryDateType);
+    }
+
+    @Test
+    void test_isMatchQueryDateType_when_type_is_day_fail() {
+        // given
+        String dateStr = "20/3/2000";
+        StatisticalDateType type = StatisticalDateType.DAY;
+
+        // when
+        boolean matchQueryDateType = InputValidation.isMatchQueryDateType(dateStr, type);
+
+        // then
+        Assertions.assertFalse(matchQueryDateType);
+    }
+
+    @Test
+    void test_isMatchQueryDateType_when_type_is_month_success() {
+        // given
+        String dateStr = "23/2000";
+        StatisticalDateType type = StatisticalDateType.MONTH;
+
+        // when
+        boolean matchQueryDateType = InputValidation.isMatchQueryDateType(dateStr, type);
+
+        // then
+        Assertions.assertTrue(matchQueryDateType);
+    }
+
+    @Test
+    void test_isMatchQueryDateType_when_type_is_month_fail() {
+        // given
+        String dateStr = "3/2000";
+        StatisticalDateType type = StatisticalDateType.MONTH;
+
+        // when
+        boolean matchQueryDateType = InputValidation.isMatchQueryDateType(dateStr, type);
+
+        // then
+        Assertions.assertFalse(matchQueryDateType);
+    }
+
+    @Test
+    void test_isMatchQueryDateType_when_type_is_year_success() {
+        // given
+        String dateStr = "2000";
+        StatisticalDateType type = StatisticalDateType.YEAR;
+
+        // when
+        boolean matchQueryDateType = InputValidation.isMatchQueryDateType(dateStr, type);
+
+        // then
+        Assertions.assertTrue(matchQueryDateType);
+    }
+
+    @Test
+    void test_isMatchQueryDateType_when_type_is_year_month_fail() {
+        // given
+        String dateStr = "200";
+        StatisticalDateType type = StatisticalDateType.YEAR;
+
+        // when
+        boolean matchQueryDateType = InputValidation.isMatchQueryDateType(dateStr, type);
+
+        // then
+        Assertions.assertFalse(matchQueryDateType);
     }
 }

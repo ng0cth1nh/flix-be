@@ -1,14 +1,16 @@
 package com.fu.flix.util;
 
 import com.fu.flix.constant.enums.FeedbackType;
+import com.fu.flix.constant.enums.StatisticalDateType;
 import com.fu.flix.dto.error.GeneralException;
 import org.springframework.http.HttpStatus;
 
 import java.text.Normalizer;
+import java.time.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.fu.flix.constant.Constant.INVALID_FEEDBACK_TYPE;
+import static com.fu.flix.constant.Constant.*;
 
 public class InputValidation {
     private static final String PHONE_REGEX = "^(03|05|07|08|09|01[2|6|8|9])([0-9]{8})$";
@@ -18,6 +20,101 @@ public class InputValidation {
     private static final String BANK_NAME_REGEX = "^[A-Z\\s]{3,}$";
     private static final String IDENTITY_CARD_NUMBER_REGEX = "^\\d{9,12}$";
     private static final String BANK_NUMBER_REGEX = "^\\d{8,17}$";
+    private static final String DAY_REGEX = "^([0-9]{2})(\\/)([0-9]{2})(\\/)([0-9]{4})$";
+    private static final String MONTH_REGEX = "^([0-9]{2})(\\/)([0-9]{4})$";
+    private static final String YEAR_REGEX = "^([0-9]{4})$";
+
+    public static LocalDateTime getFromDateValidated(String from, StatisticalDateType type) {
+        if (!isMatchQueryDateType(from, type)) {
+            throw new GeneralException(HttpStatus.GONE, QUERY_DATE_AND_TYPE_NOT_MATCHED);
+        }
+
+        LocalDate fromLocalDate;
+        try {
+            String[] dateUnits = from.split("/");
+
+            switch (type) {
+                case DAY:
+                    fromLocalDate = LocalDate.of(Integer.parseInt(dateUnits[2]),
+                            Integer.parseInt(dateUnits[1]),
+                            Integer.parseInt(dateUnits[0]));
+                    break;
+                case MONTH:
+                    fromLocalDate = YearMonth.of(Integer.parseInt(dateUnits[1]),
+                                    Integer.parseInt(dateUnits[0]))
+                            .atDay(1);
+                    break;
+                default:
+                    fromLocalDate = Year.of(Integer.parseInt(dateUnits[0]))
+                            .atMonth(1)
+                            .atDay(1);
+                    break;
+            }
+        } catch (Exception e) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_QUERY_DATE);
+        }
+        return LocalDateTime.of(fromLocalDate, LocalTime.MIN);
+    }
+
+    public static LocalDateTime getToDateValidated(String to, LocalDateTime fromLocalDateTime, StatisticalDateType type) {
+        if (!isMatchQueryDateType(to, type)) {
+            throw new GeneralException(HttpStatus.GONE, QUERY_DATE_AND_TYPE_NOT_MATCHED);
+        }
+
+        LocalDate toLocalDate;
+        try {
+            String[] dateUnits = to.split("/");
+
+            switch (type) {
+                case DAY:
+                    toLocalDate = LocalDate.of(Integer.parseInt(dateUnits[2]),
+                            Integer.parseInt(dateUnits[1]),
+                            Integer.parseInt(dateUnits[0]));
+                    break;
+                case MONTH:
+                    toLocalDate = YearMonth.of(Integer.parseInt(dateUnits[1]),
+                                    Integer.parseInt(dateUnits[0]))
+                            .atEndOfMonth();
+                    break;
+                default:
+                    toLocalDate = Year.of(Integer.parseInt(dateUnits[0]))
+                            .atMonth(12)
+                            .atEndOfMonth();
+                    break;
+            }
+        } catch (Exception e) {
+            throw new GeneralException(HttpStatus.GONE, INVALID_QUERY_DATE);
+        }
+
+        LocalDateTime toLocalDateTime = LocalDateTime.of(toLocalDate, LocalTime.MAX);
+        if (fromLocalDateTime.isAfter(toLocalDateTime)) {
+            throw new GeneralException(HttpStatus.GONE, FROM_CAN_NOT_BE_GREATER_THAN_TO);
+        }
+
+        return toLocalDateTime;
+    }
+
+    public static boolean isMatchQueryDateType(String dateStr, StatisticalDateType type) {
+        if (dateStr == null) {
+            return false;
+        }
+        Pattern pattern;
+
+        switch (type) {
+            case DAY:
+                pattern = Pattern.compile(DAY_REGEX);
+                break;
+            case MONTH:
+                pattern = Pattern.compile(MONTH_REGEX);
+                break;
+            default:
+                pattern = Pattern.compile(YEAR_REGEX);
+                break;
+        }
+
+        Matcher matcher = pattern.matcher(dateStr);
+        return matcher.matches();
+    }
 
     public static boolean isValidDate(String date, String pattern) {
         try {

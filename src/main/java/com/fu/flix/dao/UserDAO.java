@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -216,4 +217,22 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "   ELSE TRUE " +
             "END)", nativeQuery = true)
     List<ISearchRepairersDTO> searchRepairersForAdmin(String phone, Boolean isActiveState, String cvStatus);
+
+    @Query(value = "SELECT count(*) " +
+            "FROM users u " +
+            "JOIN user_roles ur " +
+            "ON u.id = ur.user_id " +
+            "WHERE ur.role_id = :roleId " +
+            "AND u.created_at >= :start " +
+            "AND u.created_at < :end", nativeQuery = true)
+    long countTotalAccountsCreated(LocalDateTime start, LocalDateTime end, String roleId);
+
+    @Query(value = "SELECT count(*) " +
+            "FROM users u " +
+            "JOIN user_roles ur " +
+            "ON u.id = ur.user_id " +
+            "WHERE ur.role_id = :roleId " +
+            "AND u.ban_at >= :start " +
+            "AND u.ban_at < :end", nativeQuery = true)
+    long countTotalAccountsBanned(LocalDateTime start, LocalDateTime end, String roleId);
 }

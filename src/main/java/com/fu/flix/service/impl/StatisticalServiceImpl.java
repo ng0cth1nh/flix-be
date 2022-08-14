@@ -4,7 +4,6 @@ import com.fu.flix.constant.enums.StatisticalDateType;
 import com.fu.flix.dao.InvoiceDAO;
 import com.fu.flix.dao.RepairRequestHistoryDAO;
 import com.fu.flix.dao.UserDAO;
-import com.fu.flix.dao.UserUpdateHistoryDAO;
 import com.fu.flix.dto.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.StatisticalCustomerAccountsRequest;
@@ -29,13 +28,11 @@ import java.util.List;
 
 import static com.fu.flix.constant.Constant.INVALID_DATE_TYPE;
 import static com.fu.flix.constant.enums.RepairRequestHistoryType.*;
-import static com.fu.flix.constant.enums.RoleType.*;
 
 @Service
 @Transactional
 public class StatisticalServiceImpl implements StatisticalService {
     private final UserDAO userDAO;
-    private final UserUpdateHistoryDAO userUpdateHistoryDAO;
     private final InvoiceDAO invoiceDAO;
     private final RepairRequestHistoryDAO repairRequestHistoryDAO;
     private final String DAY_FORMAT = "dd/MM/yyyy";
@@ -43,11 +40,9 @@ public class StatisticalServiceImpl implements StatisticalService {
     private final String YEAR_FORMAT = "yyyy";
 
     public StatisticalServiceImpl(UserDAO userDAO,
-                                  UserUpdateHistoryDAO userUpdateHistoryDAO,
                                   InvoiceDAO invoiceDAO,
                                   RepairRequestHistoryDAO repairRequestHistoryDAO) {
         this.userDAO = userDAO;
-        this.userUpdateHistoryDAO = userUpdateHistoryDAO;
         this.invoiceDAO = invoiceDAO;
         this.repairRequestHistoryDAO = repairRequestHistoryDAO;
     }
@@ -76,7 +71,7 @@ public class StatisticalServiceImpl implements StatisticalService {
             LocalDateTime fromNext = getFromNext(fromValidated, type);
 
             IStatisticalCustomerAccountDTO statisticalCustomerAccount = userDAO
-                    .findStatisticalCustomerAccount(fromValidated, fromNext);
+                    .findStatisticalCustomerAccounts(fromValidated, fromNext);
 
             dto.setDate(getQueryDayFormatted(fromValidated, type));
             dto.setTotalBanAccount(statisticalCustomerAccount.getTotalBanAccount());
@@ -112,19 +107,14 @@ public class StatisticalServiceImpl implements StatisticalService {
             StatisticalRepairerAccountDTO dto = new StatisticalRepairerAccountDTO();
             LocalDateTime fromNext = getFromNext(fromValidated, type);
 
+            IStatisticalRepairerAccountDTO statisticalRepairerAccount = userDAO
+                    .findStatisticalRepairerAccounts(fromValidated, fromNext);
+
             dto.setDate(getQueryDayFormatted(fromValidated, type));
-            dto.setTotalNewAccount(userDAO.countTotalCreatedAccounts(fromValidated,
-                    fromNext,
-                    ROLE_REPAIRER.getId(),
-                    ROLE_PENDING_REPAIRER.getId()));
-            dto.setTotalBanAccount(userUpdateHistoryDAO.countTotalBannedAccountHistories(fromValidated,
-                    fromNext,
-                    ROLE_REPAIRER.getId(),
-                    ROLE_PENDING_REPAIRER.getId()));
-            dto.setTotalApprovedAccount(userUpdateHistoryDAO.countTotalApprovedAccountHistories(fromValidated,
-                    fromNext));
-            dto.setTotalRejectedAccount(userUpdateHistoryDAO.countTotalRejectedAccountHistories(fromValidated,
-                    fromNext));
+            dto.setTotalNewAccount(statisticalRepairerAccount.getTotalNewAccount());
+            dto.setTotalBanAccount(statisticalRepairerAccount.getTotalBanAccount());
+            dto.setTotalRejectedAccount(statisticalRepairerAccount.getTotalRejectedAccount());
+            dto.setTotalApprovedAccount(statisticalRepairerAccount.getTotalApprovedAccount());
 
             data.add(dto);
             fromValidated = fromNext;

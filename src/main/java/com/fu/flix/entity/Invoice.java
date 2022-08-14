@@ -79,4 +79,5 @@ public class Invoice {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    private LocalDateTime doneAt;
 }

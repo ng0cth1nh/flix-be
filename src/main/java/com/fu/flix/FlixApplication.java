@@ -39,7 +39,7 @@ public class FlixApplication {
         return new WebMvcConfigurerAdapter() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**").allowedOrigins("https://flix-admin-fe-lj7prqscta-as.a.run.app");
+                registry.addMapping("/**").allowedOrigins("https://flix-admin-fe-lj7prqscta-as.a.run.app").allowedMethods("*");
             }
         };
     }

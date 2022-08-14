@@ -405,6 +405,9 @@ public class RepairerServiceImpl implements RepairerService {
         repairer.setRepairing(false);
         repairRequest.setStatusId(DONE.getId());
 
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        invoice.setDoneAt(LocalDateTime.now());
+
         UserNotificationDTO customerNotificationDTO = new UserNotificationDTO(
                 "request",
                 NotificationStatus.REQUEST_DONE.name(),

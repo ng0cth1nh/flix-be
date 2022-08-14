@@ -342,6 +342,7 @@ public class VnPayServiceImpl implements VNPayService {
         savePaymentTransactions(requestParams, repairerId, customerId, null);
         repairer.setRepairing(false);
         repairRequest.setStatusId(RequestStatus.DONE.getId());
+        invoice.setDoneAt(LocalDateTime.now());
 
         UserNotificationDTO customerNotificationDTO = new UserNotificationDTO(
                 "request",

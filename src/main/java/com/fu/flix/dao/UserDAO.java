@@ -218,15 +218,6 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "END)", nativeQuery = true)
     List<ISearchRepairersDTO> searchRepairersForAdmin(String phone, Boolean isActiveState, String cvStatus);
 
-    @Query(value = "SELECT count(*) " +
-            "FROM users u " +
-            "JOIN user_roles ur " +
-            "ON u.id = ur.user_id " +
-            "WHERE ur.role_id IN (:roleIds) " +
-            "AND u.created_at >= :start " +
-            "AND u.created_at < :end", nativeQuery = true)
-    long countTotalCreatedAccounts(LocalDateTime start, LocalDateTime end, String... roleIds);
-
     @Query(value = "SELECT " +
             "(SELECT count(*) " +
             "FROM users u " +
@@ -243,5 +234,33 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "AND ur.role_id = 'C' " +
             "AND uuh.created_at >= :start " +
             "AND uuh.created_at < :end) as totalBanAccount", nativeQuery = true)
-    IStatisticalCustomerAccountDTO findStatisticalCustomerAccount(LocalDateTime start, LocalDateTime end);
+    IStatisticalCustomerAccountDTO findStatisticalCustomerAccounts(LocalDateTime start, LocalDateTime end);
+
+    @Query(value = "SELECT " +
+            "(SELECT count(*) " +
+            "FROM users u " +
+            "JOIN user_roles ur " +
+            "ON u.id = ur.user_id " +
+            "WHERE (ur.role_id = 'R' or ur.role_id = 'PR') " +
+            "AND u.created_at >= :start " +
+            "AND u.created_at < :end) as totalNewAccount, " +
+            "(SELECT count(distinct uuh.user_id) " +
+            "FROM user_update_histories uuh " +
+            "JOIN user_roles ur " +
+            "ON ur.user_id = uuh.user_id " +
+            "WHERE type = 'BAN_ACCOUNT' " +
+            "AND (ur.role_id = 'R' or ur.role_id = 'PR') " +
+            "AND uuh.created_at >= :start " +
+            "AND uuh.created_at < :end) as totalBanAccount, " +
+            "(SELECT count(distinct user_id) " +
+            "FROM user_update_histories " +
+            "WHERE type = 'ACCEPT_CV' " +
+            "AND created_at >= :start " +
+            "AND created_at < :end) as totalApprovedAccount, " +
+            "(SELECT count(distinct user_id) " +
+            "FROM user_update_histories " +
+            "WHERE type = 'REJECT_CV' " +
+            "AND created_at >= :start " +
+            "AND created_at < :end) as totalRejectedAccount", nativeQuery = true)
+    IStatisticalRepairerAccountDTO findStatisticalRepairerAccounts(LocalDateTime start, LocalDateTime end);
 }

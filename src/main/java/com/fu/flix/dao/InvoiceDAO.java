@@ -113,5 +113,5 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "WHERE done_at IS NOT NULL " +
             "AND done_at >= :start " +
             "AND done_at < :end", nativeQuery = true)
-    IStatisticalTransactionDTO findStatisticalTransactionDTO(LocalDateTime start, LocalDateTime end);
+    IStatisticalTransactionDTO findStatisticalTransaction(LocalDateTime start, LocalDateTime end);
 }

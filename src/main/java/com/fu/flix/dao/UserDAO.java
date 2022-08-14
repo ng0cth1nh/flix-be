@@ -234,7 +234,7 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "AND ur.role_id = 'C' " +
             "AND uuh.created_at >= :start " +
             "AND uuh.created_at < :end) as totalBanAccount", nativeQuery = true)
-    IStatisticalCustomerAccountDTO findStatisticalCustomerAccounts(LocalDateTime start, LocalDateTime end);
+    IStatisticalCustomerAccountDTO findStatisticalCustomerAccount(LocalDateTime start, LocalDateTime end);
 
     @Query(value = "SELECT " +
             "(SELECT count(*) " +
@@ -262,5 +262,5 @@ public interface UserDAO extends JpaRepository<User, Long> {
             "WHERE type = 'REJECT_CV' " +
             "AND created_at >= :start " +
             "AND created_at < :end) as totalRejectedAccount", nativeQuery = true)
-    IStatisticalRepairerAccountDTO findStatisticalRepairerAccounts(LocalDateTime start, LocalDateTime end);
+    IStatisticalRepairerAccountDTO findStatisticalRepairerAccount(LocalDateTime start, LocalDateTime end);
 }

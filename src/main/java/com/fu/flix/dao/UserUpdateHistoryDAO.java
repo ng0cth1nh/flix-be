@@ -17,18 +17,19 @@ public interface UserUpdateHistoryDAO extends JpaRepository<UserUpdateHistory, L
             "AND ur.role_id IN (:roleIds) " +
             "AND uuh.created_at >= :start " +
             "AND uuh.created_at < :end", nativeQuery = true)
-    long countTotalBannedAccounts(LocalDateTime start, LocalDateTime end, String... roleIds);
+    long countTotalBannedAccountHistories(LocalDateTime start, LocalDateTime end, String... roleIds);
 
     @Query(value = "SELECT count(distinct user_id) " +
             "FROM user_update_histories " +
             "WHERE type = 'REJECT_CV' " +
             "AND created_at >= :start " +
             "AND created_at < :end", nativeQuery = true)
-    long countTotalRejectedAccounts(LocalDateTime start, LocalDateTime end);
+    long countTotalRejectedAccountHistories(LocalDateTime start, LocalDateTime end);
 
-    @Query(value = "SELECT count(*) " +
-            "FROM repairers " +
-            "WHERE accepted_cv_at >= :start " +
-            "AND accepted_cv_at <= :end", nativeQuery = true)
-    long countTotalApprovedAccounts(LocalDateTime start, LocalDateTime end);
+    @Query(value = "SELECT count(distinct user_id) " +
+            "FROM user_update_histories " +
+            "WHERE type = 'ACCEPT_CV' " +
+            "AND created_at >= :start " +
+            "AND created_at < :end", nativeQuery = true)
+    long countTotalApprovedAccountHistories(LocalDateTime start, LocalDateTime end);
 }

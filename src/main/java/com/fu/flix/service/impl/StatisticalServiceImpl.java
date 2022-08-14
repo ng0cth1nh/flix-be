@@ -179,6 +179,9 @@ public class StatisticalServiceImpl implements StatisticalService {
             dto.setTotalPaymentWaitingRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromDateValidated,
                     flagDateTimeNext,
                     PAYMENT_WAITING_REQUEST.name()));
+            dto.setTotalCancelRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromDateValidated,
+                    flagDateTimeNext,
+                    CANCELLED_REQUEST.name()));
 
             data.add(dto);
             fromDateValidated = flagDateTimeNext;

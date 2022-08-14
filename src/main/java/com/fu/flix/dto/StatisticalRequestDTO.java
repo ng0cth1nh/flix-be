@@ -12,4 +12,5 @@ public class StatisticalRequestDTO {
     private long totalFixingRequest;
     private long totalDoneRequest;
     private long totalPaymentWaitingRequest;
+    private long totalCancelRequest;
 }

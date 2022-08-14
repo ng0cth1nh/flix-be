@@ -24,7 +24,7 @@ public class InputValidation {
     private static final String MONTH_REGEX = "^([0-9]{2})(/)([0-9]{4})$";
     private static final String YEAR_REGEX = "^([0-9]{4})$";
 
-    public static LocalDateTime getFromDateValidated(String from, StatisticalDateType type) {
+    public static LocalDateTime getFromValidated(String from, StatisticalDateType type) {
         if (!isMatchQueryDateType(from, type)) {
             throw new GeneralException(HttpStatus.GONE, QUERY_DATE_AND_TYPE_NOT_MATCHED);
         }
@@ -56,7 +56,7 @@ public class InputValidation {
         return LocalDateTime.of(fromLocalDate, LocalTime.MIN);
     }
 
-    public static LocalDateTime getToDateValidated(String to, LocalDateTime fromLocalDateTime, StatisticalDateType type) {
+    public static LocalDateTime getToValidated(String to, LocalDateTime fromLocalDateTime, StatisticalDateType type) {
         if (!isMatchQueryDateType(to, type)) {
             throw new GeneralException(HttpStatus.GONE, QUERY_DATE_AND_TYPE_NOT_MATCHED);
         }

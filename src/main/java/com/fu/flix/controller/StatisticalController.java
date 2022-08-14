@@ -3,9 +3,11 @@ package com.fu.flix.controller;
 import com.fu.flix.dto.request.StatisticalCustomerAccountsRequest;
 import com.fu.flix.dto.request.StatisticalRepairerAccountsRequest;
 import com.fu.flix.dto.request.StatisticalRequestsRequest;
+import com.fu.flix.dto.request.StatisticalTransactionsRequest;
 import com.fu.flix.dto.response.StatisticalCustomerAccountsResponse;
 import com.fu.flix.dto.response.StatisticalRepairerAccountsResponse;
 import com.fu.flix.dto.response.StatisticalRequestsResponse;
+import com.fu.flix.dto.response.StatisticalTransactionsResponse;
 import com.fu.flix.service.StatisticalService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,5 +36,10 @@ public class StatisticalController {
     @GetMapping("requests")
     public ResponseEntity<StatisticalRequestsResponse> getStatisticalRequests(StatisticalRequestsRequest request) {
         return statisticalService.getStatisticalRequests(request);
+    }
+
+    @GetMapping("transactions")
+    public ResponseEntity<StatisticalTransactionsResponse> getStatisticalTransactions(StatisticalTransactionsRequest request) {
+        return statisticalService.getStatisticalTransactions(request);
     }
 }

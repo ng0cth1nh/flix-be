@@ -1,15 +1,20 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.constant.enums.RepairRequestHistoryType;
 import com.fu.flix.constant.enums.StatisticalDateType;
+import com.fu.flix.dao.RepairRequestHistoryDAO;
 import com.fu.flix.dao.UserDAO;
 import com.fu.flix.dao.UserUpdateHistoryDAO;
 import com.fu.flix.dto.StatisticalCustomerAccountDTO;
 import com.fu.flix.dto.StatisticalRepairerAccountDTO;
+import com.fu.flix.dto.StatisticalRequestDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.StatisticalCustomerAccountsRequest;
 import com.fu.flix.dto.request.StatisticalRepairerAccountsRequest;
+import com.fu.flix.dto.request.StatisticalRequestsRequest;
 import com.fu.flix.dto.response.StatisticalCustomerAccountsResponse;
 import com.fu.flix.dto.response.StatisticalRepairerAccountsResponse;
+import com.fu.flix.dto.response.StatisticalRequestsResponse;
 import com.fu.flix.service.StatisticalService;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
@@ -23,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.fu.flix.constant.Constant.INVALID_DATE_TYPE;
+import static com.fu.flix.constant.enums.RepairRequestHistoryType.*;
 import static com.fu.flix.constant.enums.RoleType.*;
 
 @Service
@@ -30,14 +36,18 @@ import static com.fu.flix.constant.enums.RoleType.*;
 public class StatisticalServiceImpl implements StatisticalService {
     private final UserDAO userDAO;
     private final UserUpdateHistoryDAO userUpdateHistoryDAO;
+
+    private final RepairRequestHistoryDAO repairRequestHistoryDAO;
     private final String DAY_FORMAT = "dd/MM/yyyy";
     private final String MONTH_FORMAT = "MM/yyyy";
     private final String YEAR_FORMAT = "yyyy";
 
     public StatisticalServiceImpl(UserDAO userDAO,
-                                  UserUpdateHistoryDAO userUpdateHistoryDAO) {
+                                  UserUpdateHistoryDAO userUpdateHistoryDAO,
+                                  RepairRequestHistoryDAO repairRequestHistoryDAO) {
         this.userDAO = userDAO;
         this.userUpdateHistoryDAO = userUpdateHistoryDAO;
+        this.repairRequestHistoryDAO = repairRequestHistoryDAO;
     }
 
     @Override
@@ -76,7 +86,7 @@ public class StatisticalServiceImpl implements StatisticalService {
             dto.setTotalNewAccount(userDAO.countTotalCreatedAccounts(fromDateValidated,
                     flagDateTimeNext,
                     ROLE_CUSTOMER.getId()));
-            dto.setTotalBanAccount(userUpdateHistoryDAO.countTotalBannedAccounts(fromDateValidated,
+            dto.setTotalBanAccount(userUpdateHistoryDAO.countTotalBannedAccountHistories(fromDateValidated,
                     flagDateTimeNext,
                     ROLE_CUSTOMER.getId()));
             data.add(dto);
@@ -114,14 +124,61 @@ public class StatisticalServiceImpl implements StatisticalService {
                     flagDateTimeNext,
                     ROLE_REPAIRER.getId(),
                     ROLE_PENDING_REPAIRER.getId()));
-            dto.setTotalBanAccount(userUpdateHistoryDAO.countTotalBannedAccounts(fromDateValidated,
+            dto.setTotalBanAccount(userUpdateHistoryDAO.countTotalBannedAccountHistories(fromDateValidated,
                     flagDateTimeNext,
                     ROLE_REPAIRER.getId(),
                     ROLE_PENDING_REPAIRER.getId()));
-            dto.setTotalApprovedAccount(userUpdateHistoryDAO.countTotalApprovedAccounts(fromDateValidated,
+            dto.setTotalApprovedAccount(userUpdateHistoryDAO.countTotalApprovedAccountHistories(fromDateValidated,
                     flagDateTimeNext));
-            dto.setTotalRejectedAccount(userUpdateHistoryDAO.countTotalRejectedAccounts(fromDateValidated,
+            dto.setTotalRejectedAccount(userUpdateHistoryDAO.countTotalRejectedAccountHistories(fromDateValidated,
                     flagDateTimeNext));
+
+            data.add(dto);
+            fromDateValidated = flagDateTimeNext;
+        }
+
+        return data;
+    }
+
+    @Override
+    public ResponseEntity<StatisticalRequestsResponse> getStatisticalRequests(StatisticalRequestsRequest request) {
+        StatisticalDateType type = getStatisticalDateTypeValidated(request.getType());
+        LocalDateTime fromDateValidated = InputValidation.getFromDateValidated(request.getFrom(), type);
+        LocalDateTime toDateValidated = InputValidation.getToDateValidated(request.getTo(), fromDateValidated, type);
+
+        List<StatisticalRequestDTO> data = queryStatisticalRequests(fromDateValidated, toDateValidated, type);
+
+        StatisticalRequestsResponse response = new StatisticalRequestsResponse();
+        response.setData(data);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private List<StatisticalRequestDTO> queryStatisticalRequests(LocalDateTime fromDateValidated,
+                                                                 LocalDateTime toDateValidated,
+                                                                 StatisticalDateType type) {
+        List<StatisticalRequestDTO> data = new ArrayList<>();
+
+        while (fromDateValidated.isBefore(toDateValidated)) {
+            StatisticalRequestDTO dto = new StatisticalRequestDTO();
+            LocalDateTime flagDateTimeNext = getFromDateTimeNext(fromDateValidated, type);
+
+            dto.setDate(getQueryDayFormatted(fromDateValidated, type));
+            dto.setTotalPendingRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromDateValidated,
+                    flagDateTimeNext,
+                    PENDING_REQUEST.name()));
+            dto.setTotalApprovedRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromDateValidated,
+                    flagDateTimeNext,
+                    APPROVED_REQUEST.name()));
+            dto.setTotalFixingRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromDateValidated,
+                    flagDateTimeNext,
+                    FIXING_REQUEST.name()));
+            dto.setTotalDoneRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromDateValidated,
+                    flagDateTimeNext,
+                    DONE_REQUEST.name()));
+            dto.setTotalPaymentWaitingRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromDateValidated,
+                    flagDateTimeNext,
+                    PAYMENT_WAITING_REQUEST.name()));
 
             data.add(dto);
             fromDateValidated = flagDateTimeNext;

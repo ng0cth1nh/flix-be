@@ -2,6 +2,7 @@ package com.fu.flix.service.impl;
 
 import com.fu.flix.constant.enums.StatisticalDateType;
 import com.fu.flix.dao.UserDAO;
+import com.fu.flix.dao.UserUpdateHistoryDAO;
 import com.fu.flix.dto.StatisticalCustomerAccountDTO;
 import com.fu.flix.dto.StatisticalRepairerAccountDTO;
 import com.fu.flix.dto.error.GeneralException;
@@ -28,12 +29,15 @@ import static com.fu.flix.constant.enums.RoleType.*;
 @Transactional
 public class StatisticalServiceImpl implements StatisticalService {
     private final UserDAO userDAO;
+    private final UserUpdateHistoryDAO userUpdateHistoryDAO;
     private final String DAY_FORMAT = "dd/MM/yyyy";
     private final String MONTH_FORMAT = "MM/yyyy";
     private final String YEAR_FORMAT = "yyyy";
 
-    public StatisticalServiceImpl(UserDAO userDAO) {
+    public StatisticalServiceImpl(UserDAO userDAO,
+                                  UserUpdateHistoryDAO userUpdateHistoryDAO) {
         this.userDAO = userDAO;
+        this.userUpdateHistoryDAO = userUpdateHistoryDAO;
     }
 
     @Override
@@ -72,7 +76,7 @@ public class StatisticalServiceImpl implements StatisticalService {
             dto.setTotalNewAccount(userDAO.countTotalCreatedAccounts(fromDateValidated,
                     flagDateTimeNext,
                     ROLE_CUSTOMER.getId()));
-            dto.setTotalBanAccount(userDAO.countTotalBannedAccounts(fromDateValidated,
+            dto.setTotalBanAccount(userUpdateHistoryDAO.countTotalBannedAccounts(fromDateValidated,
                     flagDateTimeNext,
                     ROLE_CUSTOMER.getId()));
             data.add(dto);
@@ -110,13 +114,13 @@ public class StatisticalServiceImpl implements StatisticalService {
                     flagDateTimeNext,
                     ROLE_REPAIRER.getId(),
                     ROLE_PENDING_REPAIRER.getId()));
-            dto.setTotalBanAccount(userDAO.countTotalBannedAccounts(fromDateValidated,
+            dto.setTotalBanAccount(userUpdateHistoryDAO.countTotalBannedAccounts(fromDateValidated,
                     flagDateTimeNext,
                     ROLE_REPAIRER.getId(),
                     ROLE_PENDING_REPAIRER.getId()));
-            dto.setTotalApprovedAccount(userDAO.countTotalApprovedAccounts(fromDateValidated,
+            dto.setTotalApprovedAccount(userUpdateHistoryDAO.countTotalApprovedAccounts(fromDateValidated,
                     flagDateTimeNext));
-            dto.setTotalRejectedAccount(userDAO.countTotalRejectedAccounts(fromDateValidated,
+            dto.setTotalRejectedAccount(userUpdateHistoryDAO.countTotalRejectedAccounts(fromDateValidated,
                     flagDateTimeNext));
 
             data.add(dto);

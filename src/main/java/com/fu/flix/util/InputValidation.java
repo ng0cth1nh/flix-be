@@ -20,8 +20,8 @@ public class InputValidation {
     private static final String BANK_NAME_REGEX = "^[A-Z\\s]{3,}$";
     private static final String IDENTITY_CARD_NUMBER_REGEX = "^\\d{9,12}$";
     private static final String BANK_NUMBER_REGEX = "^\\d{8,17}$";
-    private static final String DAY_REGEX = "^([0-9]{2})(\\/)([0-9]{2})(\\/)([0-9]{4})$";
-    private static final String MONTH_REGEX = "^([0-9]{2})(\\/)([0-9]{4})$";
+    private static final String DAY_REGEX = "^([0-9]{2})(/)([0-9]{2})(/)([0-9]{4})$";
+    private static final String MONTH_REGEX = "^([0-9]{2})(/)([0-9]{4})$";
     private static final String YEAR_REGEX = "^([0-9]{4})$";
 
     public static LocalDateTime getFromDateValidated(String from, StatisticalDateType type) {

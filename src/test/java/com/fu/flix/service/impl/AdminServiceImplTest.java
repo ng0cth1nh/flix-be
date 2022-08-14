@@ -1011,6 +1011,9 @@ class AdminServiceImplTest {
 
         setManagerContext(438L, "0865390063");
 
+        User user = userDAO.findById(41L).get();
+        user.setIsActive(false);
+
         // when
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.banUser(request));
 
@@ -2155,7 +2158,7 @@ class AdminServiceImplTest {
         RejectCVRequest request = new RejectCVRequest();
         request.setReason("Người dùng fake dữ liệu CMND");
         request.setRejectStatus(REJECTED.name());
-        request.setRepairerId(571l);
+        request.setRepairerId(572l);
 
         setManagerContext(438L, "0865390063");
 
@@ -2172,7 +2175,7 @@ class AdminServiceImplTest {
         RejectCVRequest request = new RejectCVRequest();
         request.setReason("Người dùng fake dữ liệu CMND");
         request.setRejectStatus(UPDATING.name());
-        request.setRepairerId(571l);
+        request.setRepairerId(555l);
 
         setManagerContext(438L, "0865390063");
 
@@ -2259,7 +2262,7 @@ class AdminServiceImplTest {
 
         setManagerContext(438L, "0865390063");
 
-        User user = userDAO.findById(39L).get();
+        User user = userDAO.findById(41L).get();
         user.setIsActive(false);
 
         // when

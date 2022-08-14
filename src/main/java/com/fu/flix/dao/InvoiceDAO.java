@@ -1,11 +1,13 @@
 package com.fu.flix.dao;
 
 import com.fu.flix.dto.IInvoiceDTO;
+import com.fu.flix.dto.IStatisticalTransactionDTO;
 import com.fu.flix.entity.Invoice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -105,4 +107,11 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "AND repairer.id = :repairerId " +
             "AND repairer.is_active", nativeQuery = true)
     Optional<IInvoiceDTO> findRepairerInvoice(String requestCode, Long repairerId);
+
+    @Query(value = "SELECT COALESCE(sum(profit), 0) as totalProfit, COALESCE(sum(actual_proceeds), 0) as totalRevenue " +
+            "FROM invoices " +
+            "WHERE done_at IS NOT NULL " +
+            "AND done_at >= :start " +
+            "AND done_at < :end", nativeQuery = true)
+    IStatisticalTransactionDTO findStatisticalTransactionDTO(LocalDateTime start, LocalDateTime end);
 }

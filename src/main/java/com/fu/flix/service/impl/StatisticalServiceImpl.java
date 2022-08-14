@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.fu.flix.constant.Constant.INVALID_DATE_TYPE;
-import static com.fu.flix.constant.enums.RepairRequestHistoryType.*;
 
 @Service
 @Transactional
@@ -71,7 +70,7 @@ public class StatisticalServiceImpl implements StatisticalService {
             LocalDateTime fromNext = getFromNext(fromValidated, type);
 
             IStatisticalCustomerAccountDTO statisticalCustomerAccount = userDAO
-                    .findStatisticalCustomerAccounts(fromValidated, fromNext);
+                    .findStatisticalCustomerAccount(fromValidated, fromNext);
 
             dto.setDate(getQueryDayFormatted(fromValidated, type));
             dto.setTotalBanAccount(statisticalCustomerAccount.getTotalBanAccount());
@@ -108,7 +107,7 @@ public class StatisticalServiceImpl implements StatisticalService {
             LocalDateTime fromNext = getFromNext(fromValidated, type);
 
             IStatisticalRepairerAccountDTO statisticalRepairerAccount = userDAO
-                    .findStatisticalRepairerAccounts(fromValidated, fromNext);
+                    .findStatisticalRepairerAccount(fromValidated, fromNext);
 
             dto.setDate(getQueryDayFormatted(fromValidated, type));
             dto.setTotalNewAccount(statisticalRepairerAccount.getTotalNewAccount());
@@ -146,25 +145,16 @@ public class StatisticalServiceImpl implements StatisticalService {
             StatisticalRequestDTO dto = new StatisticalRequestDTO();
             LocalDateTime fromNext = getFromNext(fromValidated, type);
 
+            IStatisticalRequestDTO statisticalRequest = repairRequestHistoryDAO
+                    .findStatisticalRequest(fromValidated, fromNext);
+
             dto.setDate(getQueryDayFormatted(fromValidated, type));
-            dto.setTotalPendingRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromValidated,
-                    fromNext,
-                    PENDING_REQUEST.name()));
-            dto.setTotalApprovedRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromValidated,
-                    fromNext,
-                    APPROVED_REQUEST.name()));
-            dto.setTotalFixingRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromValidated,
-                    fromNext,
-                    FIXING_REQUEST.name()));
-            dto.setTotalDoneRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromValidated,
-                    fromNext,
-                    DONE_REQUEST.name()));
-            dto.setTotalPaymentWaitingRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromValidated,
-                    fromNext,
-                    PAYMENT_WAITING_REQUEST.name()));
-            dto.setTotalCancelRequest(repairRequestHistoryDAO.countTotalRequestHistoriesByType(fromValidated,
-                    fromNext,
-                    CANCELLED_REQUEST.name()));
+            dto.setTotalPendingRequest(statisticalRequest.getTotalPendingRequest());
+            dto.setTotalApprovedRequest(statisticalRequest.getTotalApprovedRequest());
+            dto.setTotalFixingRequest(statisticalRequest.getTotalFixingRequest());
+            dto.setTotalDoneRequest(statisticalRequest.getTotalDoneRequest());
+            dto.setTotalPaymentWaitingRequest(statisticalRequest.getTotalPaymentWaitingRequest());
+            dto.setTotalCancelRequest(statisticalRequest.getTotalCancelRequest());
 
             data.add(dto);
             fromValidated = fromNext;
@@ -205,7 +195,7 @@ public class StatisticalServiceImpl implements StatisticalService {
             StatisticalTransactionDTO dto = new StatisticalTransactionDTO();
             LocalDateTime fromNext = getFromNext(fromValidated, type);
 
-            IStatisticalTransactionDTO statisticalTransaction = invoiceDAO.findStatisticalTransactionDTO(fromValidated, fromNext);
+            IStatisticalTransactionDTO statisticalTransaction = invoiceDAO.findStatisticalTransaction(fromValidated, fromNext);
 
             dto.setDate(getQueryDayFormatted(fromValidated, type));
             dto.setTotalRevenue(statisticalTransaction.getTotalRevenue());

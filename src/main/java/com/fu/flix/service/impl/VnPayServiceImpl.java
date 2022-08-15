@@ -97,8 +97,8 @@ public class VnPayServiceImpl implements VNPayService {
         this.vnPayInfo = appConf.getVnPayInfo();
         this.appConf = appConf;
         this.fcmService = fcmService;
+        this.vnPayAmountRate = appConf.getVnPayInfo().getVnPayAmountRate();
         this.repairerDAO = repairerDAO;
-        this.vnPayAmountRate = this.vnPayInfo.getVnPayAmountRate();
     }
 
     @Override

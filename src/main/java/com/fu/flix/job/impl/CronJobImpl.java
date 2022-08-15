@@ -61,7 +61,7 @@ public class CronJobImpl implements CronJob {
         this.invoiceDAO = invoiceDAO;
     }
 
-    // job run every 5 minutes
+    // job run every 5 minute
     @Override
     @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelPendingRequestAutomatically() {

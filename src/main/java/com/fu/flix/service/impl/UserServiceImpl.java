@@ -99,7 +99,7 @@ public class UserServiceImpl implements UserService {
 
         Long userId = request.getUserId();
         List<Notification> notifications = notificationDAO
-                .findByUserIdAndDeletedAtIsNullOrderByDateDesc(userId, PageRequest.of(pageNumber, pageSize));
+                .findByUserIdAndDeletedAtIsNullOrderByIdDesc(userId, PageRequest.of(pageNumber, pageSize));
         long totalRecord = notificationDAO.countByUserIdAndDeletedAtIsNull(userId);
         long numberOfUnread = notificationDAO.countByUserIdAndDeletedAtIsNullAndIsRead(userId, false);
 

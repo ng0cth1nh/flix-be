@@ -21,17 +21,17 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
             "AND type = :type", nativeQuery = true)
     Optional<Comment> findComment(String requestCode, String type);
 
-    @Query(value = "SELECT u.full_name as repairerName, avg(c.rating) as rating, r.experience_description as experienceDescription," +
-            " DATE_FORMAT(r.accepted_cv_at,'%d/%m/%Y') as joinAt, r.experience_year as experienceYear, count(c.id) as totalComment " +
-            "FROM comments c " +
-            "JOIN repair_requests_matching rrm " +
-            "ON c.request_code = rrm.request_code " +
+    @Query(value = "SELECT u.full_name as repairerName, avg(c.rating) as rating, r.experience_description as experienceDescription, " +
+            "DATE_FORMAT(r.accepted_cv_at,'%d/%m/%Y') as joinAt, r.experience_year as experienceYear, count(c.id) as totalComment " +
+            "FROM repairers r " +
             "JOIN users u " +
-            "ON rrm.repairer_id = u.id " +
-            "JOIN repairers r " +
-            "ON rrm.repairer_id = r.user_id " +
-            "WHERE rrm.repairer_id = :repairerId " +
-            "AND c.type = 'CUSTOMER_COMMENT'", nativeQuery = true)
+            "ON r.user_id = u.id " +
+            "LEFT JOIN repair_requests_matching rrm " +
+            "ON r.user_id = rrm.repairer_id " +
+            "LEFT JOIN comments c " +
+            "ON c.request_code = rrm.request_code " +
+            "AND c.type = 'CUSTOMER_COMMENT' " +
+            "WHERE rrm.repairer_id = :repairerId", nativeQuery = true)
     ICustomerGetRepairerDTO findRepairerProfile(Long repairerId);
 
     @Query(value = "SELECT count(*) as successfulRepair " +

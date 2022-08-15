@@ -65,6 +65,7 @@ public class CronJobImpl implements CronJob {
     @Override
     @Scheduled(cron = "0 0/5 * * * ?")
     public void cancelPendingRequestAutomatically() {
+        log.info("Start cancel pending request automatically at: " + LocalDateTime.now());
         List<RepairRequest> repairRequests = repairRequestDAO.findCancelablePendingRequest();
         repairRequests.parallelStream()
                 .forEach(repairRequest -> {

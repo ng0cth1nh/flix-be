@@ -166,7 +166,7 @@ public class AdminServiceImpl implements AdminService {
         int pageSize = validatorService.getPageSize(request.getPageSize());
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
-        Page<Category> categoryPage = categoryDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        Page<Category> categoryPage = categoryDAO.findAllByOrderByIdDesc(PageRequest.of(pageNumber, pageSize));
         long totalRecord = categoryDAO.count();
 
         List<CategoryDTO> categories = categoryPage.stream()
@@ -277,7 +277,7 @@ public class AdminServiceImpl implements AdminService {
 
         Long categoryId = request.getCategoryId();
         Page<com.fu.flix.entity.Service> servicePage = serviceDAO
-                .findByCategoryId(categoryId, PageRequest.of(pageNumber, pageSize));
+                .findByCategoryIdOrderByIdDesc(categoryId, PageRequest.of(pageNumber, pageSize));
         long totalRecord = serviceDAO.countByCategoryId(categoryId);
 
         List<ServiceDTO> serviceDTOS = servicePage.stream()
@@ -427,7 +427,7 @@ public class AdminServiceImpl implements AdminService {
 
         Long serviceId = request.getServiceId();
 
-        Page<SubService> subServicePage = subServiceDAO.findByServiceId(serviceId, PageRequest.of(pageNumber, pageSize));
+        Page<SubService> subServicePage = subServiceDAO.findByServiceIdOrderByIdDesc(serviceId, PageRequest.of(pageNumber, pageSize));
         long totalRecord = subServiceDAO.countByServiceId(serviceId);
 
         List<AdminSubServiceDTO> subServices = subServicePage.stream()
@@ -744,7 +744,7 @@ public class AdminServiceImpl implements AdminService {
         int pageSize = validatorService.getPageSize(request.getPageSize());
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
 
-        Page<Accessory> accessoryPage = accessoryDAO.findAll(PageRequest.of(pageNumber, pageSize));
+        Page<Accessory> accessoryPage = accessoryDAO.findAllByOrderByIdDesc(PageRequest.of(pageNumber, pageSize));
         long totalRecord = accessoryDAO.count();
 
         List<AccessoryOutputDTO> accessoryList = mapToAccessoryOutputDTOs(accessoryPage.stream());

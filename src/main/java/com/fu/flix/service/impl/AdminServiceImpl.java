@@ -252,6 +252,10 @@ public class AdminServiceImpl implements AdminService {
         if (Strings.isEmpty(categoryName) || categoryName.length() > NAME_MAX_LENGTH) {
             throw new GeneralException(HttpStatus.GONE, INVALID_CATEGORY_NAME);
         }
+
+        if (categoryDAO.findByCategoryName(categoryName).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_NAME_EXISTED);
+        }
     }
 
     private void postCategoryIcon(Category category, MultipartFile icon) throws IOException {

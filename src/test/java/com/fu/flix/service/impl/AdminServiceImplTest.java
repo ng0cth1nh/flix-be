@@ -243,6 +243,26 @@ class AdminServiceImplTest {
     }
 
     @Test
+    void test_create_category_fail_when_category_name_exsited() {
+        // given
+        CreateCategoryRequest request = new CreateCategoryRequest();
+        request.setIcon(null);
+        request.setImage(null);
+        request.setDescription("fake description 1");
+        request.setCategoryName("Dien tu");
+        request.setIsActive(null);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createCategory(request));
+
+        // then
+        Assertions.assertEquals(CATEGORY_NAME_EXISTED, exception.getMessage());
+    }
+
+
+    @Test
     void test_update_category_success() throws IOException {
         // given
         MockMultipartFile icon = new MockMultipartFile(

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CategoryDAO extends JpaRepository<Category, Long> {
@@ -26,4 +27,7 @@ public interface CategoryDAO extends JpaRepository<Category, Long> {
     List<ICategoryDTO> searchCategories(String keyword);
 
     Page<Category> findAllByOrderByIdDesc(Pageable pageable);
+
+    @Query(value = "SELECT * FROM categories WHERE name LIKE :name", nativeQuery = true)
+    Optional<Category> findByCategoryName(String name);
 }

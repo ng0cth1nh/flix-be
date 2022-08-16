@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SubServiceDAO extends JpaRepository<SubService, Long> {
@@ -36,4 +37,7 @@ public interface SubServiceDAO extends JpaRepository<SubService, Long> {
     Page<SubService> findByServiceIdOrderByIdDesc(Long serviceId, Pageable pageable);
 
     long countByServiceId(Long serviceId);
+
+    @Query(value = "SELECT * FROM sub_services WHERE name LIKE :subServiceName AND service_id = :serviceId", nativeQuery = true)
+    Optional<SubService> findBySubServiceNameAndServiceId(String subServiceName, Long serviceId);
 }

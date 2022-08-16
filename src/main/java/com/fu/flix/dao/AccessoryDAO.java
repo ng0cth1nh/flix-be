@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AccessoryDAO extends JpaRepository<Accessory, Long> {
@@ -30,4 +31,7 @@ public interface AccessoryDAO extends JpaRepository<Accessory, Long> {
     List<Accessory> searchAccessories(String keyword);
 
     Page<Accessory> findAllByOrderByIdDesc(Pageable pageable);
+
+    @Query(value = "SELECT * FROM accessories WHERE name LIKE :accessoryName AND service_id = :serviceId", nativeQuery = true)
+    Optional<Accessory> findByAccessoryNameAndServiceId(String accessoryName, Long serviceId);
 }

@@ -195,12 +195,17 @@ public class AdminServiceImpl implements AdminService {
     public ResponseEntity<CreateCategoryResponse> createCategory(CreateCategoryRequest request) throws IOException {
         validateModifyCategory(request);
 
+        String categoryName = request.getCategoryName();
+        if (categoryDAO.findByCategoryName(categoryName).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_NAME_EXISTED);
+        }
+
         boolean isActive = request.getIsActive() != null
                 ? request.getIsActive()
                 : true;
 
         Category category = new Category();
-        category.setName(request.getCategoryName());
+        category.setName(categoryName);
         category.setDescription(request.getDescription());
         category.setActive(isActive);
         postCategoryIcon(category, request.getIcon());
@@ -225,7 +230,14 @@ public class AdminServiceImpl implements AdminService {
         MultipartFile image = request.getImage();
 
         Category category = validatorService.getCategoryValidated(request.getId());
-        category.setName(request.getCategoryName());
+
+        String categoryName = request.getCategoryName();
+        if (!category.getName().equals(categoryName)
+                && categoryDAO.findByCategoryName(categoryName).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, CATEGORY_NAME_EXISTED);
+        }
+
+        category.setName(categoryName);
         category.setDescription(request.getDescription());
         category.setActive(isActive);
         if (icon != null) {
@@ -251,10 +263,6 @@ public class AdminServiceImpl implements AdminService {
         String categoryName = request.getCategoryName();
         if (Strings.isEmpty(categoryName) || categoryName.length() > NAME_MAX_LENGTH) {
             throw new GeneralException(HttpStatus.GONE, INVALID_CATEGORY_NAME);
-        }
-
-        if (categoryDAO.findByCategoryName(categoryName).isPresent()) {
-            throw new GeneralException(HttpStatus.GONE, CATEGORY_NAME_EXISTED);
         }
     }
 
@@ -299,15 +307,21 @@ public class AdminServiceImpl implements AdminService {
     public ResponseEntity<CreateServiceResponse> createService(CreateServiceRequest request) throws IOException {
         validateModifyService(request);
 
+        String serviceName = request.getServiceName();
+        Long categoryId = request.getCategoryId();
+        if (serviceDAO.findByServiceNameAndCategoryId(serviceName, categoryId).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_NAME_OF_THIS_CATEGORY_IS_EXISTED);
+        }
+
         boolean isActive = request.getIsActive() != null
                 ? request.getIsActive()
                 : true;
 
         com.fu.flix.entity.Service service = new com.fu.flix.entity.Service();
-        service.setName(request.getServiceName());
+        service.setName(serviceName);
         service.setInspectionPrice(request.getInspectionPrice());
         service.setDescription(request.getDescription());
-        service.setCategoryId(request.getCategoryId());
+        service.setCategoryId(categoryId);
         service.setActive(isActive);
         postServiceIcon(service, request.getIcon());
         postServiceImage(service, request.getImage());
@@ -331,10 +345,18 @@ public class AdminServiceImpl implements AdminService {
         MultipartFile image = request.getImage();
 
         com.fu.flix.entity.Service service = validatorService.getServiceValidated(request.getServiceId());
-        service.setName(request.getServiceName());
+
+        String serviceName = request.getServiceName();
+        Long categoryId = request.getCategoryId();
+        if (!service.getName().equals(serviceName)
+                && serviceDAO.findByServiceNameAndCategoryId(serviceName, categoryId).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_NAME_OF_THIS_CATEGORY_IS_EXISTED);
+        }
+
+        service.setName(serviceName);
         service.setInspectionPrice(request.getInspectionPrice());
         service.setDescription(request.getDescription());
-        service.setCategoryId(request.getCategoryId());
+        service.setCategoryId(categoryId);
         service.setActive(isActive);
         if (icon != null) {
             postServiceIcon(service, icon);
@@ -373,10 +395,6 @@ public class AdminServiceImpl implements AdminService {
 
         if (categoryDAO.findById(categoryId).isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, CATEGORY_NOT_FOUND);
-        }
-
-        if (serviceDAO.findByServiceNameAndCategoryId(serviceName, categoryId).isPresent()) {
-            throw new GeneralException(HttpStatus.GONE, SERVICE_NAME_OF_THIS_CATEGORY_IS_EXISTED);
         }
     }
 
@@ -460,15 +478,21 @@ public class AdminServiceImpl implements AdminService {
     public ResponseEntity<CreateSubServiceResponse> createSubService(CreateSubServiceRequest request) {
         validateModifySubService(request);
 
+        Long serviceId = request.getServiceId();
+        String subServiceName = request.getSubServiceName();
+        if (subServiceDAO.findBySubServiceNameAndServiceId(subServiceName, serviceId).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_NAME_OF_THIS_SERVICE_IS_EXISTED);
+        }
+
         boolean isActive = request.getIsActive() != null
                 ? request.getIsActive()
                 : true;
 
         SubService subService = new SubService();
-        subService.setName(request.getSubServiceName());
+        subService.setName(subServiceName);
         subService.setDescription(request.getDescription());
         subService.setPrice(request.getPrice());
-        subService.setServiceId(request.getServiceId());
+        subService.setServiceId(serviceId);
         subService.setIsActive(isActive);
         subServiceDAO.save(subService);
 
@@ -487,10 +511,17 @@ public class AdminServiceImpl implements AdminService {
                 : true;
 
         SubService subService = validatorService.getSubServiceValidated(request.getSubServiceId());
-        subService.setName(request.getSubServiceName());
+
+        Long serviceId = request.getServiceId();
+        String subServiceName = request.getSubServiceName();
+        if (subServiceDAO.findBySubServiceNameAndServiceId(subServiceName, serviceId).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_NAME_OF_THIS_SERVICE_IS_EXISTED);
+        }
+
+        subService.setName(subServiceName);
         subService.setDescription(request.getDescription());
         subService.setPrice(request.getPrice());
-        subService.setServiceId(request.getServiceId());
+        subService.setServiceId(serviceId);
         subService.setIsActive(isActive);
         subServiceDAO.save(subService);
 
@@ -518,10 +549,6 @@ public class AdminServiceImpl implements AdminService {
 
         Long serviceId = request.getServiceId();
         validatorService.getServiceValidated(serviceId);
-
-        if (subServiceDAO.findBySubServiceNameAndServiceId(subServiceName, serviceId).isPresent()) {
-            throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_NAME_OF_THIS_SERVICE_IS_EXISTED);
-        }
     }
 
     @Override
@@ -799,6 +826,10 @@ public class AdminServiceImpl implements AdminService {
     public ResponseEntity<CreateAccessoryResponse> createAccessory(CreateAccessoryRequest request) {
         validateModifyAccessory(request);
 
+        if (accessoryDAO.findByAccessoryNameAndServiceId(request.getAccessoryName(), request.getServiceId()).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, ACCESSORY_NAME_OF_THIS_SERVICE_IS_EXISTED);
+        }
+
         Accessory accessory = new Accessory();
         buildAccessory(request, accessory);
 
@@ -815,6 +846,13 @@ public class AdminServiceImpl implements AdminService {
         validateModifyAccessory(request);
 
         Accessory accessory = validatorService.getAccessoryValidated(request.getId());
+
+        String accessoryName = request.getAccessoryName();
+        if (!accessory.getName().equals(accessoryName)
+                && accessoryDAO.findByAccessoryNameAndServiceId(accessoryName, request.getServiceId()).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, ACCESSORY_NAME_OF_THIS_SERVICE_IS_EXISTED);
+        }
+
         buildAccessory(request, accessory);
 
         UpdateAccessoryResponse response = new UpdateAccessoryResponse();
@@ -851,10 +889,6 @@ public class AdminServiceImpl implements AdminService {
 
         if (serviceDAO.findById(serviceId).isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
-        }
-
-        if (accessoryDAO.findByAccessoryNameAndServiceId(accessoryName, serviceId).isPresent()) {
-            throw new GeneralException(HttpStatus.GONE, ACCESSORY_NAME_OF_THIS_SERVICE_IS_EXISTED);
         }
     }
 

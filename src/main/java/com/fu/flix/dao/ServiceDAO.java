@@ -22,7 +22,8 @@ public interface ServiceDAO extends JpaRepository<Service, Long> {
             "JOIN images image " +
             "ON sv.image_id = image.id " +
             "WHERE sv.name LIKE %:keyword% " +
-            "AND sv.is_active", nativeQuery = true)
+            "AND sv.is_active " +
+            "ORDER BY sv.id DESC", nativeQuery = true)
     List<ISearchActiveServiceDTO> searchActiveServices(String keyword);
 
     @Query(value = "SELECT sv.id as serviceId, sv.name as serviceName, icon.url as icon, image.url as image, sv.description as description, " +
@@ -33,10 +34,11 @@ public interface ServiceDAO extends JpaRepository<Service, Long> {
             "JOIN images image " +
             "ON sv.image_id = image.id " +
             "WHERE sv.name LIKE %:keyword% " +
-            "AND sv.category_id = :categoryId ", nativeQuery = true)
+            "AND sv.category_id = :categoryId " +
+            "ORDER BY sv.id DESC", nativeQuery = true)
     List<IAdminSearchServiceDTO> searchServicesForAdmin(String keyword, Long categoryId);
 
-    Page<Service> findByCategoryId(Long categoryId, Pageable pageable);
+    Page<Service> findByCategoryIdOrderByIdDesc(Long categoryId, Pageable pageable);
 
     long countByCategoryId(Long categoryId);
 }

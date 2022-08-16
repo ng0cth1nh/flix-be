@@ -20,7 +20,8 @@ public interface SubServiceDAO extends JpaRepository<SubService, Long> {
     @Query(value = "SELECT * FROM sub_services " +
             "WHERE service_id = :serviceId " +
             "AND name LIKE %:keyword% " +
-            "AND is_active", nativeQuery = true)
+            "AND is_active " +
+            "ORDER BY id DESC", nativeQuery = true)
     List<SubService> searchSubServicesByService(String keyword, Long serviceId);
 
     List<SubService> findByServiceIdAndIsActive(Long serviceId, Boolean isActive);
@@ -28,10 +29,11 @@ public interface SubServiceDAO extends JpaRepository<SubService, Long> {
     @Query(value = "SELECT * " +
             "FROM sub_services " +
             "WHERE name LIKE %:keyword% " +
-            "AND service_id = :serviceId", nativeQuery = true)
+            "AND service_id = :serviceId " +
+            "ORDER BY id DESC", nativeQuery = true)
     List<SubService> searchSubServicesForAdmin(String keyword, Long serviceId);
 
-    Page<SubService> findByServiceId(Long serviceId, Pageable pageable);
+    Page<SubService> findByServiceIdOrderByIdDesc(Long serviceId, Pageable pageable);
 
     long countByServiceId(Long serviceId);
 }

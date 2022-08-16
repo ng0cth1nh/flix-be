@@ -2,6 +2,8 @@ package com.fu.flix.dao;
 
 import com.fu.flix.dto.ICategoryDTO;
 import com.fu.flix.entity.Category;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -19,6 +21,9 @@ public interface CategoryDAO extends JpaRepository<Category, Long> {
             "ON c.icon_id = icon.id " +
             "JOIN images image " +
             "ON c.image_id = image.id " +
-            "WHERE c.name LIKE %:keyword% ", nativeQuery = true)
+            "WHERE c.name LIKE %:keyword% " +
+            "ORDER BY c.id DESC", nativeQuery = true)
     List<ICategoryDTO> searchCategories(String keyword);
+
+    Page<Category> findAllByOrderByIdDesc(Pageable pageable);
 }

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ServiceDAO extends JpaRepository<Service, Long> {
     List<Service> findByCategoryIdAndIsActive(Long categoryId, Boolean isActive);
@@ -41,4 +42,7 @@ public interface ServiceDAO extends JpaRepository<Service, Long> {
     Page<Service> findByCategoryIdOrderByIdDesc(Long categoryId, Pageable pageable);
 
     long countByCategoryId(Long categoryId);
+
+    @Query(value = "SELECT * FROM services WHERE name LIKE :serviceName AND category_id = :categoryId", nativeQuery = true)
+    Optional<Service> findByServiceNameAndCategoryId(String serviceName, Long categoryId);
 }

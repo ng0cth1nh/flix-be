@@ -524,6 +524,27 @@ class AdminServiceImplTest {
     }
 
     @Test
+    void test_create_service_fail_when_service_name_is_existed() {
+        // given
+        CreateServiceRequest request = new CreateServiceRequest();
+        request.setIcon(null);
+        request.setImage(null);
+        request.setDescription("a");
+        request.setServiceName("Quat");
+        request.setIsActive(null);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createService(request));
+
+        // then
+        Assertions.assertEquals(SERVICE_NAME_OF_THIS_CATEGORY_IS_EXISTED, exception.getMessage());
+    }
+
+    @Test
     void test_update_service_success() throws IOException {
         // given
         MockMultipartFile icon = new MockMultipartFile(
@@ -716,6 +737,25 @@ class AdminServiceImplTest {
 
         // then
         Assertions.assertEquals(EXCEEDED_DESCRIPTION_LENGTH_ALLOWED, exception.getMessage());
+    }
+
+    @Test
+    void test_create_sub_service_fail_when_name_is_existed() {
+        // given
+        CreateSubServiceRequest request = new CreateSubServiceRequest();
+        request.setSubServiceName("Điện thoại tự động tắt và mở nguồn");
+        request.setPrice(33000L);
+        request.setServiceId(33L);
+        request.setDescription("a");
+        request.setIsActive(true);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createSubService(request));
+
+        // then
+        Assertions.assertEquals(SUB_SERVICE_NAME_OF_THIS_SERVICE_IS_EXISTED, exception.getMessage());
     }
 
     @Test
@@ -1386,6 +1426,28 @@ class AdminServiceImplTest {
         // then
         Assertions.assertEquals(INVALID_SERVICE, exception.getMessage());
     }
+
+    @Test
+    void test_create_accessory_fail_when_name_is_existed() {
+        // given
+        CreateAccessoryRequest request = new CreateAccessoryRequest();
+        request.setAccessoryName("Dây nguồn SAMSUNG vuông 3 chấu - dùng cho màn hình tivi");
+        request.setPrice(20000L);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("la la");
+        request.setServiceId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createAccessory(request));
+
+        // then
+        Assertions.assertEquals(ACCESSORY_NAME_OF_THIS_SERVICE_IS_EXISTED, exception.getMessage());
+    }
+
 
     @Test
     void test_update_accessory_success() {

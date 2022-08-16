@@ -374,6 +374,10 @@ public class AdminServiceImpl implements AdminService {
         if (categoryDAO.findById(categoryId).isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, CATEGORY_NOT_FOUND);
         }
+
+        if (serviceDAO.findByServiceNameAndCategoryId(serviceName, categoryId).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_NAME_OF_THIS_CATEGORY_IS_EXISTED);
+        }
     }
 
     private void postServiceIcon(com.fu.flix.entity.Service service, MultipartFile icon) throws IOException {
@@ -512,7 +516,12 @@ public class AdminServiceImpl implements AdminService {
             throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
         }
 
-        validatorService.getServiceValidated(request.getServiceId());
+        Long serviceId = request.getServiceId();
+        validatorService.getServiceValidated(serviceId);
+
+        if (subServiceDAO.findBySubServiceNameAndServiceId(subServiceName, serviceId).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_NAME_OF_THIS_SERVICE_IS_EXISTED);
+        }
     }
 
     @Override
@@ -842,6 +851,10 @@ public class AdminServiceImpl implements AdminService {
 
         if (serviceDAO.findById(serviceId).isEmpty()) {
             throw new GeneralException(HttpStatus.GONE, INVALID_SERVICE);
+        }
+
+        if (accessoryDAO.findByAccessoryNameAndServiceId(accessoryName, serviceId).isPresent()) {
+            throw new GeneralException(HttpStatus.GONE, ACCESSORY_NAME_OF_THIS_SERVICE_IS_EXISTED);
         }
     }
 

@@ -300,16 +300,25 @@ public class VnPayServiceImpl implements VNPayService {
 
         RepairRequest repairRequest = optionalRepairRequest.get();
         Long customerId = repairRequest.getUserId();
+
+        Optional<RepairRequestMatching> optionalRepairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode);
+        if (optionalRepairRequestMatching.isEmpty()) {
+            savePaymentTransactions(requestParams, null, customerId, REQUEST_DOES_NOT_MATCHING_WITH_ANY_REPAIRER);
+            response.setMessage(REQUEST_DOES_NOT_MATCHING_WITH_ANY_REPAIRER);
+            response.setRspCode(VN_PAY_RESPONSE.get(REQUEST_DOES_NOT_MATCHING_WITH_ANY_REPAIRER));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
+        RepairRequestMatching repairRequestMatching = optionalRepairRequestMatching.get();
+        Long repairerId = repairRequestMatching.getRepairerId();
+        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
+
         if (!RequestStatus.PAYMENT_WAITING.getId().equals(repairRequest.getStatusId())) {
-            savePaymentTransactions(requestParams, null, customerId, CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
+            savePaymentTransactions(requestParams, repairerId, customerId, CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
             response.setMessage(CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING);
             response.setRspCode(VN_PAY_RESPONSE.get(CUSTOMER_PAYMENT_ONLY_USE_WHEN_STATUS_IS_PAYMENT_WAITING));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
-
-        RepairRequestMatching repairRequestMatching = repairRequestMatchingDAO.findByRequestCode(requestCode).get();
-        Long repairerId = repairRequestMatching.getRepairerId();
-        Repairer repairer = repairerDAO.findByUserId(repairerId).get();
 
         String responseCode = requestParams.get(VNP_RESPONSE_CODE);
         if (!VN_PAY_SUCCESS_CODE.equals(responseCode)) {

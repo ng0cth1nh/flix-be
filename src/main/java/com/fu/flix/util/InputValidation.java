@@ -3,6 +3,7 @@ package com.fu.flix.util;
 import com.fu.flix.constant.enums.FeedbackType;
 import com.fu.flix.constant.enums.StatisticalDateType;
 import com.fu.flix.dto.error.GeneralException;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 
 import java.text.Normalizer;
@@ -207,6 +208,9 @@ public class InputValidation {
     }
 
     public static String removeAccent(String s) {
+        if (Strings.isEmpty(s)) {
+            return s;
+        }
         String temp = Normalizer.normalize(s, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         return pattern.matcher(temp).replaceAll("");

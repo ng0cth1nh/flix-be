@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 public interface VNPayService {
@@ -23,4 +22,6 @@ public interface VNPayService {
                                                                         HttpServletRequest httpServletRequest);
 
     ResponseEntity<RepairerDepositResponse> responseRepairerDeposit(Map<String, String> requestParams) throws IOException;
+
+    String hmacSHA512(final String key, final String data);
 }

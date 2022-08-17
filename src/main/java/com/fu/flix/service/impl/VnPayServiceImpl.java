@@ -481,7 +481,7 @@ public class VnPayServiceImpl implements VNPayService {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        Long amount = Long.parseLong(requestParams.get(VNP_AMOUNT)) / vnPayAmountRate;
+        Long amount = getTransactionAmount(requestParams);
         Balance balance = balanceDAO.findByUserId(repairerId).get();
 
         plusBalanceForRepairer(amount, balance);
@@ -554,14 +554,9 @@ public class VnPayServiceImpl implements VNPayService {
 
     private String getIpAddress(HttpServletRequest httpServletRequest) {
         final String HEADER = "X-FORWARDED-FOR";
-        String ipAddress;
-        try {
-            ipAddress = httpServletRequest.getHeader(HEADER);
-            if (ipAddress == null) {
-                ipAddress = httpServletRequest.getRemoteAddr();
-            }
-        } catch (Exception e) {
-            throw new GeneralException(HttpStatus.INTERNAL_SERVER_ERROR, INVALID_IP_ADDRESS);
+        String ipAddress = httpServletRequest.getHeader(HEADER);
+        if (ipAddress == null) {
+            ipAddress = httpServletRequest.getRemoteAddr();
         }
         return ipAddress;
     }
@@ -593,7 +588,8 @@ public class VnPayServiceImpl implements VNPayService {
         return s.replace(' ', '+');
     }
 
-    private String hmacSHA512(final String key, final String data) {
+    @Override
+    public String hmacSHA512(final String key, final String data) {
         final String HMAC_SHA512 = "HmacSHA512";
         try {
             if (key == null || data == null) {
@@ -612,7 +608,7 @@ public class VnPayServiceImpl implements VNPayService {
             return sb.toString();
 
         } catch (Exception ex) {
-            return "";
+            return Strings.EMPTY;
         }
     }
 }

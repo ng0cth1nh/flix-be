@@ -3,6 +3,7 @@ package com.fu.flix.controller;
 
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
+import com.fu.flix.service.AdminService;
 import com.fu.flix.service.FCMService;
 import com.fu.flix.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +20,14 @@ public class UserController {
     private final UserService userService;
     private final FCMService fcmService;
 
+    private final AdminService adminService;
+
     public UserController(UserService userService,
-                          FCMService fcmService) {
+                          FCMService fcmService,
+                          AdminService adminService) {
         this.userService = userService;
         this.fcmService = fcmService;
+        this.adminService = adminService;
     }
 
     @PutMapping("avatar")
@@ -63,5 +68,15 @@ public class UserController {
     @PutMapping("notification")
     public ResponseEntity<PutNotificationResponse> markReadNotification(@RequestBody PutNotificationRequest request) {
         return userService.markReadNotification(request);
+    }
+
+    @GetMapping("accessories")
+    public ResponseEntity<AdminGetAccessoriesResponse> getAccessories(AdminGetAccessoriesRequest request) {
+        return adminService.getAccessories(request);
+    }
+
+    @GetMapping("search/accessories")
+    public ResponseEntity<AdminSearchAccessoriesResponse> searchAccessories(AdminSearchAccessoriesRequest request) {
+        return adminService.searchAccessories(request);
     }
 }

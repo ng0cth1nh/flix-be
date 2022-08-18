@@ -13,4 +13,5 @@ public class AccessoryOutputDTO {
     private Integer insuranceTime;
     private String manufacture;
     private String country;
+    private String serviceName;
 }

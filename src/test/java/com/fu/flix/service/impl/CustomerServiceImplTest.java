@@ -429,7 +429,7 @@ class CustomerServiceImplTest {
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
 
         // then
-        Assertions.assertEquals(EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_30_DAYS, exception.getMessage());
+        Assertions.assertEquals(EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_14_DAYS, exception.getMessage());
     }
 
     @Test
@@ -456,7 +456,7 @@ class CustomerServiceImplTest {
         Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
 
         // then
-        Assertions.assertEquals(EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_30_DAYS, exception.getMessage());
+        Assertions.assertEquals(EXPECT_FIXING_DAY_MUST_START_AFTER_1_HOURS_AND_BEFORE_14_DAYS, exception.getMessage());
     }
 
     @Test

@@ -92,7 +92,7 @@ spring:
     password: S$s.(QQl6mXrG,eJ
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
-    host: 34.134.183.253
+    host: 34.134.101.105
     port: 6379
     password: ''
   jackson:

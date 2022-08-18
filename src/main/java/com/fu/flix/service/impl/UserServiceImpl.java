@@ -37,7 +37,6 @@ public class UserServiceImpl implements UserService {
     private final ImageDAO imageDAO;
     private final CloudStorageService cloudStorageService;
     private final UserDAO userDAO;
-    private final AppConf appConf;
     private final NotificationDAO notificationDAO;
     private final PasswordEncoder passwordEncoder;
     private final FeedbackDAO feedbackDAO;
@@ -48,7 +47,6 @@ public class UserServiceImpl implements UserService {
     public UserServiceImpl(ImageDAO imageDAO,
                            CloudStorageService cloudStorageService,
                            UserDAO userDAO,
-                           AppConf appConf,
                            NotificationDAO notificationDAO,
                            PasswordEncoder passwordEncoder,
                            FeedbackDAO feedbackDAO,
@@ -57,7 +55,6 @@ public class UserServiceImpl implements UserService {
         this.imageDAO = imageDAO;
         this.cloudStorageService = cloudStorageService;
         this.userDAO = userDAO;
-        this.appConf = appConf;
         this.notificationDAO = notificationDAO;
         this.passwordEncoder = passwordEncoder;
         this.feedbackDAO = feedbackDAO;

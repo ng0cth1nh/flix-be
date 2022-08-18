@@ -781,13 +781,15 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<AdminGetAccessoriesResponse> getAccessories(AdminGetAccessoriesRequest request) {
-        int pageSize = validatorService.getPageSize(request.getPageSize());
         int pageNumber = validatorService.getPageNumber(request.getPageNumber());
+        int pageSize = validatorService.getPageSize(request.getPageSize());
 
-        Page<Accessory> accessoryPage = accessoryDAO.findAllByOrderByIdDesc(PageRequest.of(pageNumber, pageSize));
+        int offset = pageNumber * pageSize;
+
+        List<IAccessoryDTO> accessories = accessoryDAO.findAllByOrderByIdDesc(pageSize, offset);
         long totalRecord = accessoryDAO.count();
 
-        List<AccessoryOutputDTO> accessoryList = mapToAccessoryOutputDTOs(accessoryPage.stream());
+        List<AccessoryOutputDTO> accessoryList = mapToAccessoryOutputDTOs(accessories.stream());
 
         AdminGetAccessoriesResponse response = new AdminGetAccessoriesResponse();
         response.setAccessoryList(accessoryList);
@@ -1209,7 +1211,7 @@ public class AdminServiceImpl implements AdminService {
                 ? Strings.EMPTY
                 : request.getKeyword();
 
-        List<Accessory> accessories = accessoryDAO.searchAccessories(keyword);
+        List<IAccessoryDTO> accessories = accessoryDAO.searchAccessories(keyword);
         List<AccessoryOutputDTO> accessoryOutputDTOS = mapToAccessoryOutputDTOs(accessories.stream());
 
         AdminSearchAccessoriesResponse response = new AdminSearchAccessoriesResponse();
@@ -1218,7 +1220,7 @@ public class AdminServiceImpl implements AdminService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private static List<AccessoryOutputDTO> mapToAccessoryOutputDTOs(Stream<Accessory> accessories) {
+    private static List<AccessoryOutputDTO> mapToAccessoryOutputDTOs(Stream<IAccessoryDTO> accessories) {
         return accessories
                 .map(accessory -> {
                     AccessoryOutputDTO dto = new AccessoryOutputDTO();
@@ -1229,6 +1231,7 @@ public class AdminServiceImpl implements AdminService {
                     dto.setManufacture(accessory.getManufacture());
                     dto.setCountry(accessory.getCountry());
                     dto.setDescription(accessory.getDescription());
+                    dto.setServiceName(accessory.getServiceName());
                     return dto;
                 }).collect(Collectors.toList());
     }

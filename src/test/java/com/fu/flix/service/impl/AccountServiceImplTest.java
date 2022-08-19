@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.constant.enums.ApplicationType;
+import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.*;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
@@ -2232,7 +2233,8 @@ class AccountServiceImplTest {
     }
 
     void setCustomerContext(Long id, String phone) {
-        String[] roles = {"ROLE_CUSTOMER"};
+        List<String> roles = new ArrayList<>();
+        roles.add(RoleType.ROLE_CUSTOMER.name());
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));

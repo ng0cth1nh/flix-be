@@ -1,5 +1,6 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.CommentDAO;
 import com.fu.flix.dao.RepairRequestDAO;
 import com.fu.flix.dao.UserAddressDAO;
@@ -2014,7 +2015,8 @@ class CustomerServiceImplTest {
     }
 
     void setUserContext(Long id, String phone) {
-        String[] roles = {"ROLE_CUSTOMER"};
+        List<String> roles = new ArrayList<>();
+        roles.add(RoleType.ROLE_CUSTOMER.name());
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));

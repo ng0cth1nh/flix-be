@@ -1,6 +1,7 @@
 package com.fu.flix.service.impl;
 
 import com.fu.flix.configuration.AppConf;
+import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.dao.BalanceDAO;
 import com.fu.flix.dao.RepairerDAO;
 import com.fu.flix.dao.UserDAO;
@@ -2685,7 +2686,8 @@ class AdminServiceImplTest {
     }
 
     void setCustomerContext(Long id, String phone) {
-        String[] roles = {"ROLE_CUSTOMER"};
+        List<String> roles = new ArrayList<>();
+        roles.add(RoleType.ROLE_CUSTOMER.name());
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));
@@ -2776,7 +2778,8 @@ class AdminServiceImplTest {
     }
 
     void setUserContext(Long id, String phone) {
-        String[] roles = {"ROLE_CUSTOMER"};
+        List<String> roles = new ArrayList<>();
+        roles.add(RoleType.ROLE_CUSTOMER.name());
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));
@@ -2802,7 +2805,8 @@ class AdminServiceImplTest {
 
 
     void setRepairerContext(Long id, String phone) {
-        String[] roles = {"ROLE_REPAIRER"};
+        List<String> roles = new ArrayList<>();
+        roles.add(RoleType.ROLE_REPAIRER.name());
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));
@@ -2813,7 +2817,8 @@ class AdminServiceImplTest {
     }
 
     void setManagerContext(Long id, String phone) {
-        String[] roles = {"ROLE_MANAGER"};
+        List<String> roles = new ArrayList<>();
+        roles.add(RoleType.ROLE_MANAGER.name());
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));

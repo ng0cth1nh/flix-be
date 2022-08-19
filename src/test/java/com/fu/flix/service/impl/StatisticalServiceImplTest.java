@@ -1,5 +1,6 @@
 package com.fu.flix.service.impl;
 
+import com.fu.flix.constant.enums.RoleType;
 import com.fu.flix.constant.enums.StatisticalDateType;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.StatisticalCustomerAccountsRequest;
@@ -26,6 +27,7 @@ import javax.transaction.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static com.fu.flix.constant.Constant.INVALID_DATE_TYPE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -264,7 +266,8 @@ class StatisticalServiceImplTest {
     }
 
     void setManagerContext(Long id, String phone) {
-        String[] roles = {"ROLE_MANAGER"};
+        List<String> roles = new ArrayList<>();
+        roles.add(RoleType.ROLE_MANAGER.name());
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));

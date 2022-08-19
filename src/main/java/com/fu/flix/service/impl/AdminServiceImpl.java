@@ -9,6 +9,7 @@ import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.entity.*;
 import com.fu.flix.service.*;
+import com.fu.flix.util.DataFormatter;
 import com.fu.flix.util.DateFormatUtil;
 import com.fu.flix.util.InputValidation;
 import org.apache.logging.log4j.util.Strings;
@@ -1463,6 +1464,16 @@ public class AdminServiceImpl implements AdminService {
 
         transactionHistory.setStatus(TransactionStatus.SUCCESS.name());
 
+        UserNotificationDTO repairerNotification = new UserNotificationDTO(
+                "transaction",
+                NotificationStatus.ACCEPTED_WITHDRAW.name(),
+                repairerId,
+                NotificationType.ACCEPTED_WITHDRAW.name(),
+                null,
+                null
+        );
+        fcmService.sendAndSaveNotification(repairerNotification, DataFormatter.getVietnamMoneyFormatted(amount));
+
         AcceptWithdrawResponse response = new AcceptWithdrawResponse();
         response.setMessage(ACCEPT_WITHDRAW_SUCCESS);
 
@@ -1500,6 +1511,16 @@ public class AdminServiceImpl implements AdminService {
 
         transactionHistory.setStatus(FAIL.name());
         transactionHistory.setFailReason(reason);
+
+        UserNotificationDTO repairerNotification = new UserNotificationDTO(
+                "transaction",
+                NotificationStatus.REJECTED_WITHDRAW.name(),
+                transactionHistory.getUserId(),
+                NotificationType.REJECTED_WITHDRAW.name(),
+                null,
+                null
+        );
+        fcmService.sendAndSaveNotification(repairerNotification, reason);
 
         RejectWithdrawResponse response = new RejectWithdrawResponse();
         response.setMessage(REJECT_WITHDRAW_REQUEST_SUCCESS);

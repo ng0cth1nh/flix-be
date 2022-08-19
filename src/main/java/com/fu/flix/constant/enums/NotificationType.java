@@ -12,5 +12,7 @@ public enum NotificationType {
     DEPOSIT_FAILED,
     DEPOSIT_SUCCESS,
     REGISTER_FAIL,
-    REMIND
+    REMIND,
+    REJECTED_WITHDRAW,
+    ACCEPTED_WITHDRAW
 }

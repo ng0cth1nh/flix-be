@@ -7,6 +7,8 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fu.flix.configuration.AppConf;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.security.UserPrincipal;
+import com.fu.flix.entity.Role;
+import com.fu.flix.service.ValidatorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.fu.flix.constant.Constant.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -31,9 +34,14 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
     private final AppConf appConf;
     private final HandlerExceptionResolver resolver;
 
-    public CustomAuthorizationFilter(AppConf appConf, HandlerExceptionResolver resolver) {
+    private final ValidatorService validatorService;
+
+    public CustomAuthorizationFilter(AppConf appConf,
+                                     HandlerExceptionResolver resolver,
+                                     ValidatorService validatorService) {
         this.appConf = appConf;
         this.resolver = resolver;
+        this.validatorService = validatorService;
     }
 
     @Override
@@ -52,7 +60,13 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                     DecodedJWT decodedJWT = verifier.verify(token);
                     String username = decodedJWT.getSubject();
                     Long id = decodedJWT.getClaim(USER_ID).asLong();
-                    String[] roles = decodedJWT.getClaim(ROLES).asArray(String.class);
+
+                    List<String> roles = validatorService.getUserValidated(id)
+                            .getRoles()
+                            .stream()
+                            .map(Role::getName)
+                            .collect(Collectors.toList());
+
                     Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
                     for (String role : roles) {
                         authorities.add(new SimpleGrantedAuthority(role));

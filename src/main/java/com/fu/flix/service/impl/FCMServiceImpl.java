@@ -56,6 +56,7 @@ public class FCMServiceImpl implements FCMService {
         sendNotificationDTO.setTitle(title);
         sendNotificationDTO.setBody(message);
         sendNotificationDTO.setImageUrl(savedImage.getUrl());
+        sendNotificationDTO.setNotificationType(userNotificationDTO.getNotificationType());
         sendNotification(sendNotificationDTO);
 
         com.fu.flix.entity.Notification notificationData = new com.fu.flix.entity.Notification();

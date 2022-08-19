@@ -2,6 +2,7 @@ package com.fu.flix.configuration;
 
 import com.fu.flix.filter.CustomAccessDeniedHandler;
 import com.fu.flix.filter.CustomAuthorizationFilter;
+import com.fu.flix.service.ValidatorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
@@ -20,14 +21,16 @@ import static com.fu.flix.constant.enums.RoleType.*;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final AppConf appConf;
-
     private final HandlerExceptionResolver resolver;
+    private final ValidatorService validatorService;
 
     @Autowired
     public SecurityConfig(AppConf appConf,
-                          @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
+                          @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver,
+                          ValidatorService validatorService) {
         this.appConf = appConf;
         this.resolver = resolver;
+        this.validatorService = validatorService;
     }
 
     @Override
@@ -70,7 +73,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.authorizeRequests().anyRequest().authenticated();
         http.exceptionHandling().accessDeniedHandler(new CustomAccessDeniedHandler());
-        http.addFilterBefore(new CustomAuthorizationFilter(this.appConf, resolver), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new CustomAuthorizationFilter(this.appConf, resolver, validatorService), UsernamePasswordAuthenticationFilter.class);
     }
 
     @Override

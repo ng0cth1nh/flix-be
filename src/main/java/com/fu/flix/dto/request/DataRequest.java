@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.List;
+
 @Getter
 @Setter
 public abstract class DataRequest {
@@ -34,7 +36,7 @@ public abstract class DataRequest {
         return null;
     }
 
-    public String[] getRoles() {
+    public List<String> getRoles() {
         if (SecurityContextHolder.getContext() != null) {
             if (SecurityContextHolder.getContext().getAuthentication() != null) {
                 Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

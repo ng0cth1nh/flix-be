@@ -85,6 +85,7 @@ public class FCMServiceImpl implements FCMService {
                 .putData("content", dto.getTitle())
                 .putData("body", dto.getBody())
                 .putData("image", dto.getImageUrl())
+                .putData("notificationType", dto.getNotificationType())
                 .build();
 
         try {

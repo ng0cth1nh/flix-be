@@ -241,8 +241,8 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
                 && !FIXING.getId().equals(statusId);
     }
 
-    private boolean isCustomer(String[] roles) {
-        return Arrays.stream(roles).anyMatch(r -> ROLE_CUSTOMER.name().equals(r));
+    private boolean isCustomer(List<String> roles) {
+        return roles.stream().anyMatch(r -> ROLE_CUSTOMER.name().equals(r));
     }
 
     private List<SubServiceOutputDTO> getSubServiceDTOs(Invoice invoice) {

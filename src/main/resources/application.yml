@@ -22,6 +22,8 @@ app:
       feedback: 'Thông tin phản hồi'
       transaction: 'Thông tin giao dịch'
     content:
+      ACCEPTED_WITHDRAW: 'Yêu cầu rút tiền của quý khách đã được chấp nhận. Số tiền là %s.'
+      REJECTED_WITHDRAW: 'Yêu cầu rút tiền của quý khách đã bị từ chối với lí do: %s.'
       REMIND_EXPECT_FIXING_TIME_DEADLINE: 'Quý khách có yêu cầu sửa chữa đơn hàng #%s vào lúc %s.'
       REMIND_FIXING_TASK: 'Đơn hàng #%s đang được thực hiện, vui lòng hoàn thành trước %s.'
       REQUEST_CANCELED_AUTOMATICALLY: 'Mã yêu cầu #%s đã được hủy tự động.'

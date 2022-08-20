@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Aspect
 @Configuration
 @Slf4j
-public class AspectConfiguration {
+public class LoggingAspectConfiguration {
     @Before("execution(* com.fu.flix.service.impl.AccountServiceImpl.login(..)) && args(request)")
     public void loginSuccessLogging(LoginRequest request) {
         log.info("User: {} login at: {}", request.getUsername(), LocalDateTime.now());

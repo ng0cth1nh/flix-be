@@ -515,7 +515,8 @@ public class AdminServiceImpl implements AdminService {
 
         Long serviceId = request.getServiceId();
         String subServiceName = request.getSubServiceName();
-        if (subServiceDAO.findBySubServiceNameAndServiceId(subServiceName, serviceId).isPresent()) {
+        if (!subService.getName().equals(subServiceName)
+                && subServiceDAO.findBySubServiceNameAndServiceId(subServiceName, serviceId).isPresent()) {
             throw new GeneralException(HttpStatus.GONE, SUB_SERVICE_NAME_OF_THIS_SERVICE_IS_EXISTED);
         }
 

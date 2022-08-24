@@ -207,10 +207,25 @@ public class InputValidation {
         return description.length() < maxLength;
     }
 
-    public static String removeAccent(String s) {
-        return Normalizer
-                .normalize(s, Normalizer.Form.NFD)
-                .replaceAll("[^\\p{ASCII}]", "");
+    public static String removeAccent(String str) {
+        if (Strings.isEmpty(str)) {
+            return str;
+        }
+        str = Normalizer.normalize(str, Normalizer.Form.NFD);
+        Pattern normalPattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        str = normalPattern
+                .matcher(str)
+                .replaceAll("");
+
+        Pattern dLowerPattern = Pattern.compile("đ");
+        str = dLowerPattern
+                .matcher(str)
+                .replaceAll("d");
+
+        Pattern dUpperPattern = Pattern.compile("Đ");
+        return dUpperPattern
+                .matcher(str)
+                .replaceAll("D");
     }
 
     public static String getFeedbackTypeValidated(String feedbackType) {

@@ -37,6 +37,7 @@ public class AppConf {
     private Integer defaultPageNumber;
     private Long milestoneMoney;
     private Long minVnPay;
+    private Integer maxNeededFixingRequest;
 
     @Data
     public static class Notification {

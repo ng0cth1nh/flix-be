@@ -322,4 +322,12 @@ public interface RepairRequestDAO extends JpaRepository<RepairRequest, Long> {
             "AND TIMESTAMPDIFF(SECOND,iv.confirm_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) < 259200 " +
             "AND TIMESTAMPDIFF(SECOND,iv.confirm_fixing_at, CONVERT_TZ(NOW(),'+00:00','+07:00')) >= 0;", nativeQuery = true)
     List<RepairRequest> findRequestToRemindFixingTask();
+
+    @Query(value = "SELECT count(*) " +
+            "FROM repair_requests rr " +
+            "JOIN repair_requests_matching rrm " +
+            "ON rr.request_code = rrm.request_code " +
+            "WHERE rrm.repairer_id = :repairerId " +
+            "AND rr.status_id NOT IN ('CC', 'DO');", nativeQuery = true)
+    long countNumberOfNeededFixingRequest(Long repairerId);
 }

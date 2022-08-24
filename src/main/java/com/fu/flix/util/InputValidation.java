@@ -208,12 +208,9 @@ public class InputValidation {
     }
 
     public static String removeAccent(String s) {
-        if (Strings.isEmpty(s)) {
-            return s;
-        }
-        String temp = Normalizer.normalize(s, Normalizer.Form.NFD);
-        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-        return pattern.matcher(temp).replaceAll("");
+        return Normalizer
+                .normalize(s, Normalizer.Form.NFD)
+                .replaceAll("[^\\p{ASCII}]", "");
     }
 
     public static String getFeedbackTypeValidated(String feedbackType) {

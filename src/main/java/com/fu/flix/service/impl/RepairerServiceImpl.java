@@ -128,6 +128,10 @@ public class RepairerServiceImpl implements RepairerService {
             throw new GeneralException(HttpStatus.CONFLICT, BALANCE_MUST_GREATER_THAN_OR_EQUAL_ + milestoneMoney);
         }
 
+        if (repairRequestDAO.countNumberOfNeededFixingRequest(repairerId) >= appConf.getMaxNeededFixingRequest()) {
+            throw new GeneralException(HttpStatus.GONE, CAN_NOT_HAVE_MORE_THAN_5_REQUEST);
+        }
+
         repairRequest.setStatusId(APPROVED.getId());
 
         RepairRequestMatching repairRequestMatching = buildRepairRequestMatching(requestCode, repairerId);

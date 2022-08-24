@@ -13,6 +13,7 @@ app:
   nameMaxLength: 150
   defaultPageSize: 10
   defaultPageNumber: 0
+  maxNeededFixingRequest: 5
   notification:
     defaultImageName: 'Notification Image'
     defaultImage: 'https://firebasestorage.googleapis.com/v0/b/flix-cb844.appspot.com/o/images%2Fic_notification.jpg?alt=media&token=b2e68977-8764-44ef-8ec2-c1b38dba417f'

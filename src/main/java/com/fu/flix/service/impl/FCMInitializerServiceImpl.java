@@ -25,19 +25,15 @@ public class FCMInitializerServiceImpl implements FCMInitializerService {
 
     @Override
     @PostConstruct
-    public void initialize() {
-        try {
-            FirebaseOptions options = new FirebaseOptions.Builder()
-                    .setCredentials(GoogleCredentials.fromStream(new ClassPathResource(appConf.getFirebaseConfig()).getInputStream()))
-                    .build();
+    public void initialize() throws IOException {
+        FirebaseOptions options = new FirebaseOptions.Builder()
+                .setCredentials(GoogleCredentials.fromStream(new ClassPathResource(appConf.getFirebaseConfig()).getInputStream()))
+                .build();
 
-            if (FirebaseApp.getApps().isEmpty()) {
-                this.firebaseApp = FirebaseApp.initializeApp(options);
-            } else {
-                this.firebaseApp = FirebaseApp.getInstance();
-            }
-        } catch (IOException e) {
-            log.error("Create FirebaseApp Error", e);
+        if (FirebaseApp.getApps().isEmpty()) {
+            this.firebaseApp = FirebaseApp.initializeApp(options);
+        } else {
+            this.firebaseApp = FirebaseApp.getInstance();
         }
     }
 }

@@ -81,6 +81,19 @@ class CategoryServiceImplTest {
     }
 
     @Test
+    void test_search_service_success_when_key_word_is_empty() {
+        // given
+        SearchActiveServicesRequest request = new SearchActiveServicesRequest();
+        request.setKeyword("");
+
+        // when
+        SearchActiveServicesResponse response = underTest.searchServices(request).getBody();
+
+        // then
+        Assertions.assertTrue(response.getServices().size() > 0);
+    }
+
+    @Test
     void test_search_service_success_when_key_word_contain_utf_8_character_and_white_space() {
         // given
         SearchActiveServicesRequest request = new SearchActiveServicesRequest();

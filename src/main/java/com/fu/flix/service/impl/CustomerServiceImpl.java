@@ -412,12 +412,8 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     private Long getRequestPrice(String requestCode, boolean isActualPrice) {
-        Optional<Invoice> optionalInvoice = invoiceDAO.findByRequestCode(requestCode);
-        if (optionalInvoice.isPresent()) {
-            Invoice invoice = optionalInvoice.get();
-            return isActualPrice ? invoice.getActualProceeds() : invoice.getTotalPrice();
-        }
-        return 0L;
+        Invoice invoice = invoiceDAO.findByRequestCode(requestCode).get();
+        return isActualPrice ? invoice.getActualProceeds() : invoice.getTotalPrice();
     }
 
     @Override

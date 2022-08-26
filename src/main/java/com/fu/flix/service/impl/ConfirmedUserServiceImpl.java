@@ -135,7 +135,7 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
                 return CommentType.REPAIRER_COMMENT.name();
             }
         }
-        return null;
+        throw new GeneralException(HttpStatus.GONE, THIS_USER_CANNOT_CREATE_COMMENT_FOR_THIS_REQUEST);
     }
 
     private Integer getRatingValidated(Integer rating) {

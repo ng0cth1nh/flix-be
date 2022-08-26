@@ -67,6 +67,26 @@ class ConfirmedUserServiceImplTest {
     }
 
     @Test
+    public void test_comment_success_with_rating_is_5_and_role_is_repairer() {
+        // given
+        String requestCode = "0908224D3DCA";
+        Integer rating = 5;
+        String comment = "Thợ xấu trai";
+        CommentRequest request = new CommentRequest();
+        request.setRequestCode(requestCode);
+        request.setRating(rating);
+        request.setComment(comment);
+        setRepairerContext(55L, "0962706248");
+
+        // when
+        ResponseEntity<CommentResponse> responseEntity = underTest.createComment(request);
+        CommentResponse response = responseEntity.getBody();
+
+        // then
+        Assertions.assertEquals(COMMENT_SUCCESS, response.getMessage());
+    }
+
+    @Test
     public void test_comment_success_with_rating_is_1() {
         // given
         String requestCode = "0908224D3DCA";
@@ -123,6 +143,26 @@ class ConfirmedUserServiceImplTest {
 
         // then
         Assertions.assertEquals(RATING_MUST_IN_RANGE_1_TO_5, exception.getMessage());
+    }
+
+    @Test
+    public void test_comment_fail_when_role_is_not_repairer_or_customer() {
+        // given
+        String requestCode = "0908224D3DCA";
+        Integer rating = 5;
+        String comment = "Thợ xấu trai";
+        CommentRequest request = new CommentRequest();
+        request.setRequestCode(requestCode);
+        request.setRating(rating);
+        request.setComment(comment);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createComment(request));
+
+        // then
+        Assertions.assertEquals(THIS_USER_CANNOT_CREATE_COMMENT_FOR_THIS_REQUEST, exception.getMessage());
     }
 
     @Test
@@ -600,6 +640,18 @@ class ConfirmedUserServiceImplTest {
     void setRepairerContext(Long id, String phone) {
         List<String> roles = new ArrayList<>();
         roles.add(RoleType.ROLE_REPAIRER.name());
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (String role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        UsernamePasswordAuthenticationToken authenticationToken
+                = new UsernamePasswordAuthenticationToken(new UserPrincipal(id, phone, roles), null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
+
+    void setManagerContext(Long id, String phone) {
+        List<String> roles = new ArrayList<>();
+        roles.add(RoleType.ROLE_MANAGER.name());
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             authorities.add(new SimpleGrantedAuthority(role));

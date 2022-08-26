@@ -20,4 +20,6 @@ public interface IHistoryRequestForRepairerDTO {
     Double getActualPrice();
 
     LocalDateTime getCreatedAt();
+
+    Long getCustomerId();
 }

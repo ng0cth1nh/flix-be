@@ -72,9 +72,6 @@ public class AddressServiceImpl implements AddressService {
         }
 
         List<District> districts = districtDAO.findByCityId(cityId);
-        if (districts.isEmpty()) {
-            throw new GeneralException(HttpStatus.GONE, INVALID_CITY);
-        }
 
         List<DistrictDTO> districtDTOS = districts.stream()
                 .map(district -> {

@@ -14,7 +14,7 @@ public interface RepairRequestMatchingDAO extends JpaRepository<RepairRequestMat
     Optional<RepairRequestMatching> findByRequestCode(String requestCode);
 
     @Query(value = "SELECT rrm.request_code as requestCode, s.name as status, i.url as image, sv.name as serviceName, rr.description, iv.total_price as price, " +
-            "iv.actual_proceeds as actualPrice, rr.created_at as createdAt, sv.id as serviceId " +
+            "iv.actual_proceeds as actualPrice, rr.created_at as createdAt, sv.id as serviceId, rr.user_id as customerId " +
             "FROM repair_requests_matching rrm " +
             "JOIN repair_requests rr " +
             "ON rrm.request_code = rr.request_code " +

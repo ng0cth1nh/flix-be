@@ -3,6 +3,7 @@ package com.fu.flix.service.impl;
 import com.fu.flix.dto.CityDTO;
 import com.fu.flix.dto.CommuneDTO;
 import com.fu.flix.dto.DistrictDTO;
+import com.fu.flix.dto.MainAddressDTO;
 import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.CommuneRequest;
 import com.fu.flix.dto.request.DistrictRequest;
@@ -199,5 +200,43 @@ class AddressServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_DISTRICT, exception.getMessage());
+    }
+
+    @Test
+    void test_getAddressFormatted_fail_when_address_id_is_null() {
+        // when
+        String addressFormatted = underTest.getAddressFormatted(null);
+
+        // then
+        Assertions.assertNull(addressFormatted);
+    }
+
+    @Test
+    void test_getAddressFormatted_success() {
+        //
+        underTest.getAddressFormatted(20L);
+    }
+
+    @Test
+    void test_getAddressFormatted_fail_when_address_id_is_not_found() {
+        // when
+        String addressFormatted = underTest.getAddressFormatted(1000000000L);
+
+        // then
+        Assertions.assertNull(addressFormatted);
+    }
+
+    @Test
+    void test_saveNewMainAddress() {
+        // given
+        MainAddressDTO request = new MainAddressDTO();
+        request.setUsername("0865390037");
+        request.setCommuneId("00826");
+        request.setStreetAddress("abc");
+        request.setFullName("Meo Meo");
+        request.setPhone("0865390036");
+
+        // when
+        underTest.saveNewMainAddress(request);
     }
 }

@@ -330,6 +330,8 @@ public class CustomerServiceImpl implements CustomerService {
                     com.fu.flix.entity.Service service = serviceDAO.findById(repairRequest.getServiceId()).get();
                     String requestCode = repairRequest.getRequestCode();
                     Image image = imageDAO.findById(service.getImageId()).get();
+                    Optional<RepairRequestMatching> optionalRepairRequestMatching = repairRequestMatchingDAO
+                            .findByRequestCode(requestCode);
 
                     HistoryRequestForCustomerDTO dto = new HistoryRequestForCustomerDTO();
                     dto.setRequestCode(requestCode);
@@ -341,6 +343,8 @@ public class CustomerServiceImpl implements CustomerService {
                     dto.setPrice(getRequestPrice(requestCode, false));
                     dto.setActualPrice(getRequestPrice(requestCode, true));
                     dto.setDate(DateFormatUtil.toString(repairRequest.getCreatedAt(), DATE_TIME_PATTERN));
+                    optionalRepairRequestMatching
+                            .ifPresent(repairRequestMatching -> dto.setRepairerId(repairRequestMatching.getRepairerId()));
 
                     return dto;
                 }).collect(Collectors.toList());

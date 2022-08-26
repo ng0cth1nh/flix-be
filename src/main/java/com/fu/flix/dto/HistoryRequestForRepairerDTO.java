@@ -15,4 +15,5 @@ public class HistoryRequestForRepairerDTO {
     private Double price;
     private Double actualPrice;
     private String date;
+    private Long customerId;
 }

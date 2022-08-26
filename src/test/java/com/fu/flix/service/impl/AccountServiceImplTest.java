@@ -152,7 +152,7 @@ class AccountServiceImplTest {
         Assertions.assertEquals(REFRESH_TOKEN_MISSING, exception.getMessage());
     }
 
-//        @Test
+    @Test
     public void test_send_register_otp_with_phone_valid() throws JsonProcessingException {
         // given
         SendRegisterOTPRequest request = new SendRegisterOTPRequest();
@@ -1201,7 +1201,117 @@ class AccountServiceImplTest {
         Assertions.assertEquals(FILE_MUST_BE_IMAGE, exception.getMessage());
     }
 
-//            @Test
+    @Test
+    public void test_confirm_register_customer_fail_when_invalid_phone() {
+        // given
+        MockMultipartFile avatar = new MockMultipartFile(
+                "avatar",
+                "image.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "avatar".getBytes());
+        String fullName = "Nguyễn Thị Hồng Nhung";
+        String password = "123abc";
+        String communeId = "00006";
+        String streetAddress = "Đường 30m Hòa Lạc";
+        int otp = 123456;
+        String phone = "08653900";
+
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
+        request.setAvatar(avatar);
+        request.setFullName(fullName);
+        request.setPassword(password);
+        request.setCommuneId(communeId);
+        request.setStreetAddress(streetAddress);
+        request.setOtp(otp);
+        request.setPhone(phone);
+
+        OTPInfo otpInfo = new OTPInfo();
+        otpInfo.setUsername(phone);
+        otpInfo.setOtp(otp);
+        otpInfo.setOtpType(REGISTER);
+
+        // when
+        awaitSaveOTP(otpInfo);
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
+
+        // then
+        Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_register_customer_fail_when_account_existed() {
+        // given
+        MockMultipartFile avatar = new MockMultipartFile(
+                "avatar",
+                "image.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "avatar".getBytes());
+        String fullName = "Nguyễn Thị Hồng Nhung";
+        String password = "123abc";
+        String communeId = "00006";
+        String streetAddress = "Đường 30m Hòa Lạc";
+        int otp = 123456;
+        String phone = "0865390037";
+
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
+        request.setAvatar(avatar);
+        request.setFullName(fullName);
+        request.setPassword(password);
+        request.setCommuneId(communeId);
+        request.setStreetAddress(streetAddress);
+        request.setOtp(otp);
+        request.setPhone(phone);
+
+        OTPInfo otpInfo = new OTPInfo();
+        otpInfo.setUsername(phone);
+        otpInfo.setOtp(otp);
+        otpInfo.setOtpType(REGISTER);
+
+        // when
+        awaitSaveOTP(otpInfo);
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
+
+        // then
+        Assertions.assertEquals(ACCOUNT_EXISTED, exception.getMessage());
+    }
+
+    @Test
+    public void test_confirm_register_customer_fail_when_otp_wrong() {
+        // given
+        MockMultipartFile avatar = new MockMultipartFile(
+                "avatar",
+                "image.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "avatar".getBytes());
+        String fullName = "Nguyễn Thị Hồng Nhung";
+        String password = "123abc";
+        String communeId = "00006";
+        String streetAddress = "Đường 30m Hòa Lạc";
+        String phone = "0865390031";
+
+        CFRegisterCustomerRequest request = new CFRegisterCustomerRequest();
+        request.setAvatar(avatar);
+        request.setFullName(fullName);
+        request.setPassword(password);
+        request.setCommuneId(communeId);
+        request.setStreetAddress(streetAddress);
+        request.setOtp(123456);
+        request.setPhone(phone);
+
+        OTPInfo otpInfo = new OTPInfo();
+        otpInfo.setUsername(phone);
+        otpInfo.setOtp(123455);
+        otpInfo.setOtpType(REGISTER);
+
+        // when
+        awaitSaveOTP(otpInfo);
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterCustomer(request));
+
+        // then
+        Assertions.assertEquals(INVALID_OTP, exception.getMessage());
+    }
+
+    @Test
     public void test_send_forgot_pass_otp_success() throws JsonProcessingException {
         // given
         String phone = "0585943270";
@@ -1284,6 +1394,21 @@ class AccountServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_PHONE_NUMBER, exception.getMessage());
+    }
+
+    @Test
+    public void test_send_forgot_pass_otp_fail_when_wrong_application_type() {
+        // given
+        String phone = "0865390037";
+        SendForgotPassOTPRequest request = new SendForgotPassOTPRequest();
+        request.setPhone(phone);
+        request.setRoleType("ADMIN");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.sendForgotPassOTP(request));
+
+        // then
+        Assertions.assertEquals(ACCOUNT_NOT_FOUND, exception.getMessage());
     }
 
     @Test
@@ -2008,6 +2133,27 @@ class AccountServiceImplTest {
         Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
     }
 
+    @Test
+    public void test_confirm_register_repairer_fail_when_register_services_is_empty() {
+        // given
+        CFRegisterRepairerRequest request = getCfRegisterRepairerRequestValidated();
+        request.setCommuneId("00001");
+        request.setRegisterServices(new ArrayList<>());
+
+        OTPInfo otpInfo = new OTPInfo();
+        otpInfo.setUsername(request.getPhone());
+        otpInfo.setOtp(request.getOtp());
+        otpInfo.setOtpType(REGISTER);
+
+        awaitSaveOTP(otpInfo);
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.confirmRegisterRepairer(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REGISTER_SERVICE_IDS, exception.getMessage());
+    }
+
     private CFRegisterRepairerRequest getCfRegisterRepairerRequestValidated() {
         MockMultipartFile avatar = new MockMultipartFile(
                 "avatar",
@@ -2230,6 +2376,18 @@ class AccountServiceImplTest {
 
         // then
         Assertions.assertEquals(USER_IS_INACTIVE, exception.getMessage());
+    }
+
+    @Test
+    void test_isInvalidRegisterServices_when_list_id_is_empty() {
+        // given
+        List<Long> registerServices = new ArrayList<>();
+
+        // when
+        boolean check = underTest.isInvalidRegisterServices(registerServices);
+
+        // then
+        Assertions.assertTrue(check);
     }
 
     void setCustomerContext(Long id, String phone) {

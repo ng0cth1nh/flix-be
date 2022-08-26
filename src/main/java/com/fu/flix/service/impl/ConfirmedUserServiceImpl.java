@@ -197,6 +197,8 @@ public class ConfirmedUserServiceImpl implements ConfirmedUserService {
             response.setStatus(dto.getStatus());
             response.setIsCustomerCommented(dto.getIsCustomerCommented());
             response.setIsRepairerCommented(dto.getIsRepairerCommented());
+            response.setCustomerId(dto.getCustomerId());
+            response.setRepairerId(dto.getRepairerId());
         }
 
         return new ResponseEntity<>(response, HttpStatus.OK);

@@ -27,7 +27,7 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "CASE " +
             "   WHEN re_cmt.id IS NOT NULL THEN 'true' " +
             "   ELSE 'false' " +
-            "END as isRepairerCommented " +
+            "END as isRepairerCommented, customer.id as customerId, repairer.id as repairerId " +
             "FROM repair_requests rr " +
             "JOIN users customer " +
             "ON rr.user_id = customer.id " +
@@ -74,7 +74,7 @@ public interface InvoiceDAO extends JpaRepository<Invoice, String> {
             "CASE " +
             "   WHEN re_cmt.id IS NOT NULL THEN 'true' " +
             "   ELSE 'false' " +
-            "END as isRepairerCommented " +
+            "END as isRepairerCommented, customer.id as customerId, repairer.id as repairerId " +
             "FROM repair_requests rr " +
             "JOIN users customer " +
             "ON rr.user_id = customer.id " +

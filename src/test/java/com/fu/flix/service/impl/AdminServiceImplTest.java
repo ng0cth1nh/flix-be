@@ -10,6 +10,7 @@ import com.fu.flix.dto.error.GeneralException;
 import com.fu.flix.dto.request.*;
 import com.fu.flix.dto.response.*;
 import com.fu.flix.dto.security.UserPrincipal;
+import com.fu.flix.entity.Repairer;
 import com.fu.flix.entity.User;
 import com.fu.flix.service.AdminService;
 import com.fu.flix.service.CustomerService;
@@ -57,6 +58,8 @@ class AdminServiceImplTest {
     CustomerService customerService;
     @Autowired
     RepairerService repairerService;
+    @Autowired
+    RepairerDAO repairerDAO;
     String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @Test
@@ -293,6 +296,38 @@ class AdminServiceImplTest {
 
         // then
         Assertions.assertEquals(UPDATE_CATEGORY_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_update_category_fail_when_name_is_existed() throws IOException {
+        // given
+        MockMultipartFile icon = new MockMultipartFile(
+                "icon",
+                "icon.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "icon".getBytes());
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image",
+                "image.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "image".getBytes());
+
+        UpdateCategoryRequest request = new UpdateCategoryRequest();
+        request.setIcon(icon);
+        request.setImage(image);
+        request.setDescription("fake description 1");
+        request.setCategoryName("Xe máy");
+        request.setIsActive(true);
+        request.setId(6L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateCategory(request));
+
+        // then
+        Assertions.assertEquals(CATEGORY_NAME_EXISTED, exception.getMessage());
     }
 
     @Test
@@ -614,10 +649,60 @@ class AdminServiceImplTest {
     }
 
     @Test
+    void test_update_service_fail_when_name_is_existed() throws IOException {
+        // given
+        MockMultipartFile icon = new MockMultipartFile(
+                "icon",
+                "icon.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "icon".getBytes());
+
+        MockMultipartFile image = new MockMultipartFile(
+                "image",
+                "image.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "image".getBytes());
+
+        UpdateServiceRequest request = new UpdateServiceRequest();
+        request.setIcon(icon);
+        request.setImage(image);
+        request.setDescription("fake description 1");
+        request.setServiceName("Xe côn tay");
+        request.setIsActive(null);
+        request.setInspectionPrice(20000L);
+        request.setCategoryId(5L);
+        request.setServiceId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateService(request));
+
+        // then
+        Assertions.assertEquals(SERVICE_NAME_OF_THIS_CATEGORY_IS_EXISTED, exception.getMessage());
+    }
+
+    @Test
     void test_search_services_success() {
         // given
         AdminSearchServicesRequest request = new AdminSearchServicesRequest();
         request.setKeyword("điện");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminSearchServicesResponse response = underTest.searchServices(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_search_services_success_when_keyword_is_empty() {
+        // given
+        AdminSearchServicesRequest request = new AdminSearchServicesRequest();
+        request.setKeyword("");
+        request.setCategoryId(1L);
 
         setManagerContext(438L, "0865390063");
 
@@ -817,6 +902,26 @@ class AdminServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_SUB_SERVICE, exception.getMessage());
+    }
+
+    @Test
+    void test_update_sub_service_fail_when_name_is_existed() {
+        // given
+        UpdateSubServiceRequest request = new UpdateSubServiceRequest();
+        request.setSubServiceName("Lỗi bo mạch");
+        request.setPrice(33000L);
+        request.setServiceId(1L);
+        request.setDescription("asdad");
+        request.setIsActive(true);
+        request.setSubServiceId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateSubService(request));
+
+        // then
+        Assertions.assertEquals(SUB_SERVICE_NAME_OF_THIS_SERVICE_IS_EXISTED, exception.getMessage());
     }
 
     @Test
@@ -1517,11 +1622,67 @@ class AdminServiceImplTest {
     }
 
     @Test
+    void test_update_accessory_fail_when_name_is_existed() {
+        // given
+        UpdateAccessoryRequest request = new UpdateAccessoryRequest();
+        request.setAccessoryName("Thanh LED cong tivi Asanzo 32 in - Tivi ASANZO/ S810 - NANOMAX");
+        request.setPrice(20000L);
+        request.setInsurance(18);
+        request.setManufacturer("Honda");
+        request.setCountry("Nhật");
+        request.setDescription("Cực xịn");
+        request.setServiceId(1L);
+        request.setId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateAccessory(request));
+
+        // then
+        Assertions.assertEquals(ACCESSORY_NAME_OF_THIS_SERVICE_IS_EXISTED, exception.getMessage());
+    }
+
+    @Test
     void test_response_feedback_success() throws IOException {
         // given
         ResponseFeedbackRequest request = new ResponseFeedbackRequest();
         request.setId(510L);
         request.setStatus("PROCESSING");
+        request.setResponse("Đang xử lí, mày chờ tý");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        ResponseFeedbackResponse response = underTest.responseFeedback(request).getBody();
+
+        // then
+        Assertions.assertEquals(RESPONSE_FEEDBACK_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_response_feedback_success_when_status_is_REJECTED() throws IOException {
+        // given
+        ResponseFeedbackRequest request = new ResponseFeedbackRequest();
+        request.setId(510L);
+        request.setStatus("REJECTED");
+        request.setResponse("Đang xử lí, mày chờ tý");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        ResponseFeedbackResponse response = underTest.responseFeedback(request).getBody();
+
+        // then
+        Assertions.assertEquals(RESPONSE_FEEDBACK_SUCCESS, response.getMessage());
+    }
+
+    @Test
+    void test_response_feedback_success_when_status_is_DONE() throws IOException {
+        // given
+        ResponseFeedbackRequest request = new ResponseFeedbackRequest();
+        request.setId(510L);
+        request.setStatus("DONE");
         request.setResponse("Đang xử lí, mày chờ tý");
 
         setManagerContext(438L, "0865390063");
@@ -1742,6 +1903,21 @@ class AdminServiceImplTest {
     }
 
     @Test
+    void test_search_categories_success_when_keyword_is_empty() {
+        // given
+        SearchCategoriesRequest request = new SearchCategoriesRequest();
+        request.setKeyword("");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchCategoriesResponse response = underTest.searchCategories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getCategories());
+    }
+
+    @Test
     void test_search_feedback_success() {
         // given
         SearchFeedbackRequest request = new SearchFeedbackRequest();
@@ -1860,12 +2036,112 @@ class AdminServiceImplTest {
     }
 
     @Test
+    void test_search_customer_success_when_status_is_ACTIVE() {
+        // given
+        SearchCustomersRequest request = new SearchCustomersRequest();
+        request.setKeyword("08");
+        request.setStatus("ACTIVE");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchCustomersResponse response = underTest.searchCustomers(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getCustomers());
+    }
+
+    @Test
+    void test_search_customer_success_when_keyword_is_empty() {
+        // given
+        SearchCustomersRequest request = new SearchCustomersRequest();
+        request.setKeyword("");
+        request.setStatus("BAN");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchCustomersResponse response = underTest.searchCustomers(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getCustomers());
+    }
+
+    @Test
     void test_search_repairer_success() {
         // given
         SearchRepairersRequest request = new SearchRepairersRequest();
         request.setAccountState("ACTIVE");
         request.setKeyword("0");
         request.setCvStatus("PENDING");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchRepairersResponse response = underTest.searchRepairers(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRepairers());
+    }
+
+    @Test
+    void test_search_repairer_success_when_state_is_BAN() {
+        // given
+        SearchRepairersRequest request = new SearchRepairersRequest();
+        request.setAccountState("BAN");
+        request.setKeyword("0");
+        request.setCvStatus("PENDING");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchRepairersResponse response = underTest.searchRepairers(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRepairers());
+    }
+
+    @Test
+    void test_search_repairer_success_when_keyword_is_empty() {
+        // given
+        SearchRepairersRequest request = new SearchRepairersRequest();
+        request.setAccountState("BAN");
+        request.setKeyword("");
+        request.setCvStatus("PENDING");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchRepairersResponse response = underTest.searchRepairers(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRepairers());
+    }
+
+    @Test
+    void test_search_repairer_success_when_state_is_empty() {
+        // given
+        SearchRepairersRequest request = new SearchRepairersRequest();
+        request.setAccountState("");
+        request.setKeyword("");
+        request.setCvStatus("PENDING");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        SearchRepairersResponse response = underTest.searchRepairers(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getRepairers());
+    }
+
+    @Test
+    void test_search_repairer_success_when_status_is_empty() {
+        // given
+        SearchRepairersRequest request = new SearchRepairersRequest();
+        request.setAccountState("");
+        request.setKeyword("");
+        request.setCvStatus("");
 
         setManagerContext(438L, "0865390063");
 
@@ -1892,6 +2168,24 @@ class AdminServiceImplTest {
         // then
         Assertions.assertEquals(INVALID_ACCOUNT_STATE, exception.getMessage());
     }
+
+    @Test
+    void test_search_repairer_fail_when_cv_status_is_wrong() {
+        // given
+        SearchRepairersRequest request = new SearchRepairersRequest();
+        request.setAccountState("ACTIVE");
+        request.setKeyword("0");
+        request.setCvStatus("WRONG");
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.searchRepairers(request));
+
+        // then
+        Assertions.assertEquals(INVALID_CV_STATUS, exception.getMessage());
+    }
+
 
     @Test
     void test_get_transactions_success() {
@@ -1951,7 +2245,24 @@ class AdminServiceImplTest {
     void test_searchSubServices_success() {
         // given
         AdminSearchSubServicesRequest request = new AdminSearchSubServicesRequest();
-        request.setKeyword("Loi");
+        request.setKeyword("a");
+        request.setServiceId(1L);
+
+        setManagerContext(438L, "0865390063");
+
+        // when
+        AdminSearchSubServicesResponse response = underTest.searchSubServices(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getSubServices());
+    }
+
+    @Test
+    void test_searchSubServices_success_when_keyword_is_empty() {
+        // given
+        AdminSearchSubServicesRequest request = new AdminSearchSubServicesRequest();
+        request.setKeyword("");
+        request.setServiceId(1L);
 
         setManagerContext(438L, "0865390063");
 
@@ -1966,7 +2277,7 @@ class AdminServiceImplTest {
     void test_getTransactionDetail_success() {
         // given
         TransactionDetailRequest request = new TransactionDetailRequest();
-        request.setId(2126L);
+        request.setId(2870L);
 
         setManagerContext(438L, "0865390063");
 
@@ -2341,12 +2652,15 @@ class AdminServiceImplTest {
     void test_unbanUser_success() {
         // given
         UnbanUserRequest request = new UnbanUserRequest();
-        request.setPhone("0865390041");
+        request.setPhone("0865390051");
 
         setManagerContext(438L, "0865390063");
 
-        User user = userDAO.findById(41L).get();
+        User user = userDAO.findById(52L).get();
         user.setIsActive(false);
+
+        Repairer repairer = repairerDAO.findByUserId(52L).get();
+        repairer.setCvStatus(REJECTED.name());
 
         // when
         UnbanUserResponse response = underTest.unbanUser(request).getBody();
@@ -2661,6 +2975,34 @@ class AdminServiceImplTest {
 
         // then
         Assertions.assertNotNull(response);
+    }
+
+    @Test
+    void test_searchAccessories_success() {
+        // given
+        AdminSearchAccessoriesRequest request = new AdminSearchAccessoriesRequest();
+        request.setKeyword("a");
+
+        // when
+        setManagerContext(438L, "0865390063");
+        AdminSearchAccessoriesResponse response = underTest.searchAccessories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getAccessories());
+    }
+
+    @Test
+    void test_searchAccessories_success_when_keyword_is_empty() {
+        // given
+        AdminSearchAccessoriesRequest request = new AdminSearchAccessoriesRequest();
+        request.setKeyword("");
+
+        // when
+        setManagerContext(438L, "0865390063");
+        AdminSearchAccessoriesResponse response = underTest.searchAccessories(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getAccessories());
     }
 
     private String createFixingRequestByCustomerId36ForService1() throws IOException {

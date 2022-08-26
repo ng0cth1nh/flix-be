@@ -12,9 +12,11 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
+
 import java.io.IOException;
 
 import static com.fu.flix.constant.Constant.FILE_MUST_BE_IMAGE;
+import static com.fu.flix.constant.Constant.FILE_MUST_BE_IMAGE_OR_PDF;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -22,76 +24,12 @@ import static com.fu.flix.constant.Constant.FILE_MUST_BE_IMAGE;
 class CloudStorageServiceImplTest {
 
     @Autowired
-    CloudStorageService cloudStorageService;
-
-    //    @Test
-    void upload_image_jpg_success() throws IOException {
-        // given
-        MockMultipartFile avatar = new MockMultipartFile(
-                "avatar",
-                "image.jpg",
-                MediaType.IMAGE_JPEG_VALUE,
-                "avatar".getBytes());
-
-        // when
-        String url = cloudStorageService.uploadImage(avatar);
-
-        // then
-        Assertions.assertTrue(url.length() > 0);
-    }
-
-    //    @Test
-    void upload_image_jpeg_success() throws IOException {
-        // given
-        MockMultipartFile avatar = new MockMultipartFile(
-                "avatar",
-                "image.jpeg",
-                MediaType.IMAGE_JPEG_VALUE,
-                "avatar".getBytes());
-
-        // when
-        String url = cloudStorageService.uploadImage(avatar);
-
-        // then
-        Assertions.assertTrue(url.length() > 0);
-    }
-
-    //    @Test
-    void upload_image_png_success() throws IOException {
-        //given
-        MockMultipartFile avatar = new MockMultipartFile(
-                "avatar",
-                "image.png",
-                MediaType.IMAGE_PNG_VALUE,
-                "avatar".getBytes());
-
-        // when
-        String url = cloudStorageService.uploadImage(avatar);
-
-        // then
-        Assertions.assertTrue(url.length() > 0);
-    }
-
-    //    @Test
-    void upload_image_gif_success() throws IOException {
-        // given
-        MockMultipartFile avatar = new MockMultipartFile(
-                "avatar",
-                "image.gif",
-                MediaType.IMAGE_GIF_VALUE,
-                "avatar".getBytes());
-
-        // when
-        String url = cloudStorageService.uploadImage(avatar);
-
-        // then
-        Assertions.assertTrue(url.length() > 0);
-    }
+    CloudStorageService underTest;
 
     @Test
     void upload_image_fail_when_image_is_null() {
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> cloudStorageService.uploadImage(null));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.uploadImage(null));
 
         // then
         Assertions.assertEquals(FILE_MUST_BE_IMAGE, exception.getMessage());
@@ -107,10 +45,19 @@ class CloudStorageServiceImplTest {
                 "avatar".getBytes());
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> cloudStorageService.uploadImage(avatar));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.uploadImage(avatar));
 
         // then
         Assertions.assertEquals(FILE_MUST_BE_IMAGE, exception.getMessage());
+    }
+
+    @Test
+    void test_is_Not_CertificateFile() {
+        // when
+        boolean check = underTest.isCertificateFile(null);
+
+        // then
+        Assertions.assertFalse(check);
     }
 
     @Test
@@ -123,9 +70,26 @@ class CloudStorageServiceImplTest {
                 "avatar".getBytes());
 
         // when
-        Exception exception = Assertions.assertThrows(GeneralException.class, () -> cloudStorageService.uploadImage(avatar));
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.uploadImage(avatar));
 
         // then
         Assertions.assertEquals(FILE_MUST_BE_IMAGE, exception.getMessage());
     }
+
+    @Test
+    void test_uploadCertificateFile_fail_when_file_is_txt() {
+        // given
+        MockMultipartFile avatar = new MockMultipartFile(
+                "avatar",
+                "image.txt",
+                MediaType.TEXT_XML_VALUE,
+                "avatar".getBytes());
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.uploadCertificateFile(avatar));
+
+        // then
+        Assertions.assertEquals(FILE_MUST_BE_IMAGE_OR_PDF, exception.getMessage());
+    }
+
 }

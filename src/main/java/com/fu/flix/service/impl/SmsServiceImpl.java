@@ -38,11 +38,7 @@ public class SmsServiceImpl implements SmsService {
         int max = 999999;
         int otp = (int) (Math.random() * (max - min + 1) + min);
 
-        try {
-            Async.await(CompletableFuture.runAsync(() -> sendOTP(request.getPhoneNumberFormatted(), otp)));
-        } catch (Exception e) {
-            throw new GeneralException(HttpStatus.INTERNAL_SERVER_ERROR, SEND_SMS_OTP_FAILED);
-        }
+        Async.await(CompletableFuture.runAsync(() -> sendOTP(request.getPhoneNumberFormatted(), otp)));
 
         OTPInfo otpInfo = new OTPInfo();
         otpInfo.setOtp(otp);

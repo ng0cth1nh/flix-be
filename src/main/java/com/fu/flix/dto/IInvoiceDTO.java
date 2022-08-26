@@ -58,4 +58,8 @@ public interface IInvoiceDTO {
     Boolean getIsCustomerCommented();
 
     Boolean getIsRepairerCommented();
+
+    Long getCustomerId();
+
+    Long getRepairerId();
 }

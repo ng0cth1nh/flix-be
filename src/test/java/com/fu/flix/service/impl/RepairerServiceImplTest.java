@@ -37,6 +37,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static com.fu.flix.constant.Constant.*;
 
@@ -158,6 +159,31 @@ class RepairerServiceImplTest {
     }
 
     @Test
+    public void test_approval_request_fail_when_have_more_than_5_request() throws IOException {
+        // given
+        IntStream.range(0, 5).forEach(value -> {
+            try {
+                String requestCode = createFixingRequestByCustomerId36ForService3();
+                approvalRequestByRepairerId56(requestCode);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        RepairerApproveRequest request = new RepairerApproveRequest();
+        request.setRequestCode(requestCode);
+
+        // when
+        setRepairerContext(56L, "0865390056");
+        Repairer repairer = repairerDAO.findByUserId(56L).get();
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.approveRequest(request).getBody());
+
+        // then
+        Assertions.assertEquals(CAN_NOT_HAVE_MORE_THAN_5_REQUEST, exception.getMessage());
+    }
+
+    @Test
     public void test_approval_request_fail_when_repairer_balance_not_enough() throws IOException {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
@@ -184,6 +210,21 @@ class RepairerServiceImplTest {
 
         // then
         Assertions.assertEquals(40L, response.getCustomerId());
+    }
+
+    @Test
+    public void test_get_repairer_request_detail_success_when_request_is_PE() throws IOException {
+        // given
+        RequestingDetailForRepairerRequest request = new RequestingDetailForRepairerRequest();
+        String requestCode = createFixingRequestByCustomerId36ForService3();
+        request.setRequestCode(requestCode);
+
+        // when
+        setRepairerContext(55L, "0865390056");
+        RequestingDetailForRepairerResponse response = underTest.getRepairRequestDetail(request).getBody();
+
+        // then
+        Assertions.assertEquals(36L, response.getCustomerId());
     }
 
     @Test
@@ -219,6 +260,46 @@ class RepairerServiceImplTest {
         // given
         String requestCode = createFixingRequestByCustomerId36ForService1();
         approvalRequestByRepairerId56(requestCode);
+
+        CancelRequestForRepairerRequest request = new CancelRequestForRepairerRequest();
+        request.setRequestCode(requestCode);
+        request.setReason("Bận quá");
+
+        // when
+        setRepairerContext(56L, "0865390056");
+        CancelRequestForRepairerResponse response = underTest.cancelFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertEquals(CANCEL_REPAIR_REQUEST_SUCCESSFUL, response.getMessage());
+    }
+
+    @Test
+    public void cancel_fixing_request_success_and_repairer_is_fined() throws IOException {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+
+        CancelRequestForRepairerRequest request = new CancelRequestForRepairerRequest();
+        request.setRequestCode(requestCode);
+        request.setReason("Bận quá");
+
+        RepairRequest repairRequest = repairRequestDAO.findByRequestCode(requestCode).get();
+        repairRequest.setExpectStartFixingAt(LocalDateTime.now().plusMinutes(50L));
+
+        // when
+        setRepairerContext(56L, "0865390056");
+        CancelRequestForRepairerResponse response = underTest.cancelFixingRequest(request).getBody();
+
+        // then
+        Assertions.assertEquals(CANCEL_REPAIR_REQUEST_SUCCESSFUL, response.getMessage());
+    }
+
+    @Test
+    public void cancel_fixing_request_success_when_sst_is_FIXNG() throws IOException {
+        // given
+        String requestCode = createFixingRequestByCustomerId36ForService1();
+        approvalRequestByRepairerId56(requestCode);
+        confirmFixingByRepairerId56(requestCode);
 
         CancelRequestForRepairerRequest request = new CancelRequestForRepairerRequest();
         request.setRequestCode(requestCode);

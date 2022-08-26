@@ -1295,7 +1295,7 @@ class AccountServiceImplTest {
         request.setPassword(password);
         request.setCommuneId(communeId);
         request.setStreetAddress(streetAddress);
-        request.setOtp(123456);
+        request.setOtp(12345);
         request.setPhone(phone);
 
         OTPInfo otpInfo = new OTPInfo();

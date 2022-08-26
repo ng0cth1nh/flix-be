@@ -355,6 +355,23 @@ class CommonRepairerServiceImplTest {
     }
 
     @Test
+    public void test_search_sub_services_by_service_success_when_keyword_is_empty() {
+        // given
+        SearchSubServicesRequest request = new SearchSubServicesRequest();
+        request.setKeyword("");
+        request.setServiceId(1L);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        SearchSubServicesResponse response = underTest.searchSubServicesByService(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getSubServices());
+    }
+
+
+    @Test
     public void test_search_sub_services_by_service_fail_when_service_id_is_null() {
         // given
         SearchSubServicesRequest request = new SearchSubServicesRequest();
@@ -385,6 +402,23 @@ class CommonRepairerServiceImplTest {
         // then
         Assertions.assertNotNull(response.getAccessories());
     }
+
+    @Test
+    public void test_search_accessory_by_service_success_when_keyword_is_empty() {
+        // given
+        SearchAccessoriesRequest request = new SearchAccessoriesRequest();
+        request.setKeyword("");
+        request.setServiceId(1L);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        SearchAccessoriesResponse response = underTest.searchAccessoriesByService(request).getBody();
+
+        // then
+        Assertions.assertNotNull(response.getAccessories());
+    }
+
 
     @Test
     public void test_search_accessory_by_service_fail_when_service_id_is_null() {
@@ -561,6 +595,25 @@ class CommonRepairerServiceImplTest {
 
         // then
         Assertions.assertEquals(INVALID_COMMUNE, exception.getMessage());
+    }
+
+    @Test
+    void test_updateRepairerProfile_fail_when_register_services_is_null() {
+        // given
+        UpdateRepairerRequest request = new UpdateRepairerRequest();
+        request.setEmail("dung@gmail.com");
+        request.setExperienceDescription("lal  al la");
+        request.setCommuneId("00001");
+        request.setStreetAddress("la la");
+        request.setRegisterServices(null);
+
+        setRepairerContext(52L, "0865390057");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.updateRepairerProfile(request));
+
+        // then
+        Assertions.assertEquals(INVALID_REGISTER_SERVICE_IDS, exception.getMessage());
     }
 
     void setRepairerContext(Long id, String phone) {

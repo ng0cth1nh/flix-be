@@ -114,13 +114,18 @@ public class CustomerServiceImpl implements CustomerService {
             throw new GeneralException(HttpStatus.GONE, EXCEEDED_DESCRIPTION_LENGTH_ALLOWED);
         }
 
+        Long serviceId = request.getServiceId();
+        if (!validatorService.getServiceValidated(serviceId).isActive()) {
+            throw new GeneralException(HttpStatus.GONE, SERVICE_IS_INACTIVE);
+        }
+
         User user = validatorService.getUserValidated(userId);
         Collection<UserVoucher> userVouchers = user.getUserVouchers();
         LocalDateTime now = LocalDateTime.now();
         Long voucherId = request.getVoucherId();
         String paymentMethodID = getPaymentMethodIdValidated(request.getPaymentMethodId());
         if (voucherId != null) {
-            UsingVoucherDTO usingVoucherDTO = new UsingVoucherDTO(userVouchers, voucherId, request.getServiceId(), paymentMethodID);
+            UsingVoucherDTO usingVoucherDTO = new UsingVoucherDTO(userVouchers, voucherId, serviceId, paymentMethodID);
             useVoucher(usingVoucherDTO, now);
         }
 
@@ -129,7 +134,7 @@ public class CustomerServiceImpl implements CustomerService {
         RepairRequest repairRequest = new RepairRequest();
         repairRequest.setRequestCode(RandomUtil.generateCode());
         repairRequest.setUserId(userId);
-        repairRequest.setServiceId(request.getServiceId());
+        repairRequest.setServiceId(serviceId);
         repairRequest.setPaymentMethodId(paymentMethodID);
         repairRequest.setStatusId(PENDING.getId());
         repairRequest.setExpectStartFixingAt(expectFixingDay);

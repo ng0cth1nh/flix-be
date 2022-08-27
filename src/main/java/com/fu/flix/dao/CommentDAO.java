@@ -54,6 +54,7 @@ public interface CommentDAO extends JpaRepository<Comment, Long> {
             "ON avatar.id = u.avatar " +
             "WHERE rrm.repairer_id = :repairerId " +
             "AND c.type = 'CUSTOMER_COMMENT' " +
+            "ORDER BY c.id DESC " +
             "limit :limit offset :offset", nativeQuery = true)
     List<IRepairerCommentDTO> findRepairComments(Long repairerId, Integer limit, Integer offset);
 

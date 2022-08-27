@@ -47,7 +47,8 @@ class CustomerServiceImplTest {
 
     @Autowired
     CustomerService underTest;
-
+    @Autowired
+    ServiceDAO serviceDAO;
     @Autowired
     VoucherDAO voucherDAO;
 
@@ -321,6 +322,34 @@ class CustomerServiceImplTest {
 
         // then
         Assertions.assertEquals(VOUCHER_EXPIRED, exception.getMessage());
+    }
+
+    @Test
+    public void test_create_fixing_request_fail_when_service_is_inactive() {
+        // given
+        Long serviceId = 1L;
+        Long addressId = 8L;
+        String expectFixingDay = DateFormatUtil.toString(LocalDateTime.now().plusDays(2L), DATE_TIME_PATTERN);
+        String description = "Thợ phải đẹp trai";
+        Long voucherId = 1L;
+        String paymentMethodId = "C";
+
+        RequestingRepairRequest request = new RequestingRepairRequest();
+        request.setServiceId(serviceId);
+        request.setVoucherId(voucherId);
+        request.setDescription(description);
+        request.setExpectFixingDay(expectFixingDay);
+        request.setAddressId(addressId);
+        request.setPaymentMethodId(paymentMethodId);
+        setCustomerContext(36L, "0865390037");
+
+        serviceDAO.findById(1L).get().setActive(false);
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createFixingRequest(request));
+
+        // then
+        Assertions.assertEquals(SERVICE_IS_INACTIVE, exception.getMessage());
     }
 
     @Test

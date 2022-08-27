@@ -105,6 +105,7 @@ class VnPayServiceImplTest {
         appConf.setMinVnPay(5000L);
         appConf.getVnPayInfo().setDepositInfo(depositInfo);
         appConf.getVnPayInfo().setPaymentInfo(paymentInfo);
+        appConf.setMaxVnPay(100000000L);
 
         underTest = new VnPayServiceImpl(appConf,
                 repairRequestDAO,
@@ -618,6 +619,46 @@ class VnPayServiceImplTest {
 
         // then
         Assertions.assertEquals(ORDER_INFO_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_createRepairerDepositUrl_fail_when_amount_is_null() {
+        // given
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest();
+        httpServletRequest.setRemoteAddr("0:0:0:0:0:0:0:1");
+
+        RepairerDepositUrlRequest repairerDepositUrlRequest = new RepairerDepositUrlRequest();
+        repairerDepositUrlRequest.setOrderInfo("abc");
+        repairerDepositUrlRequest.setAmount(null);
+        repairerDepositUrlRequest.setBankCode("NCB");
+
+        setRepairerContext(52L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createRepairerDepositUrl(repairerDepositUrlRequest, httpServletRequest));
+
+        // then
+        Assertions.assertEquals(AMOUNT_IS_REQUIRED, exception.getMessage());
+    }
+
+    @Test
+    void test_createRepairerDepositUrl_fail_when_amount_is_1000000000() {
+        // given
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest();
+        httpServletRequest.setRemoteAddr("0:0:0:0:0:0:0:1");
+
+        RepairerDepositUrlRequest repairerDepositUrlRequest = new RepairerDepositUrlRequest();
+        repairerDepositUrlRequest.setOrderInfo("abc");
+        repairerDepositUrlRequest.setAmount(1000000000L);
+        repairerDepositUrlRequest.setBankCode("NCB");
+
+        setRepairerContext(52L, "0865390037");
+
+        // when
+        Exception exception = Assertions.assertThrows(GeneralException.class, () -> underTest.createRepairerDepositUrl(repairerDepositUrlRequest, httpServletRequest));
+
+        // then
+        Assertions.assertEquals(AMOUNT_MUST_BE_LOWER_OR_EQUAL_ + appConf.getMaxVnPay(), exception.getMessage());
     }
 
     @Test

@@ -110,7 +110,7 @@ public class VnPayServiceImpl implements VNPayService {
 
         String vnpOrderInfo = customerPaymentUrlRequest.getOrderInfo();
         String vnpIpAddress = getIpAddress(httpServletRequest);
-        int amount = invoice.getActualProceeds().intValue() * vnPayAmountRate;
+        long amount = invoice.getActualProceeds() * vnPayAmountRate;
         String bankCode = customerPaymentUrlRequest.getBankCode();
         String vnpTmnCode = vnPayInfo.getPaymentInfo().getTmnCode();
         String returnUrl = vnPayInfo.getPaymentInfo().getReturnUrl();
@@ -131,7 +131,7 @@ public class VnPayServiceImpl implements VNPayService {
 
         String vnpOrderInfo = repairerDepositUrlRequest.getOrderInfo();
         String vnpIpAddress = getIpAddress(httpServletRequest);
-        int amount = repairerDepositUrlRequest.getAmount().intValue() * vnPayAmountRate;
+        long amount = repairerDepositUrlRequest.getAmount() * vnPayAmountRate;
         String bankCode = repairerDepositUrlRequest.getBankCode();
         String vnpTmnCode = vnPayInfo.getDepositInfo().getTmnCode();
         String returnUrl = vnPayInfo.getDepositInfo().getReturnUrl();
@@ -191,14 +191,24 @@ public class VnPayServiceImpl implements VNPayService {
             throw new GeneralException(HttpStatus.GONE, BANK_CODE_IS_REQUIRED);
         }
 
+        Long amount = repairerDepositUrlRequest.getAmount();
+        if (amount == null) {
+            throw new GeneralException(HttpStatus.GONE, AMOUNT_IS_REQUIRED);
+        }
+
         Long minVnPay = appConf.getMinVnPay();
-        if (repairerDepositUrlRequest.getAmount() == null || repairerDepositUrlRequest.getAmount() < minVnPay) {
+        if (amount < minVnPay) {
             throw new GeneralException(HttpStatus.GONE, AMOUNT_MUST_BE_GREATER_OR_EQUAL_ + minVnPay);
+        }
+
+        Long maxVnPay = appConf.getMaxVnPay();
+        if (amount > maxVnPay) {
+            throw new GeneralException(HttpStatus.GONE, AMOUNT_MUST_BE_LOWER_OR_EQUAL_ + maxVnPay);
         }
     }
 
     private Map<String, String> buildVnpParams(String vnpOrderInfo,
-                                               int amount,
+                                               long amount,
                                                String bankCode,
                                                String vnpIpAddress,
                                                String vnpTmnCode,

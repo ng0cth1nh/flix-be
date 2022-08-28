@@ -44,6 +44,7 @@ app:
       REGISTER_FAIL: 'Đăng kí tài khoản thất bại do %s'
   milestoneMoney: 200000
   minVnPay: 5000
+  maxVnPay: 100000000
   twilioInfo:
     accountSid: 'AC61a6f887f88c2c98f13b8c807cb8e15d'
     authToken: 'b2bdec58830ce248a8e2d60bdfa6205c'

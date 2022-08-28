@@ -50,7 +50,7 @@ public class SmsServiceImpl implements SmsService {
     }
 
     private void sendOTP(String targetPhone, int otp) {
-        String msg = "Mã OTP của bạn là " + otp + ". Vui lòng sử dụng mã OTP này để xác thực";
+        String msg = "Mã xác nhận cho ứng dụng FLIX của bạn là " + otp;
         Message.creator(
                         new PhoneNumber(targetPhone),
                         new PhoneNumber(appConf.getTwilioInfo().getFromNumber()), msg)
